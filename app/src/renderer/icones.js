@@ -1,8 +1,10 @@
 // Ícones da barra de ferramentas (SVG 24×24 desenhados para o MisterALG,
 // inspirados nos desenhos do VisuAlg: folha, pasta, disquete, binóculo...).
 
+// O "papel" branco dos ícones ganha a cor do tema (.papel no CSS), senão vira
+// uma mancha branca nos temas escuros.
 const svg = (corpo) =>
-  `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${corpo}</svg>`
+  `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${corpo.replaceAll('fill="#fff"', 'class="papel"')}</svg>`
 
 const folha = '<path d="M6 2.5h8l4 4V21.5H6z" fill="#fff"/><path d="M14 2.5v4h4"/>'
 

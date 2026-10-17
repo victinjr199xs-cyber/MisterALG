@@ -8,7 +8,8 @@ const caminhoRenderer = fileURLToPath(new URL('../renderer/index.html', import.m
 // tela, em tamanho fixo, para o print sair igual em qualquer máquina.
 const MODO_CAPTURA = process.env.MISTERALG_CAPTURA === '1'
 
-export function criarJanelaPrincipal() {
+/** @param fundo cor do tema escolhido, para a janela não piscar verde antes de a página pintar */
+export function criarJanelaPrincipal(fundo = '#c0dcc0') {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   const janela = new BrowserWindow({
     width: MODO_CAPTURA ? 1440 : Math.min(1366, width),
@@ -16,7 +17,7 @@ export function criarJanelaPrincipal() {
     minWidth: 900,
     minHeight: 560,
     title: 'MisterALG',
-    backgroundColor: '#c0dcc0',
+    backgroundColor: fundo,
     show: false,
     webPreferences: {
       preload: caminhoPreload,

@@ -100,7 +100,8 @@ export function perfil(linhas, contagem) {
 
 // ---- Configurações ------------------------------------------------------------
 
-export async function configuracoes(prefs) {
+/** @param aoPrever(idTema) aplica o tema enquanto o usuário escolhe; quem chama desfaz se cancelar */
+export async function configuracoes(prefs, { temas = [], aoPrever } = {}) {
   const fontes = [
     'Menlo', 'Monaco', 'SF Mono', 'Consolas', 'Lucida Console', 'DejaVu Sans Mono', 'Liberation Mono',
     'Ubuntu Mono', 'Noto Sans Mono', 'Courier New', 'Courier',
@@ -112,8 +113,11 @@ export async function configuracoes(prefs) {
   const disciplina = el('input', { value: prefs.disciplina })
   const professor = el('input', { value: prefs.professor })
   const entidade = el('input', { value: prefs.entidade })
+  const tema = el('select', {}, ...temas.map((t) => el('option', { value: t.id, textContent: t.nome, selected: t.id === prefs.tema })))
+  tema.addEventListener('change', () => aoPrever?.(tema.value))
 
   const abaEditor = el('div', { className: 'aba-conteudo' },
+    el('label', { textContent: 'Tema (cores da tela):' }), tema,
     el('label', { textContent: 'Fonte:' }), fonte,
     el('label', { textContent: 'Tamanho:' }), tamanho,
     el('label', { textContent: 'Largura da Tabulação (colunas):' }), tab,
@@ -144,6 +148,7 @@ export async function configuracoes(prefs) {
   })
   if (r !== 'ok') return null
   return {
+    tema: tema.value,
     fonte: fonte.value,
     tamanho: Number(tamanho.value),
     tabulacao: Number(tab.value),

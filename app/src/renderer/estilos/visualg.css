@@ -1,20 +1,162 @@
-/* Tema "Nenhum" do VisuAlg 3.0.7 (cores do DFM — docs/spec/_sintese-B §2.2.5). */
+/* Cores da IDE. O tema "Clássico" é o "Nenhum" do VisuAlg 3.0.7 (cores do DFM —
+   docs/spec/_sintese-B §2.2.5); os outros trocam só as variáveis abaixo.
+   A lista de temas fica em ../../compartilhado/temas.js. */
 :root {
-  --verde-menta: #c0dcc0;
-  --azul-ceu: #a6caf0;
-  --salmao: #ff8080;
-  --amarelo-claro: #ffff80;
-  --marinho: #000080;
+  /* janela e molduras */
+  --fundo-janela: #c0dcc0;
+  --moldura-editor: #a6caf0;
+  --moldura-variaveis: #ff8080;
+  --moldura-visualizacao: #ffff80;
+  --destaque: #000080;
   --borda: #808080;
   --borda-clara: #ffffff;
   --texto: #000000;
   --fundo-campo: #ffffff;
+  /* barra de ferramentas */
+  --texto-barra: #000080;
+  --icone-papel: #ffffff;
+  --botao-hover: #d8ecd8;
+  --botao-ativo: #a8c8a8;
+  --desabilitado: #6a7a6a;
+  --desabilitado-fundo: #e4ece4;
+  --desabilitado-campo: #8a948a;
+  /* grades */
+  --cabecalho: #d4d0c8;
+  --linha-grade: #c8c8c8;
   --selecao-grade: #ffffe0;
+  /* editor */
+  --calha-borda: #b0c4de;
+  --calha-fim: #ffffff;
+  --calha-texto: #000000;
   --linha-execucao: #0000ff;
+  --texto-execucao: #ffffff;
   --linha-breakpoint: #c00000;
+  --texto-breakpoint: #ffffff;
   --linha-erro: #ff0000;
+  --linha-erro-fundo: #ffd0d0;
+  --selecao-texto: #d7d4f0;
+  --mesma-palavra: #e8e8ff;
+  --cursor: #000000;
+  --detalhe: #555555;
+  /* realce de sintaxe (VISUALG30.INI padrão) */
+  --sx-comentario: #008000;
+  --sx-literal: #ff0000;
+  --sx-chave: #0000a0;
+  --sx-especial: #0000ff;
+  --sx-tipo: #800000;
+  --sx-variavel: #000000;
+  /* diálogos */
+  --dialogo-fundo: #ece9d8;
+  --dialogo-moldura: #404040;
+  --dialogo-borda: #a0a0a0;
+  --campo-borda: #7f9db9;
+  --titulo-inicio: #0a246a;
+  --titulo-fim: #3a6ea5;
+  --titulo-texto: #ffffff;
+  --acao-inicio: #ffffff;
+  --acao-fim: #e0ddd0;
+  --aba: #e0ddd0;
+  --aba-ativa: #f4f3ee;
+  --aviso: #800000;
+  --domingo: #c00000;
+
   --fonte-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --fonte-codigo: Menlo, Monaco, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace;
+  color-scheme: light;
+}
+
+/* ---- Escuro: cinza neutro, como os editores modernos -------------------- */
+:root[data-tema="escuro"] {
+  --fundo-janela: #181818; --moldura-editor: #1d2b3a; --moldura-variaveis: #3b2326; --moldura-visualizacao: #35321d;
+  --destaque: #8ab4f8; --borda: #3c3c3c; --borda-clara: rgb(255 255 255 / 0.05); --texto: #d4d4d4; --fundo-campo: #1e1e1e;
+  --texto-barra: #9cdcfe; --icone-papel: #3c3f44; --botao-hover: #2a2d2e; --botao-ativo: #37373d;
+  --desabilitado: #6b6b6b; --desabilitado-fundo: #252526; --desabilitado-campo: #6b6b6b;
+  --cabecalho: #2d2d30; --linha-grade: #333333; --selecao-grade: #3d3a1c;
+  --calha-borda: #333333; --calha-fim: #1e1e1e; --calha-texto: #858585;
+  --linha-execucao: #0e639c; --texto-execucao: #ffffff; --linha-breakpoint: #8b1e1e; --texto-breakpoint: #ffffff;
+  --linha-erro: #f14c4c; --linha-erro-fundo: #4b1818; --selecao-texto: #264f78; --mesma-palavra: #343a40;
+  --cursor: #aeafad; --detalhe: #999999;
+  --sx-comentario: #6a9955; --sx-literal: #ce9178; --sx-chave: #569cd6; --sx-especial: #c586c0; --sx-tipo: #4ec9b0; --sx-variavel: #9cdcfe;
+  --dialogo-fundo: #252526; --dialogo-moldura: #454545; --dialogo-borda: #454545; --campo-borda: #3c3c3c;
+  --titulo-inicio: #0e4f7c; --titulo-fim: #0e639c; --titulo-texto: #ffffff;
+  --acao-inicio: #3a3d41; --acao-fim: #2d2d30; --aba: #2d2d30; --aba-ativa: #1e1e1e;
+  --aviso: #f48771; --domingo: #f48771;
+  color-scheme: dark;
+}
+
+/* ---- Meia-noite: azul-marinho profundo ------------------------------------ */
+:root[data-tema="meia-noite"] {
+  --fundo-janela: #16161e; --moldura-editor: #1e2340; --moldura-variaveis: #3a1f2b; --moldura-visualizacao: #33301e;
+  --destaque: #7aa2f7; --borda: #2f334d; --borda-clara: rgb(255 255 255 / 0.05); --texto: #c0caf5; --fundo-campo: #1a1b26;
+  --texto-barra: #7dcfff; --icone-papel: #2f3549; --botao-hover: #292e42; --botao-ativo: #33395a;
+  --desabilitado: #565f89; --desabilitado-fundo: #1f2335; --desabilitado-campo: #565f89;
+  --cabecalho: #24283b; --linha-grade: #292e42; --selecao-grade: #3d3a1e;
+  --calha-borda: #292e42; --calha-fim: #1a1b26; --calha-texto: #737aa2;
+  --linha-execucao: #3d59a1; --texto-execucao: #ffffff; --linha-breakpoint: #8c2f3f; --texto-breakpoint: #ffffff;
+  --linha-erro: #f7768e; --linha-erro-fundo: #4a2030; --selecao-texto: #33467c; --mesma-palavra: #2e3555;
+  --cursor: #c0caf5; --detalhe: #737aa2;
+  --sx-comentario: #5f6996; --sx-literal: #ff9e64; --sx-chave: #7aa2f7; --sx-especial: #bb9af7; --sx-tipo: #2ac3de; --sx-variavel: #c0caf5;
+  --dialogo-fundo: #1f2335; --dialogo-moldura: #3b4261; --dialogo-borda: #3b4261; --campo-borda: #3b4261;
+  --titulo-inicio: #2a3a6e; --titulo-fim: #3d59a1; --titulo-texto: #ffffff;
+  --acao-inicio: #2f3549; --acao-fim: #24283b; --aba: #24283b; --aba-ativa: #1a1b26;
+  --aviso: #ff9e64; --domingo: #f7768e;
+  color-scheme: dark;
+}
+
+/* ---- Drácula: roxo, com a paleta Dracula --------------------------------- */
+:root[data-tema="dracula"] {
+  --fundo-janela: #21222c; --moldura-editor: #2b2d45; --moldura-variaveis: #3d2a3a; --moldura-visualizacao: #3a3a2a;
+  --destaque: #bd93f9; --borda: #44475a; --borda-clara: rgb(255 255 255 / 0.05); --texto: #f8f8f2; --fundo-campo: #282a36;
+  --texto-barra: #8be9fd; --icone-papel: #44475a; --botao-hover: #343746; --botao-ativo: #44475a;
+  --desabilitado: #6272a4; --desabilitado-fundo: #2a2c38; --desabilitado-campo: #6272a4;
+  --cabecalho: #343746; --linha-grade: #3a3c4e; --selecao-grade: #4a4630;
+  --calha-borda: #3a3c4e; --calha-fim: #282a36; --calha-texto: #6272a4;
+  --linha-execucao: #6272a4; --texto-execucao: #ffffff; --linha-breakpoint: #b23a48; --texto-breakpoint: #ffffff;
+  --linha-erro: #ff5555; --linha-erro-fundo: #4d2531; --selecao-texto: #44475a; --mesma-palavra: #424450;
+  --cursor: #f8f8f2; --detalhe: #9aa5ce;
+  --sx-comentario: #6272a4; --sx-literal: #f1fa8c; --sx-chave: #ff79c6; --sx-especial: #bd93f9; --sx-tipo: #8be9fd; --sx-variavel: #f8f8f2;
+  --dialogo-fundo: #282a36; --dialogo-moldura: #44475a; --dialogo-borda: #44475a; --campo-borda: #44475a;
+  --titulo-inicio: #5b3fa0; --titulo-fim: #7c5bc9; --titulo-texto: #ffffff;
+  --acao-inicio: #44475a; --acao-fim: #343746; --aba: #343746; --aba-ativa: #282a36;
+  --aviso: #ffb86c; --domingo: #ff5555;
+  color-scheme: dark;
+}
+
+/* ---- Terminal: preto com fósforo verde (e âmbar nos destaques) ------------ */
+:root[data-tema="terminal"] {
+  --fundo-janela: #000000; --moldura-editor: #04140a; --moldura-variaveis: #140f04; --moldura-visualizacao: #0a140a;
+  --destaque: #ffb000; --borda: #1f5f2f; --borda-clara: rgb(51 255 102 / 0.06); --texto: #33ff66; --fundo-campo: #000000;
+  --texto-barra: #ffb000; --icone-papel: #062a12; --botao-hover: #062a12; --botao-ativo: #0b3d1a;
+  --desabilitado: #1d6b33; --desabilitado-fundo: #020c05; --desabilitado-campo: #1d6b33;
+  --cabecalho: #062a12; --linha-grade: #0f3a1c; --selecao-grade: #2a2200;
+  --calha-borda: #0f3a1c; --calha-fim: #000000; --calha-texto: #1fa34a;
+  --linha-execucao: #33ff66; --texto-execucao: #000000; --linha-breakpoint: #a00000; --texto-breakpoint: #ffffff;
+  --linha-erro: #ff3b3b; --linha-erro-fundo: #3a0a0a; --selecao-texto: #145c2a; --mesma-palavra: #0b3d1a;
+  --cursor: #33ff66; --detalhe: #1fa34a;
+  --sx-comentario: #1f9f45; --sx-literal: #ffb000; --sx-chave: #8dffaa; --sx-especial: #c8ffd6; --sx-tipo: #ffd75f; --sx-variavel: #33ff66;
+  --dialogo-fundo: #020c05; --dialogo-moldura: #1f5f2f; --dialogo-borda: #1f5f2f; --campo-borda: #1f5f2f;
+  --titulo-inicio: #0b3d1a; --titulo-fim: #145c2a; --titulo-texto: #33ff66;
+  --acao-inicio: #0b3d1a; --acao-fim: #062a12; --aba: #062a12; --aba-ativa: #000000;
+  --aviso: #ffb000; --domingo: #ff6b3b;
+  color-scheme: dark;
+}
+
+/* ---- Sépia: claro, mas sem o branco que cansa a vista ---------------------- */
+:root[data-tema="sepia"] {
+  --fundo-janela: #e9dfc7; --moldura-editor: #d3dac6; --moldura-variaveis: #e6c3ae; --moldura-visualizacao: #ebdc9c;
+  --destaque: #2a5d8f; --borda: #b3a68a; --borda-clara: #fffaf0; --texto: #3b3226; --fundo-campo: #fbf4e2;
+  --texto-barra: #2a5d8f; --icone-papel: #fffaf0; --botao-hover: #f3ead3; --botao-ativo: #d9cba8;
+  --desabilitado: #9c9078; --desabilitado-fundo: #efe6cf; --desabilitado-campo: #a89c82;
+  --cabecalho: #e3d7b8; --linha-grade: #ddd0b0; --selecao-grade: #f6e7a8;
+  --calha-borda: #d6c9a8; --calha-fim: #fbf4e2; --calha-texto: #7a6e58;
+  --linha-execucao: #2a5d8f; --texto-execucao: #ffffff; --linha-breakpoint: #a33a2a; --texto-breakpoint: #ffffff;
+  --linha-erro: #c0392b; --linha-erro-fundo: #f3d0c4; --selecao-texto: #e6d6a8; --mesma-palavra: #eadfbf;
+  --cursor: #3b3226; --detalhe: #7a6e58;
+  --sx-comentario: #6f7f4f; --sx-literal: #b5481a; --sx-chave: #1f5f9f; --sx-especial: #6c4fb0; --sx-tipo: #8a5a00; --sx-variavel: #3b3226;
+  --dialogo-fundo: #f3ead3; --dialogo-moldura: #8a7d62; --dialogo-borda: #b3a68a; --campo-borda: #b3a68a;
+  --titulo-inicio: #7a5530; --titulo-fim: #a0703f; --titulo-texto: #ffffff;
+  --acao-inicio: #fffaf0; --acao-fim: #eadfc4; --aba: #e6dbbd; --aba-ativa: #fbf4e2;
+  --aviso: #8b2f1f; --domingo: #b03a2e;
   color-scheme: light;
 }
 
@@ -28,7 +170,7 @@ html, body {
 body {
   display: grid;
   grid-template-rows: auto 1fr auto;
-  background: var(--verde-menta);
+  background: var(--fundo-janela);
   color: var(--texto);
   font: 12px/1.3 var(--fonte-ui);
   overflow: hidden;
@@ -60,15 +202,16 @@ button, input, select { font: inherit; color: inherit; }
   background: transparent;
   cursor: default;
 }
-.botao:hover:not(:disabled) { border-color: var(--borda); background: #d8ecd8; }
+.botao:hover:not(:disabled) { border-color: var(--borda); background: var(--botao-hover); }
 .botao:active:not(:disabled), .botao[aria-pressed="true"] {
   border-color: var(--borda);
-  background: #a8c8a8;
+  background: var(--botao-ativo);
   box-shadow: inset 1px 1px 2px rgb(0 0 0 / 0.25);
 }
 .botao:disabled { opacity: 0.35; }
-.botao:focus-visible { outline: 2px solid var(--marinho); outline-offset: -2px; }
+.botao:focus-visible { outline: 2px solid var(--destaque); outline-offset: -2px; }
 .botao svg { width: 20px; height: 20px; }
+.botao svg .papel { fill: var(--icone-papel); }
 
 .separador {
   width: 1px;
@@ -84,17 +227,17 @@ button, input, select { font: inherit; color: inherit; }
   gap: 3px;
   margin: 0 2px;
 }
-.campo-barra:has(:disabled) { color: #6a7a6a; }
+.campo-barra:has(:disabled) { color: var(--desabilitado); }
 .campo-barra input, .campo-barra select {
   height: 22px;
   padding: 0 4px;
   border: 1px solid var(--borda);
   border-radius: 2px;
   background: var(--fundo-campo);
-  color: var(--marinho);
+  color: var(--texto-barra);
 }
 .campo-barra input { width: 46px; }
-.campo-barra input:disabled, .campo-barra select:disabled { background: #e4ece4; color: #8a948a; }
+.campo-barra input:disabled, .campo-barra select:disabled { background: var(--desabilitado-fundo); color: var(--desabilitado-campo); }
 
 /* ---- área principal --------------------------------------------------- */
 
@@ -123,9 +266,9 @@ main {
   border-radius: 3px;
   box-shadow: inset 1px 1px 0 var(--borda-clara);
 }
-.moldura-editor { background: var(--azul-ceu); }
-.moldura-variaveis { background: var(--salmao); }
-.moldura-visualizacao { background: var(--amarelo-claro); }
+.moldura-editor { background: var(--moldura-editor); }
+.moldura-variaveis { background: var(--moldura-variaveis); }
+.moldura-visualizacao { background: var(--moldura-visualizacao); }
 
 .legenda {
   margin: 0;
@@ -137,14 +280,14 @@ main {
   text-overflow: ellipsis;
 }
 .moldura-variaveis .legenda { font-style: italic; }
-.moldura-visualizacao .legenda { color: var(--marinho); font-family: Arial, var(--fonte-ui); font-size: 15px; }
+.moldura-visualizacao .legenda { color: var(--destaque); font-family: Arial, var(--fonte-ui); font-size: 15px; }
 
 .editor {
   flex: 1;
   min-height: 0;
   margin: 0 6px 6px;
   border: 1px solid var(--borda);
-  background: #ffffff;
+  background: var(--fundo-campo);
   user-select: text;
 }
 
@@ -156,7 +299,7 @@ main {
   margin: 0 6px 6px;
   overflow: auto;
   border: 1px solid var(--borda);
-  background: #ffffff;
+  background: var(--fundo-campo);
 }
 
 .grade {
@@ -170,13 +313,13 @@ main {
   top: 0;
   padding: 0 4px;
   border: 1px solid var(--borda);
-  background: #d4d0c8;
+  background: var(--cabecalho);
   font: 12px/20px var(--fonte-ui);
   text-align: left;
 }
 .grade td {
   padding: 0 4px;
-  border: 1px solid #c8c8c8;
+  border: 1px solid var(--linha-grade);
   white-space: nowrap;
 }
 .grade td:nth-child(1) { width: 22%; }
@@ -193,12 +336,13 @@ main {
   padding: 4px 6px;
   overflow: auto;
   border: 1px solid var(--borda);
-  background: #ffffff;
+  background: var(--fundo-campo);
   font: 13px/1.35 var(--fonte-codigo);
   white-space: pre;
   user-select: text;
 }
 
+/* O console imita o modo texto do MS-DOS: é preto em todos os temas. */
 .console {
   position: absolute;
   inset: 0;
@@ -215,13 +359,13 @@ main {
   align-items: center;
   gap: 6px;
   padding: 2px 4px 2px 6px;
-  background: linear-gradient(#0a246a, #3a6ea5);
-  color: #ffffff;
+  background: linear-gradient(var(--titulo-inicio), var(--titulo-fim));
+  color: var(--titulo-texto);
   font-weight: 700;
 }
 .console-icone {
   padding: 0 3px;
-  border: 1px solid #ffffff;
+  border: 1px solid currentColor;
   font: 700 10px var(--fonte-codigo);
 }
 .console-fechar {
@@ -283,14 +427,17 @@ main {
 
 /* ---- editor (CodeMirror) ---------------------------------------------- */
 
-.cm-editor { height: 100%; }
+.cm-editor { height: 100%; color: var(--texto); }
 .cm-editor.cm-focused { outline: none; }
+.cm-editor .cm-cursor, .cm-editor .cm-dropCursor { border-left-color: var(--cursor); }
+.cm-editor .cm-selectionLayer .cm-selectionBackground,
+.cm-editor.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground { background: var(--selecao-texto); }
 .cm-gutters {
-  border-right: 1px solid #b0c4de !important;
-  background: linear-gradient(90deg, var(--azul-ceu), #ffffff) !important;
+  border-right: 1px solid var(--calha-borda) !important;
+  background: linear-gradient(90deg, var(--moldura-editor), var(--calha-fim)) !important;
   font-family: 'Times New Roman', Times, serif;
   font-style: italic;
-  color: #000000 !important;
+  color: var(--calha-texto) !important;
 }
 .cm-gutter-breakpoint { width: 14px; cursor: pointer; }
 .cm-marcador-breakpoint {
@@ -299,17 +446,18 @@ main {
   margin: 4px 0 0 2px;
   border-radius: 50%;
   background: var(--linha-breakpoint);
-  box-shadow: 0 0 0 1px #ffffff;
+  box-shadow: 0 0 0 1px var(--fundo-campo);
 }
 .cm-linha-breakpoint { background: var(--linha-breakpoint) !important; }
-.cm-linha-breakpoint, .cm-linha-breakpoint span { color: #ffffff !important; }
+.cm-linha-breakpoint, .cm-linha-breakpoint span { color: var(--texto-breakpoint) !important; }
 .cm-linha-execucao { background: var(--linha-execucao) !important; }
-.cm-linha-execucao, .cm-linha-execucao span { color: #ffffff !important; }
-.cm-linha-erro { background: #ffd0d0 !important; outline: 1px solid var(--linha-erro); }
-.cm-editor .cm-selectionMatch { background: #e8e8ff; }
+.cm-linha-execucao, .cm-linha-execucao span { color: var(--texto-execucao) !important; }
+.cm-linha-erro { background: var(--linha-erro-fundo) !important; outline: 1px solid var(--linha-erro); }
+.cm-editor .cm-selectionMatch { background: var(--mesma-palavra); }
+.cm-tooltip { border-color: var(--borda) !important; background: var(--fundo-campo) !important; color: var(--texto); }
 .cm-tooltip-autocomplete .cm-completionLabel { font-weight: 700; }
 .cm-tooltip.cm-tooltip-autocomplete > ul { font-family: var(--fonte-codigo); min-width: 400px; }
-.cm-completionDetail { margin-left: 1.5em; color: #555555; font-style: normal !important; }
+.cm-completionDetail { margin-left: 1.5em; color: var(--detalhe); font-style: normal !important; }
 .cm-titulo-ctrlj {
   padding: 2px 6px;
   background: #000000;
@@ -322,9 +470,9 @@ main {
 
 dialog.janela {
   padding: 0;
-  border: 1px solid #404040;
+  border: 1px solid var(--dialogo-moldura);
   border-radius: 6px;
-  background: #ece9d8;
+  background: var(--dialogo-fundo);
   color: var(--texto);
   box-shadow: 0 12px 40px rgb(0 0 0 / 0.35);
   user-select: none;
@@ -334,8 +482,8 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
   margin: 0;
   padding: 7px 12px;
   border-radius: 6px 6px 0 0;
-  background: linear-gradient(#0a246a, #3a6ea5);
-  color: #ffffff;
+  background: linear-gradient(var(--titulo-inicio), var(--titulo-fim));
+  color: var(--titulo-texto);
   font-size: 13px;
   font-weight: 700;
 }
@@ -349,69 +497,69 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
 .janela button.acao {
   min-width: 84px;
   padding: 4px 12px;
-  border: 1px solid #404040;
+  border: 1px solid var(--dialogo-moldura);
   border-radius: 3px;
-  background: linear-gradient(#ffffff, #e0ddd0);
+  background: linear-gradient(var(--acao-inicio), var(--acao-fim));
 }
-.janela button.acao.principal { box-shadow: 0 0 0 1px #000000; font-weight: 700; }
-.janela button.acao:focus-visible { outline: 2px dotted #000000; outline-offset: 1px; }
+.janela button.acao.principal { box-shadow: 0 0 0 1px var(--texto); font-weight: 700; }
+.janela button.acao:focus-visible { outline: 2px dotted var(--texto); outline-offset: 1px; }
 .janela label { display: block; margin: 6px 0 2px; }
 .janela input[type="text"], .janela input:not([type]), .janela select, .janela textarea {
   width: 100%;
   padding: 3px 5px;
-  border: 1px solid #7f9db9;
-  background: #ffffff;
+  border: 1px solid var(--campo-borda);
+  background: var(--fundo-campo);
   user-select: text;
 }
-.janela fieldset { margin: 8px 0 0; padding: 4px 10px 8px; border: 1px solid #a0a0a0; }
+.janela fieldset { margin: 8px 0 0; padding: 4px 10px 8px; border: 1px solid var(--dialogo-borda); }
 .janela fieldset label { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
-.janela fieldset label:has(input:disabled) { color: #8a8a8a; }
+.janela fieldset label:has(input:disabled) { color: var(--desabilitado-campo); }
 .janela .linhas-2 { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 
-.aviso-mensagem { margin: 6px 0 10px; font-weight: 700; color: #800000; }
+.aviso-mensagem { margin: 6px 0 10px; font-weight: 700; color: var(--aviso); }
 .aviso-linha { width: 100%; font-family: var(--fonte-codigo); }
-.aviso-explicacao { margin: 4px 0 0; padding: 6px; max-height: 120px; overflow: auto; border: 1px solid #a0a0a0; background: #ffffff; }
+.aviso-explicacao { margin: 4px 0 0; padding: 6px; max-height: 120px; overflow: auto; border: 1px solid var(--dialogo-borda); background: var(--fundo-campo); }
 
 .tabela-dialogo {
   width: 100%;
   border-collapse: collapse;
-  background: #ffffff;
+  background: var(--fundo-campo);
   font: 12px/18px var(--fonte-codigo);
   user-select: text;
 }
-.tabela-dialogo th { position: sticky; top: 0; padding: 0 4px; border: 1px solid #a0a0a0; background: #d4d0c8; font-family: var(--fonte-ui); text-align: left; }
-.tabela-dialogo td { padding: 0 4px; border: 1px solid #d0d0d0; white-space: pre; }
-.rolagem-dialogo { max-height: 60vh; overflow: auto; border: 1px solid #808080; }
+.tabela-dialogo th { position: sticky; top: 0; padding: 0 4px; border: 1px solid var(--dialogo-borda); background: var(--cabecalho); font-family: var(--fonte-ui); text-align: left; }
+.tabela-dialogo td { padding: 0 4px; border: 1px solid var(--linha-grade); white-space: pre; }
+.rolagem-dialogo { max-height: 60vh; overflow: auto; border: 1px solid var(--borda); }
 
 .abas { display: flex; gap: 2px; margin-bottom: -1px; }
-.abas button { padding: 4px 12px; border: 1px solid #a0a0a0; border-bottom: 0; border-radius: 4px 4px 0 0; background: #e0ddd0; }
-.abas button[aria-selected="true"] { background: #f4f3ee; font-weight: 700; }
-.aba-conteudo { padding: 10px; border: 1px solid #a0a0a0; background: #f4f3ee; }
+.abas button { padding: 4px 12px; border: 1px solid var(--dialogo-borda); border-bottom: 0; border-radius: 4px 4px 0 0; background: var(--aba); }
+.abas button[aria-selected="true"] { background: var(--aba-ativa); font-weight: 700; }
+.aba-conteudo { padding: 10px; border: 1px solid var(--dialogo-borda); background: var(--aba-ativa); }
 
 .calculadora { display: grid; grid-template-columns: repeat(4, 52px); gap: 4px; }
-.calculadora output { grid-column: 1 / -1; padding: 6px; border: 1px solid #7f9db9; background: #ffffff; font: 700 18px var(--fonte-codigo); text-align: right; }
-.calculadora button { height: 34px; border: 1px solid #808080; border-radius: 3px; background: linear-gradient(#ffffff, #dcdcdc); font-weight: 700; }
+.calculadora output { grid-column: 1 / -1; padding: 6px; border: 1px solid var(--campo-borda); background: var(--fundo-campo); font: 700 18px var(--fonte-codigo); text-align: right; }
+.calculadora button { height: 34px; border: 1px solid var(--borda); border-radius: 3px; background: linear-gradient(var(--acao-inicio), var(--acao-fim)); font-weight: 700; }
 
 .calendario { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-.mes h4 { margin: 0 0 2px; color: var(--marinho); text-align: center; }
+.mes h4 { margin: 0 0 2px; color: var(--destaque); text-align: center; }
 .mes table { border-collapse: collapse; font: 11px/16px var(--fonte-codigo); }
 .mes td, .mes th { width: 22px; text-align: right; }
-.mes .hoje { background: var(--marinho); color: #ffffff; }
-.mes .domingo { color: #c00000; }
+.mes .hoje { background: var(--destaque); color: var(--fundo-campo); }
+.mes .domingo { color: var(--domingo); }
 
 .termos {
   max-height: 55vh;
   overflow: auto;
   padding: 10px 12px;
-  border: 1px solid #a0a0a0;
-  background: #ffffff;
+  border: 1px solid var(--dialogo-borda);
+  background: var(--fundo-campo);
   font: 12px/1.5 var(--fonte-ui);
   white-space: pre-wrap;
   user-select: text;
 }
 .ajuda { max-width: 760px; max-height: 70vh; overflow: auto; user-select: text; }
-.ajuda h3 { margin: 14px 0 4px; color: var(--marinho); }
+.ajuda h3 { margin: 14px 0 4px; color: var(--destaque); }
 .ajuda code, .ajuda pre { font-family: var(--fonte-codigo); }
-.ajuda pre { padding: 6px 8px; border: 1px solid #c0c0c0; background: #ffffff; }
+.ajuda pre { padding: 6px 8px; border: 1px solid var(--dialogo-borda); background: var(--fundo-campo); }
 .ajuda table { border-collapse: collapse; }
-.ajuda td, .ajuda th { padding: 2px 8px; border: 1px solid #c0c0c0; text-align: left; vertical-align: top; }
+.ajuda td, .ajuda th { padding: 2px 8px; border: 1px solid var(--dialogo-borda); text-align: left; vertical-align: top; }

@@ -8,6 +8,7 @@
 
 import { app, Menu } from 'electron'
 import { basename } from 'node:path'
+import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
 const ehMac = process.platform === 'darwin'
 
@@ -115,6 +116,15 @@ export function montarMenu(janela, prefs, estado = {}) {
       label: '&Manutenção',
       submenu: [
         item('&Configurações', 'configuracoes', ehMac ? undefined : 'Ctrl+,'),
+        {
+          label: '&Tema (cores)',
+          submenu: TEMAS.map((tema) => ({
+            label: tema.nome,
+            type: 'radio',
+            checked: tema.id === temaPorId(prefs.tema).id,
+            click: enviar('tema', tema.id),
+          })),
+        },
         { type: 'separator' },
         item('&A Calculadora', 'calculadora'),
         item('&O Calendário', 'calendario'),

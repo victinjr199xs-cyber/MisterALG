@@ -100,6 +100,7 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 
 ### ⌨️ Escrever código
 - Realce de sintaxe nas **cores do VisuAlg**
+- **6 temas de cores**, com 4 escuros para programar à noite (Manutenção → Tema)
 - **Auto-digitação** (Ctrl+Espaço): as 72 abreviaturas do VisuAlg
 - **Sugestões** de comandos e funções (Ctrl+J)
 - **Corrigir indentação** (Ctrl+G)
@@ -149,6 +150,25 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 <tr>
 <td width="50%"><img src="docs/imagens/06-sugestoes-ctrl-j.png" alt="Sugestões Ctrl+J"><p align="center"><sub><b>Sugestões</b> de comandos (Ctrl+J)</sub></p></td>
 <td width="50%"><img src="docs/imagens/08-perfil.png" alt="Perfil de execução"><p align="center"><sub><b>Perfil</b>: quantas vezes cada linha rodou (F7)</sub></p></td>
+</tr>
+</table>
+
+### 🎨 Temas
+
+Cansou do fundo claro? Escolha o tema em **Manutenção → Tema (cores)** ou em **Configurações**, que mostra a cor na hora. O MisterALG guarda a escolha. Nos temas escuros, a barra de título e os menus também ficam escuros.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/imagens/temas/escuro.png" alt="Tema Escuro"><p align="center"><sub><b>Escuro</b>: cinza neutro, como os editores modernos</sub></p></td>
+<td width="50%"><img src="docs/imagens/temas/meia-noite.png" alt="Tema Meia-noite"><p align="center"><sub><b>Meia-noite</b>: azul-marinho profundo</sub></p></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/imagens/temas/dracula.png" alt="Tema Drácula"><p align="center"><sub><b>Drácula</b>: roxo, com a paleta Dracula</sub></p></td>
+<td width="50%"><img src="docs/imagens/temas/terminal.png" alt="Tema Terminal"><p align="center"><sub><b>Terminal</b>: fósforo verde no preto, com destaques em âmbar</sub></p></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/imagens/temas/sepia.png" alt="Tema Sépia"><p align="center"><sub><b>Sépia</b>: claro, mas cor de papel em vez de branco</sub></p></td>
+<td width="50%"><img src="docs/imagens/temas/classico.png" alt="Tema Clássico"><p align="center"><sub><b>Clássico</b>: as cores originais do VisuAlg (padrão)</sub></p></td>
 </tr>
 </table>
 

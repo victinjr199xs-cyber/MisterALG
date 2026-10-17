@@ -57,13 +57,14 @@ const portugol = StreamLanguage.define({
   languageData: { commentTokens: { line: '//' } },
 })
 
+// As cores vêm do tema (variáveis --sx-* em estilos/visualg.css).
 const coresVisualg = HighlightStyle.define([
-  { tag: t.comment, color: '#008000', fontStyle: 'italic' },
-  { tag: [t.string, t.number, t.atom], color: '#ff0000' },
-  { tag: t.keyword, color: '#0000a0' },
-  { tag: t.macroName, color: '#0000ff', textDecoration: 'underline' },
-  { tag: t.typeName, color: '#800000', textDecoration: 'underline' },
-  { tag: t.variableName, color: '#000000', fontWeight: 'bold' },
+  { tag: t.comment, color: 'var(--sx-comentario)', fontStyle: 'italic' },
+  { tag: [t.string, t.number, t.atom], color: 'var(--sx-literal)' },
+  { tag: t.keyword, color: 'var(--sx-chave)' },
+  { tag: t.macroName, color: 'var(--sx-especial)', textDecoration: 'underline' },
+  { tag: t.typeName, color: 'var(--sx-tipo)', textDecoration: 'underline' },
+  { tag: t.variableName, color: 'var(--sx-variavel)', fontWeight: 'bold' },
 ])
 
 // ---- pontos de parada (calha + linha vermelha) ---------------------------

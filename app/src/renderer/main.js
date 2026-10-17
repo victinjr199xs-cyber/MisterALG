@@ -1,4 +1,4 @@
-// IDE do MisterALG: junta editor, execuÃ§Ã£o, busca, arquivos, barra e menus.
+// IDE do MisterALG: junta editor, execução, busca, arquivos, barra e menus.
 
 import { abrirAjuda } from './ajuda.js'
 import { criarBusca } from './busca.js'
@@ -7,16 +7,19 @@ import { criarEditor } from './editor/editor.js'
 import { esqueleto } from './editor/modelos.js'
 import { INTERVALOS, criarExecucao } from './execucao.js'
 import { ICONES } from './icones.js'
+import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
-const VERSAO = '1.4.2'
+const VERSAO = '1.5.0'
 // Termos de uso: o mesmo texto que o instalador do Windows exibe (app/build/termos.txt).
 import TEXTO_TERMOS from '../../build/termos.txt?raw'
-const TERMOS = TEXTO_TERMOS.replace(/^ï»¿/, '').replace(/\r\n/g, '\n')
+const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')
 const VERSAO_TERMOS = '1.4'
 
 let prefs = await api.prefs.ler()
+const aplicarTema = (id) => { document.documentElement.dataset.tema = temaPorId(id).id }
+aplicarTema(prefs.tema)
 const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modificado: false }
 let aleatorioLigado = false
 
@@ -40,8 +43,8 @@ document.addEventListener('mouseover', (e) => {
 
 function atualizarTitulo() {
   const arquivo = doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.nome
-  $('#titulo-editor').textContent = `Ãrea dos algoritmos ( EdiÃ§Ã£o do cÃ³digo fonte ) -> Nome do arquivo: [${arquivo}]`
-  api.janela.titulo(`MisterALG â€” ${arquivo}${doc.modificado ? ' (modificado)' : ''}`)
+  $('#titulo-editor').textContent = `Área dos algoritmos ( Edição do código fonte ) -> Nome do arquivo: [${arquivo}]`
+  api.janela.titulo(`MisterALG — ${arquivo}${doc.modificado ? ' (modificado)' : ''}`)
   status.estado()
 }
 
@@ -68,14 +71,14 @@ function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 
   editor.focar()
 }
 
-/** Pergunta se deve salvar. Devolve false se o usuÃ¡rio cancelou. */
+/** Pergunta se deve salvar. Devolve false se o usuário cancelou. */
 async function podeDescartar(titulo) {
   if (!doc.modificado) return true
   const r = await api.mensagem({
     type: 'question',
     title: titulo,
-    message: `O algoritmo [${doc.nome}] foi modificado. Deseja salvÃ¡-lo ?`,
-    buttons: ['Sim', 'NÃ£o', 'Cancelar'],
+    message: `O algoritmo [${doc.nome}] foi modificado. Deseja salvá-lo ?`,
+    buttons: ['Sim', 'Não', 'Cancelar'],
     defaultId: 0,
     cancelId: 2,
   })
@@ -95,7 +98,7 @@ async function salvar(comoNovo = false) {
   doc.nome = r.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, '')
   doc.modificado = false
   atualizarTitulo()
-  status.mensagem(' MENSAGEM: Pronto! * Este algoritmo estÃ¡ salvo *')
+  status.mensagem(' MENSAGEM: Pronto! * Este algoritmo está salvo *')
   api.recuperacao.limpar()
   return true
 }
@@ -111,7 +114,7 @@ async function abrirResultado(lido) {
 
 const pastaAtual = () => (doc.caminho ? doc.caminho.replace(/[\\/][^\\/]*$/, '') : null)
 
-// ---- execuÃ§Ã£o e busca ---------------------------------------------------------------
+// ---- execução e busca ---------------------------------------------------------------
 
 execucao = criarExecucao({
   editor,
@@ -152,7 +155,7 @@ const comandos = {
     const escapar = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])
     const html = `<!doctype html><meta charset="utf-8"><title>${escapar(doc.nome)}</title>
       <style>body{font:11pt Menlo,monospace}pre{white-space:pre-wrap}</style>
-      <pre>// Arquivo com um algoritmo: ${escapar(doc.caminho ?? doc.nome)}\n// Data de impressÃ£o: ${new Date().toLocaleString('pt-BR')}\n\n${escapar(editor.texto())}</pre>`
+      <pre>// Arquivo com um algoritmo: ${escapar(doc.caminho ?? doc.nome)}\n// Data de impressão: ${new Date().toLocaleString('pt-BR')}\n\n${escapar(editor.texto())}</pre>`
     return api.imprimir({ html })
   },
   sair: async () => {
@@ -191,13 +194,18 @@ const comandos = {
   aleatorio: () => alternarAleatorio(),
   perfil: () => execucao.mostrarPerfil(),
   pilha: () => execucao.mostrarPilha(),
-  'exportar-pascal': () => api.mensagem({ type: 'info', title: 'MisterALG', message: 'A ser implementado em futuras versÃµes.' }),
+  'exportar-pascal': () => api.mensagem({ type: 'info', title: 'MisterALG', message: 'A ser implementado em futuras versões.' }),
   configuracoes: async () => {
-    const novas = await dialogos.configuracoes(prefs)
+    const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema })
     if (novas) {
       prefs = await api.prefs.gravar(novas)
       editor.aplicarPrefs(prefs)
     }
+    aplicarTema(prefs.tema)
+  },
+  tema: async (id) => {
+    aplicarTema(id)
+    prefs = await api.prefs.gravar({ tema: temaPorId(id).id })
   },
   calculadora: () => dialogos.calculadora(),
   calendario: () => dialogos.calendario(),
@@ -208,7 +216,7 @@ const comandos = {
   termos: () => dialogos.termos(TERMOS),
 }
 
-// Com um diÃ¡logo aberto sÃ³ valem os comandos de ediÃ§Ã£o de texto.
+// Com um diálogo aberto só valem os comandos de edição de texto.
 const PERMITIDOS_COM_DIALOGO = new Set(['desfazer', 'refazer', 'cortar', 'copiar', 'colar', 'sair'])
 
 function rodar(id, dados) {
@@ -221,42 +229,42 @@ api.menu.aoComando(rodar)
 // ---- barra de ferramentas -----------------------------------------------------------
 
 const BARRA = [
-  ['novo', 'novo', 'BotÃ£o Novo (âŒ˜N)'],
-  ['abrir', 'abrir', 'BotÃ£o Abrir (âŒ˜O)'],
-  ['salvar', 'salvar', 'BotÃ£o Salvar (âŒ˜S)'],
+  ['novo', 'novo', 'Botão Novo (⌘N)'],
+  ['abrir', 'abrir', 'Botão Abrir (⌘O)'],
+  ['salvar', 'salvar', 'Botão Salvar (⌘S)'],
   '|',
-  ['executar', 'executar', 'BotÃ£o Executar (F9)'],
-  ['passo', 'passo', 'BotÃ£o Passo a Passo (F8)'],
+  ['executar', 'executar', 'Botão Executar (F9)'],
+  ['passo', 'passo', 'Botão Passo a Passo (F8)'],
   ['timer', 'timer', 'Executar com Timer (Tempo) (Shift+F9)'],
   'intervalo',
   '|',
-  ['parar', 'parar', 'BotÃ£o Parar (Ctrl+F2)'],
-  ['breakpoint', 'breakpoint', 'BotÃ£o Liga/desliga breakpoint (F5)'],
-  ['limpar-breakpoints', 'limparBreakpoints', 'BotÃ£o Desmarca todos os breakpoints (Ctrl+F5)'],
-  ['restaurar', 'restaurar', 'BotÃ£o Restaura a tela inicial do MisterALG'],
-  ['cortar', 'cortar', 'BotÃ£o Cortar (âŒ˜X)'],
-  ['copiar', 'copiar', 'BotÃ£o Copiar (âŒ˜C)'],
-  ['colar', 'colar', 'BotÃ£o Colar (âŒ˜V)'],
+  ['parar', 'parar', 'Botão Parar (Ctrl+F2)'],
+  ['breakpoint', 'breakpoint', 'Botão Liga/desliga breakpoint (F5)'],
+  ['limpar-breakpoints', 'limparBreakpoints', 'Botão Desmarca todos os breakpoints (Ctrl+F5)'],
+  ['restaurar', 'restaurar', 'Botão Restaura a tela inicial do MisterALG'],
+  ['cortar', 'cortar', 'Botão Cortar (⌘X)'],
+  ['copiar', 'copiar', 'Botão Copiar (⌘C)'],
+  ['colar', 'colar', 'Botão Colar (⌘V)'],
   '|',
-  ['gravar-bloco', 'gravarBloco', 'BotÃ£o Grava o bloco de texto selecionado (Ctrl+W)'],
-  ['inserir-bloco', 'inserirBloco', 'BotÃ£o Insere um bloco de algoritmo na posiÃ§Ã£o do cursor (Ctrl+R)'],
-  ['desfazer', 'desfazer', 'BotÃ£o Desfazer (âŒ˜Z)'],
-  ['refazer', 'refazer', 'BotÃ£o Refazer (Shift+âŒ˜Z)'],
+  ['gravar-bloco', 'gravarBloco', 'Botão Grava o bloco de texto selecionado (Ctrl+W)'],
+  ['inserir-bloco', 'inserirBloco', 'Botão Insere um bloco de algoritmo na posição do cursor (Ctrl+R)'],
+  ['desfazer', 'desfazer', 'Botão Desfazer (⌘Z)'],
+  ['refazer', 'refazer', 'Botão Refazer (Shift+⌘Z)'],
   '|',
-  ['localizar', 'localizar', 'BotÃ£o Localizar (âŒ˜F ou Ctrl+L)'],
-  ['localizar-proximo', 'proximo', 'BotÃ£o Localizar o prÃ³ximo (F3)'],
-  ['localizar-anterior', 'anterior', 'BotÃ£o Localizar o anterior (F4)'],
-  ['substituir', 'substituir', 'BotÃ£o Substituir (âŒ¥âŒ˜F ou Ctrl+U)'],
-  ['indentar', 'indentar', 'BotÃ£o Corrigir indentaÃ§Ã£o (Ctrl+G)'],
-  ['imprimir', 'imprimir', 'BotÃ£o Imprimir (âŒ˜P)'],
-  ['perfil', 'perfil', 'BotÃ£o Perfil (F7)'],
-  ['aleatorio', 'aleatorio', 'BotÃ£o Ativa/Desativa AleatÃ³rio'],
+  ['localizar', 'localizar', 'Botão Localizar (⌘F ou Ctrl+L)'],
+  ['localizar-proximo', 'proximo', 'Botão Localizar o próximo (F3)'],
+  ['localizar-anterior', 'anterior', 'Botão Localizar o anterior (F4)'],
+  ['substituir', 'substituir', 'Botão Substituir (⌥⌘F ou Ctrl+U)'],
+  ['indentar', 'indentar', 'Botão Corrigir indentação (Ctrl+G)'],
+  ['imprimir', 'imprimir', 'Botão Imprimir (⌘P)'],
+  ['perfil', 'perfil', 'Botão Perfil (F7)'],
+  ['aleatorio', 'aleatorio', 'Botão Ativa/Desativa Aleatório'],
   'faixa',
   '|',
-  ['pilha', 'pilha', 'BotÃ£o Mostra a pilha de ativaÃ§Ã£o dos procedimentos e funÃ§Ãµes (Ctrl+F3)'],
-  ['calculadora', 'calculadora', 'Mostra uma calculadora prÃ¡tica'],
-  ['calendario', 'calendario', 'Mostra um calendÃ¡rio do ano atual'],
-  ['ajuda-tela', 'ajuda', 'BotÃ£o Ajuda on-line (F1)'],
+  ['pilha', 'pilha', 'Botão Mostra a pilha de ativação dos procedimentos e funções (Ctrl+F3)'],
+  ['calculadora', 'calculadora', 'Mostra uma calculadora prática'],
+  ['calendario', 'calendario', 'Mostra um calendário do ano atual'],
+  ['ajuda-tela', 'ajuda', 'Botão Ajuda on-line (F1)'],
   ['sair', 'sair', 'Sair do MisterALG'],
 ]
 
@@ -266,10 +274,10 @@ const ehMac = api.plataforma === 'darwin'
 function dicaDaPlataforma(dica) {
   if (ehMac) return dica
   return dica
-    .replace(' (âŒ˜F ou Ctrl+L)', ' (Ctrl+L)')
-    .replace(' (âŒ¥âŒ˜F ou Ctrl+U)', ' (Ctrl+U)')
-    .replace('âŒ˜O', 'Ctrl+A')
-    .replace('âŒ˜', 'Ctrl+')
+    .replace(' (⌘F ou Ctrl+L)', ' (Ctrl+L)')
+    .replace(' (⌥⌘F ou Ctrl+U)', ' (Ctrl+U)')
+    .replace('⌘O', 'Ctrl+A')
+    .replace('⌘', 'Ctrl+')
 }
 
 function montarBarra() {
@@ -310,9 +318,9 @@ function montarBarra() {
         span.append(lab, input)
         barra.append(span)
       }
-      campo('De:', 'de', 'Digita o valor aleatÃ³rio inicial')
-      campo('AtÃ©:', 'ate', 'Digita o valor aleatÃ³rio final')
-      campo('Decimais:', 'decimais', 'Digita as casas decimais do valor aleatÃ³rio', [0, 1, 2, 3, 4, 5])
+      campo('De:', 'de', 'Digita o valor aleatório inicial')
+      campo('Até:', 'ate', 'Digita o valor aleatório final')
+      campo('Decimais:', 'decimais', 'Digita as casas decimais do valor aleatório', [0, 1, 2, 3, 4, 5])
     } else {
       const [id, icone] = item
       const dica = dicaDaPlataforma(item[2])
@@ -339,7 +347,7 @@ function alternarAleatorio() {
   api.menu.estado({ aleatorio: aleatorioLigado })
 }
 
-// ---- atalhos originais do VisuAlg que nÃ£o estÃ£o no menu do Mac ----------------------------
+// ---- atalhos originais do VisuAlg que não estão no menu do Mac ----------------------------
 
 document.addEventListener('keydown', (e) => {
   const comando = (() => {
@@ -359,19 +367,19 @@ document.addEventListener('keydown', (e) => {
 
 $('#console-fechar').addEventListener('click', () => (execucao.emExecucao() ? execucao.parar() : execucao.fecharConsole()))
 
-// ---- recuperaÃ§Ã£o apÃ³s falha (visualg3.tmp) ------------------------------------------------
+// ---- recuperação após falha (visualg3.tmp) ------------------------------------------------
 
 setInterval(() => {
   if (doc.modificado) api.recuperacao.gravar({ texto: editor.texto(), caminho: doc.caminho, nome: doc.nome, codificacao: doc.codificacao })
 }, 5000)
 
-// ---- inÃ­cio ----------------------------------------------------------------------------------
+// ---- início ----------------------------------------------------------------------------------
 
 montarBarra()
 editor.aplicarPrefs(prefs)
 
-// No Windows instalado, os termos jÃ¡ foram aceitos no instalador. No Mac, no
-// Linux e na versÃ£o portÃ¡til, o aceite acontece aqui, na primeira abertura.
+// No Windows instalado, os termos já foram aceitos no instalador. No Mac, no
+// Linux e na versão portátil, o aceite acontece aqui, na primeira abertura.
 const precisaAceiteNoApp = ehMac || api.plataforma === 'linux' || api.portatil
 if (precisaAceiteNoApp && prefs.termosAceitos !== VERSAO_TERMOS) {
   if (await dialogos.termos(TERMOS, true)) {
@@ -390,8 +398,8 @@ if (pendente) {
   const r = await api.mensagem({
     type: 'question',
     title: 'Falha!',
-    message: 'O MisterALG nÃ£o foi terminado corretamente da Ãºltima vez que foi executado. Deseja recuperar o algoritmo que estava sendo editado?',
-    buttons: ['Sim', 'NÃ£o'],
+    message: 'O MisterALG não foi terminado corretamente da última vez que foi executado. Deseja recuperar o algoritmo que estava sendo editado?',
+    buttons: ['Sim', 'Não'],
     defaultId: 0,
     cancelId: 1,
   })
@@ -406,5 +414,5 @@ if (pendente) {
   carregar({ texto: esqueleto(prefs) })
 }
 
-// Para testes automatizados e depuraÃ§Ã£o no DevTools.
+// Para testes automatizados e depuração no DevTools.
 window.__misteralg = { editor, execucao, doc, comandos }

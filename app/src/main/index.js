@@ -1,4 +1,5 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from 'electron'
+import { temaPorId } from '../compartilhado/temas.js'
 import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
 import { criarJanelaPrincipal } from './janelas.js'
 import { montarMenu } from './menu.js'
@@ -37,10 +38,20 @@ let arquivoParaAbrir = null // arquivo .alg aberto pelo Finder antes da janela e
 const atualizarMenu = () => montarMenu(janela, lerPreferencias(), estadoMenu)
 const documentos = () => app.getPath('documents')
 
+// Temas escuros deixam escuros também a barra de título, os menus e as caixas
+// de diálogo nativas; os claros seguem o sistema, como antes.
+function aplicarTemaNativo() {
+  const tema = temaPorId(lerPreferencias().tema)
+  nativeTheme.themeSource = tema.escuro ? 'dark' : 'system'
+  janela?.setBackgroundColor(tema.fundo)
+  return tema
+}
+
 function registrarIpc() {
   ipcMain.handle('prefs:ler', () => lerPreferencias())
   ipcMain.handle('prefs:gravar', (_e, prefs) => {
     const r = gravarPreferencias(prefs)
+    if ('tema' in prefs) aplicarTemaNativo()
     atualizarMenu()
     return r
   })
@@ -175,7 +186,7 @@ app.on('open-file', (evento, caminho) => {
 
 app.whenReady().then(() => {
   registrarIpc()
-  janela = criarJanelaPrincipal()
+  janela = criarJanelaPrincipal(aplicarTemaNativo().fundo)
   atualizarMenu()
 
   // Fechar a janela pergunta ao renderer se há alterações não salvas.
@@ -192,7 +203,7 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       podeFechar = false
-      janela = criarJanelaPrincipal()
+      janela = criarJanelaPrincipal(aplicarTemaNativo().fundo)
       atualizarMenu()
     }
   })

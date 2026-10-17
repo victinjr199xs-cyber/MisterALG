@@ -13,6 +13,7 @@ export const PADRAO = {
   tamanho: 13,
   tabulacao: 3,
   numerarLinhas: true,
+  tema: 'classico', // ids em ../compartilhado/temas.js
   mru: [],
   disciplina: '[Linguagem e Lógica de Programação]',
   professor: '',
