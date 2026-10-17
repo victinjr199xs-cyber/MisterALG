@@ -1,4 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from 'electron'
+import { writeFileSync } from 'node:fs'
 import { temaPorId } from '../compartilhado/temas.js'
 import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
 import { criarJanelaPrincipal } from './janelas.js'
@@ -122,6 +123,18 @@ function registrarIpc() {
     })
     if (r.canceled || !r.filePaths[0]) return null
     return (await lerArquivo(r.filePaths[0])).texto
+  })
+
+  // Exportar para Pascal: grava o .pas gerado no renderer, em UTF-8.
+  ipcMain.handle('exportar:salvar', async (_e, { texto, nome }) => {
+    const r = await dialog.showSaveDialog(janela, {
+      title: 'Exportar para a linguagem Pascal',
+      filters: [{ name: 'Programas Pascal', extensions: ['pas'] }, { name: 'Todos os arquivos', extensions: ['*'] }],
+      defaultPath: `${documentos()}/${nome || 'semnome'}.pas`,
+    })
+    if (r.canceled || !r.filePath) return null
+    writeFileSync(r.filePath, texto, 'utf8')
+    return r.filePath
   })
 
   ipcMain.handle('dialogo:mensagem', async (_e, opcoes) => {

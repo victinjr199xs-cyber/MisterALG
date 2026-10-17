@@ -7,19 +7,83 @@ import { criarEditor } from './editor/editor.js'
 import { esqueleto } from './editor/modelos.js'
 import { INTERVALOS, criarExecucao } from './execucao.js'
 import { ICONES } from './icones.js'
+import { DICAS } from './dicas.js'
+import { gerarPascal } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
-const VERSAO = '1.5.1'
+const VERSAO = '1.6.0'
 // Termos de uso: o mesmo texto que o instalador do Windows exibe (app/build/termos.txt).
 import TEXTO_TERMOS from '../../build/termos.txt?raw'
 const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')
 const VERSAO_TERMOS = '1.4'
 
 let prefs = await api.prefs.ler()
-const aplicarTema = (id) => { document.documentElement.dataset.tema = temaPorId(id).id }
+/** Tema + cores de código que o usuário trocou para esse tema (Configurações → Cores). */
+function aplicarTema(id, cores = prefs.coresSintaxe?.[temaPorId(id).id] ?? {}) {
+  const raiz = document.documentElement
+  raiz.dataset.tema = temaPorId(id).id
+  for (const [cat] of dialogos.CATEGORIAS_SINTAXE) {
+    if (cores[cat]) raiz.style.setProperty(`--sx-${cat}`, cores[cat])
+    else raiz.style.removeProperty(`--sx-${cat}`)
+  }
+}
 aplicarTema(prefs.tema)
+
+// ---- botão de temas (menu suspenso com amostras) ---------------------------------------
+
+const menuTemas = Object.assign(document.createElement('div'), { className: 'menu-temas', hidden: true })
+menuTemas.setAttribute('role', 'menu')
+document.body.append(menuTemas)
+
+function fecharMenuTemas() {
+  menuTemas.hidden = true
+  $('[data-id="temas"]')?.setAttribute('aria-expanded', 'false')
+}
+
+function abrirMenuTemas() {
+  if (!menuTemas.hidden) return fecharMenuTemas()
+  const botao = $('[data-id="temas"]')
+  const item = (rotulo, aoClicar, extra = {}) => {
+    const b = Object.assign(document.createElement('button'), { type: 'button', ...extra })
+    b.setAttribute('role', extra.marcado === undefined ? 'menuitem' : 'menuitemradio')
+    if (extra.marcado !== undefined) b.setAttribute('aria-checked', String(extra.marcado))
+    b.append(...rotulo)
+    b.addEventListener('click', () => { fecharMenuTemas(); aoClicar() })
+    return b
+  }
+  const amostra = (cores) => {
+    const s = Object.assign(document.createElement('span'), { className: 'amostra-tema' })
+    for (const c of cores) s.append(Object.assign(document.createElement('i'), { style: `background:${c}` }))
+    return s
+  }
+  menuTemas.replaceChildren(
+    ...TEMAS.map((t) => item([amostra(t.amostra), t.nome], () => comandos.tema(t.id), { marcado: t.id === temaPorId(prefs.tema).id })),
+    document.createElement('hr'),
+    item(['Personalizar as cores do código…'], () => comandos['configurar-cores']()),
+  )
+  const r = botao.getBoundingClientRect()
+  menuTemas.hidden = false
+  menuTemas.style.top = `${r.bottom + 2}px`
+  menuTemas.style.left = `${Math.max(4, Math.min(r.left, innerWidth - menuTemas.offsetWidth - 4))}px`
+  botao.setAttribute('aria-expanded', 'true')
+  menuTemas.querySelector('[aria-checked="true"]')?.focus()
+}
+
+document.addEventListener('mousedown', (e) => {
+  if (!menuTemas.hidden && !menuTemas.contains(e.target) && !e.target.closest('[data-id="temas"]')) fecharMenuTemas()
+})
+menuTemas.addEventListener('keydown', (e) => {
+  const itens = [...menuTemas.querySelectorAll('button')]
+  const i = itens.indexOf(document.activeElement)
+  if (e.key === 'Escape') { fecharMenuTemas(); $('[data-id="temas"]').focus() }
+  else if (e.key === 'ArrowDown') itens[(i + 1) % itens.length].focus()
+  else if (e.key === 'ArrowUp') itens[(i - 1 + itens.length) % itens.length].focus()
+  else return
+  e.preventDefault()
+  e.stopPropagation()
+})
 const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modificado: false }
 let aleatorioLigado = false
 
@@ -124,6 +188,7 @@ execucao = criarExecucao({
     aleatorio: aleatorioLigado
       ? { min: Number(prefs.aleatorio.de) || 0, max: Number(prefs.aleatorio.ate) || 100, casas: Number(prefs.aleatorio.decimais) || undefined }
       : null,
+    listas: prefs.listas,
     arquivos: {
       ler: (nome) => api.dados.ler(nome, pastaAtual()),
       anexar: (nome, linha) => api.dados.anexar(nome, pastaAtual(), linha),
@@ -194,19 +259,35 @@ const comandos = {
   aleatorio: () => alternarAleatorio(),
   perfil: () => execucao.mostrarPerfil(),
   pilha: () => execucao.mostrarPilha(),
-  'exportar-pascal': () => api.mensagem({ type: 'info', title: 'MisterALG', message: 'A ser implementado em futuras versões.' }),
-  configuracoes: async () => {
-    const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema })
+  'exportar-pascal': async () => {
+    let codigo
+    try {
+      codigo = gerarPascal(editor.texto()).codigo
+    } catch (e) {
+      if (!e.codigo) throw e
+      editor.realcarErro(e.linha)
+      return dialogos.aviso(e, editor.textoDaLinha(e.linha))
+    }
+    if (await dialogos.codigoPascal(codigo) === 'salvar') {
+      const caminho = await api.exportar({ texto: codigo, nome: doc.nome })
+      if (caminho) status.mensagem(` MENSAGEM: Programa Pascal gravado em ${caminho}`)
+    }
+  },
+  configuracoes: async (aba) => {
+    const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema, aba })
     if (novas) {
       prefs = await api.prefs.gravar(novas)
       editor.aplicarPrefs(prefs)
     }
     aplicarTema(prefs.tema)
   },
+  'configurar-cores': () => comandos.configuracoes('cores'),
+  temas: () => abrirMenuTemas(),
   tema: async (id) => {
-    aplicarTema(id)
     prefs = await api.prefs.gravar({ tema: temaPorId(id).id })
+    aplicarTema(id)
   },
+  dica: () => mostrarDica(),
   calculadora: () => dialogos.calculadora(),
   calendario: () => dialogos.calendario(),
   'ajuda-tela': () => abrirAjuda('tela'),
@@ -264,6 +345,7 @@ const BARRA = [
   ['pilha', 'pilha', 'Botão Mostra a pilha de ativação dos procedimentos e funções (Ctrl+F3)'],
   ['calculadora', 'calculadora', 'Mostra uma calculadora prática'],
   ['calendario', 'calendario', 'Mostra um calendário do ano atual'],
+  ['temas', 'temas', 'Botão Temas: escolhe as cores da tela (claras ou escuras)'],
   ['ajuda-tela', 'ajuda', 'Botão Ajuda on-line (F1)'],
   ['sair', 'sair', 'Sair do MisterALG'],
 ]
@@ -413,6 +495,15 @@ if (pendente) {
 } else {
   carregar({ texto: esqueleto(prefs) })
 }
+
+async function mostrarDica() {
+  const r = await dialogos.dicaDoDia(DICAS, prefs.dicaAtual ?? 0, prefs.mostrarDicas !== false)
+  prefs = await api.prefs.gravar({ dicaAtual: r.indice, mostrarDicas: r.mostrar })
+  editor.focar()
+}
+
+// Dica do dia ao abrir (como o VisuAlg). Os testes automatizados não a veem.
+if (prefs.mostrarDicas !== false && !api.automatizado && !recuperado?.texto) void mostrarDica()
 
 // Para testes automatizados e depuração no DevTools.
 window.__misteralg = { editor, execucao, doc, comandos }

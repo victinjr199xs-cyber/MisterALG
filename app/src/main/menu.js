@@ -107,7 +107,7 @@ export function montarMenu(janela, prefs, estado = {}) {
     {
       label: '&Exportar para',
       submenu: [
-        item('a Linguagem &Pascal', 'exportar-pascal'),
+        item('a Linguagem &Pascal…', 'exportar-pascal'),
         item('a Linguagem &C / C++', 'exportar-c', undefined, { enabled: false }),
         item('a Linguagem &Java', 'exportar-java', undefined, { enabled: false }),
       ],
@@ -123,7 +123,7 @@ export function montarMenu(janela, prefs, estado = {}) {
             type: 'radio',
             checked: tema.id === temaPorId(prefs.tema).id,
             click: enviar('tema', tema.id),
-          })),
+          })).concat([{ type: 'separator' }, item('Personalizar as cores do código…', 'configurar-cores')]),
         },
         { type: 'separator' },
         item('&A Calculadora', 'calculadora'),
@@ -138,6 +138,7 @@ export function montarMenu(janela, prefs, estado = {}) {
         item('A &Linguagem (Portugol)', 'ajuda-linguagem', 'Ctrl+H'),
         item('&Referência da Linguagem', 'ajuda-referencia', 'Ctrl+Alt+H'),
         { type: 'separator' },
+        item('&Dica do dia', 'dica'),
         item('&Termos de uso e privacidade', 'termos'),
         item('&Sobre os autores do Software', 'sobre', 'Ctrl+F1'),
       ],

@@ -100,7 +100,10 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 
 ### ⌨️ Escrever código
 - Realce de sintaxe nas **cores do VisuAlg**
-- **6 temas de cores**, com 4 escuros para programar à noite (Manutenção → Tema)
+- **6 temas de cores**, com 4 escuros para programar à noite (botão 🎨 da barra)
+- **Cores do código personalizáveis**, guardadas por tema
+- **Exportar para Pascal** (Free Pascal)
+- **Listas** para o comando `lista` e **dica do dia**
 - **Auto-digitação** (Ctrl+Espaço): as 72 abreviaturas do VisuAlg
 - **Sugestões** de comandos e funções (Ctrl+J)
 - **Corrigir indentação** (Ctrl+G)
@@ -155,7 +158,9 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 
 ### 🎨 Temas
 
-Cansou do fundo claro? Escolha o tema em **Manutenção → Tema (cores)** ou em **Configurações**, que mostra a cor na hora. O MisterALG guarda a escolha. Nos temas escuros, a barra de título e os menus também ficam escuros.
+Cansou do fundo claro? Clique no botão da **paleta** 🎨 na barra (ou em **Manutenção → Tema**) e escolha um tema. O MisterALG guarda a escolha. Nos temas escuros, a barra de título e os menus também ficam escuros. Em **Configurações → Cores** você muda a cor de cada tipo de palavra do código, e cada tema guarda as suas.
+
+<p align="center"><img src="docs/imagens/novidades/botao-temas.png" alt="Botão de temas com a amostra de cada tema" width="88%"></p>
 
 <table>
 <tr>
@@ -169,6 +174,19 @@ Cansou do fundo claro? Escolha o tema em **Manutenção → Tema (cores)** ou em
 <tr>
 <td width="50%"><img src="docs/imagens/temas/sepia.png" alt="Tema Sépia"><p align="center"><sub><b>Sépia</b>: claro, mas cor de papel em vez de branco</sub></p></td>
 <td width="50%"><img src="docs/imagens/temas/classico.png" alt="Tema Clássico"><p align="center"><sub><b>Clássico</b>: as cores originais do VisuAlg (padrão)</sub></p></td>
+</tr>
+</table>
+
+### 🧰 Mais ferramentas
+
+<table>
+<tr>
+<td width="50%"><img src="docs/imagens/novidades/exportar-pascal.png" alt="Exportar para Pascal"><p align="center"><sub><b>Exportar para → Pascal</b>: o algoritmo vira um programa Free Pascal</sub></p></td>
+<td width="50%"><img src="docs/imagens/novidades/cores.png" alt="Cores do código"><p align="center"><sub><b>Cores</b>: escolha a cor de cada tipo de palavra</sub></p></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/imagens/novidades/listas.png" alt="Listas"><p align="center"><sub><b>Listas</b>: com <code>aleatorio on</code>, <code>lista MESES</code> sorteia um mês no <code>leia</code></sub></p></td>
+<td width="50%"><img src="docs/imagens/novidades/dica-do-dia.png" alt="Dica do dia"><p align="center"><sub><b>Dica do dia</b> ao abrir (e no menu Ajuda)</sub></p></td>
 </tr>
 </table>
 

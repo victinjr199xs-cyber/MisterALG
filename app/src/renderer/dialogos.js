@@ -100,8 +100,29 @@ export function perfil(linhas, contagem) {
 
 // ---- Configurações ------------------------------------------------------------
 
-/** @param aoPrever(idTema) aplica o tema enquanto o usuário escolhe; quem chama desfaz se cancelar */
-export async function configuracoes(prefs, { temas = [], aoPrever } = {}) {
+/** Categorias do realce de sintaxe (variáveis --sx-* do CSS). */
+export const CATEGORIAS_SINTAXE = [
+  ['chave', 'Comandos (escreva, se, para...)'],
+  ['especial', 'Estrutura (algoritmo, var, inicio...)'],
+  ['tipo', 'Tipos (inteiro, real...)'],
+  ['variavel', 'Variáveis e nomes'],
+  ['literal', 'Textos e números'],
+  ['comentario', 'Comentários'],
+]
+
+/** Cor computada (#rrggbb) de uma variável CSS da página. */
+function corDaVariavel(nome) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim()
+  if (/^#[0-9a-f]{6}$/i.test(v)) return v.toLowerCase()
+  if (/^#[0-9a-f]{3}$/i.test(v)) return `#${[...v.slice(1)].map((c) => c + c).join('')}`.toLowerCase()
+  return '#000000'
+}
+
+/**
+ * @param aoPrever(idTema, cores) aplica tema e cores enquanto o usuário escolhe;
+ *        quem chama desfaz se cancelar
+ */
+export async function configuracoes(prefs, { temas = [], aoPrever, aba = 'editor' } = {}) {
   const fontes = [
     'Menlo', 'Monaco', 'SF Mono', 'Consolas', 'Lucida Console', 'DejaVu Sans Mono', 'Liberation Mono',
     'Ubuntu Mono', 'Noto Sans Mono', 'Courier New', 'Courier',
@@ -114,7 +135,92 @@ export async function configuracoes(prefs, { temas = [], aoPrever } = {}) {
   const professor = el('input', { value: prefs.professor })
   const entidade = el('input', { value: prefs.entidade })
   const tema = el('select', {}, ...temas.map((t) => el('option', { value: t.id, textContent: t.nome, selected: t.id === prefs.tema })))
-  tema.addEventListener('change', () => aoPrever?.(tema.value))
+
+  // ---- aba Cores: uma cor por categoria, guardada por tema ----
+  const coresSintaxe = structuredClone(prefs.coresSintaxe ?? {})
+  const seletores = new Map()
+  const atualizarSeletores = () => {
+    for (const [cat, input] of seletores) input.value = corDaVariavel(`--sx-${cat}`)
+  }
+  const prever = () => {
+    aoPrever?.(tema.value, coresSintaxe[tema.value] ?? {})
+    atualizarSeletores()
+  }
+  tema.addEventListener('change', prever)
+  const linhasCores = CATEGORIAS_SINTAXE.map(([cat, rotulo]) => {
+    const input = el('input', { type: 'color', id: `cor-${cat}` })
+    input.addEventListener('input', () => {
+      coresSintaxe[tema.value] = { ...coresSintaxe[tema.value], [cat]: input.value }
+      aoPrever?.(tema.value, coresSintaxe[tema.value])
+    })
+    seletores.set(cat, input)
+    return el('div', { className: 'linha-cor' }, input, el('label', { htmlFor: input.id, textContent: rotulo }))
+  })
+  const restaurar = el('button', { type: 'button', className: 'acao', textContent: 'Restaurar as cores do tema' })
+  restaurar.addEventListener('click', () => {
+    delete coresSintaxe[tema.value]
+    prever()
+  })
+  const abaCores = el('div', { className: 'aba-conteudo', hidden: true },
+    el('p', { className: 'nota', textContent: 'Cores do código para o tema escolhido na aba Editor. Cada tema guarda as suas.' }),
+    ...linhasCores,
+    el('div', { className: 'linha-botoes' }, restaurar),
+  )
+
+  // ---- aba Listas (comando `lista`) ----
+  const listas = structuredClone(prefs.listas ?? [])
+  const lstNomes = el('select', { size: 8, className: 'lista-nomes' })
+  const itens = el('textarea', { rows: 9, className: 'lista-itens', spellcheck: false })
+  const novoNome = el('input', { placeholder: 'Digite o nome da nova lista' })
+  const indice = () => lstNomes.selectedIndex
+  const redesenharNomes = (sel = 0) => {
+    lstNomes.replaceChildren(...listas.map((l) => el('option', { textContent: `${l.nome} (${l.itens.length})` })))
+    lstNomes.selectedIndex = Math.min(sel, listas.length - 1)
+    itens.value = listas[indice()]?.itens.join('\n') ?? ''
+    itens.disabled = !listas.length
+  }
+  lstNomes.addEventListener('change', () => { itens.value = listas[indice()]?.itens.join('\n') ?? '' })
+  itens.addEventListener('input', () => {
+    const l = listas[indice()]
+    if (!l) return
+    l.itens = itens.value.split('\n').map((s) => s.trim()).filter(Boolean)
+    lstNomes.options[indice()].textContent = `${l.nome} (${l.itens.length})`
+  })
+  const btNova = el('button', { type: 'button', className: 'acao', textContent: 'Nova lista' })
+  btNova.addEventListener('click', () => {
+    const nome = novoNome.value.trim().toUpperCase()
+    if (!nome || listas.some((l) => l.nome === nome)) return novoNome.focus()
+    listas.push({ nome, itens: [] })
+    novoNome.value = ''
+    redesenharNomes(listas.length - 1)
+    itens.focus()
+  })
+  const btExcluir = el('button', { type: 'button', className: 'acao', textContent: 'Excluir' })
+  const confirmacao = el('span', { className: 'nota' })
+  btExcluir.addEventListener('click', () => {
+    const l = listas[indice()]
+    if (!l) return
+    // "Deseja excluir a lista X?" do original: aqui o segundo clique confirma.
+    if (btExcluir.dataset.confirmar !== l.nome) {
+      btExcluir.dataset.confirmar = l.nome
+      confirmacao.textContent = `Clique de novo para excluir a lista ${l.nome}.`
+      return
+    }
+    delete btExcluir.dataset.confirmar
+    confirmacao.textContent = ''
+    listas.splice(indice(), 1)
+    redesenharNomes(indice())
+  })
+  redesenharNomes()
+  const abaListas = el('div', { className: 'aba-conteudo', hidden: true },
+    el('p', { className: 'nota', textContent: 'Com "aleatorio on", o comando "lista <nome>" faz o leia de caractere sortear um item da lista.' }),
+    el('div', { className: 'listas' },
+      el('div', {}, el('label', { textContent: 'Listas:' }), lstNomes),
+      el('div', {}, el('label', { textContent: 'Itens (um por linha):' }), itens),
+    ),
+    el('div', { className: 'linha-botoes' }, novoNome, btNova, btExcluir),
+    confirmacao,
+  )
 
   const abaEditor = el('div', { className: 'aba-conteudo' },
     el('label', { textContent: 'Tema (cores da tela):' }), tema,
@@ -128,27 +234,32 @@ export async function configuracoes(prefs, { temas = [], aoPrever } = {}) {
     el('label', { textContent: 'Entidade (escola/faculdade):' }), entidade,
     el('p', { textContent: 'Esses dados entram no cabeçalho do "Novo" algoritmo e na abreviatura "#".' }),
   )
-  const btEditor = el('button', { type: 'button', textContent: 'Editor' })
-  const btPessoal = el('button', { type: 'button', textContent: 'Personalizar' })
-  const mostrar = (editor) => {
-    abaEditor.hidden = !editor
-    abaPessoal.hidden = editor
-    btEditor.setAttribute('aria-selected', String(editor))
-    btPessoal.setAttribute('aria-selected', String(!editor))
+  const ABAS = { editor: ['Editor', abaEditor], cores: ['Cores', abaCores], listas: ['Listas', abaListas], pessoal: ['Personalizar', abaPessoal] }
+  const botoesAba = Object.entries(ABAS).map(([id, [rotulo]]) => {
+    const b = el('button', { type: 'button', textContent: rotulo })
+    b.addEventListener('click', () => mostrar(id))
+    return b
+  })
+  const mostrar = (escolhida) => {
+    Object.entries(ABAS).forEach(([id, [, painel]], i) => {
+      painel.hidden = id !== escolhida
+      botoesAba[i].setAttribute('aria-selected', String(id === escolhida))
+    })
+    if (escolhida === 'cores') atualizarSeletores()
   }
-  btEditor.addEventListener('click', () => mostrar(true))
-  btPessoal.addEventListener('click', () => mostrar(false))
-  mostrar(true)
+  mostrar(ABAS[aba] ? aba : 'editor')
 
   const r = await janela({
     titulo: 'Opções de configuração do ambiente',
-    corpo: el('div', {}, el('div', { className: 'abas' }, btEditor, btPessoal), abaEditor, abaPessoal),
+    corpo: el('div', {}, el('div', { className: 'abas' }, ...botoesAba), ...Object.values(ABAS).map(([, painel]) => painel)),
     botoes: [{ valor: 'cancelar', texto: 'Cancelar' }, { valor: 'ok', texto: 'OK', principal: true }],
-    largura: '520px',
+    largura: '560px',
   })
   if (r !== 'ok') return null
   return {
     tema: tema.value,
+    coresSintaxe,
+    listas,
     fonte: fonte.value,
     tamanho: Number(tamanho.value),
     tabulacao: Number(tab.value),
@@ -156,6 +267,59 @@ export async function configuracoes(prefs, { temas = [], aoPrever } = {}) {
     professor: professor.value,
     entidade: entidade.value,
   }
+}
+
+// ---- Exportar para Pascal ---------------------------------------------------------
+
+/** Mostra o programa Pascal gerado. Resolve com 'salvar', 'copiar' ou 'cancelar'. */
+export async function codigoPascal(codigo) {
+  const r = await janela({
+    titulo: 'Exportar para a linguagem Pascal',
+    corpo: el('div', {},
+      el('p', { className: 'nota', textContent: 'Programa gerado para o Free Pascal. Comandos sem equivalente aparecem como comentário.' }),
+      el('pre', { className: 'codigo-pascal', textContent: codigo }),
+    ),
+    botoes: [
+      { valor: 'copiar', texto: 'Copiar' },
+      { valor: 'cancelar', texto: 'Fechar' },
+      { valor: 'salvar', texto: 'Salvar .pas…', principal: true },
+    ],
+    largura: '760px',
+  })
+  if (r === 'copiar') await navigator.clipboard.writeText(codigo)
+  return r
+}
+
+// ---- Dica do dia ------------------------------------------------------------------
+
+/** Texto com **negrito** em nós DOM (sem innerHTML). */
+const comNegrito = (texto) => texto.split('**').map((parte, i) => (i % 2 ? el('b', { textContent: parte }) : parte))
+
+/** @returns {Promise<{indice:number, mostrar:boolean}>} a próxima dica a mostrar e a opção "mostrar ao abrir" */
+export async function dicaDoDia(dicas, indice, mostrarAoAbrir) {
+  let i = ((indice % dicas.length) + dicas.length) % dicas.length
+  const numero = el('span', { className: 'nota' })
+  const texto = el('p', { className: 'dica-texto' })
+  const desenhar = () => {
+    texto.replaceChildren(...comNegrito(dicas[i]))
+    numero.textContent = `Dica ${i + 1} de ${dicas.length}`
+  }
+  const anterior = el('button', { type: 'button', className: 'acao', textContent: '◀ Anterior' })
+  const proxima = el('button', { type: 'button', className: 'acao', textContent: 'Próxima ▶' })
+  anterior.addEventListener('click', () => { i = (i - 1 + dicas.length) % dicas.length; desenhar() })
+  proxima.addEventListener('click', () => { i = (i + 1) % dicas.length; desenhar() })
+  const caixa = el('input', { type: 'checkbox', id: 'mostrar-dicas', checked: mostrarAoAbrir })
+  desenhar()
+  await janela({
+    titulo: 'Dica do dia',
+    corpo: el('div', { className: 'dica' },
+      el('div', { className: 'dica-icone', textContent: '💡' }),
+      el('div', {}, texto, el('div', { className: 'linha-botoes' }, anterior, proxima, numero)),
+      el('label', { className: 'dica-opcao' }, caixa, ' Mostrar uma dica ao abrir o MisterALG'),
+    ),
+    largura: '520px',
+  })
+  return { indice: (i + 1) % dicas.length, mostrar: caixa.checked }
 }
 
 // ---- Calculadora e Calendário (Manutenção) --------------------------------------

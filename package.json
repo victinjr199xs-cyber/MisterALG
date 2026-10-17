@@ -1,6 +1,6 @@
 {
   "name": "misteralg",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "private": true,
   "description": "MisterALG: interpretador, editor e depurador de Portugol para Windows, macOS e Linux, inspirado no VisuAlg",
   "license": "MIT",
@@ -16,7 +16,8 @@
     "postinstall": "node node_modules/electron/install.js",
     "dev": "npm run dev -w misteralg-app",
     "build": "npm run build -w misteralg-app",
-    "test": "npm run test:interpreter && npm run test:busca && npm run test:compat",
+    "test": "npm run test:codificacao && npm run test:interpreter && npm run test:busca && npm run test:compat",
+    "test:codificacao": "node scripts/verificar-codificacao.mjs",
     "test:interpreter": "npm run test -w @misteralg/interpreter",
     "test:busca": "npm run test -w @misteralg/editor-busca",
     "test:compat": "node --test testes-compat/p0.test.mjs testes-compat/exemplos.test.mjs",

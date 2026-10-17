@@ -167,6 +167,7 @@ export function criarExecucao(op) {
       timerMs: config.timerMs,
       breakpoints: editor.breakpoints(),
       aleatorio: config.aleatorio,
+      listas: config.listas,
       arquivos: config.arquivos,
       perfil: true,
       onOutput: escrever,

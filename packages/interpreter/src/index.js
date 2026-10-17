@@ -6,6 +6,7 @@ import { analisar } from './parser.js'
 
 export { analisar } from './parser.js'
 export { tokenizar } from './lexer.js'
+export { gerarPascal } from './pascal.js'
 export { decodificar } from './codificacao.js'
 export { ErroVisualg, MENSAGENS, TEXTOS, CABECALHO_ERRO } from './erros.js'
 export { FUNCOES, PALAVRAS_CHAVE, REALCE, normalizar } from './palavras.js'
@@ -33,7 +34,7 @@ export class Sessao {
   /**
    * opcoes: entrada[], rng, relogio {agora()}, arquivos {ler, anexar},
    * modo 'continuo'|'passo'|'timer', timerMs, breakpoints (Iterable<linha>),
-   * maxLinhas, semAtrasos, e os eventos onOutput, onStep, onVariables, onStack,
+   * maxLinhas, semAtrasos, listas [{nome, itens[]}], e os eventos onOutput, onStep, onVariables, onStack,
    * onWaitInput, onColor, onProfile, onEnd.
    */
   constructor(fonte, opcoes = {}) {
@@ -69,6 +70,7 @@ export class Sessao {
         relogio: this.op.relogio,
         arquivos: this.op.arquivos,
         aleatorio: this.op.aleatorio,
+        listas: this.op.listas,
         io: {
           saida: (t) => { this.buffer += t },
           limpar: () => { this.buffer += '\f' },

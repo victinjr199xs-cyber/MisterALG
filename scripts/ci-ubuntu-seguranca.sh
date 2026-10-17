@@ -23,7 +23,7 @@ rodar() { # $1 = comando, $2 = porta, $3 = log
   xvfb-run -a --server-args="-screen 0 1366x860x24" bash -c "
     $1 --remote-debugging-port=$2 > $3 2>&1 &
     sleep 10
-    node scripts/cdp.mjs $2 scripts/fumaca-ide.mjs
+    node scripts/cdp.mjs $2 scripts/fumaca-ide.mjs && node scripts/cdp.mjs $2 scripts/fumaca-temas.mjs
     s=\$?
     kill %1 2>/dev/null || true
     exit \$s

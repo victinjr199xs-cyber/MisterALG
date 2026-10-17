@@ -14,6 +14,25 @@ export const PADRAO = {
   tabulacao: 3,
   numerarLinhas: true,
   tema: 'classico', // ids em ../compartilhado/temas.js
+  coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
+  mostrarDicas: true, // dica do dia ao abrir
+  dicaAtual: 0,
+  // Listas do comando `lista` (as 3 primeiras são as do listas.txt do VisuAlg).
+  listas: [
+    { nome: 'MESES', itens: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'] },
+    { nome: 'DIAS DA SEMANA', itens: ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'] },
+    {
+      nome: 'ESTADOS',
+      itens: [
+        'Acre', 'Alagoas', 'Amazonas', 'Amapá', 'Bahia', 'Ceará', 'Distrito Federal', 'Espírito Santo', 'Goiás',
+        'Maranhão', 'Mato Grosso', 'Mato Grosso do Sul', 'Minas Gerais', 'Pará', 'Paraíba', 'Paraná', 'Pernambuco',
+        'Piauí', 'Rio de Janeiro', 'Rondônia', 'Rio Grande do Norte', 'Roraima', 'Rio Grande do Sul', 'Santa Catarina',
+        'Sergipe', 'São Paulo', 'Tocantins',
+      ],
+    },
+    { nome: 'CORES', itens: ['Amarelo', 'Azul', 'Branco', 'Cinza', 'Laranja', 'Marrom', 'Preto', 'Rosa', 'Roxo', 'Verde', 'Vermelho'] },
+    { nome: 'NOMES', itens: ['Ana', 'Bruno', 'Carla', 'Daniel', 'Eduarda', 'Felipe', 'Gabriela', 'Heitor', 'Isabela', 'João', 'Larissa', 'Marcos', 'Natália', 'Pedro', 'Rafaela', 'Thiago'] },
+  ],
   mru: [],
   disciplina: '[Linguagem e Lógica de Programação]',
   professor: '',

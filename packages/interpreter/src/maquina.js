@@ -9,6 +9,7 @@
 import { erro, TEXTOS } from './erros.js'
 import { formatarSaida, textoGrade, textoValor } from './formatos.js'
 import { FUNCOES_EMBUTIDAS, textoParaNumero } from './stdlib.js'
+import { normalizar } from './palavras.js'
 
 export const INTERROMPA = Symbol('interrompa')
 
@@ -68,6 +69,10 @@ export class Maquina {
     this.aleatorio = opcoes.aleatorio
       ? { ligado: true, min: 0, max: 100, casas: undefined, ...opcoes.aleatorio }
       : { ligado: false, min: 0, max: 100, casas: undefined }
+    // Listas da aba "Listas" (listas.txt do original): `lista <nome>` faz o
+    // aleatório sortear os caracteres dessa lista em vez de 5 letras.
+    this.listas = new Map((opcoes.listas ?? []).map((l) => [normalizar(l.nome), l.itens]))
+    this.listaAtiva = null
     this.timerMs = null
     this.cronometro = null
     this.perfil = new Map()
@@ -619,8 +624,16 @@ export class Maquina {
       case 'perfil':
         this.pedirPerfil = true
         return undefined
-      case 'lista':
+      case 'lista': {
+        const nome = normalizar(c.nome.replace(/^"|"$/g, '').trim())
+        if (!nome) {
+          this.listaAtiva = null
+          return undefined
+        }
+        if (!this.listas.has(nome) || !this.listas.get(nome).length) throw erro(104, c.linha, c.nome)
+        this.listaAtiva = this.listas.get(nome)
         return undefined
+      }
       case 'mensagem': {
         const v = yield* this.avaliar(c.expr)
         this.io.saida(textoValor(v) + '\n')
@@ -659,6 +672,7 @@ export class Maquina {
   gerarAleatorio(tipo) {
     const { min, max, casas } = this.aleatorio
     if (tipo === 'C') {
+      if (this.listaAtiva) return this.listaAtiva[Math.floor(this.rng() * this.listaAtiva.length)]
       let s = ''
       for (let i = 0; i < 5; i += 1) s += String.fromCharCode(65 + Math.floor(this.rng() * 26))
       return s

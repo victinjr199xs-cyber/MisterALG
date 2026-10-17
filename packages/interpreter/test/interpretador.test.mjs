@@ -216,3 +216,13 @@ test('laço infinito pode ser parado entre fatias', async () => {
     setTimeout(() => s.parar(), 30)
   })
 })
+
+test('lista: o aleatório sorteia os itens da lista escolhida', async () => {
+  const listas = [{ nome: 'Meses', itens: ['Janeiro', 'Fevereiro'] }, { nome: 'Dias da semana', itens: ['Domingo'] }]
+  const fonte = prog('aleatorio on\nlista meses\nleia(m)\nlista "DIAS DA SEMANA"\nleia(d)\nescreval(m, "-", d)', 'm, d : caractere')
+  const r = await rodar(fonte, { listas, rng: () => 0.7 })
+  assert.equal(r.status, 'terminado')
+  assert.ok(r.saida.endsWith('Fevereiro-Domingo\n'), r.saida)
+  const sem = await rodar(prog('lista frutas'), { listas })
+  assert.equal(sem.erro.codigo, 104)
+})

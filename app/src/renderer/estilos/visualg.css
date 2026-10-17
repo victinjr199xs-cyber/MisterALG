@@ -76,7 +76,7 @@
   --linha-execucao: #0e639c; --texto-execucao: #ffffff; --linha-breakpoint: #8b1e1e; --texto-breakpoint: #ffffff;
   --linha-erro: #f14c4c; --linha-erro-fundo: #4b1818; --selecao-texto: #264f78; --mesma-palavra: #343a40;
   --cursor: #aeafad; --detalhe: #999999;
-  --sx-comentario: #6a9955; --sx-literal: #ce9178; --sx-chave: #569cd6; --sx-especial: #c586c0; --sx-tipo: #4ec9b0; --sx-variavel: #9cdcfe;
+  --sx-comentario: #6a9955; --sx-literal: #ce9178; --sx-chave: #569cd6; --sx-especial: #c586c0; --sx-tipo: #b5cea8; --sx-variavel: #9cdcfe;
   --dialogo-fundo: #252526; --dialogo-moldura: #454545; --dialogo-borda: #454545; --campo-borda: #3c3c3c;
   --titulo-inicio: #0e4f7c; --titulo-fim: #0e639c; --titulo-texto: #ffffff;
   --acao-inicio: #3a3d41; --acao-fim: #2d2d30; --aba: #2d2d30; --aba-ativa: #1e1e1e;
@@ -95,7 +95,7 @@
   --linha-execucao: #3d59a1; --texto-execucao: #ffffff; --linha-breakpoint: #8c2f3f; --texto-breakpoint: #ffffff;
   --linha-erro: #f7768e; --linha-erro-fundo: #4a2030; --selecao-texto: #33467c; --mesma-palavra: #2e3555;
   --cursor: #c0caf5; --detalhe: #737aa2;
-  --sx-comentario: #5f6996; --sx-literal: #ff9e64; --sx-chave: #7aa2f7; --sx-especial: #bb9af7; --sx-tipo: #2ac3de; --sx-variavel: #9ece6a;
+  --sx-comentario: #8089b8; --sx-literal: #ff9e64; --sx-chave: #7aa2f7; --sx-especial: #bb9af7; --sx-tipo: #2ac3de; --sx-variavel: #9ece6a;
   --dialogo-fundo: #1f2335; --dialogo-moldura: #3b4261; --dialogo-borda: #3b4261; --campo-borda: #3b4261;
   --titulo-inicio: #2a3a6e; --titulo-fim: #3d59a1; --titulo-texto: #ffffff;
   --acao-inicio: #2f3549; --acao-fim: #24283b; --aba: #24283b; --aba-ativa: #1a1b26;
@@ -114,7 +114,7 @@
   --linha-execucao: #6272a4; --texto-execucao: #ffffff; --linha-breakpoint: #b23a48; --texto-breakpoint: #ffffff;
   --linha-erro: #ff5555; --linha-erro-fundo: #4d2531; --selecao-texto: #44475a; --mesma-palavra: #424450;
   --cursor: #f8f8f2; --detalhe: #9aa5ce;
-  --sx-comentario: #6272a4; --sx-literal: #f1fa8c; --sx-chave: #ff79c6; --sx-especial: #bd93f9; --sx-tipo: #8be9fd; --sx-variavel: #f8f8f2;
+  --sx-comentario: #8a97c9; --sx-literal: #f1fa8c; --sx-chave: #ff79c6; --sx-especial: #bd93f9; --sx-tipo: #8be9fd; --sx-variavel: #f8f8f2;
   --dialogo-fundo: #282a36; --dialogo-moldura: #44475a; --dialogo-borda: #44475a; --campo-borda: #44475a;
   --titulo-inicio: #5b3fa0; --titulo-fim: #7c5bc9; --titulo-texto: #ffffff;
   --acao-inicio: #44475a; --acao-fim: #343746; --aba: #343746; --aba-ativa: #282a36;
@@ -153,7 +153,7 @@
   --linha-execucao: #2a5d8f; --texto-execucao: #ffffff; --linha-breakpoint: #a33a2a; --texto-breakpoint: #ffffff;
   --linha-erro: #c0392b; --linha-erro-fundo: #f3d0c4; --selecao-texto: #e6d6a8; --mesma-palavra: #eadfbf;
   --cursor: #3b3226; --detalhe: #7a6e58;
-  --sx-comentario: #6f7f4f; --sx-literal: #b5481a; --sx-chave: #1f5f9f; --sx-especial: #6c4fb0; --sx-tipo: #8a5a00; --sx-variavel: #3b3226;
+  --sx-comentario: #5c6b3e; --sx-literal: #b5481a; --sx-chave: #1f5f9f; --sx-especial: #6c4fb0; --sx-tipo: #1d7366; --sx-variavel: #3b3226;
   --dialogo-fundo: #f3ead3; --dialogo-moldura: #8a7d62; --dialogo-borda: #b3a68a; --campo-borda: #b3a68a;
   --titulo-inicio: #7a5530; --titulo-fim: #a0703f; --titulo-texto: #ffffff;
   --acao-inicio: #fffaf0; --acao-fim: #eadfc4; --aba: #e6dbbd; --aba-ativa: #fbf4e2;
@@ -536,6 +536,62 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
 .abas button { padding: 4px 12px; border: 1px solid var(--dialogo-borda); border-bottom: 0; border-radius: 4px 4px 0 0; background: var(--aba); }
 .abas button[aria-selected="true"] { background: var(--aba-ativa); font-weight: 700; }
 .aba-conteudo { padding: 10px; border: 1px solid var(--dialogo-borda); background: var(--aba-ativa); }
+
+.nota { color: var(--detalhe); font-size: 11px; }
+.codigo-pascal {
+  max-height: 60vh;
+  margin: 0;
+  padding: 8px 10px;
+  overflow: auto;
+  border: 1px solid var(--dialogo-borda);
+  background: var(--fundo-campo);
+  font: 12px/1.45 var(--fonte-codigo);
+  user-select: text;
+}
+.janela .linha-botoes { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.janela .linha-botoes input { flex: 1; min-width: 160px; width: auto; }
+.janela .linha-cor { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.janela .linha-cor label { display: inline; margin: 0; }
+.janela input[type="color"] { width: 40px; height: 24px; padding: 0 2px; border: 1px solid var(--campo-borda); background: var(--fundo-campo); }
+.listas { display: grid; grid-template-columns: 200px 1fr; gap: 10px; }
+.janela .lista-nomes { height: 168px; }
+.janela .lista-itens { height: 168px; resize: none; font-family: var(--fonte-codigo); color: var(--texto); }
+
+.dica { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; }
+.dica-icone { font-size: 30px; line-height: 1; }
+.dica-texto { min-height: 60px; margin: 0; font-size: 13px; line-height: 1.5; user-select: text; }
+.janela .dica-opcao { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; margin-top: 10px; }
+
+/* Botão de temas: menu suspenso com uma amostra de cada tema */
+.menu-temas {
+  position: fixed;
+  z-index: 20;
+  min-width: 230px;
+  padding: 4px;
+  border: 1px solid var(--dialogo-moldura);
+  border-radius: 5px;
+  background: var(--dialogo-fundo);
+  color: var(--texto);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+.menu-temas[hidden] { display: none; }
+.menu-temas button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  text-align: left;
+}
+.menu-temas button:hover, .menu-temas button:focus-visible { background: var(--botao-hover); outline: none; }
+.menu-temas button[aria-checked="true"] { font-weight: 700; }
+.menu-temas button[aria-checked="true"]::after { content: '✓'; margin-left: auto; }
+.menu-temas hr { margin: 4px 2px; border: 0; border-top: 1px solid var(--borda); }
+.amostra-tema { display: inline-flex; overflow: hidden; border: 1px solid var(--borda); border-radius: 3px; }
+.amostra-tema i { width: 9px; height: 16px; }
 
 .calculadora { display: grid; grid-template-columns: repeat(4, 52px); gap: 4px; }
 .calculadora output { grid-column: 1 / -1; padding: 6px; border: 1px solid var(--campo-borda); background: var(--fundo-campo); font: 700 18px var(--fonte-codigo); text-align: right; }

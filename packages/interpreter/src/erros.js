@@ -59,6 +59,7 @@ export const MENSAGENS = {
   101: "Procedimento ou função '%s' não foi encontrado.",
   102: "Número incorreto de argumentos para '%s'.",
   103: 'Excesso de chamadas aninhadas (recursão infinita?).',
+  104: 'Lista %s inexistente.', // "Lista " + " inexistente" estão no exe; o ponto final é nosso
 }
 
 export const CABECALHO_ERRO = 'VisuAlg3 encontrou o seguinte problema em seu algoritmo, na linha %d :'
