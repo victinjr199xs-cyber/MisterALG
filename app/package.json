@@ -1,9 +1,9 @@
 {
   "name": "misteralg-app",
   "productName": "MisterALG",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
-  "description": "MisterALG — interpretador e IDE de Portugol inspirado no VisuAlg 3.0.7",
+  "description": "MisterALG â€” interpretador e IDE de Portugol inspirado no VisuAlg 3.0.7",
   "author": {
     "name": "victinjr199xs-cyber",
     "email": "304906700+victinjr199xs-cyber@users.noreply.github.com"
