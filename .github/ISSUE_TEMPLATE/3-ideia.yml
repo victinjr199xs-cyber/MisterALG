@@ -1,0 +1,23 @@
+name: 💡 Sugerir uma ideia
+description: Um recurso novo ou uma melhoria
+labels: ["ideia"]
+body:
+  - type: textarea
+    id: ideia
+    attributes:
+      label: Qual é a ideia?
+    validations:
+      required: true
+  - type: textarea
+    id: porque
+    attributes:
+      label: Por que ela ajudaria?
+      description: Ex.: "em sala de aula, os alunos precisam…"
+  - type: dropdown
+    id: quem
+    attributes:
+      label: Você usa o MisterALG como
+      options:
+        - Estudante
+        - Professor(a)
+        - Outro

@@ -1,0 +1,45 @@
+name: 🐞 Relatar um problema
+description: Algo não funciona como deveria no MisterALG
+labels: ["problema"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por ajudar a melhorar o MisterALG! Quanto mais detalhes, mais rápido dá para corrigir.
+  - type: dropdown
+    id: sistema
+    attributes:
+      label: Sistema
+      options:
+        - Windows (instalador)
+        - Windows (portátil)
+        - macOS
+        - Linux (.deb)
+        - Linux (.rpm)
+        - Linux (AppImage / .tar.gz)
+    validations:
+      required: true
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do MisterALG
+      description: Aparece em Ajuda › Sobre os autores do Software.
+      placeholder: "1.4.0"
+  - type: textarea
+    id: oque
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o que você fez, o que esperava e o que aconteceu de fato.
+    validations:
+      required: true
+  - type: textarea
+    id: algoritmo
+    attributes:
+      label: Algoritmo que causa o problema (se houver)
+      description: Cole o código ou anexe o arquivo `.alg`.
+      render: text
+  - type: textarea
+    id: telas
+    attributes:
+      label: Prints ou mensagens de erro
+      description: Arraste imagens para cá.

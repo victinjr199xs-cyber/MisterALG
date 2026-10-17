@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Como o MisterALG funciona por dentro
+    url: https://github.com/victinjr199xs-cyber/MisterALG/blob/main/docs/COMO-FUNCIONA.md
+    about: Leia antes de mexer no código.
+  - name: ⬇️ Baixar a versão mais recente
+    url: https://github.com/victinjr199xs-cyber/MisterALG/releases/latest
+    about: Instaladores para Windows, macOS e Linux.

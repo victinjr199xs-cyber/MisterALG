@@ -1,0 +1,40 @@
+name: 🔄 Diferença em relação ao VisuAlg
+description: Um algoritmo se comporta diferente no MisterALG e no VisuAlg original
+labels: ["compatibilidade"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Compatibilidade com o VisuAlg é prioridade. Se você tem o VisuAlg no Windows, compare os dois — isso ajuda demais!
+  - type: textarea
+    id: algoritmo
+    attributes:
+      label: Algoritmo
+      description: O menor código possível que mostra a diferença.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: entradas
+    attributes:
+      label: Valores digitados nos `leia` (se houver)
+  - type: textarea
+    id: visualg
+    attributes:
+      label: O que o VisuAlg mostra
+      description: Saída do console ou mensagem de erro, exatamente como aparece (com espaços).
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: misteralg
+    attributes:
+      label: O que o MisterALG mostra
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: versao-visualg
+    attributes:
+      label: Versão do VisuAlg usada na comparação
+      placeholder: "3.0.7"

@@ -1,110 +1,158 @@
 <p align="center">
-  <img src="app/build/icon.png" width="128" alt="Ícone do MisterALG">
-</p>
-
-<h1 align="center">MisterALG</h1>
-
-<p align="center">
-  <b>Interpretador, editor e depurador de algoritmos em Portugol</b><br>
-  para <b>Windows</b>, <b>macOS</b> e <b>Linux</b> — inspirado no <b>VisuAlg</b>
+  <img src="docs/imagens/banner.png" alt="MisterALG — algoritmos em Portugol no Windows, macOS e Linux, inspirado no VisuAlg" width="100%">
 </p>
 
 <p align="center">
-  <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases/latest"><b>⬇️ Baixar a versão mais recente</b></a>
-  ·
-  <a href="docs/COMO-FUNCIONA.md">Como funciona por dentro</a>
-  ·
-  <a href="#créditos">Créditos</a>
+  <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases/latest"><img src="https://img.shields.io/github/v/release/victinjr199xs-cyber/MisterALG?label=vers%C3%A3o&color=0e2a5c&style=flat-square" alt="Versão"></a>
+  <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases"><img src="https://img.shields.io/github/downloads/victinjr199xs-cyber/MisterALG/total?label=downloads&color=2f5f9e&style=flat-square" alt="Downloads"></a>
+  <a href="https://github.com/victinjr199xs-cyber/MisterALG/actions/workflows/pacotes.yml"><img src="https://img.shields.io/github/actions/workflow/status/victinjr199xs-cyber/MisterALG/pacotes.yml?branch=main&label=build&style=flat-square" alt="Build"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/victinjr199xs-cyber/MisterALG?label=licen%C3%A7a&color=3d8b3d&style=flat-square" alt="Licença MIT"></a>
+  <img src="https://img.shields.io/badge/idioma-portugu%C3%AAs-ffd75e?style=flat-square" alt="Em português">
 </p>
 
 <p align="center">
-  <img src="docs/imagens/02-execucao.png" alt="MisterALG executando um algoritmo: editor à esquerda, variáveis e console à direita" width="900">
+  <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases/latest"><img src="https://img.shields.io/badge/Windows-baixar-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Baixar para Windows"></a>
+  <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases/latest"><img src="https://img.shields.io/badge/macOS-baixar-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Baixar para macOS"></a>
+  <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases/latest"><img src="https://img.shields.io/badge/Linux-baixar-E95420?style=for-the-badge&logo=linux&logoColor=white" alt="Baixar para Linux"></a>
+</p>
+
+<p align="center">
+  <a href="#-o-que-é">O que é</a> ·
+  <a href="#-baixar-e-instalar">Instalar</a> ·
+  <a href="#-recursos">Recursos</a> ·
+  <a href="#-veja-funcionando">Prints</a> ·
+  <a href="#-a-linguagem">Linguagem</a> ·
+  <a href="#-créditos">Créditos</a> ·
+  <a href="docs/COMO-FUNCIONA.md">Como funciona</a>
 </p>
 
 ---
 
-## O que é
+## 💡 O que é
 
 O **MisterALG** é um ambiente para aprender lógica de programação escrevendo algoritmos em
-**Portugol** (pseudocódigo em português). Ele foi **inspirado no [VisuAlg](#créditos)**, a ferramenta
-usada há anos em escolas e faculdades do Brasil, e segue a mesma linguagem, os mesmos menus, as
-mesmas teclas e até as mesmas mensagens de erro da versão 3.0.7.
+**Portugol** — pseudocódigo em português. Ele foi **inspirado no [VisuAlg](#-créditos)**, a
+ferramenta usada há anos em escolas e faculdades do Brasil, e fala a mesma língua: mesma linguagem,
+mesmos menus, mesmas teclas e até as mesmas mensagens de erro da versão 3.0.7.
 
-O VisuAlg roda só no Windows. O MisterALG nasceu para que quem usa **Mac** ou **Linux** também possa
-estudar com ele — e roda no Windows também.
+O VisuAlg roda só no Windows. O MisterALG nasceu para que quem tem **Mac** ou **Linux** também possa
+estudar com ele — e, claro, também roda no **Windows**.
 
-- ✅ Os arquivos `.alg` feitos no VisuAlg abrem e rodam no MisterALG — e os salvos no MisterALG
-  continuam abrindo no VisuAlg (mesma codificação, Windows-1252).
-- ✅ Funciona 100% offline, sem conta, sem propaganda e sem coletar dados.
-- ✅ Gratuito e de código aberto (Licença MIT).
+<table>
+<tr>
+<td align="center" width="25%">🖥️<br><b>3 sistemas</b><br><sub>Windows, macOS e Linux</sub></td>
+<td align="center" width="25%">🔁<br><b>Compatível</b><br><sub>abre e salva os <code>.alg</code> do VisuAlg</sub></td>
+<td align="center" width="25%">🔒<br><b>100% offline</b><br><sub>sem conta, sem anúncio, sem coleta de dados</sub></td>
+<td align="center" width="25%">🆓<br><b>Grátis e aberto</b><br><sub>licença MIT</sub></td>
+</tr>
+</table>
 
-## Baixar e instalar
+## ⬇️ Baixar e instalar
 
-Na página **[Releases](https://github.com/victinjr199xs-cyber/MisterALG/releases/latest)**:
+Todos os arquivos estão na página **[Releases](https://github.com/victinjr199xs-cyber/MisterALG/releases/latest)**:
 
-| Sistema | Arquivo | Observação |
-|---|---|---|
-| **Windows** | `MisterALG-x.y.z-instalador.exe` | Assistente em português: termos de uso, pasta, atalhos e associação dos `.alg` |
-| **Windows** | `MisterALG-x.y.z-portatil.exe` | Roda sem instalar (pendrive, PC da escola) |
-| **macOS** (Intel e Apple Silicon) | `MisterALG-x.y.z.dmg` | Arraste para Aplicativos |
-| **Ubuntu, Mint, Debian, Pop!_OS** | `misteralg_x.y.z_amd64.deb` | `sudo apt install ./misteralg_*.deb` |
-| **Fedora, openSUSE** | `misteralg-x.y.z.x86_64.rpm` | `sudo dnf install ./misteralg-*.rpm` |
-| **Outras distribuições Linux** | `MisterALG-x.y.z-x86_64.AppImage` / `.tar.gz` | Sem instalar |
+| | Sistema | Arquivo | Como instalar |
+|:-:|---|---|---|
+| <img src="https://cdn.simpleicons.org/windows/0078D4" width="18" alt=""> | **Windows** | `MisterALG-x.y.z-instalador.exe` | Assistente em português (termos, pasta, atalhos) |
+| <img src="https://cdn.simpleicons.org/windows/0078D4" width="18" alt=""> | **Windows** (sem instalar) | `MisterALG-x.y.z-portatil.exe` | É só abrir — ótimo para pendrive ou PC da escola |
+| <img src="https://cdn.simpleicons.org/apple/000000" width="18" alt=""> | **macOS** (Intel e Apple Silicon) | `MisterALG-x.y.z.dmg` | Arraste para **Aplicativos** |
+| <img src="https://cdn.simpleicons.org/ubuntu/E95420" width="18" alt=""> | **Ubuntu, Mint, Debian, Pop!_OS** | `misteralg_x.y.z_amd64.deb` | Duplo clique, ou `sudo apt install ./misteralg_*.deb` |
+| <img src="https://cdn.simpleicons.org/fedora/51A2DA" width="18" alt=""> | **Fedora, openSUSE** | `misteralg-x.y.z.x86_64.rpm` | `sudo dnf install ./misteralg-*.rpm` |
+| <img src="https://cdn.simpleicons.org/linux/333333" width="18" alt=""> | **Outras distribuições** | `.AppImage` ou `.tar.gz` | Sem instalar |
+
+> [!TIP]
+> **Primeira abertura:** o MisterALG não tem certificado digital pago, então o sistema pode avisar.
+> É normal — veja abaixo como liberar.
 
 <details>
-<summary><b>Avisos de segurança na primeira abertura (é normal)</b></summary>
+<summary><b>🛡️ Liberando o app na primeira abertura</b></summary>
 
-O MisterALG não tem certificado digital pago (Apple/Microsoft), então o sistema avisa na primeira vez:
+<br>
 
 - **Windows:** "O Windows protegeu o computador" → **Mais informações** → **Executar assim mesmo**.
-- **macOS 15 ou mais novo:** tente abrir, depois vá em **Ajustes do Sistema › Privacidade e
-  Segurança** e clique em **Abrir Mesmo Assim**. No macOS 14 ou anterior: botão direito no app ›
-  **Abrir**. Se aparecer "está danificado": `xattr -dr com.apple.quarantine /Applications/MisterALG.app`.
+- **macOS 15 ou mais novo:** tente abrir, depois **Ajustes do Sistema › Privacidade e Segurança** →
+  **Abrir Mesmo Assim**. No macOS 14 ou anterior: botão direito no app › **Abrir**.
+  Se aparecer "está danificado": `xattr -dr com.apple.quarantine /Applications/MisterALG.app`
 - **Ubuntu 23.10 ou mais novo:** use o **`.deb`**. Ele instala um perfil do AppArmor que permite ao
   MisterALG usar a caixa de proteção (sandbox) do Chromium — o app abre com toda a segurança ligada.
-  O AppImage não consegue instalar esse perfil; no Ubuntu recente, só rode-o com `--no-sandbox` se
-  não puder usar o `.deb`. Algumas distribuições precisam de `libfuse2` para AppImages.
-- **Teclas F (F8, F9…) no Mac:** podem precisar da tecla **fn**.
+  O AppImage não consegue instalar esse perfil; no Ubuntu recente, só use-o com `--no-sandbox` se não
+  puder instalar o `.deb`. Algumas distribuições precisam de `libfuse2` para AppImages.
+- **Mac:** as teclas F (F8, F9…) podem precisar da tecla **fn**.
+
 </details>
 
-## Como é
+## ✨ Recursos
 
-### Executar um algoritmo (F9)
-O programa roda no **console** (à direita, embaixo); o `leia` espera você digitar ali mesmo, e a
-grade mostra o valor de cada variável.
+<table>
+<tr>
+<td width="50%" valign="top">
 
-![Execução com leia, console e variáveis](docs/imagens/02-execucao.png)
+### ▶️ Executar e depurar
+- **F9** executa; **F8** vai linha a linha com a linha atual **em azul**
+- **Pontos de parada** (F5 ou clique na margem)
+- **Executar com tempo** (Shift+F9), com o intervalo na barra
+- **Pilha de ativação** (Ctrl+F3) — ótima para entender recursão
+- **Perfil** (F7): quantas vezes cada linha rodou
+- Grade de **variáveis globais e locais**, destacando o que mudou
 
-### Passo a passo (F8) e pontos de parada (F5)
-A linha em azul é a próxima a executar. As variáveis (globais e locais) se atualizam a cada passo.
+</td>
+<td width="50%" valign="top">
 
-![Animação do passo a passo ordenando um vetor](docs/imagens/passo-a-passo.gif)
+### ⌨️ Escrever código
+- Realce de sintaxe nas **cores do VisuAlg**
+- **Auto-digitação** (Ctrl+Espaço): as 72 abreviaturas do VisuAlg
+- **Sugestões** de comandos e funções (Ctrl+J)
+- **Corrigir indentação** (Ctrl+G)
+- **Localizar e substituir** com palavra inteira, acentos e regex
+- Gravar e inserir blocos, imprimir, arquivos recentes
 
-![Ponto de parada dentro de uma função recursiva](docs/imagens/03-depuracao.png)
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
-### Pilha de ativação (Ctrl+F3)
-Mostra as funções e procedimentos em andamento — ótimo para entender recursão.
+### 🖨️ Console e entrada de dados
+- Console no estilo **MS-DOS**, com `leia` digitado ali mesmo
+- Cores com `mudacor`, `limpatela`, `pausa`, `timer`, `cronometro`
+- **Gerar valores aleatórios** para os `leia` (botão da varinha)
+- Comando `arquivo` para ler dados de um arquivo texto
 
-![Pilha de ativação de um fatorial recursivo](docs/imagens/04-pilha-de-ativacao.png)
+</td>
+<td width="50%" valign="top">
 
-### Erros explicados
-Quando algo dá errado, o MisterALG marca a linha, mostra a mensagem (as mesmas do VisuAlg) e
-explica o que costuma causar o problema.
+### 🧯 Erros que ensinam
+- As **mesmas mensagens** do VisuAlg, com a linha marcada
+- Uma **explicação** do que costuma causar os erros mais comuns
+- **Recuperação** do algoritmo se o app fechar de repente
+- Nada é enviado para a internet — tudo fica no seu computador
 
-![Aviso de índice fora dos limites do vetor](docs/imagens/05-erro.png)
+</td>
+</tr>
+</table>
 
-### Ajudas de digitação
-**Ctrl+J** lista comandos e funções; **Ctrl+Espaço** expande abreviaturas (`see` → `se … entao …
-fimse`, `par` → `para … fimpara`, `!` → um algoritmo novo — são as 72 abreviaturas do VisuAlg);
-**Ctrl+G** corrige a indentação.
+## 📸 Veja funcionando
 
-![Lista de sugestões do Ctrl+J](docs/imagens/06-sugestoes-ctrl-j.png)
+<p align="center">
+  <img src="docs/imagens/passo-a-passo.gif" alt="Animação: passo a passo ordenando um vetor, com a linha azul andando e as variáveis mudando" width="88%">
+  <br><sub><b>Passo a passo (F8)</b> ordenando um vetor: a linha azul anda e as variáveis se atualizam.</sub>
+</p>
 
-### Localizar e substituir, perfil de execução
-![Diálogo Pesquisar o Texto](docs/imagens/07-localizar.png)
-![Perfil: quantas vezes cada linha executou](docs/imagens/08-perfil.png)
+<table>
+<tr>
+<td width="50%"><img src="docs/imagens/02-execucao.png" alt="Execução"><p align="center"><sub><b>Executar (F9)</b> — console com <code>leia</code> e grade de variáveis</sub></p></td>
+<td width="50%"><img src="docs/imagens/03-depuracao.png" alt="Depuração"><p align="center"><sub><b>Ponto de parada</b> dentro de uma função recursiva</sub></p></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/imagens/04-pilha-de-ativacao.png" alt="Pilha de ativação"><p align="center"><sub><b>Pilha de ativação</b> (Ctrl+F3)</sub></p></td>
+<td width="50%"><img src="docs/imagens/05-erro.png" alt="Aviso de erro"><p align="center"><sub><b>Erro explicado</b>, com a linha marcada</sub></p></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/imagens/06-sugestoes-ctrl-j.png" alt="Sugestões Ctrl+J"><p align="center"><sub><b>Sugestões</b> de comandos (Ctrl+J)</sub></p></td>
+<td width="50%"><img src="docs/imagens/08-perfil.png" alt="Perfil de execução"><p align="center"><sub><b>Perfil</b>: quantas vezes cada linha rodou (F7)</sub></p></td>
+</tr>
+</table>
 
-## A linguagem
+## 📝 A linguagem
 
 ```
 Algoritmo "media"
@@ -124,70 +172,86 @@ Inicio
 Fimalgoritmo
 ```
 
-Tudo o que o VisuAlg 3.0.7 tem: `inteiro`, `real`, `caractere`, `logico`; vetores e matrizes
-(`vetor[1..10,1..3] de real`); `const`; registros (`tipo … registro … fimregistro`); `se`,
-`escolha/caso` (com faixas `caso 1 ate 5`), `para`, `enquanto`, `repita`, `interrompa`;
-procedimentos e funções com parâmetros por valor e por referência (`var`) e recursão; `leia` e
-`escreva` com formatação (`x:8:2`); as 28 funções pré-definidas (`raizq`, `copia`, `randi`,
-`maiusc`…); e os comandos especiais (`aleatorio`, `timer`, `pausa`, `debug`, `eco`, `cronometro`,
-`limpatela`, `mudacor`, `arquivo`). Palavras com acento (`então`, `faça`, `até`) também valem.
+Tudo o que o VisuAlg 3.0.7 tem:
 
-A pasta **[`exemplos/`](exemplos/)** tem programas prontos para abrir e experimentar.
+| Tipos e dados | Controle | Subprogramas | Extras |
+|---|---|---|---|
+| `inteiro`, `real`, `caractere`, `logico` | `se … senao … fimse` | `procedimento` e `funcao` | 28 funções (`raizq`, `copia`, `randi`…) |
+| vetores e matrizes `vetor[1..3,1..3]` | `escolha / caso` (com faixas) | parâmetros por valor e `var` | `aleatorio`, `timer`, `pausa`, `debug` |
+| `const` e registros (`tipo … registro`) | `para`, `enquanto`, `repita` | recursão | `leia` / `escreva` com `x:8:2` |
 
-## Atalhos principais
+Palavras com acento (`então`, `faça`, `até`) e `:=` também valem. A pasta **[`exemplos/`](exemplos/)**
+tem programas prontos para abrir e experimentar.
 
-| Tecla | Ação | | Tecla | Ação |
-|---|---|---|---|---|
-| **F9** | Executar / continuar | | **Ctrl+L** (⌘F no Mac) | Localizar |
-| **F8** | Passo a passo | | **F3 / F4** | Próximo / anterior |
-| **Shift+F9** | Executar com tempo | | **Ctrl+U** (⌥⌘F no Mac) | Substituir |
-| **Ctrl+F2** | Parar | | **Ctrl+G** | Corrigir indentação |
-| **F5 / Ctrl+F5** | Ponto de parada / limpar todos | | **Ctrl+J** | Lista de comandos |
-| **F7** | Perfil | | **Ctrl+Espaço** | Auto-digitação |
-| **Ctrl+F3** | Pilha de ativação | | **Esc** | Termina o `leia` / fecha o console |
+## ⌨️ Atalhos
 
-No Windows e no Linux valem os atalhos originais do VisuAlg (Ctrl+A abre, Ctrl+T seleciona tudo,
-Ctrl+F sai); no Mac, os do sistema (⌘O, ⌘A, ⌘Q).
+| Tecla | Ação | Tecla | Ação |
+|---|---|---|---|
+| <kbd>F9</kbd> | Executar / continuar | <kbd>Ctrl</kbd>+<kbd>L</kbd> · <kbd>⌘</kbd>+<kbd>F</kbd> | Localizar |
+| <kbd>F8</kbd> | Passo a passo | <kbd>F3</kbd> / <kbd>F4</kbd> | Próximo / anterior |
+| <kbd>Shift</kbd>+<kbd>F9</kbd> | Executar com tempo | <kbd>Ctrl</kbd>+<kbd>U</kbd> · <kbd>⌥</kbd><kbd>⌘</kbd>+<kbd>F</kbd> | Substituir |
+| <kbd>Ctrl</kbd>+<kbd>F2</kbd> | Parar | <kbd>Ctrl</kbd>+<kbd>G</kbd> | Corrigir indentação |
+| <kbd>F5</kbd> / <kbd>Ctrl</kbd>+<kbd>F5</kbd> | Ponto de parada / limpar | <kbd>Ctrl</kbd>+<kbd>J</kbd> | Sugestões |
+| <kbd>F7</kbd> | Perfil | <kbd>Ctrl</kbd>+<kbd>Espaço</kbd> | Auto-digitação |
+| <kbd>Ctrl</kbd>+<kbd>F3</kbd> | Pilha de ativação | <kbd>Esc</kbd> | Encerra o `leia` / fecha o console |
 
-## Créditos
+No Windows e no Linux valem os atalhos originais do VisuAlg (<kbd>Ctrl</kbd>+<kbd>A</kbd> abre,
+<kbd>Ctrl</kbd>+<kbd>T</kbd> seleciona tudo, <kbd>Ctrl</kbd>+<kbd>F</kbd> sai); no Mac, os do sistema.
 
-O MisterALG só existe porque o **VisuAlg** existiu primeiro. Todo o crédito pela ideia, pela
-linguagem e pela forma de ensinar algoritmos visualmente é dos seus criadores:
+## 🔄 Do VisuAlg para o MisterALG
+
+| | VisuAlg 3.0.7 | MisterALG |
+|---|:-:|:-:|
+| Windows | ✅ | ✅ |
+| macOS | — | ✅ |
+| Linux | — | ✅ |
+| Mesma linguagem e mensagens de erro | ✅ | ✅ |
+| Abre e salva os mesmos `.alg` (Windows-1252) | ✅ | ✅ |
+| Mesmos menus, atalhos e painéis | ✅ | ✅ |
+
+## 🙏 Créditos
+
+> [!IMPORTANT]
+> O MisterALG só existe porque o **VisuAlg** existiu primeiro. Todo o crédito pela ideia, pela
+> linguagem e pela forma de ensinar algoritmos visualmente é dos seus criadores.
 
 - **Prof. Cláudio Morgado de Souza** — criador do VisuAlg, que ele desenvolveu até a versão 2.5 e
   que se tornou uma das ferramentas mais usadas no ensino de lógica de programação no Brasil.
 - **Prof. Antonio Carlos Nicolodi** — recebeu os fontes do Prof. Cláudio e deu continuidade ao
-  projeto com o **VisuAlg 3.0**, que modernizou a interface e o console e acrescentou muitos dos
-  recursos usados como referência aqui (como ele mesmo registra na tela "Sobre" do VisuAlg 3.0:
+  projeto com o **VisuAlg 3.0**, modernizando a interface e o console e acrescentando muitos dos
+  recursos usados como referência aqui. Nas palavras dele, na tela "Sobre" do VisuAlg 3.0:
   *"Desenvolvido originalmente até a versão 2.5 pelo professor Cláudio Morgado de Souza, que […] me
-  passou os fontes, pra mim dar continuidade ao seu projeto para os usuários (professores e alunos)"*).
+  passou os fontes, pra mim dar continuidade ao seu projeto para os usuários (professores e alunos)"*.
 
 O MisterALG é uma **recriação independente**, feita do zero a partir do estudo do comportamento,
 dos manuais e da interface do VisuAlg 3.0.7. Ele **não contém código do VisuAlg**, não é afiliado
-nem endossado pelos seus autores, e o nome "VisuAlg" é citado apenas para indicar compatibilidade
-e inspiração. Se você é professor ou aluno e usa Windows, conheça e prestigie o VisuAlg original.
+nem endossado pelos seus autores, e o nome "VisuAlg" é citado apenas para indicar inspiração e
+compatibilidade. Se você usa Windows, conheça e prestigie o VisuAlg original.
 
-Também usamos software livre de terceiros: [Electron](https://www.electronjs.org/),
-[CodeMirror](https://codemirror.net/), [electron-vite](https://electron-vite.org/) e
-[electron-builder](https://www.electron.build/).
+Feito com software livre: [Electron](https://www.electronjs.org/), [CodeMirror](https://codemirror.net/),
+[electron-vite](https://electron-vite.org/) e [electron-builder](https://www.electron.build/).
 
-## Para desenvolvedores
+## 🛠️ Para desenvolvedores
 
 ```bash
 npm install
-npm test          # 20 testes do interpretador + 34 da busca + 7 dos exemplos
+npm test          # interpretador (20) + busca (34) + exemplos (7)
 npm run dev       # abre a IDE com recarga automática
 npm run build     # compila para app/out/
-npm run dist:win  # gera instaladores (também dist:mac e dist:linux)
+npm run dist:win  # gera os instaladores (também dist:mac e dist:linux)
 ```
 
-- Como o interpretador e a IDE funcionam: **[docs/COMO-FUNCIONA.md](docs/COMO-FUNCIONA.md)**.
-- Os 73 testes de compatibilidade com o VisuAlg usam os exemplos que vêm com ele (que não podemos
+- 📖 **[Como o MisterALG funciona por dentro](docs/COMO-FUNCIONA.md)** — do texto à linha azul, com diagramas.
+- 🧪 Os 73 testes de compatibilidade usam os exemplos que vêm com o VisuAlg (que não podemos
   redistribuir). Se você tem o VisuAlg 3.0.7: `MISTERALG_VISUALG_DIR="caminho/do/visualg3.0.7" npm test`.
-- Cada push gera os pacotes dos três sistemas no GitHub Actions; no Linux a IDE empacotada é aberta
-  e testada de verdade, com a segurança do Ubuntu ligada.
-- Quer ajudar? Veja o [CONTRIBUTING.md](CONTRIBUTING.md).
+- 🤖 Cada push gera os pacotes dos três sistemas no GitHub Actions; no Linux, a IDE empacotada é
+  aberta e testada de verdade, com a segurança do Ubuntu ligada.
+- 🤝 Quer ajudar? Veja o **[CONTRIBUTING.md](CONTRIBUTING.md)** — relatos de diferenças em relação
+  ao VisuAlg são especialmente bem-vindos.
 
-## Licença
+---
 
-[MIT](LICENSE) — use, estude, modifique e compartilhe à vontade, mantendo os créditos.
+<p align="center">
+  <img src="app/build/icon.png" width="48" alt=""><br>
+  <sub>Feito com ❤️ para quem está aprendendo a programar · <a href="LICENSE">Licença MIT</a></sub>
+</p>
