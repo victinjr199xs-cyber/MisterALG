@@ -10,7 +10,27 @@ permissions:
   contents: write
 
 jobs:
+  # Envio comum para o main: só os testes (uns 2 minutos). Os instaladores
+  # saem nas tags v* ou quando a build é disparada à mão (Run workflow).
+  testes:
+    if: github.ref_type == 'branch' && github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes (codificação, interpretador, busca e compatibilidade com o VisuAlg)
+        run: npm test
+
   pacote:
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
