@@ -13,7 +13,7 @@ import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
-const VERSAO = '1.6.0'
+const VERSAO = '1.6.1'
 // Termos de uso: o mesmo texto que o instalador do Windows exibe (app/build/termos.txt).
 import TEXTO_TERMOS from '../../build/termos.txt?raw'
 const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')
@@ -463,7 +463,8 @@ editor.aplicarPrefs(prefs)
 // No Windows instalado, os termos já foram aceitos no instalador. No Mac, no
 // Linux e na versão portátil, o aceite acontece aqui, na primeira abertura.
 const precisaAceiteNoApp = ehMac || api.plataforma === 'linux' || api.portatil
-if (precisaAceiteNoApp && prefs.termosAceitos !== VERSAO_TERMOS) {
+const mostrouTermos = precisaAceiteNoApp && prefs.termosAceitos !== VERSAO_TERMOS
+if (mostrouTermos) {
   if (await dialogos.termos(TERMOS, true)) {
     prefs = await api.prefs.gravar({ termosAceitos: VERSAO_TERMOS })
   } else {
@@ -502,8 +503,9 @@ async function mostrarDica() {
   editor.focar()
 }
 
-// Dica do dia ao abrir (como o VisuAlg). Os testes automatizados não a veem.
-if (prefs.mostrarDicas !== false && !api.automatizado && !recuperado?.texto) void mostrarDica()
+// Dica do dia ao abrir (como o VisuAlg). Não aparece logo depois dos termos (uma
+// janela de cada vez na primeira abertura) nem nos testes automatizados.
+if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto) void mostrarDica()
 
 // Para testes automatizados e depuração no DevTools.
 window.__misteralg = { editor, execucao, doc, comandos }
