@@ -10,7 +10,7 @@ import { ICONES } from './icones.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
-const VERSAO = '1.4.1'
+const VERSAO = '1.4.2'
 // Termos de uso: o mesmo texto que o instalador do Windows exibe (app/build/termos.txt).
 import TEXTO_TERMOS from '../../build/termos.txt?raw'
 const TERMOS = TEXTO_TERMOS.replace(/^ï»¿/, '').replace(/\r\n/g, '\n')

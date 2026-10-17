@@ -132,7 +132,8 @@ const diamante = base(`
   </linearGradient>
 `)
 
-const ESCOLHIDO = '3-diamante'
+// Ícone oficial (escolhido pelo autor do projeto): Fluxo Vivo.
+const ESCOLHIDO = '1-fluxo-vivo'
 
 const CONCEITOS = [
   ['1-fluxo-vivo', fluxo, 'Fluxo Vivo'],
@@ -168,7 +169,7 @@ app.whenReady().then(async () => {
   </body></html>`
   await render(folha, 1800, 760, join(pasta, 'comparacao.png'))
   console.log('folha comparativa pronta')
-  // Ícone escolhido para o app (Diamante de Decisão).
+  // Copia o ícone oficial para o app.
   writeFileSync(join(raiz, 'app', 'build', 'icon.png'), readFileSync(join(pasta, `${ESCOLHIDO}.png`)))
   console.log('app/build/icon.png ←', ESCOLHIDO)
   app.quit()
