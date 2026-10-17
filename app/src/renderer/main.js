@@ -11,7 +11,7 @@ import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
-const VERSAO = '1.5.0'
+const VERSAO = '1.5.1'
 // Termos de uso: o mesmo texto que o instalador do Windows exibe (app/build/termos.txt).
 import TEXTO_TERMOS from '../../build/termos.txt?raw'
 const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')

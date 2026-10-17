@@ -95,7 +95,7 @@
   --linha-execucao: #3d59a1; --texto-execucao: #ffffff; --linha-breakpoint: #8c2f3f; --texto-breakpoint: #ffffff;
   --linha-erro: #f7768e; --linha-erro-fundo: #4a2030; --selecao-texto: #33467c; --mesma-palavra: #2e3555;
   --cursor: #c0caf5; --detalhe: #737aa2;
-  --sx-comentario: #5f6996; --sx-literal: #ff9e64; --sx-chave: #7aa2f7; --sx-especial: #bb9af7; --sx-tipo: #2ac3de; --sx-variavel: #c0caf5;
+  --sx-comentario: #5f6996; --sx-literal: #ff9e64; --sx-chave: #7aa2f7; --sx-especial: #bb9af7; --sx-tipo: #2ac3de; --sx-variavel: #9ece6a;
   --dialogo-fundo: #1f2335; --dialogo-moldura: #3b4261; --dialogo-borda: #3b4261; --campo-borda: #3b4261;
   --titulo-inicio: #2a3a6e; --titulo-fim: #3d59a1; --titulo-texto: #ffffff;
   --acao-inicio: #2f3549; --acao-fim: #24283b; --aba: #24283b; --aba-ativa: #1a1b26;
@@ -133,7 +133,8 @@
   --linha-execucao: #33ff66; --texto-execucao: #000000; --linha-breakpoint: #a00000; --texto-breakpoint: #ffffff;
   --linha-erro: #ff3b3b; --linha-erro-fundo: #3a0a0a; --selecao-texto: #145c2a; --mesma-palavra: #0b3d1a;
   --cursor: #33ff66; --detalhe: #1fa34a;
-  --sx-comentario: #1f9f45; --sx-literal: #ffb000; --sx-chave: #8dffaa; --sx-especial: #c8ffd6; --sx-tipo: #ffd75f; --sx-variavel: #33ff66;
+  /* cada tipo de palavra numa cor diferente (paleta de terminal), só as variáveis no verde */
+  --sx-comentario: #5f9f6f; --sx-literal: #ffaf00; --sx-chave: #5fd7ff; --sx-especial: #ff87ff; --sx-tipo: #ffff5f; --sx-variavel: #33ff66;
   --dialogo-fundo: #020c05; --dialogo-moldura: #1f5f2f; --dialogo-borda: #1f5f2f; --campo-borda: #1f5f2f;
   --titulo-inicio: #0b3d1a; --titulo-fim: #145c2a; --titulo-texto: #33ff66;
   --acao-inicio: #0b3d1a; --acao-fim: #062a12; --aba: #062a12; --aba-ativa: #000000;
