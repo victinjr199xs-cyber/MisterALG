@@ -1,0 +1,14 @@
+{
+  "name": "@misteralg/interpreter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Interpretador de Portugol (VisuAlg 3.0.7) — ESM puro, sem dependências",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "misteralg-app",
+  "productName": "MisterALG",
+  "version": "1.4.0",
+  "private": true,
+  "description": "MisterALG — interpretador e IDE de Portugol inspirado no VisuAlg 3.0.7",
+  "author": {
+    "name": "victinjr199xs-cyber",
+    "email": "304906700+victinjr199xs-cyber@users.noreply.github.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/victinjr199xs-cyber/MisterALG",
+  "type": "module",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron out/main/index.js",
+    "dist:mac": "electron-builder --mac --config electron-builder.json5",
+    "dist:win": "electron-builder --win --config electron-builder.json5",
+    "dist:linux": "electron-builder --linux --config electron-builder.json5"
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "^6",
+    "@codemirror/commands": "^6",
+    "@codemirror/language": "^6",
+    "@codemirror/search": "^6",
+    "@codemirror/state": "^6",
+    "@codemirror/view": "^6",
+    "@lezer/highlight": "^1",
+    "@misteralg/editor-busca": "*",
+    "@misteralg/interpreter": "*",
+    "codemirror": "^6",
+    "electron-vite": "^3",
+    "vite": "^6"
+  }
+}

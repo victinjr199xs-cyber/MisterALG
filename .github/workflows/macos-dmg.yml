@@ -1,0 +1,73 @@
+name: MisterALG (Mac, Windows e Linux)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pacote:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sistema: macos-15
+            comando: dist:mac
+            artefato: MisterALG-dmg
+            arquivos: app/dist/*.dmg
+          - sistema: windows-latest
+            comando: dist:win
+            artefato: MisterALG-windows
+            arquivos: app/dist/*.exe
+          - sistema: ubuntu-24.04
+            comando: dist:linux
+            artefato: MisterALG-linux
+            arquivos: |
+              app/dist/*.AppImage
+              app/dist/*.deb
+              app/dist/*.rpm
+              app/dist/*.tar.gz
+    runs-on: ${{ matrix.sistema }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Ferramentas do Linux (rpm para o pacote .rpm, xvfb para testar a IDE)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm xvfb
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes (interpretador, busca e compatibilidade com o VisuAlg)
+        run: npm test
+
+      - name: Gerar o instalador
+        run: npm run ${{ matrix.comando }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Testar no Ubuntu com a segurança do desktop (AppArmor + sandbox ligada)
+        if: runner.os == 'Linux'
+        run: bash scripts/ci-ubuntu-seguranca.sh
+
+      - name: Publicar como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artefato }}
+          path: ${{ matrix.arquivos }}
+          if-no-files-found: error
+
+      - name: Anexar à release (em tags v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.arquivos }}

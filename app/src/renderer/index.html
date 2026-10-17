@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:5173; img-src 'self' data:"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MisterALG</title>
+    <link rel="stylesheet" href="./estilos/visualg.css" />
+  </head>
+  <body>
+    <div id="barra" class="barra" role="toolbar" aria-label="Barra de ferramentas"></div>
+
+    <main id="area" data-dica="Área de desenvolvimento de programas">
+      <section class="moldura moldura-editor" data-dica="Permite CRIAR, ALTERAR, EXCLUIR, CONSULTAR e VISUALIZAR o código fonte escrito em Portugol">
+        <h2 id="titulo-editor" class="legenda">Área dos algoritmos ( Edição do código fonte ) -&gt; Nome do arquivo: [semnome]</h2>
+        <div id="editor" class="editor"></div>
+      </section>
+
+      <div class="coluna-direita">
+        <section class="moldura moldura-variaveis" data-dica="Mostra todas as variáveis de memória (GLOBAIS e LOCAIS) usadas nos programas !">
+          <h2 class="legenda">Áreas das variáveis de memória (Globais e Locais)</h2>
+          <div class="grade-rolagem">
+            <table id="variaveis" class="grade">
+              <thead>
+                <tr><th>Escopo</th><th>Nome</th><th>Tipo</th><th>Valor</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="moldura moldura-visualizacao" data-dica="Mostra o resultado final de um programa escrito em Portugol depois de finalizado !">
+          <h2 class="legenda">Área de visualização dos resultados</h2>
+          <pre id="visualizacao" class="visualizacao"></pre>
+
+          <div id="console" class="console" hidden>
+            <div class="console-titulo">
+              <span class="console-icone">C:\</span>
+              <span>Console simulando o modo texto do MS-DOS</span>
+              <button type="button" id="console-fechar" class="console-fechar" title="Fechar (Esc)">×</button>
+            </div>
+            <div id="console-tela" class="console-tela" tabindex="0"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="status" role="status">
+      <span id="st-posicao" class="painel painel-posicao">1:1</span>
+      <span id="st-estado" class="painel painel-estado"></span>
+      <span class="painel painel-dica"> Use as setas (&lt;- ou -&gt;) &lt;&lt;Ctrl J&gt;&gt; p/ LISTA dos(Comandos/Funções)</span>
+      <span id="st-mensagem" class="painel painel-mensagem"></span>
+    </footer>
+
+    <div id="dialogos"></div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+﻿MisterALG — Termos de Uso e Política de Privacidade
+Versão 1.4 — 17 de outubro de 2026
+
+Leia com atenção antes de instalar ou usar. Ao aceitar estes termos (no instalador, marcando "Eu aceito"; no aplicativo, clicando em "Aceito"), você declara que leu e concorda com eles.
+
+
+1. O QUE É O MISTERALG
+
+O MisterALG é um programa gratuito para escrever, executar e depurar algoritmos em Portugol, compatível com a linguagem e a interface do VisuAlg 3.0.7. Ele é feito para fins educacionais: estudar lógica de programação e algoritmos.
+
+
+2. LICENÇA DE USO
+
+2.1. O MisterALG é software livre e de código aberto, distribuído sob a Licença MIT. Você pode instalar, usar, copiar, estudar, modificar e redistribuir o programa gratuitamente, em quantos computadores quiser, desde que mantenha o aviso de direitos autorais e o texto da licença. O código-fonte completo está em https://github.com/victinjr199xs-cyber/MisterALG.
+
+2.2. Versões modificadas devem deixar claro que foram alteradas, para não serem confundidas com a versão oficial.
+
+2.3. Os algoritmos (arquivos .alg) que você criar são seus. O MisterALG não reivindica nenhum direito sobre eles.
+
+
+3. PRIVACIDADE — QUAIS DADOS O PROGRAMA USA
+
+3.1. O MisterALG funciona 100% no seu computador. Ele não precisa de internet, não cria conta, não pede login e não envia nenhuma informação para servidores, para o autor ou para terceiros.
+
+3.2. Não há propaganda, rastreamento, telemetria nem coleta de estatísticas de uso.
+
+3.3. O programa grava apenas, no próprio computador:
+   - os arquivos .alg que você mandar salvar, na pasta que você escolher;
+   - suas preferências (fonte, tamanho, intervalo do timer, dados do cabeçalho como disciplina e professor) e a lista dos 5 últimos arquivos abertos, na pasta de dados do aplicativo;
+   - uma cópia temporária do algoritmo em edição, usada só para recuperá-lo se o programa fechar de forma inesperada. Essa cópia é apagada quando você sai normalmente.
+
+3.4. O comando "arquivo" da linguagem lê e grava somente o arquivo de dados que o próprio algoritmo indicar.
+
+3.5. Ao desinstalar, o programa é removido. As preferências podem ser apagadas manualmente da pasta de dados do aplicativo (no Windows: %APPDATA%\MisterALG; no Mac: ~/Library/Application Support/MisterALG; no Linux: ~/.config/MisterALG).
+
+
+4. SEM GARANTIA
+
+O MisterALG é fornecido "como está", sem garantia de qualquer tipo. O autor não se responsabiliza por perda de dados, falhas ou resultados de algoritmos executados nele. Faça cópias de segurança dos seus trabalhos importantes.
+
+
+5. RELAÇÃO COM O VISUALG
+
+O MisterALG é uma recriação independente, inspirada no VisuAlg. O VisuAlg foi criado pelo Prof. Cláudio Morgado de Souza (até a versão 2.5) e continuado pelo Prof. Antonio Carlos Nicolodi (versão 3.0). O MisterALG não contém código do VisuAlg e não é afiliado nem endossado pelos seus autores. "VisuAlg" é citado apenas para indicar compatibilidade.
+
+
+6. ASSINATURA DIGITAL
+
+Este programa não possui certificado digital pago. Por isso o Windows (SmartScreen) ou o macOS (Gatekeeper) podem exibir um aviso na primeira abertura. No Linux, os pacotes também não são assinados. Baixe o MisterALG apenas do repositório oficial do autor.
+
+
+7. ALTERAÇÕES
+
+Estes termos podem ser atualizados em versões futuras. A versão em vigor é sempre a que acompanha o instalador que você está usando e pode ser consultada no menu Ajuda do programa.

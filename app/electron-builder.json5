@@ -1,0 +1,90 @@
+{
+  appId: 'com.misteralg.app',
+  productName: 'MisterALG',
+  copyright: 'Copyright © 2026 victinjr199xs-cyber — Licença MIT. Inspirado no VisuAlg.',
+  directories: { buildResources: 'build', output: 'dist' },
+  files: ['out/**/*', 'package.json'],
+  // Tudo do renderer já vem empacotado pelo electron-vite; não há node_modules em runtime.
+  npmRebuild: false,
+  electronVersion: '44.8.0',
+  fileAssociations: [
+    { ext: 'alg', name: 'Algoritmo em Portugol', role: 'Editor', icon: 'build/icon.png', mimeType: 'text/x-portugol' },
+  ],
+  mac: {
+    target: [{ target: 'dmg', arch: ['universal'] }],
+    // Sem conta Apple Developer: assinatura ad-hoc ("-"), necessária para o app
+    // rodar em Macs com chip Apple. Não é notarizado (ver README / Gatekeeper).
+    identity: '-',
+    category: 'public.app-category.education',
+    icon: 'build/icon.png',
+    darkModeSupport: false,
+    hardenedRuntime: false,
+    gatekeeperAssess: false,
+  },
+  win: {
+    // Instalador (assistente com atalhos no Menu Iniciar/Área de Trabalho) e versão portátil.
+    target: [
+      { target: 'nsis', arch: ['x64'] },
+      { target: 'portable', arch: ['x64'] },
+    ],
+    icon: 'build/icon.png',
+  },
+  nsis: {
+    // Assistente completo: pergunta inicial + boas-vindas (installer.nsh), termos de uso
+    // (precisa aceitar), "só para mim / todos os usuários", pasta, instalação e
+    // tela final com "Executar MisterALG".
+    oneClick: false,
+    perMachine: false,
+    allowElevation: true,
+    allowToChangeInstallationDirectory: true,
+    license: 'build/termos.txt',
+    include: 'build/installer.nsh',
+    installerLanguages: ['pt_BR'],
+    runAfterFinish: true,
+    uninstallDisplayName: 'MisterALG ${version}',
+    deleteAppDataOnUninstall: false,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: 'MisterALG',
+    artifactName: 'MisterALG-${version}-instalador.exe',
+    language: '1046', // português do Brasil
+  },
+  portable: {
+    artifactName: 'MisterALG-${version}-portatil.exe',
+  },
+  dmg: {
+    title: 'MisterALG',
+    artifactName: 'MisterALG-${version}.dmg',
+    contents: [
+      { x: 130, y: 220 },
+      { x: 410, y: 220, type: 'link', path: '/Applications' },
+    ],
+  },
+  linux: {
+    // AppImage (roda sem instalar), .deb (Ubuntu/Mint/Debian), .rpm (Fedora/openSUSE) e .tar.gz.
+    target: [
+      { target: 'AppImage', arch: ['x64'] },
+      { target: 'deb', arch: ['x64'] },
+      { target: 'rpm', arch: ['x64'] },
+      { target: 'tar.gz', arch: ['x64'] },
+    ],
+    executableName: 'misteralg',
+    artifactName: 'MisterALG-${version}.${ext}', // .tar.gz (os outros formatos têm nome próprio abaixo)
+    icon: 'build/icon.png',
+    category: 'Education',
+    maintainer: 'victinjr199xs-cyber <304906700+victinjr199xs-cyber@users.noreply.github.com>',
+    synopsis: 'Interpretador e IDE de Portugol compatível com o VisuAlg 3.0.7',
+    description: 'Escreva, execute e depure algoritmos em Portugol com a linguagem, os menus e as teclas do VisuAlg 3.0.7.',
+    desktop: {
+      entry: {
+        Name: 'MisterALG',
+        GenericName: 'IDE de Portugol',
+        Comment: 'Interpretador e editor de algoritmos em Portugol (compatível com o VisuAlg)',
+        Keywords: 'portugol;visualg;algoritmo;programação;lógica;',
+      },
+    },
+  },
+  appImage: { artifactName: 'MisterALG-${version}-x86_64.AppImage' },
+  deb: { artifactName: 'misteralg_${version}_amd64.deb', depends: ['libnotify4', 'libnss3', 'libxss1', 'libxtst6', 'xdg-utils', 'libatspi2.0-0', 'libuuid1', 'libsecret-1-0'] },
+  rpm: { artifactName: 'misteralg-${version}.x86_64.rpm' },
+}

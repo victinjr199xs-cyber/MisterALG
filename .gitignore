@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+.vite/
+*.log
+.DS_Store
+Thumbs.db
+tmp-exemplos-zip/
+docs/imagens/quadros/

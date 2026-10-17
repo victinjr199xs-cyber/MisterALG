@@ -1,0 +1,15 @@
+{
+  "name": "@misteralg/editor-busca",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Motor de Localizar/Substituir DOM-free (vendored de editor-busca)",
+  "type": "module",
+  "main": "src/search-engine.js",
+  "exports": {
+    ".": "./src/search-engine.js",
+    "./session": "./src/search-session.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}

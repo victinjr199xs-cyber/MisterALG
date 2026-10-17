@@ -1,0 +1,30 @@
+{
+  "name": "misteralg",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Recriação do VisuAlg 3.0.7 (IDE + interpretador de Portugol) para macOS",
+  "workspaces": [
+    "app",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w misteralg-app",
+    "build": "npm run build -w misteralg-app",
+    "test": "npm run test:interpreter && npm run test:busca && npm run test:compat",
+    "test:interpreter": "npm run test -w @misteralg/interpreter",
+    "test:busca": "npm run test -w @misteralg/editor-busca",
+    "test:compat": "node --test testes-compat/p0.test.mjs testes-compat/exemplos.test.mjs",
+    "test:compat:full": "node --test \"testes-compat/*.test.mjs\"",
+    "dist:mac": "npm run build && npm run dist:mac -w misteralg-app",
+    "dist:win": "npm run build && npm run dist:win -w misteralg-app",
+    "dist:linux": "npm run build && npm run dist:linux -w misteralg-app"
+  },
+  "devDependencies": {
+    "electron": "^44.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "allowScripts": {
+    "electron-winstaller@5.4.0": true,
+    "esbuild@0.25.12": true
+  }
+}
