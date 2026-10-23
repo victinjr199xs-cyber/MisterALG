@@ -4,6 +4,8 @@
 import { DICAS } from './dicas.js'
 import { telaInicial } from './inicio.js'
 import { VERSAO } from '../compartilhado/versao.js'
+import { tradutor } from '../compartilhado/idiomas.js'
+import { traduzirPagina } from './traduzir-pagina.js'
 
 const api = window.misteralg
 const ehMac = api.plataforma === 'darwin'
@@ -16,6 +18,7 @@ api.menu.aoComando((id, dados) => {
 })
 
 let prefs = await api.prefs.ler()
+traduzirPagina(tradutor(prefs.idioma))
 // O MisterALG fechou com um algoritmo aberto: a IDE é quem oferece recuperá-lo.
 const recuperado = await api.recuperacao.ler()
 if (recuperado?.texto) await irParaIDE({})
@@ -25,12 +28,13 @@ for (;;) {
   const r = await telaInicial({
     versao: VERSAO,
     recentes: prefs.mru,
-    dica: DICAS[dica],
+    dica: tradutor(prefs.idioma)(DICAS[dica]),
     prefs,
     atalhos: { novo: ehMac ? '⌘N' : 'Ctrl+N', abrir: ehMac ? '⌘O' : 'Ctrl+A' },
   })
   prefs = await api.prefs.gravar({ ...r.prefs, dicaAtual: (dica + 1) % DICAS.length })
-  if (r.acao === 'idioma') prefs = await api.prefs.gravar({ idioma: r.idioma })
+  // A página inteira já foi traduzida para o idioma anterior: recarregar é o jeito simples de trocar.
+  if (r.acao === 'idioma') { await api.prefs.gravar({ idioma: r.idioma }); location.reload(); break }
   else if (r.acao === 'novo') { await irParaIDE({ linguagem: r.linguagem }); break }
   else if (r.acao === 'recente') { await irParaIDE({ abrir: r.caminho }); break }
   else if (r.acao === 'abrir') {

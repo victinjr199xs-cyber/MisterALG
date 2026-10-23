@@ -1,132 +1,95 @@
-// Idioma da interface (menu, tela inicial e avisos gerais). O texto em português é a própria chave:
-// tr('pt-texto') devolve a tradução do idioma escolhido ou, se faltar, o original.
-// O Portugol continua em português (é a linguagem); os modelos das outras linguagens já vêm em inglês.
+// Idioma da interface. O texto em português é a chave (traducoes/chaves.js, numerada); cada idioma traz
+// { número: tradução } em traducoes/<id>.js. tr('texto em português') devolve a tradução ou, se faltar, o original.
+// Textos com partes que mudam usam {0}, {1}...: tr('Pausado na linha {0}', 5), e a tela também os reconhece prontos
+// ("Pausado na linha 5"). O Portugol continua em português (é a própria linguagem).
+
+import CHAVES from './traducoes/chaves.js'
+import ar from './traducoes/ar.js'
+import de from './traducoes/de.js'
+import en from './traducoes/en.js'
+import es from './traducoes/es.js'
+import fr from './traducoes/fr.js'
+import hi from './traducoes/hi.js'
+import id from './traducoes/id.js'
+import it from './traducoes/it.js'
+import ja from './traducoes/ja.js'
+import ko from './traducoes/ko.js'
+import nl from './traducoes/nl.js'
+import pl from './traducoes/pl.js'
+import ru from './traducoes/ru.js'
+import tr from './traducoes/tr.js'
+import uk from './traducoes/uk.js'
+import vi from './traducoes/vi.js'
+import zh from './traducoes/zh.js'
 
 export const IDIOMAS = [
   { id: 'pt', nome: 'Português' },
   { id: 'en', nome: 'English' },
   { id: 'es', nome: 'Español' },
+  { id: 'fr', nome: 'Français' },
+  { id: 'de', nome: 'Deutsch' },
+  { id: 'it', nome: 'Italiano' },
+  { id: 'nl', nome: 'Nederlands' },
+  { id: 'pl', nome: 'Polski' },
+  { id: 'tr', nome: 'Türkçe' },
+  { id: 'ru', nome: 'Русский' },
+  { id: 'uk', nome: 'Українська' },
+  { id: 'ar', nome: 'العربية' },
+  { id: 'hi', nome: 'हिन्दी' },
+  { id: 'id', nome: 'Bahasa Indonesia' },
+  { id: 'vi', nome: 'Tiếng Việt' },
+  { id: 'zh', nome: '中文（简体）' },
+  { id: 'ja', nome: '日本語' },
+  { id: 'ko', nome: '한국어' },
 ]
 
-const T = {
-  // ---- menu ----
-  'Sobre o MisterALG': ['About MisterALG', 'Acerca de MisterALG'],
-  'Configurações…': ['Settings…', 'Configuración…'],
-  'Serviços': ['Services', 'Servicios'],
-  'Ocultar MisterALG': ['Hide MisterALG', 'Ocultar MisterALG'],
-  'Ocultar outros': ['Hide Others', 'Ocultar otros'],
-  'Mostrar tudo': ['Show All', 'Mostrar todo'],
-  'Sair do MisterALG': ['Quit MisterALG', 'Salir de MisterALG'],
-  '&Arquivo': ['&File', '&Archivo'],
-  '&Novo': ['&New', '&Nuevo'],
-  '&Abrir…': ['&Open…', '&Abrir…'],
-  '&Tela inicial': ['&Start screen', 'Pantalla de &inicio'],
-  '&Salvar': ['&Save', '&Guardar'],
-  'Salvar &Como…': ['Save &As…', 'Guardar &como…'],
-  '&Imprimir…': ['&Print…', '&Imprimir…'],
-  'Sai&r': ['E&xit', 'Sali&r'],
-  'E&ditar': ['&Edit', '&Editar'],
-  '&Desfazer': ['&Undo', '&Deshacer'],
-  '&Refazer': ['&Redo', '&Rehacer'],
-  'Recor&tar': ['Cu&t', 'Cor&tar'],
-  '&Copiar': ['&Copy', '&Copiar'],
-  'Col&ar': ['&Paste', 'Peg&ar'],
-  '&Indentação': ['&Indentation', '&Sangría'],
-  '&Selecionar tudo': ['Select &All', '&Seleccionar todo'],
-  '&Localizar…': ['&Find…', '&Buscar…'],
-  'Localizar o &Próximo': ['Find &Next', 'Buscar &siguiente'],
-  'Localizar o &Anterior': ['Find &Previous', 'Buscar &anterior'],
-  'S&ubstituir…': ['&Replace…', '&Reemplazar…'],
-  '&Gravar bloco…': ['&Save block…', '&Guardar bloque…'],
-  'I&nserir bloco…': ['I&nsert block…', 'I&nsertar bloque…'],
-  '&Run (executar)': ['&Run', '&Ejecutar'],
-  'Rodar o &Algoritmo': ['&Run the program', 'Ejecutar el &algoritmo'],
-  'Rodar &Passo a passo': ['Run &step by step', 'Ejecutar &paso a paso'],
-  'Rodar com Tempo': ['Run with timer', 'Ejecutar con tiempo'],
-  '&Parar  (stop)': ['&Stop', '&Detener'],
-  '&Liga/desliga breakpoint': ['Toggle &breakpoint', 'Activar/desactivar &breakpoint'],
-  '&Desmarcar todas (os breakpoints)': ['&Clear all breakpoints', '&Quitar todos los breakpoints'],
-  'Executar em modo &DOS': ['Run in &DOS mode', 'Ejecutar en modo &DOS'],
-  'Linhas (Ativa/Desativa)': ['Line numbers (on/off)', 'Números de línea (sí/no)'],
-  '&Gerar valores aleatórios': ['&Generate random values', '&Generar valores aleatorios'],
-  'Per&fil': ['Pro&file', 'Per&fil'],
-  '&Pilha de ativação': ['Call &stack', '&Pila de llamadas'],
-  '&Exportar para': ['E&xport to', 'E&xportar a'],
-  'a Linguagem &Pascal…': ['&Pascal…', '&Pascal…'],
-  'a Linguagem &C / C++': ['&C / C++', '&C / C++'],
-  'a Linguagem &Java': ['&Java', '&Java'],
-  '&Manutenção': ['&Tools', '&Herramientas'],
-  '&Configurações': ['&Settings', '&Configuración'],
-  '&Tema (cores)': ['&Theme (colors)', '&Tema (colores)'],
-  'Personalizar as cores do código…': ['Customize code colors…', 'Personalizar los colores del código…'],
-  'Assistente de &IA': ['&AI assistant', 'Asistente de &IA'],
-  'Configurar o assistente de IA…': ['Set up the AI assistant…', 'Configurar el asistente de IA…'],
-  '&A Calculadora': ['&Calculator', '&Calculadora'],
-  '&O Calendário': ['C&alendar', 'C&alendario'],
-  '&Idioma': ['&Language', '&Idioma'],
-  '&Help (Ajuda)': ['&Help', 'A&yuda'],
-  'A &Tela do MisterALG': ['The MisterALG &screen', 'La &pantalla de MisterALG'],
-  'A &Linguagem (Portugol)': ['The Portugol &language', 'El &lenguaje Portugol'],
-  '&Referência da Linguagem': ['Language &reference', '&Referencia del lenguaje'],
-  '&Dica do dia': ['&Tip of the day', '&Consejo del día'],
-  '&Termos de uso e privacidade': ['&Terms of use and privacy', '&Términos de uso y privacidad'],
-  '&Sobre os autores do Software': ['&About the authors', '&Acerca de los autores'],
-  'Janela': ['Window', 'Ventana'],
+export const TRADUCOES = { ar, de, en, es, fr, hi, id, it, ja, ko, nl, pl, ru, tr, uk, vi, zh }
 
-  // ---- tela inicial ----
-  'Aprenda a programar vendo o código rodar.': ['Learn to code by watching your code run.', 'Aprende a programar viendo el código ejecutarse.'],
-  'Em qual linguagem você quer programar?': ['Which language do you want to code in?', '¿En qué lenguaje quieres programar?'],
-  'Começar': ['Start', 'Empezar'],
-  'Novo algoritmo': ['New program', 'Nuevo algoritmo'],
-  'Abrir…': ['Open…', 'Abrir…'],
-  'Recentes': ['Recent', 'Recientes'],
-  'Os algoritmos que você abrir aparecem aqui.': ['Files you open show up here.', 'Los archivos que abras aparecen aquí.'],
-  'Dica do dia': ['Tip of the day', 'Consejo del día'],
-  'Mostrar esta tela ao abrir': ['Show this screen at startup', 'Mostrar esta pantalla al abrir'],
-  'Animação de abertura': ['Opening animation', 'Animación de apertura'],
-  'Fechar': ['Close', 'Cerrar'],
-  'Fechar (Esc)': ['Close (Esc)', 'Cerrar (Esc)'],
-  'versão': ['version', 'versión'],
-  'Idioma': ['Language', 'Idioma'],
-  'em breve': ['coming soon', 'próximamente'],
-  'Variáveis, pilha de ativação e perfil, como no VisuAlg': ['Variables, call stack and profile, like VisuAlg', 'Variables, pila de llamadas y perfil, como en VisuAlg'],
-  'Pilha de chamadas, objetos e referências (setas)': ['Call stack, objects and references (arrows)', 'Pila de llamadas, objetos y referencias (flechas)'],
-  'Pilha de chamadas e fila de eventos': ['Call stack and event queue', 'Pila de llamadas y cola de eventos'],
-  'O tipo de cada valor durante a execução': ['The type of every value while it runs', 'El tipo de cada valor durante la ejecución'],
-  'Objetos e referências, ligados por setas': ['Objects and references, linked by arrows', 'Objetos y referencias, unidos por flechas'],
-  'Biblioteca padrão completa (clang). Em breve: memória e ponteiros': ['Full standard library (clang). Memory and pointers view', 'Biblioteca estándar completa (clang). Memoria y punteros'],
-  'Biblioteca padrão completa (clang). Em breve: objetos': ['Full standard library (clang). Objects coming soon', 'Biblioteca estándar completa (clang). Objetos próximamente'],
-  'A página gerada, ao vivo': ['The generated page, live', 'La página generada, en vivo'],
-  'Tela inicial do MisterALG': ['MisterALG start screen', 'Pantalla de inicio de MisterALG'],
-  'Linguagens': ['Languages', 'Lenguajes'],
+const preencher = (modelo, args) => modelo.replace(/\{(\d+)\}/g, (_, i) => (args[i] ?? ''))
+const escaparRegex = (s) => s.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\\?\{(\d+)\\?\}/g, '{$1}')
 
-  'Criar programa': ['Create program', 'Crear programa'],
-  'Início': ['Home', 'Inicio'],
-  'Ambiente de programação': ['Programming environment', 'Entorno de programación'],
-  'Lógica de programação em português': ['Programming logic in Portuguese', 'Lógica de programación en portugués'],
-  'Orientação a objetos com .NET': ['Object-oriented with .NET', 'Orientación a objetos con .NET'],
-  'A linguagem da web': ['The language of the web', 'El lenguaje de la web'],
-  'JavaScript com tipos': ['JavaScript with types', 'JavaScript con tipos'],
-  'Simples, legível e poderosa': ['Simple, readable and powerful', 'Simple, legible y potente'],
-  'Memória, ponteiros e desempenho': ['Memory, pointers and speed', 'Memoria, punteros y rendimiento'],
-  'C com classes e a STL': ['C with classes and the STL', 'C con clases y la STL'],
-  'Páginas web geradas no servidor': ['Web pages built on the server', 'Páginas web generadas en el servidor'],
-  'Como no VisuAlg': ['Just like VisuAlg', 'Como en VisuAlg'],
-  'Objetos e setas': ['Objects and arrows', 'Objetos y flechas'],
-  'Pilha e eventos': ['Stack and events', 'Pila y eventos'],
-  'Tipos ao vivo': ['Live types', 'Tipos en vivo'],
-  'Memória e ponteiros': ['Memory and pointers', 'Memoria y punteros'],
-  'Compilador clang': ['clang compiler', 'Compilador clang'],
-  'Página ao vivo': ['Live page', 'Página en vivo'],
-
-  // ---- sair ----  'Sair': ['Exit', 'Salir'],
-  'Você quer voltar para a tela inicial do MisterALG ou fechar o aplicativo?': ['Do you want to go back to the MisterALG start screen or close the app?', '¿Quieres volver a la pantalla de inicio de MisterALG o cerrar la aplicación?'],
-  'Voltar para a tela inicial': ['Back to the start screen', 'Volver a la pantalla de inicio'],
-  'Fechar o MisterALG': ['Close MisterALG', 'Cerrar MisterALG'],
-  'Cancelar': ['Cancel', 'Cancelar'],
+const cache = new Map()
+function dicionario(idioma) {
+  if (cache.has(idioma)) return cache.get(idioma)
+  const lista = TRADUCOES[idioma]
+  let d = null
+  if (lista) {
+    const exatos = new Map()
+    const modelos = [] // textos com {0}: viram expressões regulares para reconhecer o texto já preenchido
+    for (const [n, pt] of Object.entries(CHAVES)) {
+      const alvo = lista[n]
+      if (!alvo) continue
+      exatos.set(pt, alvo)
+      if (/\{\d+\}/.test(pt)) {
+        const re = new RegExp(`^${escaparRegex(pt).replace(/\{(\d+)\}/g, '(.+?)')}$`, 's')
+        modelos.push({ re, alvo, ordem: [...pt.matchAll(/\{(\d+)\}/g)].map((m) => Number(m[1])) })
+      }
+    }
+    d = { exatos, modelos }
+  }
+  cache.set(idioma, d)
+  return d
 }
 
-const POSICAO = { en: 0, es: 1 }
-
-/** Uma função de tradução para o idioma (pt devolve o próprio texto). */
-export const tradutor = (idioma) => (texto) => T[texto]?.[POSICAO[idioma]] ?? texto
+/** Uma função de tradução para o idioma: t(textoEmPortugues, ...valores). */
+export function tradutor(idioma) {
+  const d = dicionario(idioma)
+  const t = (texto, ...args) => preencher(d?.exatos.get(texto) ?? texto, args)
+  /** Traduz um texto que já veio preenchido ("Pausado na linha 5"); devolve null se não conhece. */
+  t.reconhecer = (texto) => {
+    if (!d) return null
+    const exato = d.exatos.get(texto)
+    if (exato) return exato
+    for (const m of d.modelos) {
+      const r = m.re.exec(texto)
+      if (r) {
+        const args = []
+        m.ordem.forEach((i, k) => { args[i] = r[k + 1] })
+        return preencher(m.alvo, args)
+      }
+    }
+    return null
+  }
+  t.idioma = d ? idioma : 'pt'
+  return t
+}

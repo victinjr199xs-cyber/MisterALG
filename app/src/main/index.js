@@ -11,6 +11,7 @@ import { aquecerPHP, pararPHP } from './php.js'
 import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
 import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
 import { montarMenu } from './menu.js'
+import { tradutor } from '../compartilhado/idiomas.js'
 import {
   adicionarRecente,
   gravarPreferencias,
@@ -69,6 +70,8 @@ let estadoMenu = {}
 let arquivoParaAbrir = null // arquivo .alg aberto pelo Finder antes da janela existir
 
 let naInicio = false // a janela está na página inicial (sem a IDE)
+/** Traduz um texto das janelas do sistema para o idioma escolhido (compartilhado/idiomas.js). */
+const trMain = (texto) => tradutor(lerPreferencias().idioma)(texto)
 
 // Na página inicial não há menu da IDE (no Mac o menu do app continua, por causa do ⌘Q).
 const atualizarMenu = () => (naInicio && process.platform !== 'darwin' ? Menu.setApplicationMenu(null) : montarMenu(janela, lerPreferencias(), estadoMenu))
@@ -107,7 +110,7 @@ function registrarIpc() {
 
   ipcMain.handle('arquivo:abrir', async () => {
     const r = await dialog.showOpenDialog(janela, {
-      title: 'Abrir algoritmo',
+      title: trMain('Abrir algoritmo'),
       filters: FILTROS_ABRIR,
       properties: ['openFile'],
       defaultPath: documentos(),
@@ -153,7 +156,7 @@ function registrarIpc() {
   })
 
   ipcMain.handle('bloco:gravar', async (_e, texto) => {
-    const r = await dialog.showSaveDialog(janela, { title: 'Gravar bloco de algoritmo', filters: FILTROS_BLOCO })
+    const r = await dialog.showSaveDialog(janela, { title: trMain('Gravar bloco de algoritmo'), filters: FILTROS_BLOCO })
     if (r.canceled || !r.filePath) return false
     await gravarArquivo(r.filePath, texto, 'windows-1252')
     return true
@@ -161,7 +164,7 @@ function registrarIpc() {
 
   ipcMain.handle('bloco:inserir', async () => {
     const r = await dialog.showOpenDialog(janela, {
-      title: 'Inserir bloco de algoritmo',
+      title: trMain('Inserir bloco de algoritmo'),
       filters: FILTROS_BLOCO,
       properties: ['openFile'],
     })
@@ -172,7 +175,7 @@ function registrarIpc() {
   // Exportar para Pascal: grava o .pas gerado no renderer, em UTF-8.
   ipcMain.handle('exportar:salvar', async (_e, { texto, nome }) => {
     const r = await dialog.showSaveDialog(janela, {
-      title: 'Exportar para a linguagem Pascal',
+      title: trMain('Exportar para a linguagem Pascal'),
       filters: [{ name: 'Programas Pascal', extensions: ['pas'] }, { name: 'Todos os arquivos', extensions: ['*'] }],
       defaultPath: `${documentos()}/${nome || 'semnome'}.pas`,
     })
@@ -182,7 +185,9 @@ function registrarIpc() {
   })
 
   ipcMain.handle('dialogo:mensagem', async (_e, opcoes) => {
-    const r = await dialog.showMessageBox(janela, { noLink: true, ...opcoes })
+    const t = trMain
+    const traduzidas = { ...opcoes, title: t(opcoes?.title ?? ''), message: t(opcoes?.message ?? ''), buttons: opcoes?.buttons?.map((b) => t(b)) }
+    const r = await dialog.showMessageBox(janela, { noLink: true, ...traduzidas })
     return r.response
   })
 

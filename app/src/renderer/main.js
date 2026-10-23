@@ -9,6 +9,7 @@ import { INTERVALOS, criarExecucao } from './execucao.js'
 import { ICONES } from './icones.js'
 import { DICAS } from './dicas.js'
 import { tradutor } from '../compartilhado/idiomas.js'
+import { traduzirPagina } from './traduzir-pagina.js'
 import { criarAssistente } from './assistente.js'
 import { gerarPascal } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
@@ -150,7 +151,8 @@ function aplicarModo(linguagem) {
 function atualizarTitulo() {
   const arquivo = doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.linguagem === 'portugol' ? doc.nome : `${doc.nome}.${EXTENSAO[doc.linguagem]}`
   $('#titulo-editor').textContent = doc.linguagem === 'portugol' ? `Área dos algoritmos ( Edição do código fonte ) -> Nome do arquivo: [${arquivo}]` : arquivo
-  api.janela.titulo(`MisterALG — ${arquivo}${doc.modificado ? ' (modificado)' : ''}`)
+  const t = tradutor(prefs.idioma)
+  api.janela.titulo(doc.modificado ? t('MisterALG — {0} (modificado)', arquivo) : t('MisterALG — {0}', arquivo))
   status.estado()
 }
 
@@ -321,8 +323,11 @@ const comandos = {
     if (execucao.emExecucao()) execucao.parar()
     if (await podeDescartar(' Encerrando o algoritmo e fechando o MisterALG ')) api.janela.fechar()
   },
+  // Trocar o idioma recarrega a IDE já traduzida, com o mesmo arquivo (ou um novo na mesma linguagem).
   idioma: async (id) => {
+    if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
     prefs = await api.prefs.gravar({ idioma: id })
+    api.janela.pagina({ pagina: 'ide', params: doc.caminho ? { abrir: doc.caminho } : { linguagem: doc.linguagem } })
   },
   desfazer: () => (document.activeElement?.closest('.cm-editor') ? editor.desfazer() : document.execCommand('undo')),
   refazer: () => (document.activeElement?.closest('.cm-editor') ? editor.refazer() : document.execCommand('redo')),
@@ -564,6 +569,7 @@ setInterval(() => {
 
 montarBarra()
 editor.aplicarPrefs(prefs)
+traduzirPagina(tradutor(prefs.idioma))
 
 // No Windows instalado, os termos já foram aceitos no instalador. No Mac, no
 // Linux e na versão portátil, o aceite acontece aqui, na primeira abertura.
@@ -610,7 +616,8 @@ if (pendente) {
 const veioDoInicio = Boolean(location.search)
 
 async function mostrarDica() {
-  const r = await dialogos.dicaDoDia(DICAS, prefs.dicaAtual ?? 0, prefs.mostrarDicas !== false)
+  const t = tradutor(prefs.idioma)
+  const r = await dialogos.dicaDoDia(DICAS.map((d) => t(d)), prefs.dicaAtual ?? 0, prefs.mostrarDicas !== false)
   prefs = await api.prefs.gravar({ dicaAtual: r.indice, mostrarDicas: r.mostrar })
   editor.focar()
 }
