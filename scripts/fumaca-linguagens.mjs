@@ -99,6 +99,25 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('Python: Ctrl+F2 para o laço', await ate(`${M}.execucao.emExecucao() === false`, 20), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
+  // ---- C e C++: o clang compila (F9) e o passo a passo (F8) mostra pilha, heap e ponteiros -------
+  const PROGRAMA_C = '#include <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    int x = 5;\n    int *p = &x;\n    int *v = malloc(3 * sizeof(int));\n    v[0] = 7;\n    printf("%d %d\\n", *p, v[0]);\n    free(v);\n    return 0;\n}\n'
+  await novo('c', PROGRAMA_C)
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('C: F9 compila e roda', await ate(`document.querySelector('#console-tela').textContent.includes('5 7')`, 240, 500), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+  await avaliar(`void ${M}.comandos.passo()`)
+  conferir('C: F8 abre a memória do C', await ate(`!!document.querySelector('.memoria-c:not([hidden]) .mc-quadro')`, 240, 500), true)
+  for (let i = 0; i < 5; i += 1) { await passo(); await esperar(400) }
+  conferir('C: ponteiros e heap na tela', await avaliar(`document.querySelectorAll('.mc-ponteiro').length`) >= 2, true)
+  conferir('C: setas dos ponteiros', await ate(`document.querySelectorAll('path.mc-seta').length >= 1`, 20), true)
+  for (let i = 0; i < 10 && (await avaliar(`${M}.execucao.emExecucao()`)); i += 1) { await passo(); await esperar(300) }
+  conferir('C: F8 até o fim', (await console_()).includes('5 7'), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
+  await novo('cpp', '#include <iostream>\n#include <vector>\nusing namespace std;\nint main() {\n    vector<int> v = {3, 1, 2};\n    int soma = 0;\n    for (int x : v) soma += x;\n    cout << "soma=" << soma << endl;\n    return 0;\n}\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('C++: F9 compila e roda', await ate(`document.querySelector('#console-tela').textContent.includes('soma=6')`, 240, 500), true)
+  await avaliar(`${M}.execucao.restaurar()`)
   // ---- PHP: a página gerada ao vivo (servidor de desenvolvimento dentro do app) ---------------
   await novo('php', '<h1>Olá, <?= strtoupper("php") ?>!</h1>\n<?php for ($i = 1; $i <= 3; $i++) echo "<p>$i</p>"; ?>\n')
   await avaliar(`void ${M}.comandos.executar()`)

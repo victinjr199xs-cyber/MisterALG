@@ -527,10 +527,9 @@ export function criarExecucao(op) {
 
   function pararCompilado() {
     api.clang.parar(processo.id)
-    if (!processo.rodando) {
-      processo.terminado = true
-      terminou('parado')
-    }
+    // Termina já: esperar o evento "fim" do processo deixava o F8 seguinte sem efeito por alguns instantes.
+    processo.terminado = true
+    terminou('parado')
   }
 
   /** F9 (continuo), F8 (passo) ou Shift+F9 (timer). */
