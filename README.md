@@ -83,6 +83,14 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 
 ## ✨ Recursos
 
+### 🌍 Oito linguagens, dezoito idiomas
+- **Tela inicial**: o app abre só nela; escolha a linguagem e a IDE carrega já pronta para ela.
+- **Portugol** com a tela do VisuAlg; **C#, JavaScript, TypeScript, Python, C, C++ e PHP** numa IDE escura de terminal, com mensagens em inglês e modelo `Hello, World!`.
+- **F8 (passo a passo)** mostra a pilha de chamadas e os objetos ligados por setas (C#, JS/TS, Python) ou a memória com ponteiros (C).
+- **PHP** abre a página gerada ao vivo, ao lado do código.
+- **Idioma da interface**: português, inglês, espanhol, francês, alemão, italiano, holandês, polonês, turco, russo, ucraniano, árabe, hindi, indonésio, vietnamita, chinês, japonês e coreano (tela inicial ou **Manutenção → Idioma**).
+- **Sair** pergunta se você quer voltar para a tela inicial ou fechar o app.
+
 <table>
 <tr>
 <td width="50%" valign="top">
