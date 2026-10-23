@@ -19,6 +19,7 @@ import { autocompletion, closeBrackets, completionKeymap, startCompletion } from
 import { cpp } from '@codemirror/lang-cpp'
 import { javascript } from '@codemirror/lang-javascript'
 import { python } from '@codemirror/lang-python'
+import { csharp } from '@replit/codemirror-lang-csharp'
 import { php } from '@codemirror/lang-php'
 import { highlightSelectionMatches } from '@codemirror/search'
 import { tags as t } from '@lezer/highlight'
@@ -93,6 +94,7 @@ const EXTENSOES = {
   cpp: () => [cpp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
   javascript: () => [javascript(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
   typescript: () => [javascript({ typescript: true }), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
+  csharp: () => [csharp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets(), indentUnit.of('    ')],
   python: () => [python(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets(), indentUnit.of('    ')],
   php: () => [php(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
 }

@@ -6,6 +6,7 @@ import { comNegrito, el } from './dialogos.js'
 
 export const LINGUAGENS = [
   { id: 'portugol', nome: 'Portugol', sigla: 'Pt', cor: '#7b5cff', visao: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', pronta: true },
+  { id: 'csharp', nome: 'C#', sigla: 'C#', cor: '#68217a', visao: 'Pilha de chamadas, objetos e referências (setas)', pronta: true },
   { id: 'javascript', nome: 'JavaScript', sigla: 'JS', cor: '#f0db4f', tinta: '#1b1b1b', visao: 'Pilha de chamadas e fila de eventos', pronta: true },
   { id: 'typescript', nome: 'TypeScript', sigla: 'TS', cor: '#3178c6', visao: 'O tipo de cada valor durante a execução', pronta: true },
   { id: 'python', nome: 'Python', sigla: 'Py', cor: '#3776ab', visao: 'Objetos e referências, ligados por setas', pronta: true },

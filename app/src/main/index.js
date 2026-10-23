@@ -8,6 +8,7 @@ import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
 import { criarJanelaPrincipal } from './janelas.js'
 import * as programas from './programas.js'
 import { aquecerPHP, pararPHP } from './php.js'
+import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
 import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
 import { montarMenu } from './menu.js'
 import {
@@ -249,6 +250,11 @@ function registrarIpc() {
   })
   ipcMain.handle('programa:comando', (_e, { id, cmd }) => programas.comando(id, cmd))
   ipcMain.handle('programa:parar', (_e, id) => programas.parar(id))
+
+  // C#: o tree-sitter lê o programa aqui; a IDE o executa (packages/interpretador-csharp).
+  ipcMain.handle('csharp:analisar', (_e, { fonte }) => (typeof fonte === 'string' ? analisarCSharp(fonte) : { erros: [{ linha: 1, coluna: 0, mensagem: 'pedido inválido' }] }))
+  ipcMain.handle('csharp:preludio', () => preludioCSharp())
+  ipcMain.handle('csharp:aquecer', () => aquecerCSharp())
 
   // PHP: a página ao vivo (main/previa.js). O iframe da IDE abre a URL devolvida e o PHP responde a cada requisição.
   ipcMain.handle('php:definir', (_e, { fonte, nome, diretorio }) => ({ url: definirPagina({ fonte, nome, diretorio }) }))

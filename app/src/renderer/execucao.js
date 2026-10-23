@@ -5,6 +5,7 @@ import { TEXTOS, executar } from '@misteralg/interpreter'
 import { SessaoC } from '@misteralg/interpretador-c'
 import { SessaoJSProxy } from './js/sessao-js.js'
 import { criarMemoriaObjetos } from './memoria-objetos.js'
+import { SessaoCS } from '@misteralg/interpretador-csharp'
 import { SessaoPython } from './python/sessao-python.js'
 import { criarPrevia } from './previa.js'
 import * as dialogos from './dialogos.js'
@@ -137,7 +138,7 @@ export function criarExecucao(op) {
   }
 
   function mudarCor(cor, posicao) {
-    const valor = CORES[cor] ?? CORES.BRANCO
+    const valor = CORES[cor] ?? (/^#[0-9a-f]{6}$/i.test(cor) ? cor : CORES.BRANCO)
     if (posicao === 'FRENTE') corTexto = valor
     else tela.style.background = valor
   }
@@ -156,7 +157,7 @@ export function criarExecucao(op) {
         campo.remove()
         status.mensagem(' MENSAGEM: Executando o algoritmo...')
         // Fora do Portugol, o eco é do terminal (o Portugol escreve ele mesmo).
-        if (sessao instanceof SessaoC || sessao instanceof SessaoJSProxy || sessao instanceof SessaoPython) escrever(`${valor}\n`)
+        if (sessao instanceof SessaoC || sessao instanceof SessaoJSProxy || sessao instanceof SessaoPython || sessao instanceof SessaoCS) escrever(`${valor}\n`)
         sessao?.fornecerEntrada(valor)
       } else if (e.key === 'Escape') {
         e.preventDefault()
@@ -395,6 +396,45 @@ export function criarExecucao(op) {
     else sessao.continuar()
   }
 
+  // ---- C#: o tree-sitter lê o programa no processo principal; o interpretador roda aqui ---------------
+
+  let preludioCS = null
+
+  async function iniciarCSharp(modo) {
+    prepararPassoAPasso()
+    const analise = { id: 'analise-cs', rodando: false, terminado: false, analise: true } // F8/F9 repetidos e o Parar já valem
+    processo = analise
+    status.estado(' Preparando ')
+    status.mensagem(' MENSAGEM: Lendo o programa em C#…')
+    const r = await api.csharp.analisar({ fonte: editor.texto() })
+    if (processo !== analise || analise.terminado) return
+    processo = null
+    if (r.erros) {
+      corTexto = CORES.VERMELHO
+      escrever(r.erros.map((e) => `programa.cs(${e.linha},${e.coluna + 1}): erro: ${e.mensagem}\n`).join(''))
+      corTexto = CORES.BRANCO
+      const e = r.erros[0]
+      terminou('erro', { linha: e.linha, mensagem: e.mensagem, explicacao: 'O programa tem um erro de escrita: confira ponto e vírgula, parênteses, chaves e aspas na linha marcada (ou na de cima).' })
+      return
+    }
+    preludioCS ??= (await api.csharp.preludio()).ast
+    sessao = new SessaoCS(r.ast, preludioCS, {
+      modo,
+      timerMs: op.configuracao().timerMs,
+      breakpoints: editor.breakpoints(),
+      onOutput: escrever,
+      onStep: aoPassar,
+      onMemory: mostrarMemoriaObjetos,
+      onWaitInput: () => pedirEntrada(),
+      onColor: mudarCor,
+      onEnd: terminou,
+    })
+    status.estado(' Executando ')
+    status.mensagem(` MENSAGEM: ${TEXTOS.inicio}`)
+    if (modo === 'passo') sessao.passo()
+    else sessao.continuar()
+  }
+
   // ---- PHP: a página gerada, ao vivo ---------------------------------------------------------------
   // Não há "execução" com passos: o PHP responde a cada requisição da página (main/previa.js) e o editor
   // continua livre — ao editar, a página se atualiza sozinha.
@@ -526,7 +566,12 @@ export function criarExecucao(op) {
   }
 
   function pararCompilado() {
-    api.clang.parar(processo.id)
+    if (!processo.analise) api.clang.parar(processo.id) // a análise do C# não é um processo
+    processo.terminado = true
+    if (processo.analise) {
+      terminou('parado')
+      return
+    }
     // Termina já: esperar o evento "fim" do processo deixava o F8 seguinte sem efeito por alguns instantes.
     processo.terminado = true
     terminou('parado')
@@ -540,6 +585,7 @@ export function criarExecucao(op) {
     const linguagem = op.linguagem?.() ?? 'portugol'
     if (linguagem === 'javascript' || linguagem === 'typescript') return iniciarJS(modo, linguagem)
     if (linguagem === 'python') return iniciarPython(modo)
+    if (linguagem === 'csharp') return iniciarCSharp(modo)
     if (linguagem === 'php') return iniciarPHP()
     if (linguagem !== 'portugol') {
       // F9 sem pontos de parada roda o programa compilado de verdade; F8, Shift+F9 ou pontos de parada usam o passo a passo.

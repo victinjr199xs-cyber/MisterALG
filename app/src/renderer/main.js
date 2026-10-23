@@ -90,8 +90,9 @@ const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modif
 
 // ---- linguagens --------------------------------------------------------------------
 
-const EXTENSAO = { portugol: 'alg', c: 'c', cpp: 'cpp', javascript: 'js', typescript: 'ts', python: 'py', php: 'php' }
+const EXTENSAO = { portugol: 'alg', c: 'c', cpp: 'cpp', csharp: 'cs', javascript: 'js', typescript: 'ts', python: 'py', php: 'php' }
 const linguagemDoCaminho = (caminho) => (
+  /\.cs$/i.test(caminho) ? 'csharp' :
   /\.ts$/i.test(caminho) ? 'typescript' :
   /\.js$/i.test(caminho) ? 'javascript' :
   /\.py$/i.test(caminho) ? 'python' :
@@ -103,6 +104,7 @@ const linguagemDoCaminho = (caminho) => (
 const MODELOS_NOVO = {
   c: '#include <stdio.h>\n\nint main(void) {\n    printf("Olá, mundo!\\n");\n    return 0;\n}\n',
   cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Olá, mundo!" << endl;\n    return 0;\n}\n',
+  csharp: 'using System;\n\nclass Program\n{\n    static void Main()\n    {\n        Console.WriteLine("Olá, mundo!");\n    }\n}\n',
   javascript: 'console.log("Olá, mundo!")\n',
   typescript: 'const msg: string = "Olá, mundo!"\nconsole.log(msg)\n',
   python: 'print("Olá, mundo!")\n',
@@ -162,6 +164,7 @@ function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 
   // Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve.
   if (linguagem === 'c' || linguagem === 'cpp') api.clang.aquecer({ linguagem, fonte: texto })
   else if (linguagem === 'python') api.programa.aquecer('python')
+  else if (linguagem === 'csharp') api.csharp.aquecer()
   else if (linguagem === 'php') api.php.aquecer()
   atualizarTitulo()
   editor.focar()

@@ -66,6 +66,11 @@ contextBridge.exposeInMainWorld('misteralg', {
       return () => ipcRenderer.removeListener('programa:evento', ouvinte)
     },
   },
+  csharp: {
+    analisar: invocar('csharp:analisar'),
+    preludio: invocar('csharp:preludio'),
+    aquecer: invocar('csharp:aquecer'),
+  },
   php: {
     aquecer: invocar('php:aquecer'),
     definir: invocar('php:definir'),
