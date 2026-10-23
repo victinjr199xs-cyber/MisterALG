@@ -1,18 +1,47 @@
-// Executa Python no navegador usando Pyodide.
-// O passo a passo com rastreamento de linhas será implementado em versão futura.
+// Python no MisterALG: roda com Pyodide (CPython em WebAssembly), 100% offline.
+// No app, os arquivos do Pyodide ficam em <renderer>/pyodide/ (copiados no build por electron.vite.config.mjs);
+// no Node (testes) o próprio pacote "pyodide" os encontra. O passo a passo linha a linha ainda não existe.
 
-let pyodide = null
+let carregando = null
 
-async function inicializarPyodide() {
-  if (pyodide) return pyodide
-  try {
-    const { loadPyodide } = await import('https://cdn.jsdelivr.net/pyodide/v0.24.0/full/pyodide.js')
-    pyodide = await loadPyodide()
-    return pyodide
-  } catch (e) {
-    throw new Error('Erro ao carregar Pyodide: ' + String(e))
-  }
+function inicializarPyodide() {
+  carregando ??= (async () => {
+    const m = await import('pyodide/pyodide.mjs')
+    // No Node o pyodide.mjs procura os arquivos a partir da pasta atual, então o caminho vai explícito.
+    const indexURL = globalThis.document
+      ? new URL('pyodide/', document.baseURI).href
+      : new URL('.', import.meta.resolve('pyodide/pyodide.mjs')).pathname.replace(/^\/(\w:)/, '$1')
+    const py = await m.loadPyodide({ indexURL })
+    py.runPython(PREPARO)
+    return py
+  })()
+  carregando.catch(() => { carregando = null }) // uma falha de carregamento não pode ficar guardada para sempre
+  return carregando
 }
+
+// Roda o programa do aluno com exec(compile(...)): o texto não é colado em nenhum modelo,
+// então strings de várias linhas e a indentação do aluno chegam intactas, e o traceback traz a linha certa.
+const PREPARO = `
+import contextlib, io, json, traceback
+
+def __misteralg_rodar(fonte):
+    saida = io.StringIO()
+    erro = None
+    with contextlib.redirect_stdout(saida), contextlib.redirect_stderr(saida):
+        try:
+            exec(compile(fonte, 'programa.py', 'exec'), {'__name__': '__main__'})
+        except SystemExit:
+            pass
+        except BaseException as e:
+            linha = getattr(e, 'lineno', 0) if isinstance(e, SyntaxError) else 0
+            if not linha:
+                for f in reversed(traceback.extract_tb(e.__traceback__)):
+                    if f.filename == 'programa.py':
+                        linha = f.lineno
+                        break
+            erro = {'mensagem': f'{type(e).__name__}: {e}', 'linha': linha or 0}
+    return json.dumps({'saida': saida.getvalue(), 'erro': erro})
+`
 
 export class SessaoPython {
   constructor(fonte, opcoes = {}) {
@@ -20,102 +49,56 @@ export class SessaoPython {
     this.opcoes = opcoes
     this.estado = 'pronto'
     this.terminado = false
-    this.buffer = ''
+    this.pyodide = null
     this.iniciar()
   }
 
   async iniciar() {
     try {
-      await inicializarPyodide()
-      if (this.opcoes.modo === 'passo') {
-        this.passo()
-      } else {
-        this.continuar()
-      }
+      this.pyodide = await inicializarPyodide()
     } catch (e) {
-      this.estado = 'erro'
-      this.terminado = true
-      this.opcoes.onEnd?.('erro', {
-        mensagem: String(e),
-        linha: 0
-      })
+      return this.finalizar('erro', { mensagem: `Não foi possível carregar o Python: ${e?.message ?? e}`, linha: 0 })
     }
+    if (!this.terminado) this.executarTudo()
   }
 
-  continuar() {
-    if (this.terminado) return
-    this.executarTudo()
-  }
-
-  passo() {
-    if (this.terminado) return
-    this.executarTudo()
-  }
+  // Sem passo a passo ainda: F8 e F9 rodam o programa inteiro (assim que o Pyodide terminar de carregar).
+  continuar() {}
+  passo() {}
 
   parar() {
+    if (!this.terminado) this.finalizar('parado')
+  }
+
+  fornecerEntrada() {}
+
+  executarTudo() {
+    this.estado = 'rodando'
+    try {
+      const r = JSON.parse(this.pyodide.globals.get('__misteralg_rodar')(this.fonte))
+      if (r.saida) this.opcoes.onOutput?.(r.saida)
+      if (r.erro) this.finalizar('erro', { ...r.erro, explicacao: 'Este erro aconteceu durante a execução do programa em Python. Leia a última linha da mensagem: ela diz o que deu errado.' })
+      else this.finalizar('terminado')
+    } catch (e) {
+      this.finalizar('erro', { mensagem: String(e?.message ?? e).split('\n').pop(), linha: 0 })
+    }
+  }
+
+  finalizar(estado, erro) {
     if (this.terminado) return
     this.terminado = true
-    this.estado = 'parado'
-    this.opcoes.onEnd?.('parado')
-  }
-
-  fornecerEntrada(texto) {
-    // input() será implementado
-  }
-
-  async executarTudo() {
-    try {
-      this.estado = 'rodando'
-
-      const codigo = `
-import sys
-from io import StringIO
-
-_old_stdout = sys.stdout
-_old_stderr = sys.stderr
-sys.stdout = StringIO()
-sys.stderr = StringIO()
-
-try:
-${this.fonte.split('\n').map(l => '    ' + l).join('\n')}
-except Exception as e:
-    import traceback
-    traceback.print_exc()
-finally:
-    _saida = sys.stdout.getvalue()
-    _erro = sys.stderr.getvalue()
-    sys.stdout = _old_stdout
-    sys.stderr = _old_stderr
-`
-
-      pyodide.runPython(codigo)
-      const saida = pyodide.runPython('_saida if "_saida" in dir() else ""')
-      const erro = pyodide.runPython('_erro if "_erro" in dir() else ""')
-
-      this.buffer = saida + (erro ? erro : '')
-      this.opcoes.onOutput?.(this.buffer)
-
-      this.estado = 'terminado'
-      this.terminado = true
-      this.opcoes.onEnd?.('terminado')
-    } catch (e) {
-      this.estado = 'erro'
-      this.terminado = true
-      this.opcoes.onEnd?.('erro', {
-        mensagem: String(e).split('\n')[0],
-        linha: 0,
-        explicacao: 'Erro durante a execução do programa em Python.'
-      })
-    }
+    this.estado = estado
+    this.opcoes.onEnd?.(estado, erro)
   }
 }
 
-export async function rodarPython(fonte, opcoes = {}) {
-  return new Promise(async (resolve) => {
+/** Atalho para testes: roda até o fim e devolve a saída. */
+export function rodarPython(fonte, opcoes = {}) {
+  return new Promise((resolve) => {
     let saida = ''
     const sessao = new SessaoPython(fonte, {
       ...opcoes,
-      onOutput: (t) => { saida = t },
+      onOutput: (t) => { saida += t },
       onEnd: (status, erro) => resolve({ saida, status, erro, sessao }),
     })
   })

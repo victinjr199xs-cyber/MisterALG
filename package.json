@@ -16,7 +16,7 @@
     "postinstall": "node node_modules/electron/install.js",
     "dev": "npm run dev -w misteralg-app",
     "build": "npm run build -w misteralg-app",
-    "test": "npm run test:codificacao && npm run test:interpreter && npm run test:busca && npm run test:app && npm run test:interpretador-c && npm run test:compat && npm run test:interpretador-js",
+    "test": "npm run test:codificacao && npm run test:interpreter && npm run test:busca && npm run test:app && npm run test:interpretador-c && npm run test:compat && npm run test:interpretador-js && npm run test:interpretador-python",
     "test:app": "node --test app/src/compartilhado/ia.test.mjs app/src/main/compilador.test.mjs",
     "test:interpretador-c": "npm run test -w @misteralg/interpretador-c",
     "test:interpretador-js": "npm run test -w @misteralg/interpretador-js",

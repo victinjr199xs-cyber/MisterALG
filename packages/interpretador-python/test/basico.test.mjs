@@ -69,3 +69,27 @@ print(p.saudar())
   assert.equal(status, 'terminado')
   assert(saida.includes('Maria'))
 })
+
+test('string de varias linhas e indentacao do aluno chegam intactas', async () => {
+  const { status, saida } = await rodarPython('texto = """a\n  b"""\nprint(texto)\nif True:\n\tprint("tab")\n')
+  assert.equal(status, 'terminado')
+  assert.equal(saida, 'a\n  b\ntab\n')
+})
+
+test('erro em tempo de execucao traz a linha do aluno', async () => {
+  const { status, erro } = await rodarPython('x = 1\ny = x / 0\n')
+  assert.equal(status, 'erro')
+  assert.equal(erro.linha, 2)
+  assert(erro.mensagem.startsWith('ZeroDivisionError'))
+})
+
+test('erro de sintaxe traz a linha', async () => {
+  const { status, erro } = await rodarPython('print("ok")\nif x\n  pass\n')
+  assert.equal(status, 'erro')
+  assert.equal(erro.linha, 2)
+})
+
+test('sys.exit() termina sem erro', async () => {
+  const { status } = await rodarPython('import sys\nsys.exit(0)\n')
+  assert.equal(status, 'terminado')
+})
