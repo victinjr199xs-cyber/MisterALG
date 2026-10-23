@@ -90,10 +90,12 @@ const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modif
 
 // ---- linguagens --------------------------------------------------------------------
 
-const EXTENSAO = { portugol: 'alg', c: 'c', cpp: 'cpp', javascript: 'js', typescript: 'ts' }
+const EXTENSAO = { portugol: 'alg', c: 'c', cpp: 'cpp', javascript: 'js', typescript: 'ts', python: 'py', php: 'php' }
 const linguagemDoCaminho = (caminho) => (
   /\.ts$/i.test(caminho) ? 'typescript' :
   /\.js$/i.test(caminho) ? 'javascript' :
+  /\.py$/i.test(caminho) ? 'python' :
+  /\.php$/i.test(caminho) ? 'php' :
   /\.(cpp|cc|cxx|hpp|hh)$/i.test(caminho) ? 'cpp' :
   /\.[ch]$/i.test(caminho) ? 'c' :
   'portugol'
@@ -103,6 +105,8 @@ const MODELOS_NOVO = {
   cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Olá, mundo!" << endl;\n    return 0;\n}\n',
   javascript: 'console.log("Olá, mundo!")\n',
   typescript: 'const msg: string = "Olá, mundo!"\nconsole.log(msg)\n',
+  python: 'print("Olá, mundo!")\n',
+  php: '<?php\necho "Olá, mundo!";\n',
 }
 const esqueletoDe = (linguagem) => MODELOS_NOVO[linguagem] ?? esqueleto(prefs)
 let aleatorioLigado = false

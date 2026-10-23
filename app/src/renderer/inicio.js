@@ -8,7 +8,7 @@ export const LINGUAGENS = [
   { id: 'portugol', nome: 'Portugol', sigla: 'Pt', cor: '#7b5cff', visao: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', pronta: true },
   { id: 'javascript', nome: 'JavaScript', sigla: 'JS', cor: '#f0db4f', tinta: '#1b1b1b', visao: 'Pilha de chamadas e fila de eventos', pronta: true },
   { id: 'typescript', nome: 'TypeScript', sigla: 'TS', cor: '#3178c6', visao: 'O tipo de cada valor durante a execução', pronta: true },
-  { id: 'python', nome: 'Python', sigla: 'Py', cor: '#3776ab', visao: 'Objetos e referências, ligados por setas' },
+  { id: 'python', nome: 'Python', sigla: 'Py', cor: '#3776ab', visao: 'Objetos e referências, ligados por setas', pronta: true },
   { id: 'c', nome: 'C', sigla: 'C', cor: '#5c6bc0', visao: 'Biblioteca padrão completa (clang). Em breve: memória e ponteiros', pronta: true },
   { id: 'cpp', nome: 'C++', sigla: 'C++', cor: '#00599c', visao: 'Biblioteca padrão completa (clang). Em breve: objetos', pronta: true },
   { id: 'php', nome: 'PHP', sigla: 'PHP', cor: '#777bb4', visao: 'A página gerada, ao vivo', pronta: true },

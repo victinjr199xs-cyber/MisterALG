@@ -18,6 +18,8 @@ import { HighlightStyle, StreamLanguage, bracketMatching, indentUnit, syntaxHigh
 import { autocompletion, closeBrackets, completionKeymap, startCompletion } from '@codemirror/autocomplete'
 import { cpp } from '@codemirror/lang-cpp'
 import { javascript } from '@codemirror/lang-javascript'
+import { python } from '@codemirror/lang-python'
+import { html } from '@codemirror/lang-html'
 import { highlightSelectionMatches } from '@codemirror/search'
 import { tags as t } from '@lezer/highlight'
 import { FUNCOES, PALAVRAS_CHAVE, normalizar } from '@misteralg/interpreter'
@@ -86,6 +88,8 @@ const EXTENSOES = {
   cpp: () => [cpp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
   javascript: () => [javascript(), bracketMatching(), closeBrackets()],
   typescript: () => [javascript({ typescript: true }), bracketMatching(), closeBrackets()],
+  python: () => [python(), bracketMatching(), closeBrackets()],
+  php: () => [html({ base: 'text/x-php' }), bracketMatching(), closeBrackets()],
 }
 
 // ---- pontos de parada (calha + linha vermelha) ---------------------------

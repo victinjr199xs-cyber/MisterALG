@@ -5,6 +5,7 @@ import { TEXTOS, executar } from '@misteralg/interpreter'
 import { SessaoC } from '@misteralg/interpretador-c'
 import { SessaoJSProxy } from './js/sessao-js.js'
 import { criarMemoriaJS } from './js/memoria-js.js'
+import { SessaoPython } from '@misteralg/interpretador-python'
 import * as dialogos from './dialogos.js'
 import { criarMemoriaC } from './memoria-c.js'
 
@@ -384,6 +385,25 @@ export function criarExecucao(op) {
     else sessao.continuar()
   }
 
+  /** F8 (ou F9) em Python: executa com Pyodide no navegador. */
+  function iniciarPassoPython(modo) {
+    const fonte = editor.texto()
+    tela.replaceChildren()
+    abrirConsole()
+    editor.realcarErro(null)
+    editor.somenteLeitura(true)
+    op.aoMudarEstado(true)
+    mostrarMemoria(false)
+    status.estado(' Carregando Python ')
+    status.mensagem(' MENSAGEM: Inicializando Pyodide no navegador…')
+
+    sessao = new SessaoPython(fonte, {
+      modo,
+      onOutput: escrever,
+      onEnd: (estado, erro) => terminou(estado === 'parado' ? 'parado' : estado, erro),
+    })
+  }
+
   /** F8 (ou F9 com pontos de parada) no C: o clang gera a árvore e a SessaoC a executa linha a linha. */
   async function iniciarPassoC(modo, linguagem) {
     const fonte = editor.texto()
@@ -454,10 +474,15 @@ export function criarExecucao(op) {
   function iniciar(modo) {
     modoAtual = modo
     const linguagem = op.linguagem?.() ?? 'portugol'
-    // JS/TS: sempre passo a passo (não há F9 compilado)
+    // JS/TS/Python: sempre passo a passo (não há F9 compilado)
     if ((linguagem === 'javascript' || linguagem === 'typescript') && !(sessao instanceof SessaoJSProxy && !sessao.terminado)) {
       if (emExecucao()) return
       iniciarPassoJS(modo, linguagem)
+      return
+    }
+    if (linguagem === 'python' && !(sessao instanceof SessaoPython && !sessao.terminado)) {
+      if (emExecucao()) return
+      iniciarPassoPython(modo)
       return
     }
     // C/C++ parado no meio do passo a passo segue pelo caminho de baixo (a SessaoC é igual à do Portugol).

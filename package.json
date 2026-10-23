@@ -40,6 +40,8 @@
     "esbuild@0.25.12": true
   },
   "dependencies": {
-    "@codemirror/lang-javascript": "^6.2.5"
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-python": "^6.1.4"
   }
 }
