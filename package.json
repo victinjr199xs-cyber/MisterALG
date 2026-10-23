@@ -26,9 +26,9 @@
     "test:busca": "npm run test -w @misteralg/editor-busca",
     "test:compat": "node --test testes-compat/p0.test.mjs testes-compat/exemplos.test.mjs",
     "test:compat:full": "node --test \"testes-compat/*.test.mjs\"",
-    "dist:mac": "npm run build && npm run dist:mac -w misteralg-app",
-    "dist:win": "npm run build && npm run dist:win -w misteralg-app",
-    "dist:linux": "npm run build && npm run dist:linux -w misteralg-app"
+    "dist:mac": "npm run build && node scripts/preparar-linguagens.mjs && npm run dist:mac -w misteralg-app",
+    "dist:win": "npm run build && node scripts/preparar-linguagens.mjs && npm run dist:win -w misteralg-app",
+    "dist:linux": "npm run build && node scripts/preparar-linguagens.mjs && npm run dist:linux -w misteralg-app"
   },
   "devDependencies": {
     "electron": "^44.0.0",

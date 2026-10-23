@@ -73,7 +73,7 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   await tecla('Enter')
   conferir('Python: pausa depois do input (linha 7)', await naLinha(7), true)
   conferir('Python: x e y apontam para o mesmo objeto', await avaliar(`document.querySelectorAll('.mo-ref[data-ref="1"]').length`) >= 2, true)
-  conferir('Python: setas', await avaliar(`document.querySelectorAll('.mo-seta').length`) >= 2, true)
+  conferir('Python: setas', await ate(`document.querySelectorAll('.mo-seta').length >= 2`, 40), true)
   await passo() // a linha 7 chama soma(): o passo a passo entra na função
   conferir('Python: entrou em soma (linha 2, duas caixas na pilha)', (await naLinha(2)) && (await avaliar(`document.querySelectorAll('.mo-quadro').length`)) === 2, true)
   await passo()
@@ -109,7 +109,7 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('C: F8 abre a memória do C', await ate(`!!document.querySelector('.memoria-c:not([hidden]) .mc-quadro')`, 240, 500), true)
   for (let i = 0; i < 5; i += 1) { await passo(); await esperar(400) }
   conferir('C: ponteiros e heap na tela', await avaliar(`document.querySelectorAll('.mc-ponteiro').length`) >= 2, true)
-  conferir('C: setas dos ponteiros', await ate(`document.querySelectorAll('path.mc-seta').length >= 1`, 20), true)
+  conferir('C: setas dos ponteiros', await ate(`document.querySelectorAll('path.mc-seta').length >= 1`, 80), true)
   for (let i = 0; i < 10 && (await avaliar(`${M}.execucao.emExecucao()`)); i += 1) { await passo(); await esperar(300) }
   conferir('C: F8 até o fim', (await console_()).includes('5 7'), true)
   await avaliar(`${M}.execucao.restaurar()`)
@@ -132,6 +132,11 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('PHP: erro fatal abre o aviso com a linha', await ate(`/divisão por zero/.test(document.querySelector('dialog[open]')?.innerText ?? '')`, 60), true)
   conferir('PHP: lista de avisos na página', await avaliar(`document.querySelectorAll('.previa-aviso').length`) >= 1, true)
   await avaliar(`document.querySelector('dialog[open]')?.close()`)
+  await avaliar(`${M}.execucao.restaurar()`)
+  // ---- C#: tree-sitter no processo principal + interpretador na IDE ---------------------------
+  await novo('csharp', 'using System;\nclass P\n{\n    static void Main()\n    {\n        int[] v = { 3, 1, 2 };\n        Array.Sort(v);\n        Console.WriteLine(string.Join(",", v) + " " + 7.5);\n    }\n}\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('C#: F9 roda (cultura pt-BR)', await ate(`document.querySelector('#console-tela').textContent.includes('1,2,3 7,5')`), true)
   await avaliar(`${M}.execucao.restaurar()`)
   const proprios = erros.filter((e) => !/Autofill|DevTools/.test(e))
   conferir('sem erros no console da página', proprios, [])

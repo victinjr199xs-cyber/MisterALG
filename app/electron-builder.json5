@@ -7,8 +7,10 @@
   // Tudo do renderer já vem empacotado pelo electron-vite; não há node_modules em runtime.
   // C e C++: o clang em WebAssembly fica fora do asar, e o worker e o executor também
   // (worker_threads e o processo filho não leem de dentro do app.asar). Ver main/clang.js.
-  extraResources: [{ from: '../node_modules/@yowasp/clang', to: 'clang', filter: ['package.json', 'gen/**'] }],
-  asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js'],
+  extraResources: [{ from: '../node_modules/@yowasp/clang', to: 'clang', filter: ['package.json', 'gen/**'] },
+    // Python (Pyodide), PHP (php-wasm 8.3) e C# (tree-sitter): scripts/preparar-linguagens.mjs monta esta pasta.
+    { from: 'build/linguagens', to: 'linguagens' }],
+  asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js', 'out/main/rodar-python.js', 'out/main/rodar-php.js'],
   npmRebuild: false,
   electronVersion: '44.8.0',
   fileAssociations: [
@@ -30,7 +32,7 @@
       { target: 'nsis', arch: ['x64'] },
       { target: 'portable', arch: ['x64'] },
     ],
-    icon: 'build/icon.png',
+    icon: 'build/icon.ico',
   },
   nsis: {
     // Assistente completo: pergunta inicial + boas-vindas (installer.nsh), termos de uso
