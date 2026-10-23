@@ -53,6 +53,7 @@ export class SessaoJS {
     this.pararNaProxima = false
     this.pedidoParada = false
     this.rodando = false
+    if (typeof fonte !== 'string') fonte = ''
     const r = instrumentar(fonte, { typescript: !!op.typescript })
     if (r.erro) {
       this.erroInicial = Object.assign(new ErroJS(`erro de sintaxe: ${r.erro.mensagem}`, r.erro.linha), {

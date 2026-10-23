@@ -100,3 +100,23 @@ test('typeof', async () => {
   assert.equal(status, 'terminado')
   assert.equal(saida, 'number\nstring\nboolean\n')
 })
+
+test('Promise básica', async () => {
+  const { status, saida } = await rodarJS(`
+    Promise.resolve(42).then(x => console.log(x))
+  `)
+  assert.equal(status, 'terminado')
+  assert.equal(saida, '42\n')
+})
+
+test('async/await simples', async () => {
+  const { status, saida } = await rodarJS(`
+    async function teste() {
+      const x = await Promise.resolve(10)
+      console.log(x)
+    }
+    teste()
+  `)
+  assert.equal(status, 'terminado')
+  assert.equal(saida, '10\n')
+})
