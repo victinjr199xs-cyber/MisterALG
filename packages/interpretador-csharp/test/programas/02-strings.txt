@@ -1,0 +1,62 @@
+[  Olá, Mundo C#!  ]
+[Olá, Mundo C#!]
+[Olá, Mundo C#!  ]
+[  Olá, Mundo C#!]
+14
+OLÁ, MUNDO C#!
+olá, mundo c#!
+Mundo C#!
+Mundo
+5
+9
+9
+-1
+True
+True
+True
+Olá, Mund0 C#!
+Olá, mundo C#!
+Olá***, Mundo C#!
+OláMundo C#!
+***abc
+abc---|
+5
+a|b||c|d
+3:um/dois/três
+1, 2, 3
+abc
+abc12
+3abc
+-1
+1
+False
+True
+True
+True
+xxxxx
+b
+olleh
+2 + 3 = 5
+   42|42   |007
+1234,57 1.234,6 1,23E+003
+{literal} ok
+Linha1
+Linha2	Tab\Barra"Aspas"
+C:\pasta\arquivo.txt
+Texto "verbatim"
+>>a1c2,5True
+x-y
+16
+0
+True False False X
+True True
+3
+ban
+MiSSiSSippi
+3
+AÇÃO
+6
+True
+True
+fim
+padrão

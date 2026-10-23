@@ -150,7 +150,11 @@ export function decDividir(a, b) {
   let q = num / den
   const resto = num % den
   if (resto * 2n >= (den < 0n ? -den : den) && resto !== 0n) q += (num < 0n) !== (den < 0n) ? -1n : 1n
-  return normalizarDec(new Dec(q, escalaExtra))
+  // O .NET dá o resultado com a menor escala que o representa, mas nunca menor que a do dividendo menos a do divisor.
+  let r = new Dec(q, escalaExtra)
+  const minima = Math.max(0, a.s - b.s)
+  while (r.s > minima && r.u % 10n === 0n) r = new Dec(r.u / 10n, r.s - 1)
+  return r
 }
 export const decComparar = (a, b) => { const [x, y] = alinhar(a, b); return x < y ? -1 : x > y ? 1 : 0 }
 export const decParaNumero = (d) => Number(d.u) / 10 ** d.s
@@ -227,6 +231,17 @@ export function converterNumero(v, k) {
   return k === 'int' ? r : new Num(k, r)
 }
 
+/** O valor (truncado) cabe no tipo inteiro k? Usado nas conversões dentro de checked. */
+export function cabeEm(v, k) {
+  const n = v instanceof Dec ? decParaNumero(v) : typeof v === 'bigint' ? v : v instanceof Num && typeof v.v === 'bigint' ? v.v : comoNumero(v)
+  if (typeof n === 'number' && !Number.isFinite(n)) return false
+  const t = typeof n === 'bigint' ? n : BigInt(Math.trunc(n))
+  if (k === 'long') return t >= -(2n ** 63n) && t < 2n ** 63n
+  if (k === 'ulong') return t >= 0n && t < 2n ** 64n
+  if (LIMITES[k]) return t >= BigInt(LIMITES[k][0]) && t <= BigInt(LIMITES[k][1])
+  return true
+}
+
 /** Dos dois operandos, o tipo em que a conta é feita (a "promoção numérica" do C#). */
 export function tipoDaConta(a, b) {
   const ta = tipoNumerico(a)
@@ -253,7 +268,7 @@ export function textoDouble(n, virgula = true) {
   const digitos = mant.replace('-', '').replace('.', '')
   const sinal = n < 0 ? '-' : ''
   let r
-  if (exp >= 15 || exp < -5) {
+  if (exp >= 15 || exp < -4) {
     const m = digitos.length > 1 ? `${digitos[0]}.${digitos.slice(1)}` : digitos
     r = `${sinal}${m}E${exp < 0 ? '-' : '+'}${String(Math.abs(exp)).padStart(2, '0')}`
   } else if (exp >= 0) {

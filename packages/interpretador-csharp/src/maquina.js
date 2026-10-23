@@ -128,6 +128,7 @@ export class MaquinaCS {
     this.saidaTexto = op.saida ?? (() => {})
     this.ultimaCor = null
     this.contadorProfundidade = 0
+    this.verificado = 0 // dentro de checked { }, o estouro de inteiros vira OverflowException
     this.bib = null
   }
 
@@ -309,7 +310,8 @@ export class MaquinaCS {
       case 'property_declaration': def.propriedades.set(filho(m, 'name').x, this.lerDeclaracaoPropriedade(def, m, mods, estatico)); break
       case 'indexer_declaration': def.indexadores.push(this.lerDeclaracaoPropriedade(def, m, mods, false, true)); break
       case 'method_declaration': {
-        const nome = filho(m, 'name').x
+        const espec = m.f.find((x) => x.t === 'explicit_interface_specifier')
+        const nome = (espec ? `${espec.f.find((x) => x.x)?.x}.` : '') + filho(m, 'name').x
         const md = this.lerMetodo(def, m, mods, nome)
         if (!def.metodos.has(nome)) def.metodos.set(nome, [])
         def.metodos.get(nome).push(md)
@@ -485,7 +487,6 @@ export class MaquinaCS {
   *iniciarClasse(def) {
     if (def.iniciada) return
     def.iniciada = true
-    if (def.base) yield* this.iniciarClasse(def.base)
     const ctx = { este: null, cls: def, quadro: null }
     for (const c of def.camposEstaticos) def.estaticos.set(c.nome, new Ref(this.valorPadrao(c.tipo), c.tipo))
     for (const c of def.camposEstaticos) {
@@ -652,11 +653,12 @@ export class MaquinaCS {
 
   *chamarMetodo(md, este, args, clsContexto, extras = null) {
     if (this.pilha.length >= MAX_PILHA) throw this.excecao('InsufficientExecutionStackException', 'Stack overflow (muitas chamadas uma dentro da outra — recursão infinita?)')
+    if (md.estatico && md.cls) yield* this.iniciarClasse(md.cls)
     if (!md.corpo) {
       if (md.abstrato) throw new ErroCS(`o método ${md.nome} é abstrato e não tem corpo`, this.linhaAtual)
       return null
     }
-    const ctx = { este, cls: md.cls ?? clsContexto, quadro: null, metodo: md, tiposGenericos: extras?.tiposGenericos ?? null }
+    const ctx = { este, cls: md.cls ?? clsContexto, quadro: null, metodo: md, tiposGenericos: md.genericos?.length ? this.mapaGenerico(md, args, extras?.tiposGenericos) : null }
     const amb = new Amb(md.fechamento ?? null, ctx)
     const linhaChamada = this.linhaAtual
     yield* this.ligarParametros(md, amb, args)
@@ -687,6 +689,24 @@ export class MaquinaCS {
       this.pilha.pop()
       this.linhaAtual = linhaChamada
     }
+  }
+
+  /** Os tipos de T, U... de uma chamada genérica: os escritos (Metodo<int>) ou deduzidos dos argumentos. */
+  mapaGenerico(md, args, explicitos) {
+    const mapa = new Map()
+    md.genericos.forEach((g, i) => { if (explicitos?.[i]) mapa.set(g, explicitos[i]) })
+    md.params.forEach((p, i) => {
+      const v = args[i]
+      if (v === undefined || v === null) return
+      const valor = v instanceof Ref ? v.v : v
+      const direto = md.genericos.find((g) => g === p.tipo)
+      if (direto && !mapa.has(direto)) mapa.set(direto, this.nomeDoTipoDe(valor))
+      const arr = md.genericos.find((g) => p.tipo === `[]`)
+      if (arr && valor instanceof Arr && !mapa.has(arr)) mapa.set(arr, valor.tipoElem)
+      const gen = /^\w+<(\w+)>$/.exec(p.tipo)
+      if (gen && md.genericos.includes(gen[1]) && !mapa.has(gen[1]) && valor?.tipoElem) mapa.set(gen[1], valor.tipoElem)
+    })
+    return mapa
   }
 
   tarefaCompleta(md, r) {

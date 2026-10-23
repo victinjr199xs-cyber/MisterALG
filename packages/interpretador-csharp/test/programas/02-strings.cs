@@ -1,0 +1,84 @@
+using System;
+using System.Text;
+using System.Linq;
+
+class P
+{
+    static void Main()
+    {
+        string s = "  Olá, Mundo C#!  ";
+        Console.WriteLine("[" + s + "]");
+        Console.WriteLine("[" + s.Trim() + "]");
+        Console.WriteLine("[" + s.TrimStart() + "]");
+        Console.WriteLine("[" + s.TrimEnd() + "]");
+        string t = s.Trim();
+        Console.WriteLine(t.Length);
+        Console.WriteLine(t.ToUpper());
+        Console.WriteLine(t.ToLower());
+        Console.WriteLine(t.Substring(5));
+        Console.WriteLine(t.Substring(5, 5));
+        Console.WriteLine(t.IndexOf("Mundo"));
+        Console.WriteLine(t.IndexOf('o'));
+        Console.WriteLine(t.LastIndexOf('o'));
+        Console.WriteLine(t.IndexOf("xyz"));
+        Console.WriteLine(t.Contains("Mundo"));
+        Console.WriteLine(t.StartsWith("Olá"));
+        Console.WriteLine(t.EndsWith("!"));
+        Console.WriteLine(t.Replace("o", "0"));
+        Console.WriteLine(t.Replace('M', 'm'));
+        Console.WriteLine(t.Insert(3, "***"));
+        Console.WriteLine(t.Remove(3, 2));
+        Console.WriteLine("abc".PadLeft(6, '*'));
+        Console.WriteLine("abc".PadRight(6, '-') + "|");
+        string[] partes = "a,b,,c,d".Split(',');
+        Console.WriteLine(partes.Length);
+        Console.WriteLine(string.Join("|", partes));
+        string[] palavras = "um dois  três".Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        Console.WriteLine(palavras.Length + ":" + string.Join("/", palavras));
+        Console.WriteLine(string.Join(", ", new int[] { 1, 2, 3 }));
+        Console.WriteLine(string.Concat("a", "b", "c"));
+        Console.WriteLine("abc" + 1 + 2);
+        Console.WriteLine(1 + 2 + "abc");
+        Console.WriteLine("abc".CompareTo("abd"));
+        Console.WriteLine(string.Compare("b", "a"));
+        Console.WriteLine("Abc" == "abc");
+        Console.WriteLine(string.Equals("Abc", "abc", StringComparison.OrdinalIgnoreCase));
+        Console.WriteLine(string.IsNullOrEmpty(""));
+        Console.WriteLine(string.IsNullOrWhiteSpace("   "));
+        Console.WriteLine(new string('x', 5));
+        Console.WriteLine("abc"[1]);
+        char[] cs = "hello".ToCharArray();
+        Array.Reverse(cs);
+        Console.WriteLine(new string(cs));
+        Console.WriteLine(string.Format("{0} + {1} = {2}", 2, 3, 2 + 3));
+        Console.WriteLine(string.Format("{0,5}|{1,-5}|{2:D3}", 42, 42, 7));
+        Console.WriteLine(string.Format("{0:F2} {0:N1} {0:E2}", 1234.5678));
+        Console.WriteLine(string.Format("{{literal}} {0}", "ok"));
+        Console.WriteLine("Linha1\nLinha2\tTab\\Barra\"Aspas\"");
+        Console.WriteLine(@"C:\pasta\arquivo.txt");
+        Console.WriteLine(@"Texto ""verbatim""");
+        StringBuilder sb = new StringBuilder();
+        sb.Append("a").Append(1).Append('c').Append(2.5).Append(true);
+        sb.AppendLine();
+        sb.AppendFormat("{0}-{1}", "x", "y");
+        sb.Insert(0, ">>");
+        Console.WriteLine(sb.ToString());
+        Console.WriteLine(sb.ToString().Replace("\r", "").Length);
+        sb.Clear();
+        Console.WriteLine(sb.Length);
+        char c = 'x';
+        Console.WriteLine(char.IsLetter(c) + " " + char.IsDigit(c) + " " + char.IsUpper(c) + " " + char.ToUpper(c));
+        Console.WriteLine(char.IsWhiteSpace(' ') + " " + char.IsPunctuation('!'));
+        Console.WriteLine("banana".Count(ch => ch == 'a'));
+        Console.WriteLine(new string("banana".Distinct().ToArray()));
+        Console.WriteLine("Mississippi".Replace("ss", "SS"));
+        Console.WriteLine("a-b-c".Split('-').Length);
+        Console.WriteLine("ação".ToUpper());
+        Console.WriteLine("Straße".Length);
+        Console.WriteLine("abc".GetHashCode() == "abc".GetHashCode());
+        Console.WriteLine("x".Equals("x"));
+        string nulo = null;
+        Console.WriteLine(nulo + "fim");
+        Console.WriteLine((nulo ?? "padrão"));
+    }
+}

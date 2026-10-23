@@ -10,6 +10,18 @@ export class Multicast {
   constructor(itens) { this.itens = itens }
 }
 
+const estouro = (m) => m.excecao('OverflowException', 'Arithmetic operation resulted in an overflow.')
+
+/** Dois delegates são o mesmo método (no mesmo objeto)? Serve para o -= de eventos. */
+function igualFuncao(a, b) {
+  if (a === b) return true
+  if (a.md && b.md) return a.md === b.md && a.este === b.este
+  if (a.candidatos && b.candidatos) return a.nome === b.nome && a.este === b.este
+  if (a.md && b.candidatos) return b.candidatos.includes(a.md) && a.este === b.este
+  if (a.candidatos && b.md) return a.candidatos.includes(b.md) && a.este === b.este
+  return false
+}
+
 const comoBig = (v) => {
   if (typeof v === 'bigint') return v
   if (v instanceof Num) return BigInt(v.v)
@@ -19,7 +31,7 @@ const comoBig = (v) => {
 }
 
 /** Conta entre dois números de tipos possivelmente diferentes. op: + - * / % */
-function contaNumerica(op, a, b) {
+function contaNumerica(op, a, b, m = null) {
   const k = tipoDaConta(a, b)
   switch (k) {
     case 'double': {
@@ -56,6 +68,7 @@ function contaNumerica(op, a, b) {
         if (y === 0n) throw new DivisaoPorZero()
         r = op === '/' ? x / y : x % y
       }
+      if (m?.verificado && (k === 'long' ? BigInt.asIntN(64, r) !== r : BigInt.asUintN(64, r) !== r)) throw estouro(m)
       return k === 'long' ? BigInt.asIntN(64, r) : new Num('ulong', BigInt.asUintN(64, r))
     }
     case 'uint': {
@@ -74,9 +87,11 @@ function contaNumerica(op, a, b) {
     default: {
       const x = comoNumero(a)
       const y = comoNumero(b)
-      if (op === '+') return (x + y) | 0
-      if (op === '-') return (x - y) | 0
-      if (op === '*') return Math.imul(x, y)
+      if (op === '+' || op === '-' || op === '*') {
+        const r = op === '+' ? x + y : op === '-' ? x - y : x * y
+        if (m?.verificado && (r > 2147483647 || r < -2147483648)) throw estouro(m)
+        return op === '*' ? Math.imul(x, y) : r | 0
+      }
       if (y === 0) throw new DivisaoPorZero()
       return op === '/' ? Math.trunc(x / y) | 0 : x % y | 0
     }
@@ -118,6 +133,8 @@ export function igualdade(m, a, b) {
   if (typeof a === 'boolean' || typeof b === 'boolean') return false
   if (ehNumero(a) && ehNumero(b)) return compararNumeros(a, b) === 0
   if (a instanceof ValorEnum && b instanceof ValorEnum) return igualEnum(a, b)
+  if (a instanceof ValorEnum && ehNumero(b)) return a.v === comoNumero(b) // enum == 0
+  if (b instanceof ValorEnum && ehNumero(a)) return b.v === comoNumero(a)
   if (a instanceof Tupla && b instanceof Tupla) return a.itens.length === b.itens.length && a.itens.every((x, i) => igualdade(m, x, b.itens[i]))
   if (a instanceof Objeto || b instanceof Objeto) return m.igualObjetos(a, b)
   return false
@@ -161,9 +178,9 @@ function deslocar(op, a, b) {
 export function binario(m, op, a, b) {
   if (typeof a === 'number' && typeof b === 'number') {
     switch (op) {
-      case '+': return (a + b) | 0
-      case '-': return (a - b) | 0
-      case '*': return Math.imul(a, b)
+      case '+': { const r = a + b; if (m.verificado && (r > 2147483647 || r < -2147483648)) throw estouro(m); return r | 0 }
+      case '-': { const r = a - b; if (m.verificado && (r > 2147483647 || r < -2147483648)) throw estouro(m); return r | 0 }
+      case '*': { if (m.verificado) { const r = a * b; if (r > 2147483647 || r < -2147483648) throw estouro(m) } return Math.imul(a, b) }
       case '/': if (b === 0) throw new DivisaoPorZero(); return Math.trunc(a / b) | 0
       case '%': if (b === 0) throw new DivisaoPorZero(); return a % b | 0
       case '<': return a < b
@@ -185,16 +202,16 @@ export function binario(m, op, a, b) {
     case '+':
       if (typeof a === 'string' || typeof b === 'string') return m.aTexto(a) + m.aTexto(b)
       if (a instanceof Multicast || b instanceof Multicast || (a && a.ehFunc) || (b && b.ehFunc)) return combinar(a, b)
-      if (ehNumero(a) && ehNumero(b)) return contaNumerica('+', a, b)
+      if (ehNumero(a) && ehNumero(b)) return contaNumerica('+', a, b, m)
       if (a instanceof ValorEnum || b instanceof ValorEnum) return enumConta(a, b, '+')
       return undefined
     case '-':
       if (a instanceof Multicast || (a && a.ehFunc)) return remover(a, b)
-      if (ehNumero(a) && ehNumero(b)) return contaNumerica('-', a, b)
+      if (ehNumero(a) && ehNumero(b)) return contaNumerica('-', a, b, m)
       if (a instanceof ValorEnum || b instanceof ValorEnum) return enumConta(a, b, '-')
       return undefined
     case '*': case '/': case '%':
-      return ehNumero(a) && ehNumero(b) ? contaNumerica(op, a, b) : undefined
+      return ehNumero(a) && ehNumero(b) ? contaNumerica(op, a, b, m) : undefined
     case '==': return igualdade(m, a, b)
     case '!=': return !igualdade(m, a, b)
     case '<': case '>': case '<=': case '>=': {
@@ -202,6 +219,8 @@ export function binario(m, op, a, b) {
         const c = a.v - b.v
         return op === '<' ? c < 0 : op === '>' ? c > 0 : op === '<=' ? c <= 0 : c >= 0
       }
+      if (a instanceof ValorEnum && ehNumero(b)) a = a.v
+      else if (b instanceof ValorEnum && ehNumero(a)) b = b.v
       if (!(ehNumero(a) && ehNumero(b))) return undefined
       const c = compararNumeros(a, b)
       if (Number.isNaN(c)) return false
@@ -242,7 +261,8 @@ function combinar(a, b) {
 function remover(a, b) {
   const itens = (a instanceof Multicast ? a.itens : [a]).slice()
   for (const x of b instanceof Multicast ? b.itens : [b]) {
-    const i = itens.lastIndexOf(x)
+    let i = -1
+    for (let k = itens.length - 1; k >= 0 && i < 0; k -= 1) if (igualFuncao(itens[k], x)) i = k
     if (i >= 0) itens.splice(i, 1)
   }
   return itens.length === 0 ? null : itens.length === 1 ? itens[0] : new Multicast(itens)
@@ -276,9 +296,17 @@ export function unario(m, op, a) {
 }
 
 /** x + 1 e x - 1 mantendo o tipo de x (para ++ e --). */
-export function maisUm(a, delta) {
-  if (typeof a === 'number') return (a + delta) | 0
-  if (typeof a === 'bigint') return BigInt.asIntN(64, a + BigInt(delta))
+export function maisUm(a, delta, m = null) {
+  if (typeof a === 'number') {
+    const r = a + delta
+    if (m?.verificado && (r > 2147483647 || r < -2147483648)) throw estouro(m)
+    return r | 0
+  }
+  if (typeof a === 'bigint') {
+    const r = a + BigInt(delta)
+    if (m?.verificado && BigInt.asIntN(64, r) !== r) throw estouro(m)
+    return BigInt.asIntN(64, r)
+  }
   if (a instanceof Dbl) return new Dbl(a.v + delta)
   if (a instanceof Flt) return new Flt(a.v + delta)
   if (a instanceof Chr) return new Chr((a.c + delta) & 0xffff)

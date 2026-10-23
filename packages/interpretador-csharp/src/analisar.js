@@ -27,8 +27,9 @@ function converter(cursor) {
   }
   const filhos = []
   let virgulas = 0
+  const listaDeTipos = o.t === 'type_argument_list' || o.t === 'type_parameter_list' // os < e > aqui são só pontuação
   do {
-    if (!cursor.nodeIsNamed && PONTUACAO.has(cursor.nodeType)) {
+    if (!cursor.nodeIsNamed && (PONTUACAO.has(cursor.nodeType) || (listaDeTipos && (cursor.nodeType === '<' || cursor.nodeType === '>')))) {
       if (cursor.nodeType === ',') virgulas += 1
       continue
     }

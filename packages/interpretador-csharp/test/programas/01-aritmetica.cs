@@ -1,0 +1,92 @@
+using System;
+
+class P
+{
+    static void Main()
+    {
+        int a = 17, b = 5;
+        Console.WriteLine(a + b);
+        Console.WriteLine(a - b);
+        Console.WriteLine(a * b);
+        Console.WriteLine(a / b);
+        Console.WriteLine(a % b);
+        Console.WriteLine(-a / b);
+        Console.WriteLine(-a % b);
+        Console.WriteLine(a / (double)b);
+        Console.WriteLine((a / b).ToString() + "," + (a % b));
+        double x = 7.0 / 2;
+        Console.WriteLine(x.ToString("R"));
+        Console.WriteLine((7 / 2) * 2.0);
+        Console.WriteLine(1 / 3.0 == 0.3333333333333333);
+        Console.WriteLine((0.1 + 0.2).ToString("R"));
+        Console.WriteLine((0.1f + 0.2f).ToString("R"));
+        Console.WriteLine(0.1m + 0.2m);
+        Console.WriteLine(10m / 3m);
+        Console.WriteLine(2.50m * 2);
+        Console.WriteLine(1.0m);
+        Console.WriteLine(100m / 4);
+        int max = int.MaxValue;
+        unchecked { Console.WriteLine(max + 1); }
+        Console.WriteLine(int.MinValue);
+        Console.WriteLine(long.MaxValue);
+        Console.WriteLine((long)max * 2);
+        Console.WriteLine(max + 1L);
+        byte by = 250;
+        by += 10;
+        Console.WriteLine(by);
+        short sh = unchecked((short)40000);
+        Console.WriteLine(sh);
+        Console.WriteLine((int)3.99);
+        Console.WriteLine((int)-3.99);
+        Console.WriteLine((int)'A');
+        Console.WriteLine((char)66);
+        Console.WriteLine('a' + 1);
+        Console.WriteLine((char)('a' + 1));
+        Console.WriteLine(5 & 3);
+        Console.WriteLine(5 | 3);
+        Console.WriteLine(5 ^ 3);
+        Console.WriteLine(~5);
+        Console.WriteLine(1 << 10);
+        Console.WriteLine(-16 >> 2);
+        Console.WriteLine(uint.MaxValue);
+        Console.WriteLine((uint)1 << 31);
+        Console.WriteLine(Math.Round(2.5));
+        Console.WriteLine(Math.Round(3.5));
+        Console.WriteLine(Math.Round(-2.5));
+        Console.WriteLine(Math.Round(2.5, MidpointRounding.AwayFromZero));
+        Console.WriteLine(Math.Round(3.14159, 2));
+        Console.WriteLine(Math.Floor(-2.5));
+        Console.WriteLine(Math.Ceiling(-2.5));
+        Console.WriteLine(Math.Truncate(-2.7));
+        Console.WriteLine(Math.Abs(-7));
+        Console.WriteLine(Math.Abs(-7.5));
+        Console.WriteLine(Math.Max(3, 9));
+        Console.WriteLine(Math.Min(3.5, 9));
+        Console.WriteLine(Math.Pow(2, 10));
+        Console.WriteLine(Math.Sqrt(144));
+        Console.WriteLine(Math.Sqrt(2).ToString("R"));
+        Console.WriteLine(Math.Sign(-9));
+        Console.WriteLine(double.IsNaN(0.0 / 0.0));
+        Console.WriteLine(1.0 / 0);
+        Console.WriteLine(-1.0 / 0);
+        Console.WriteLine(0.0 / 0);
+        int i = 5;
+        i++;
+        ++i;
+        i += 3;
+        i *= 2;
+        i -= 1;
+        i /= 3;
+        i %= 4;
+        Console.WriteLine(i);
+        int j = i++ + ++i;
+        Console.WriteLine(j + " " + i);
+        long big = 1;
+        for (int k = 1; k <= 20; k++) big *= k;
+        Console.WriteLine(big);
+        double d = 1e10;
+        Console.WriteLine(d);
+        Console.WriteLine(0.00001);
+        Console.WriteLine(1.5e-7);
+    }
+}

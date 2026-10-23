@@ -1,0 +1,43 @@
+36 1 9 7 5,143
+5,8,9,8
+25,9,64,1,81,4,64
+1,2,3,5,8,8,9
+9,8,8,5,3,2,1
+5,3,8,1,9,2
+8,1,9
+8,2,9,1,8,3,5
+5 8 0 8
+True True True 2
+5,3,8 | 1,9,2,8
+17280 64
+0,3,16,3,36,10,48
+5,3,0,7
+5,3,1,2
+7 7
+3,4,5,6 ababab
+5a,3b,8c
+278,2 120 30,6
+Caneta 2,5
+Caderno 15,9
+Mouse 49,9
+Mochila 89,9
+Papelaria: 2 itens, total 18,4
+Info: 2 itens, total 169,9
+Acessorios: 1 itens, total 89,9
+CANETA/CADERNO/MOUSE/TECLADO/MOCHILA
+Teclado
+Caneta,Caderno
+49,9 5
+Caneta=250,0
+Caderno=477,0
+Mouse=748,5
+Mochila=719,2
+Caderno,Mochila,Mouse,Teclado
+1:2 2:2 3:1 4:3 5:1
+16
+a o de do rei rato roeu roma roupa
+0 7
+sequência vazia
+mais de um
+antes
+w5 w3 w8 s8 [8] w1 w9 s9 [9] w2 w8 s8 [8] 

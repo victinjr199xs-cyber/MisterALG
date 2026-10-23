@@ -1,0 +1,17 @@
+Caixa[15] Caixa[oi] 16
+(1, um) (um, 1)
+3 2,5 7,5
+Bia(41)
+9 abd 2,5
+yx
+ab,ab,ab
+Int32:42 String:s Double:1,5
+Y(20) X(35) Z(50)
+impar -> 1,3,5
+par -> 2,4,6
+0,0,0|0,1,2|0,2,4
+15
+0,5 0,5
+0,5
+2,5
+k7

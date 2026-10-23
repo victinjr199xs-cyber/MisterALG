@@ -1,0 +1,28 @@
+Quarta 3 Quarta Sabado Domingo
+fim de semana quase útil
+Terca False
+1234567
+Vermelho,Verde,Azul
+Verde 6 True True
+Ler, Escrever 3 True False True
+Tudo True
+Escrever, Executar Nenhuma
+(3,4) (10,4) 5
+(3,4)
+(1000,4)
+(1005,4)
+(0,0) (7,0)
+(7,0) (99,0)
+(5,0) (0,0)
+(5,8)
+(1005,4) (-1,4)
+True (0,0)
+1000 2000 True
+3 3000
+True True True True
+True True
+43
+True
+False
+1um (1, um)
+False True 5 -1 6 0

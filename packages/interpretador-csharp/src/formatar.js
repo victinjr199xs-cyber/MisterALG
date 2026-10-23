@@ -134,12 +134,24 @@ function formatoPadrao(valor, letra, precisao, c) {
       if (precisao === undefined) return textoGeral(valor, c)
       const n = valorComoNumero(valor)
       if (!Number.isFinite(n)) return textoEspecial(n, c)
-      const t = Number(n.toPrecision(precisao))
-      return textoDouble(t, c.decimal === ',')
+      return geralComPrecisao(n, Math.max(1, precisao), c, maiuscula)
     }
     case 'R': return textoGeral(valor, c)
     default: throw new ErroFormato('Format specifier was invalid.')
   }
+}
+
+/** G<n>: n algarismos significativos; vira notação científica quando o expoente é maior ou igual a n (ou menor que -5). */
+function geralComPrecisao(n, precisao, c, maiuscula) {
+  if (n === 0) return '0'
+  const [mant, e] = n.toExponential(precisao - 1).split('e')
+  const exp = Number(e)
+  if (exp >= precisao || exp < -4) {
+    const m = mant.includes('.') ? mant.replace(/0+$/, '').replace(/\.$/, '') : mant
+    return `${m.replace('.', c.decimal)}${maiuscula ? 'E' : 'e'}${exp < 0 ? '-' : '+'}${String(Math.abs(exp)).padStart(2, '0')}`
+  }
+  const fixo = n.toFixed(Math.max(0, precisao - 1 - exp))
+  return (fixo.includes('.') ? fixo.replace(/0+$/, '').replace(/\.$/, '') : fixo).replace('.', c.decimal)
 }
 
 /** ToString() sem formato. */
@@ -159,6 +171,8 @@ export function textoGeral(valor, c = CULTURAS['pt-BR']) {
 function formatoPersonalizado(valor, fmt, c) {
   const n = valorComoNumero(valor)
   if (!Number.isFinite(n)) return textoEspecial(n, c)
+  const cient = /^([#0,.]*)([eE])([+-]?)(0+)(.*)$/.exec(fmt)
+  if (cient) return personalizadoCientifico(n, cient, c)
   // Em partes separadas por ';' (positivo;negativo;zero).
   const secoes = fmt.split(';')
   let usado = secoes[0]
@@ -202,6 +216,21 @@ function formatoPersonalizado(valor, fmt, c) {
   void escalaMilhares
   const unido = `${sinal}${prefixo}${texto}${sufixo}`.replace(/%/g, c.percentual)
   return unido.replace(/\u0001/g, () => literais.shift() ?? '')
+}
+
+/** 0.00E+00, 0.0E-0, #.##E+0: a mantissa tem as casas do padrão e o expoente tem, no mínimo, tantos dígitos quantos zeros. */
+function personalizadoCientifico(n, m, c) {
+  const [, mantissa, e, sinalPadrao, zeros, resto] = m
+  const casas = (mantissa.split('.')[1] ?? '').length
+  const inteiras = (mantissa.split('.')[0].match(/[0#]/g) ?? []).length || 1
+  let exp = n === 0 ? 0 : Math.floor(Math.log10(Math.abs(n))) - (inteiras - 1)
+  let valorMant = n === 0 ? 0 : Math.abs(n) / 10 ** exp
+  let texto = valorMant.toFixed(casas)
+  if (Number(texto) >= 10 ** inteiras) { exp += 1; valorMant /= 10; texto = valorMant.toFixed(casas) }
+  const minFra = (mantissa.split('.')[1] ?? '').replace(/#/g, '').length
+  if (casas > minFra && texto.includes('.')) texto = texto.replace(new RegExp(`0{0,${casas - minFra}}$`), '').replace(/\.$/, '')
+  const sinalExp = exp < 0 ? '-' : sinalPadrao === '+' ? '+' : ''
+  return `${n < 0 ? '-' : ''}${texto.replace('.', c.decimal)}${e}${sinalExp}${String(Math.abs(exp)).padStart(zeros.length, '0')}${resto}`
 }
 
 /** valor.ToString(formato, cultura) para qualquer número. */

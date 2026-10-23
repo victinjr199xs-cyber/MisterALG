@@ -1,0 +1,43 @@
+try 0
+finally 0
+=> normal
+try 1
+catch IOE: op inválida
+finally 1
+=> tratou IOE
+try 2
+catch MeuErro: meu erro 42
+finally 2
+=> tratou MeuErro
+try 3
+finally 3
+=> retornou
+try 4
+catch Exception: IndexOutOfRangeException
+finally 4
+=> tratou Exception
+try 5
+finally 5
+=> normal
+finally interno
+externo pegou: interna
+nova <- interna
+log e relança
+pegou DivideByZeroException
+abre A
+abre B
+usando
+fecha B
+fecha A
+abre C
+fecha C
+dentro do using
+formato inválido
+cast inválido
+null reference
+overflow
+ArgumentNullException param
+ok
+True 123
+False 0
+True 3,5

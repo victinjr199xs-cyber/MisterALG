@@ -300,29 +300,64 @@ export const CONVERT = {
 
 // ---- Random -----------------------------------------------------------------------------------------------
 
-/** Gerador de números pseudo-aleatórios com semente (mulberry32): o mesmo Random(42) dá sempre a mesma sequência. */
+/**
+ * System.Random: com semente, o mesmo algoritmo do .NET (gerador subtrativo de Knuth), então new Random(42)
+ * dá exatamente os mesmos números que no C# de verdade. Sem semente, é aleatório de verdade.
+ */
 export class AleatorioCS {
   constructor(semente) {
-    this.estado = (semente ?? Math.floor(Math.random() * 2 ** 31)) >>> 0
+    this.comSemente = semente !== undefined && semente !== null
+    if (!this.comSemente) return
+    const MBIG = 2147483647
+    const MSEED = 161803398
+    const s = new Array(56).fill(0)
+    const subtracao = semente === -2147483648 ? MBIG : Math.abs(semente)
+    let mj = MSEED - subtracao
+    s[55] = mj
+    let mk = 1
+    for (let i = 1; i < 55; i += 1) {
+      const ii = (21 * i) % 55
+      s[ii] = mk
+      mk = mj - mk
+      if (mk < 0) mk += MBIG
+      mj = s[ii]
+    }
+    for (let k = 1; k < 5; k += 1) {
+      for (let i = 1; i < 56; i += 1) {
+        s[i] -= s[1 + ((i + 30) % 55)]
+        if (s[i] < 0) s[i] += MBIG
+      }
+    }
+    this.s = s
+    this.inext = 0
+    this.inextp = 21
   }
 
-  proximo() {
-    this.estado = (this.estado + 0x6d2b79f5) >>> 0
-    let t = this.estado
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  interno() {
+    if (!this.comSemente) return Math.floor(Math.random() * 2147483647)
+    let a = this.inext + 1
+    let b = this.inextp + 1
+    if (a >= 56) a = 1
+    if (b >= 56) b = 1
+    let r = this.s[a] - this.s[b]
+    if (r === 2147483647) r -= 1
+    if (r < 0) r += 2147483647
+    this.s[a] = r
+    this.inext = a
+    this.inextp = b
+    return r
   }
+
+  proximo() { return this.interno() * (1.0 / 2147483647) }
 
   nomeCS() { return 'Random' }
 
   paraTexto() { return 'System.Random' }
 }
-
 AleatorioCS.METODOS = {
   Next(m, o, args) {
     const [a, b] = args
-    if (args.length === 0) return Math.floor(o.proximo() * 2147483647)
+    if (args.length === 0) return o.interno()
     if (args.length === 1) {
       if (comoNumero(a) < 0) throw m.excecao('ArgumentOutOfRangeException', "'maxValue' must be greater than zero. (Parameter 'maxValue')")
       return Math.floor(o.proximo() * comoNumero(a))
@@ -334,7 +369,7 @@ AleatorioCS.METODOS = {
   NextSingle: (m, o) => new Flt(o.proximo()),
   NextInt64: (m, o, [a, b]) => BigInt(Math.floor(o.proximo() * Number(b ?? a ?? 2 ** 53))) + (b === undefined ? 0n : BigInt(a)),
   NextBytes(m, o, [arr]) {
-    for (let i = 0; i < arr.itens.length; i += 1) arr.itens[i] = new Num('byte', Math.floor(o.proximo() * 256))
+    for (let i = 0; i < arr.itens.length; i += 1) arr.itens[i] = new Num('byte', o.interno() % 256)
     return null
   },
   Shuffle(m, o, [arr]) {
@@ -349,6 +384,7 @@ AleatorioCS.METODOS = {
 export const RANDOM = {
   nome: 'Random',
   criar: (m, args) => new AleatorioCS(args[0] === undefined ? m.aleatorio : comoNumero(args[0])),
+  props: { Shared: { get: (m) => (m.aleatorioCompartilhado ??= new AleatorioCS()) } },
   const: {},
   estatico: {},
 }

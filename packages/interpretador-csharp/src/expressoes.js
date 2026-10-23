@@ -10,7 +10,7 @@ import { Indice, Intervalo, NsRef, TipoRef } from './refs.js'
 import { elementoDe, ehArray, nomeCompleto, nomeTipo, partesGenericas, semNulo } from './tipos.js'
 import {
   Arr, Chr, Dbl, Dec, Flt, Num, Objeto, Ref, Tupla, ValorEnum,
-  converterNumero, ehNumero, tipoNumerico,
+  cabeEm, converterNumero, ehNumero, tipoNumerico,
 } from './valores.js'
 import { compor } from './formatar.js'
 
@@ -33,6 +33,11 @@ export const expressoes = {
     return v.nomeCS ? v.nomeCS() : 'object'
   },
 
+  /** T → int (o tipo com que a classe ou o método genérico foi usado), quando se sabe. */
+  resolverGenerico(nome, ctx) {
+    return ctx.tiposGenericos?.get(nome) ?? ctx.este?.tiposGenericos?.get(nome) ?? nome
+  },
+
   /** É uma coleção que dá para percorrer (array, lista, yield, objeto com GetEnumerator)? */
   ehColecao(v) {
     return v instanceof Arr || this.bib.ehEnumeravel(v) || (v instanceof Objeto && !!this.acharMetodoVirtual(v.cls, 'GetEnumerator', 0))
@@ -43,7 +48,7 @@ export const expressoes = {
     if (tipo && tipo !== 'var') {
       const t = semNulo(tipo)
       if (n.t === 'implicit_object_creation_expression') return yield* this.criarObjeto(t, null, filho(n, 'arguments') ?? n.f.find((x) => x.t === 'argument_list'), n.f.find((x) => x.t === 'initializer_expression'), amb)
-      if (n.t === 'initializer_expression' && ehArray(t)) return yield* this.criarArrayDeInicializador(elementoDe(t), n, amb)
+      if (n.t === 'initializer_expression' && ehArray(t)) return yield* this.criarArrayDeInicializador(t, n, amb)
       if (n.t === 'collection_expression') return yield* this.criarDeColecao(t, n, amb)
       if (n.t === 'array_creation_expression' || n.t === 'implicit_array_creation_expression') return yield* this.aval(n, amb)
       if (n.t === 'conditional_expression') {
@@ -99,16 +104,16 @@ export const expressoes = {
       case 'array_creation_expression': return yield* this.avalNovoArray(n, amb)
       case 'implicit_array_creation_expression': return yield* this.avalArrayImplicito(n, amb)
       case 'stackalloc_expression': throw new ErroCS('stackalloc ainda não é suportado', n.l)
-      case 'initializer_expression': return yield* this.criarArrayDeInicializador('object', n, amb)
+      case 'initializer_expression': return yield* this.criarArrayDeInicializador('object[]', n, amb)
       case 'collection_expression': return yield* this.criarDeColecao('List<object>', n, amb)
       case 'tuple_expression': return yield* this.avalTupla(n, amb)
       case 'cast_expression': return yield* this.avalCast(n, amb)
       case 'lambda_expression': return this.criarLambda(n, amb)
       case 'anonymous_method_expression': return this.criarLambda(n, amb)
-      case 'typeof_expression': return this.bib.tipoValor(nomeTipo(n.f.find((x) => x.t !== 'typeof')))
+      case 'type_of_expression': return this.bib.tipoValor(this.resolverGenerico(nomeTipo(n.f.find((x) => x.t !== 'typeof')), amb.ctx))
       case 'default_expression': {
         const t = n.f.find((x) => x.k === 'type')
-        return t ? this.valorPadrao(nomeTipo(t)) : null
+        return t ? this.valorPadrao(this.resolverGenerico(nomeTipo(t), amb.ctx)) : null
       }
       case 'is_expression': {
         const v = yield* this.aval(filho(n, 'left'), amb)
@@ -141,7 +146,15 @@ export const expressoes = {
         if (nome) amb.declarar(nome, new Ref(null, nomeTipo(filho(n, 'type'))))
         return null
       }
-      case 'checked_expression': case 'unchecked_expression': return yield* this.aval(n.f[n.f.length - 1], amb)
+      case 'checked_expression': {
+        const anterior = this.verificado
+        this.verificado = n.f[0].t === 'checked' ? 1 : 0
+        try {
+          return yield* this.aval(n.f[n.f.length - 1], amb)
+        } finally {
+          this.verificado = anterior
+        }
+      }
       case 'query_expression': return yield* this.avalConsulta(n, amb)
       case 'generic_name': return yield* this.avalIdentificador(n.f.find((x) => x.t === 'identifier'), amb)
       case 'qualified_name': return yield* this.avalNomeQualificado(n, amb)
@@ -315,7 +328,7 @@ export const expressoes = {
   },
 
   incrementar(v, delta, n) {
-    const r = maisUm(v, delta)
+    const r = maisUm(v, delta, this)
     if (r !== undefined) return r
     if (v instanceof Objeto) {
       for (let c = v.cls; c; c = c.base) {
@@ -422,7 +435,10 @@ export const expressoes = {
       throw this.excecao('NullReferenceException', 'Object reference not set to an instance of an object.')
     }
     if (['int', 'long', 'double', 'float', 'decimal', 'char', 'byte', 'short', 'sbyte', 'ushort', 'uint', 'ulong'].includes(t)) {
-      if (ehNumero(v)) return converterNumero(v, t)
+      if (ehNumero(v)) {
+        if (this.verificado && t !== 'double' && t !== 'float' && t !== 'decimal' && t !== 'char' && !cabeEm(v, t)) throw this.excecao('OverflowException', 'Arithmetic operation resulted in an overflow.')
+        return converterNumero(v, t)
+      }
       if (v instanceof ValorEnum) return converterNumero(v.v, t)
       if (v instanceof Objeto) {
         const cv = this.conversaoDoAluno(v, t)
@@ -547,83 +563,121 @@ export const expressoes = {
   // ---- LINQ em sintaxe de consulta ---------------------------------------------------------------------------
 
   *avalConsulta(n, amb) {
-    const clausulas = n.f
-    const de = clausulas[0]
-    let nomeVar = de.f.find((x) => x.t === 'identifier').x
-    let fonte = yield* this.aval(de.f[de.f.length - 1], amb)
-    let itens = [...yield* this.iterarGen(fonte)]
-    const L = this.bib.linq
-    const comVar = (valor, extra = {}) => {
+    return yield* this.processarConsulta(n.f, amb, [new Map()])
+  },
+
+  /**
+   * from x in fonte where ... let ... orderby ... join ... select/group ... [into y ...]
+   * Cada "linha" da consulta é um Map com as variáveis (x, y, os let...) naquele ponto.
+   */
+  *processarConsulta(clausulas, amb, linhas) {
+    const escopoDe = (linha) => {
       const a = new Amb(amb)
-      a.declarar(nomeVar, new Ref(valor))
-      for (const [k, v] of Object.entries(extra)) a.declarar(k, new Ref(v))
+      for (const [k, v] of linha) a.declarar(k, new Ref(v))
       return a
     }
-    let atuais = itens.map((v) => ({ v, extra: {} }))
-    for (const c of clausulas.slice(1)) {
+    const nomeDe = (c) => c.f.find((x) => x.t === 'identifier').x
+    for (let i = 0; i < clausulas.length; i += 1) {
+      const c = clausulas[i]
       switch (c.t) {
+        case 'from_clause': {
+          const nome = nomeDe(c)
+          const prox = []
+          for (const linha of linhas) {
+            const fonte = yield* this.aval(c.f[c.f.length - 1], escopoDe(linha))
+            for (const item of yield* this.iterarGen(fonte)) prox.push(new Map([...linha, [nome, item]]))
+          }
+          linhas = prox
+          break
+        }
         case 'where_clause': {
           const prox = []
-          for (const it of atuais) if ((yield* this.aval(c.f[c.f.length - 1], comVar(it.v, it.extra))) === true) prox.push(it)
-          atuais = prox
+          for (const linha of linhas) if ((yield* this.aval(c.f[c.f.length - 1], escopoDe(linha))) === true) prox.push(linha)
+          linhas = prox
           break
         }
         case 'let_clause': {
-          const nome = c.f.find((x) => x.t === 'identifier').x
-          for (const it of atuais) it.extra[nome] = yield* this.aval(c.f[c.f.length - 1], comVar(it.v, it.extra))
+          const nome = nomeDe(c)
+          for (const linha of linhas) linha.set(nome, yield* this.aval(c.f[c.f.length - 1], escopoDe(linha)))
           break
         }
         case 'order_by_clause': {
-          const chaves = c.f.filter((x) => x.t === 'ordering')
+          const chaves = []
+          for (const f of c.f) {
+            if (f.t === 'orderby' || f.t === 'ascending') continue
+            if (f.t === 'descending') chaves[chaves.length - 1].desc = true
+            else chaves.push({ expr: f, desc: false })
+          }
           const calc = []
-          for (const it of atuais) {
+          for (const linha of linhas) {
             const ks = []
-            for (const o of chaves) ks.push({ k: yield* this.aval(o.f[0], comVar(it.v, it.extra)), desc: o.f.some((x) => x.t === 'descending') })
-            calc.push({ it, ks })
+            for (const k of chaves) ks.push(yield* this.aval(k.expr, escopoDe(linha)))
+            calc.push({ linha, ks })
           }
           calc.sort((a, b) => {
-            for (let i = 0; i < a.ks.length; i += 1) {
-              const r = this.comparar(a.ks[i].k, b.ks[i].k)
-              if (r !== 0) return a.ks[i].desc ? -r : r
+            for (let k = 0; k < chaves.length; k += 1) {
+              const r = this.comparar(a.ks[k], b.ks[k])
+              if (r !== 0) return chaves[k].desc ? -r : r
             }
             return 0
           })
-          atuais = calc.map((x) => x.it)
+          linhas = calc.map((x) => x.linha)
           break
         }
-        case 'from_clause': {
-          const nome = c.f.find((x) => x.t === 'identifier').x
+        case 'join_clause': {
+          // join b in ys on a.Id equals b.Id [into g]
+          const nome = nomeDe(c)
+          const partes = c.f.filter((x) => !['join', 'in', 'on', 'equals', 'join_into_clause'].includes(x.t) && x.t !== 'identifier')
+          const [fonteNo, chaveEsq, chaveDir] = partes
+          const into = c.f.find((x) => x.t === 'join_into_clause')
           const prox = []
-          for (const it of atuais) {
-            const sub = yield* this.aval(c.f[c.f.length - 1], comVar(it.v, it.extra))
-            for (const s of yield* this.iterarGen(sub)) prox.push({ v: it.v, extra: { ...it.extra, [nome]: s } })
+          for (const linha of linhas) {
+            const fonte = yield* this.iterarGen(yield* this.aval(fonteNo, escopoDe(linha)))
+            const k = yield* this.aval(chaveEsq, escopoDe(linha))
+            const achados = []
+            for (const item of fonte) {
+              const kd = yield* this.aval(chaveDir, escopoDe(new Map([...linha, [nome, item]])))
+              if (this.igualObjetosValor(k, kd)) achados.push(item)
+            }
+            if (into) prox.push(new Map([...linha, [nomeDe(into), this.bib.linq.lista(this, achados)]]))
+            else for (const a of achados) prox.push(new Map([...linha, [nome, a]]))
           }
-          atuais = prox
+          linhas = prox
           break
         }
-        case 'select_clause': {
-          const r = []
-          for (const it of atuais) r.push(yield* this.aval(c.f[c.f.length - 1], comVar(it.v, it.extra)))
-          return L.lista(this, r)
-        }
-        case 'group_clause': {
-          const grupos = new Map()
-          const [expr, chave] = c.f.filter((x) => x.t !== 'group' && x.t !== 'by')
-          for (const it of atuais) {
-            const k = yield* this.aval(chave, comVar(it.v, it.extra))
-            const h = this.hashDe(k)
-            if (!grupos.has(h)) grupos.set(h, { k, itens: [] })
-            grupos.get(h).itens.push(yield* this.aval(expr, comVar(it.v, it.extra)))
+        case 'select_clause': case 'group_clause': {
+          const resultado = []
+          if (c.t === 'select_clause') {
+            for (const linha of linhas) resultado.push(yield* this.aval(c.f[c.f.length - 1], escopoDe(linha)))
+          } else {
+            const [expr, chave] = c.f.filter((x) => x.t !== 'group' && x.t !== 'by')
+            const grupos = new Map()
+            for (const linha of linhas) {
+              const k = yield* this.aval(chave, escopoDe(linha))
+              const h = this.hashDe(k)
+              if (!grupos.has(h)) grupos.set(h, { k, itens: [] })
+              grupos.get(h).itens.push(yield* this.aval(expr, escopoDe(linha)))
+            }
+            for (const g of grupos.values()) resultado.push(this.bib.criarAgrupamento(g.k, g.itens))
           }
-          return L.lista(this, [...grupos.values()].map((g) => this.bib.criarAgrupamento(g.k, g.itens)))
+          const cont = clausulas[i + 1]
+          if (cont?.t === 'query_continuation') {
+            const nome = nomeDe(cont)
+            const resto = cont.f.filter((x) => x.t !== 'into' && !(x.t === 'identifier' && x === cont.f.find((y) => y.t === 'identifier')))
+            return yield* this.processarConsulta(resto, amb, resultado.map((x) => new Map([[nome, x]])))
+          }
+          return this.bib.linq.lista(this, resultado)
         }
         default:
           throw new ErroCS(`a consulta LINQ usa uma cláusula que o passo a passo ainda não conhece (${c.t})`, c.l)
       }
     }
-    return L.lista(this, atuais.map((x) => x.v))
+    return this.bib.linq.lista(this, linhas.map((l) => [...l.values()].pop()))
   },
 
+  igualObjetosValor(a, b) {
+    return this.hashDe(a) === this.hashDe(b)
+  },
   /** Todos os itens de uma coleção (para código que precisa deles de uma vez). */
   *iterarGen(fonte) {
     const itens = []

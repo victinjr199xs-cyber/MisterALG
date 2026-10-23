@@ -165,6 +165,8 @@ namespace System.Threading.Tasks {
   }
 }
 namespace System {
+  public class EventArgs { public static readonly EventArgs Empty = new EventArgs(); }
+  public delegate void EventHandler(object sender, EventArgs e);
   public interface IDisposable { void Dispose(); }
   public interface IComparable { int CompareTo(object other); }
   public interface IEquatable { bool Equals(object other); }

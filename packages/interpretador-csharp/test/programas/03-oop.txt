@@ -1,0 +1,27 @@
+Circulo#1(preto) area=7,07
+Retangulo#2(azul) area=7,00
+Quadrado#3(azul) area=16,00
+Circulo#4(vermelho) area=12,57
+4
+42,635
+True
+False
+True
+4 4
+True
+o
+Circulo Retangulo
+Quadrado#5(azul) area=4,00
+Ana: 150,00
+False
+True 99,75
+erro: valor inválido
+6 100 36 25 4
+True
+Pilha
+Int32
+String
+Double
+Char
+(null)
+Pilha

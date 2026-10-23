@@ -187,8 +187,15 @@ export const instrucoes = {
         yield* this.aval(n.f.find((x) => x.t !== 'lock' && x !== corpo), amb)
         return yield* this.exec(corpo, amb)
       }
-      case 'checked_statement': case 'unchecked_statement':
-        return yield* this.execBloco(n.f.find((x) => x.t === 'block'), amb)
+      case 'checked_statement': {
+        const anterior = this.verificado
+        this.verificado = n.f[0].t === 'checked' ? 1 : 0
+        try {
+          return yield* this.execBloco(n.f.find((x) => x.t === 'block'), amb)
+        } finally {
+          this.verificado = anterior
+        }
+      }
       case 'yield_statement': {
         yield* this.linha(n, amb)
         if (n.f.some((x) => x.t === 'break')) return { t: 'return', v: undefined }

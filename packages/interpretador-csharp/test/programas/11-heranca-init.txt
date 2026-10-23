@@ -1,0 +1,25 @@
+--- criando Filho
+static ctor Filho
+static ctor Base
+init campo Filho
+init campo Base
+ctor Base
+Inicializa Filho extra=1
+ctor Base(do filho)
+ctor Filho
+--- criando Neto
+init campo Filho
+init campo Base
+ctor Base
+Inicializa Filho extra=3
+ctor Base(do filho)
+ctor Filho
+2 1 4 3 4
+Filho/Base | Neto/Filho/Base
+Neto/Filho/Base | fixo de Base chamando Neto/Filho/Base
+True True False True
+1 2 3 3
+ABC tem 4 rodas
+Moto XYZ tem 2 rodas
+públicaAB
+Filho Filho/Base

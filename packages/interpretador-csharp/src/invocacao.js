@@ -338,8 +338,30 @@ export const invocacao = {
       if (nat && this.bib.temEstatico(nat, nome)) return yield* this.esperarNativo(this.bib.chamarEstatico(this, nat, nome, valores, targs, n))
     }
     if (ref) return yield* this.chamarFuncaoGen(ref.v, valores)
+    // Um evento ou campo que guarda um delegate, chamado pelo nome: Mudou(this, e)
+    const guardado = yield* this.delegateDoContexto(nome, ctx)
+    if (guardado !== undefined) {
+      if (guardado === null) throw this.excecao('NullReferenceException', 'Object reference not set to an instance of an object.')
+      return yield* this.chamarFuncaoGen(guardado, valores)
+    }
     if (este instanceof Objeto && this.bib.ehMetodoObjeto(nome)) return yield* this.esperarNativo(this.bib.chamarObjeto(this, este, nome, valores, false, n))
     throw new ErroCS(`o método "${nome}" não existe neste contexto`, n.l, 'Confira o nome do método (maiúsculas e minúsculas contam) e se ele foi declarado na classe. CS0103.')
+  },
+
+  /** O valor de um campo/propriedade/estático com esse nome (null se vazio); undefined se não existe nem guarda um delegate. */
+  *delegateDoContexto(nome, ctx) {
+    if (ctx.este instanceof Objeto) {
+      const r = yield* this.lerMembroImplicito(ctx.este, nome)
+      if (r && (r.v === null || r.v?.ehFunc || r.v instanceof Multicast)) return r.v
+    }
+    for (let c = ctx.cls; c; c = c.externa) {
+      const dono = this.achaEstatico(c, nome)
+      if (dono) {
+        const v = yield* this.lerEstatico(dono, nome)
+        if (v === null || v?.ehFunc || v instanceof Multicast) return v
+      }
+    }
+    return undefined
   },
 
   erroSobrecarga(nome, candidatos, valores, n) {
@@ -372,7 +394,9 @@ export const invocacao = {
     }
     const r = yield* this.avalAlvoCadeia(alvo, amb)
     if (r.curto) return null
-    return yield* this.chamarEmValor(r.v, nome, targs, lista, amb, n)
+    // variável declarada como interface: usa a implementação explícita (IA.Nome) dessa interface, se houver
+    const tipoVar = alvo.t === 'identifier' ? amb.buscar(alvo.x)?.t : null
+    return yield* this.chamarEmValor(r.v, tipoVar && r.v instanceof Objeto && r.v.cls.metodos.has(`${tipoVar}.${nome}`) ? `${tipoVar}.${nome}` : nome, targs, lista, amb, n)
   },
 
   /** O lado esquerdo de uma cadeia: se for a?.b e "a" for null, a cadeia toda (a?.b.c(...)) vale null. */
@@ -386,6 +410,13 @@ export const invocacao = {
     } finally {
       this.pilhaLigacao.pop()
     }
+  },
+
+  /** Implementações explícitas (string IA.Nome()), quando a chamada é só por Nome. */
+  metodosExplicitos(cls, nome) {
+    const lista = []
+    for (let c = cls; c; c = c.base) for (const [k, ms] of c.metodos) if (k.endsWith(`.${nome}`)) lista.push(...ms)
+    return lista
   },
 
   /** valor.nome(args): despacha pelo tipo do valor. */
@@ -409,7 +440,8 @@ export const invocacao = {
     }
     if (v instanceof NsRef) throw new ErroCS(`"${v.nome}" é um namespace, não dá para chamar ${nome}() nele`, n.l)
     if (v instanceof Objeto) {
-      const ms = this.metodosDe(v.cls, nome)
+      let ms = this.metodosDe(v.cls, nome)
+      if (!ms.length) ms = this.metodosExplicitos(v.cls, nome)
       if (ms.length) {
         const md = this.escolherSobrecarga(ms, valores, nomeados)
         if (md) return yield* this.chamarMetodo(md, md.estatico ? null : v, this.reordenar(md, valores, nomeados), md.cls, { tiposGenericos: targs })
@@ -637,11 +669,13 @@ export const invocacao = {
 
   *criarObjeto(tipoStr, tipoNo, argsNo, initNo, amb) {
     const { nome, args: targs } = partesGenericas(tipoStr)
+    const targ = targs
     const { valores, nomeados } = yield* this.avalArgumentos(argsNo, amb)
     const def = this.buscarClasse(nome)
     if (def) {
       if (def.tipo === 'delegate') return valores[0]
       const o = yield* this.instanciar(def, valores, nomeados)
+      if (def.genericos.length && targ.length) o.tiposGenericos = new Map(def.genericos.map((g, i) => [g, targ[i]]))
       if (initNo) yield* this.aplicarInicializador(o, initNo, amb)
       return o
     }
@@ -681,6 +715,7 @@ export const invocacao = {
   },
 
   *construir(o, def, args, nomeados) {
+    yield* this.iniciarClasse(def)
     const cands = def.construtores
     const ctor = cands.length ? this.escolherSobrecarga(cands, args, nomeados) : null
     if (cands.length && !ctor && !def.recordParams) {
@@ -786,34 +821,31 @@ export const invocacao = {
 
   // ---- arrays ------------------------------------------------------------------------------------------------------
 
+  /** new int[3], new int[2,3], new int[3][], new int[] { 1, 2 }. Nos jagged o tree-sitter aninha os "[ ]" na ordem em que aparecem. */
   *avalNovoArray(n, amb) {
     const at = n.f.find((x) => x.t === 'array_type')
-    const tipoElem = nomeTipo(at.f.find((x) => x.k === 'type'))
-    const rank = at.f.find((x) => x.k === 'rank')
+    const ranks = []
+    let base = at
+    while (base.t === 'array_type') {
+      ranks.unshift(base.f.find((x) => x.k === 'rank'))
+      base = base.f.find((x) => x.k === 'type')
+    }
+    const tipoBase = nomeTipo(base)
+    const sufixo = (rs) => rs.map((r) => `[${','.repeat((r.d ?? 1) - 1)}]`).join('')
     const init = n.f.find((x) => x.t === 'initializer_expression')
-    const dimsTexto = nomeTipo(at)
-    if (init) return yield* this.criarArrayDeInicializador(this.tipoArrayComTamanhos(tipoElem, rank, dimsTexto), init, amb)
+    if (init) return yield* this.criarArrayDeInicializador(tipoBase + sufixo(ranks), init, amb)
+    const primeira = ranks[0]
+    const tipoElem = tipoBase + sufixo(ranks.slice(1)) // new int[3][] → elementos do tipo int[]
     const tamanhos = []
-    for (const e of rank.f) tamanhos.push(comoNumero(yield* this.aval(e, amb)))
+    for (const e of primeira.f) tamanhos.push(comoNumero(yield* this.aval(e, amb)))
     if (tamanhos.some((t) => t < 0)) throw this.excecao('OverflowException', 'Arithmetic operation resulted in an overflow.')
-    if ((rank.d ?? 1) > 1) {
+    if ((primeira.d ?? 1) > 1) {
       const total = tamanhos.reduce((a, b) => a * b, 1)
       return new Arr(tipoElem, Array.from({ length: total }, () => this.valorPadrao(tipoElem)), tamanhos)
     }
-    const elemTipo = tipoElem + dimsTexto.slice(tipoElem.length).replace(/^\[,*\]/, '')
-    void elemTipo
-    // new int[3][] → elementos do tipo int[]; new int[3] → int
-    const resto = dimsTexto.slice(tipoElem.length).replace(/^\[[,]*\]/, '')
-    const tipoDosItens = tipoElem + resto
-    const padrao = resto ? null : this.valorPadrao(tipoElem)
-    return new Arr(tipoDosItens, Array.from({ length: tamanhos[0] }, () => (padrao instanceof Objeto ? this.copiar(padrao) : padrao)))
+    const padrao = this.valorPadrao(tipoElem)
+    return new Arr(tipoElem, Array.from({ length: tamanhos[0] }, () => (padrao instanceof Objeto ? this.copiar(padrao) : padrao)))
   },
-
-  tipoArrayComTamanhos(tipoElem, rank, dimsTexto) {
-    void rank
-    return dimsTexto
-  },
-
   *avalArrayImplicito(n, amb) {
     const init = n.f.find((x) => x.t === 'initializer_expression')
     const itens = []
