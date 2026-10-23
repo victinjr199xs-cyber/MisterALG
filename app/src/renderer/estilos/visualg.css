@@ -798,21 +798,44 @@ main.com-assistente { grid-template-columns: minmax(340px, 50fr) minmax(260px, 3
 .inicio-lado h2:not(:first-child) { margin-top: 20px; }
 .inicio-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
 .inicio-linguagem {
+  position: relative; overflow: hidden; isolation: isolate;
   display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; row-gap: 4px; align-items: center;
-  padding: 14px; border: 1px solid rgb(255 255 255 / .12); border-radius: 12px;
+  padding: 14px; border: 1px solid rgb(255 255 255 / .12); border-radius: 14px;
   background: rgb(255 255 255 / .06); color: inherit; font: inherit; text-align: left; cursor: pointer;
-  transition: transform .15s, background .15s, border-color .15s;
+  transition: transform .25s cubic-bezier(.2, .8, .2, 1), background .2s, border-color .2s, box-shadow .25s;
+  animation: inicio-subir .6s calc(.25s + var(--i) * .07s) cubic-bezier(.2, .8, .2, 1) backwards;
+}
+/* O brilho segue o ponteiro (--mx/--my vêm do inicio.js) e a cor da linguagem aparece no canto. */
+.inicio-linguagem::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .25s;
+  background: radial-gradient(180px circle at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--cor) 55%, transparent), transparent 70%);
 }
 .inicio-linguagem:hover:not([aria-disabled]), .inicio-linguagem:focus-visible:not([aria-disabled]) {
-  transform: translateY(-2px); background: rgb(255 255 255 / .12); border-color: #ffe066;
+  transform: translateY(-4px) scale(1.02); background: rgb(255 255 255 / .1); border-color: color-mix(in srgb, var(--cor) 70%, #fff);
+  box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--cor) 80%, transparent);
 }
+.inicio-linguagem:hover:not([aria-disabled])::before, .inicio-linguagem:focus-visible:not([aria-disabled])::before { opacity: 1; }
+.inicio-linguagem:active:not([aria-disabled]) { transform: translateY(-1px) scale(.99); }
 .inicio-linguagem:focus-visible { outline: 2px solid #7df9ff; outline-offset: 2px; }
 .inicio-linguagem[aria-disabled] { cursor: default; opacity: .55; }
-.inicio-sigla {
-  grid-row: span 2; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px;
-  color: #fff; font: 700 15px var(--fonte-codigo);
+.inicio-icone {
+  grid-row: span 2; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 13px; color: #fff;
+  background: linear-gradient(145deg, var(--cor), color-mix(in srgb, var(--cor) 55%, #000));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), 0 6px 14px -4px color-mix(in srgb, var(--cor) 70%, transparent);
+  transition: transform .35s cubic-bezier(.3, 1.6, .5, 1);
 }
-.inicio-nome { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.inicio-icone .ic { width: 32px; height: 32px; overflow: visible; }
+.ic-ponto { fill: currentColor; stroke: none; transform-box: fill-box; transform-origin: center; }
+/* Entrada: cada traço se desenha; ao passar o mouse ele se redesenha e o ícone dá um saltinho. */
+.ic-traco { stroke-dasharray: 100; animation: ic-desenhar .9s calc(.45s + var(--i, 0) * .07s) cubic-bezier(.6, 0, .2, 1) backwards; }
+.inicio-linguagem:hover:not([aria-disabled]) .ic-traco { animation: ic-desenhar .7s cubic-bezier(.6, 0, .2, 1); }
+.inicio-linguagem:hover:not([aria-disabled]) .inicio-icone { transform: rotate(-6deg) scale(1.1); }
+.inicio-linguagem:hover:not([aria-disabled]) .ic-ponto { animation: ic-pulso .8s ease-in-out infinite; }
+.ic-ponto { animation: ic-respirar 3.2s ease-in-out infinite; }
+@keyframes ic-desenhar { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes ic-pulso { 50% { transform: scale(1.7); } }
+@keyframes ic-respirar { 50% { transform: scale(1.25); opacity: .8; } }
+@keyframes inicio-subir { from { opacity: 0; transform: translateY(18px) scale(.96); } }.inicio-nome { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
 .inicio-breve { white-space: nowrap; padding: 1px 7px; border-radius: 99px; background: rgb(255 255 255 / .14); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .inicio-visao { font-size: 12px; line-height: 1.35; color: #cfc8ff; }
 .inicio-acao {
@@ -841,8 +864,35 @@ main.com-assistente { grid-template-columns: minmax(340px, 50fr) minmax(260px, 3
   background: none; color: #fff; font: inherit; cursor: pointer;
 }
 .inicio-fechar:hover { background: rgb(255 255 255 / .08); }
-@media (max-width: 760px) { .inicio-corpo { grid-template-columns: 1fr; } }
+/* Aurora: três manchas de cor à deriva atrás de tudo. */
+.inicio-aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.inicio-aurora i { position: absolute; width: 46vmax; height: 46vmax; border-radius: 50%; filter: blur(70px); opacity: .5; will-change: transform; }
+.inicio-aurora i:nth-child(1) { left: -12vmax; top: -14vmax; background: #7b5cff; animation: aurora-a 22s ease-in-out infinite alternate; }
+.inicio-aurora i:nth-child(2) { right: -14vmax; bottom: -16vmax; background: #00b4d8; animation: aurora-b 26s ease-in-out infinite alternate; }
+.inicio-aurora i:nth-child(3) { left: 38%; top: 30%; width: 30vmax; height: 30vmax; background: #ff5fa2; opacity: .22; animation: aurora-c 30s ease-in-out infinite alternate; }
+@keyframes aurora-a { to { transform: translate(18vmax, 12vmax) scale(1.15); } }
+@keyframes aurora-b { to { transform: translate(-16vmax, -10vmax) scale(1.2); } }
+@keyframes aurora-c { to { transform: translate(-14vmax, 14vmax) scale(.8); } }
+.inicio-cartao { position: relative; }
+.inicio-topo h1 { background: none; color: inherit; display: flex; }
+.inicio-letra {
+  display: inline-block; background: linear-gradient(90deg, #ffe066, #ff8fb1 50%, #7df9ff); background-size: 9ch 100%;
+  background-position: calc(var(--l) * -1ch) 0; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: inicio-letra .7s calc(.1s + var(--l) * .05s) cubic-bezier(.3, 1.5, .5, 1) backwards;
+}
+.inicio-letra:hover { transform: translateY(-4px) rotate(-4deg); transition: transform .2s; }
+@keyframes inicio-letra { from { opacity: 0; transform: translateY(24px) rotate(8deg) scale(.6); } }
+.inicio-topo p { animation: inicio-subir .7s .55s ease-out backwards; }
+.inicio-marca .marca { animation: inicio-marca .9s cubic-bezier(.3, 1.4, .5, 1) backwards; }
+@keyframes inicio-marca { from { opacity: 0; transform: scale(.4) rotate(-20deg); } }
+.inicio-lado { animation: inicio-lado .7s .5s cubic-bezier(.2, .8, .2, 1) backwards; }
+@keyframes inicio-lado { from { opacity: 0; transform: translateX(24px); } }
+.inicio-acao { transition: transform .2s cubic-bezier(.3, 1.6, .5, 1), filter .2s; }
+.inicio-acao:hover { transform: translateX(4px); }
+.inicio-link { transition: background .15s, transform .15s; }
+.inicio-link:hover { transform: translateX(3px); }@media (max-width: 760px) { .inicio-corpo { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) {
-  .tela-inicial, .inicio-marca .m-rastro { animation: none; }
-  .inicio-linguagem { transition: none; }
+  .tela-inicial, .inicio-marca .m-rastro, .inicio-marca .marca, .inicio-aurora i, .inicio-letra, .inicio-topo p, .inicio-lado,
+  .inicio-linguagem, .ic-traco, .ic-ponto { animation: none !important; }
+  .inicio-linguagem, .inicio-icone, .inicio-acao, .inicio-link { transition: none; }
 }

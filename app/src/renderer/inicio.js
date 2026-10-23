@@ -3,6 +3,7 @@
 
 import { ICONE_SVG } from '../compartilhado/marca.js'
 import { comNegrito, el } from './dialogos.js'
+import { ICONES_LINGUAGEM } from './icones-linguagens.js'
 
 export const LINGUAGENS = [
   { id: 'portugol', nome: 'Portugol', sigla: 'Pt', cor: '#7b5cff', visao: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', pronta: true },
@@ -16,6 +17,17 @@ export const LINGUAGENS = [
 ]
 
 let fecharAtual = null
+
+/** O título entra letra a letra (cada uma com o seu atraso, ver .inicio-letra no CSS). */
+function titulo() {
+  const h1 = el('h1', { ariaLabel: 'MisterALG' })
+  ;[...'MisterALG'].forEach((c, i) => {
+    const s = el('span', { className: 'inicio-letra', textContent: c, ariaHidden: 'true' })
+    s.style.setProperty('--l', i)
+    h1.append(s)
+  })
+  return h1
+}
 
 /** Fecha a tela inicial, se estiver aberta (um comando do menu chegou primeiro). */
 export function fecharTelaInicial() {
@@ -56,15 +68,24 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
       return b
     }
 
-    const cartoes = LINGUAGENS.map((l) => {
-      const sigla = el('span', { className: 'inicio-sigla', textContent: l.sigla })
-      sigla.style.background = l.cor
-      if (l.tinta) sigla.style.color = l.tinta
+    const cartoes = LINGUAGENS.map((l, i) => {
+      const icone = el('span', { className: 'inicio-icone' })
+      icone.innerHTML = ICONES_LINGUAGEM[l.id] // texto fixo do próprio app
+      icone.style.setProperty('--cor', l.cor)
+      if (l.tinta) icone.style.color = l.tinta
       const b = botao('inicio-linguagem', [
-        sigla,
+        icone,
         el('span', { className: 'inicio-nome', textContent: l.nome }, l.pronta ? null : el('span', { className: 'inicio-breve', textContent: 'em breve' })),
         el('span', { className: 'inicio-visao', textContent: l.visao }),
       ], l.pronta ? () => terminar({ acao: 'novo', linguagem: l.id }) : null)
+      b.style.setProperty('--i', i)
+      b.style.setProperty('--cor', l.cor)
+      // O brilho do cartão segue o ponteiro.
+      b.addEventListener('pointermove', (e) => {
+        const r = b.getBoundingClientRect()
+        b.style.setProperty('--mx', `${e.clientX - r.left}px`)
+        b.style.setProperty('--my', `${e.clientY - r.top}px`)
+      })
       if (!l.pronta) {
         b.setAttribute('aria-disabled', 'true')
         b.title = `${l.nome} chega numa próxima versão do MisterALG`
@@ -81,10 +102,10 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
     const marca = el('div', { className: 'inicio-marca' })
     marca.innerHTML = ICONE_SVG // texto fixo do próprio app
 
-    tela.append(el('div', { className: 'inicio-cartao' },
+    tela.append(el('div', { className: 'inicio-aurora', ariaHidden: 'true' }, el('i'), el('i'), el('i')), el('div', { className: 'inicio-cartao' },
       el('header', { className: 'inicio-topo' },
         marca,
-        el('div', {}, el('h1', { textContent: 'MisterALG' }), el('p', { textContent: 'Aprenda a programar vendo o código rodar.' })),
+        el('div', {}, titulo(), el('p', { textContent: 'Aprenda a programar vendo o código rodar.' })),
         el('span', { className: 'inicio-versao', textContent: `versão ${versao}` }),
       ),
       el('div', { className: 'inicio-corpo' },

@@ -42,8 +42,8 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
   await avaliar(`[...document.querySelectorAll('dialog[open] button')].find(b => b.textContent === 'Aceito')?.click()`)
   for (let i = 0; i < 40 && !(await avaliar('!!window.__misteralg')); i += 1) await esperar(500)
   conferir('IDE carregada', await avaliar('!!window.__misteralg'), true)
-  // Primeira abertura: a tela inicial aparece com as 7 linguagens; Fechar volta para a IDE.
-  conferir('tela inicial', await avaliar(`document.querySelectorAll('.tela-inicial .inicio-linguagem').length`), 7)
+  // Primeira abertura: a tela inicial aparece com as 8 linguagens; Fechar volta para a IDE.
+  conferir('tela inicial', await avaliar(`document.querySelectorAll('.tela-inicial .inicio-linguagem').length`), 8)
   await avaliar(`document.querySelector('.inicio-fechar').click()`)
   conferir('tela inicial fechada', await avaliar(`!!document.querySelector('.tela-inicial')`), false)
 
