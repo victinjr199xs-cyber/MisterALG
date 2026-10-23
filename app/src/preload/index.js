@@ -40,7 +40,7 @@ contextBridge.exposeInMainWorld('misteralg', {
   imprimir: invocar('imprimir'),
   exportar: invocar('exportar:salvar'),
   abrirExterno: invocar('externo:abrir'),
-  janela: { titulo: invocar('janela:titulo'), fechar: invocar('janela:fechar') },
+  janela: { titulo: invocar('janela:titulo'), fechar: invocar('janela:fechar'), pagina: invocar('janela:pagina') },
   clang: {
     aquecer: invocar('clang:aquecer'),
     executar: invocar('clang:executar'),

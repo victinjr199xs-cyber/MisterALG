@@ -770,9 +770,7 @@ main.com-assistente { grid-template-columns: minmax(340px, 50fr) minmax(260px, 3
 .link-botao { margin-top: 3px; padding: 0; border: 0; background: none; color: var(--destaque); text-decoration: underline; cursor: pointer; font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { .assistente-msg.pensando { animation: none; } }
 
-/* Enquanto a tela inicial não sai, a IDE fica escondida: o app abre direto na escolha da linguagem. */
-html.iniciando body { background: #0f1115; }
-html.iniciando :is(#barra, #area, .status) { visibility: hidden; }
+body.pagina-inicio { background: #0f1115; }
 
 
 /* ---- Tela inicial (inicio.js): um "launcher" escuro, de linhas finas, igual em qualquer tema ---------- */

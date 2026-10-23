@@ -1,11 +1,11 @@
-import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron'
 import { writeFileSync } from 'node:fs'
 import { temaPorId } from '../compartilhado/temas.js'
 import { mostrarAbertura } from './abertura.js'
 import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
 import { aquecer, arvore, compilar, enviarEntrada, executar, foiCancelado, parar, pararTudo } from './clang.js'
 import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
-import { criarJanelaPrincipal } from './janelas.js'
+import { carregarPagina, criarJanelaPrincipal } from './janelas.js'
 import * as programas from './programas.js'
 import { aquecerPHP, pararPHP } from './php.js'
 import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
@@ -68,7 +68,19 @@ let podeFechar = false
 let estadoMenu = {}
 let arquivoParaAbrir = null // arquivo .alg aberto pelo Finder antes da janela existir
 
-const atualizarMenu = () => montarMenu(janela, lerPreferencias(), estadoMenu)
+let naInicio = false // a janela está na página inicial (sem a IDE)
+
+// Na página inicial não há menu da IDE (no Mac o menu do app continua, por causa do ⌘Q).
+const atualizarMenu = () => (naInicio && process.platform !== 'darwin' ? Menu.setApplicationMenu(null) : montarMenu(janela, lerPreferencias(), estadoMenu))
+/** Troca a página da janela: a tela inicial sozinha ou a IDE. */
+const irPara = (pagina, params) => {
+  naInicio = pagina === 'inicio'
+  if (naInicio) limparRecuperacao() // voltar ao início descarta o algoritmo (já confirmado na IDE)
+  atualizarMenu()
+  return carregarPagina(janela, pagina, params)
+}
+// Testes automatizados e arquivos abertos pelo sistema vão direto para a IDE.
+const paginaInicial = () => (process.env.MISTERALG_DADOS || arquivoParaAbrir ? 'ide' : 'inicio')
 const documentos = () => app.getPath('documents')
 
 // Temas escuros deixam escuros também a barra de título, os menus e as caixas
@@ -269,6 +281,10 @@ function registrarIpc() {
     if (['cut', 'copy', 'paste', 'selectAll'].includes(acao)) janela?.webContents[acao]()
   })
   ipcMain.handle('janela:titulo', (_e, titulo) => janela?.setTitle(titulo))
+  ipcMain.handle('janela:pagina', (_e, { pagina, params } = {}) => {
+    if (pagina !== 'inicio' && pagina !== 'ide') return
+    void irPara(pagina, params && typeof params === 'object' ? params : {}) // a página atual vai embora; não há resposta a esperar
+  })
   ipcMain.handle('janela:fechar', () => {
     podeFechar = true
     limparRecuperacao()
@@ -295,7 +311,7 @@ app.whenReady().then(() => {
   const abertura = lerPreferencias().abertura !== false && !process.env.MISTERALG_DADOS ? mostrarAbertura(app.getVersion()) : null
   janela = criarJanelaPrincipal(aplicarTemaNativo().fundo, abertura?.pronta)
   if (abertura) janela.once('show', abertura.fechar)
-  atualizarMenu()
+  irPara(paginaInicial())
 
   // Fechar a janela pergunta ao renderer se há alterações não salvas.
   janela.on('close', (evento) => {
@@ -312,7 +328,7 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) {
       podeFechar = false
       janela = criarJanelaPrincipal(aplicarTemaNativo().fundo)
-      atualizarMenu()
+      irPara(paginaInicial())
     }
   })
 })

@@ -8,7 +8,6 @@ import { esqueleto } from './editor/modelos.js'
 import { INTERVALOS, criarExecucao } from './execucao.js'
 import { ICONES } from './icones.js'
 import { DICAS } from './dicas.js'
-import { fecharTelaInicial, telaInicial, telaInicialAberta } from './inicio.js'
 import { tradutor } from '../compartilhado/idiomas.js'
 import { criarAssistente } from './assistente.js'
 import { gerarPascal } from '@misteralg/interpreter'
@@ -16,7 +15,7 @@ import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
-const VERSAO = '1.6.1'
+import { VERSAO } from '../compartilhado/versao.js'
 // Termos de uso: o mesmo texto que o instalador do Windows exibe (app/build/termos.txt).
 import TEXTO_TERMOS from '../../build/termos.txt?raw'
 const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')
@@ -299,7 +298,7 @@ const comandos = {
           { valor: 'cancelar', texto: t('Cancelar') },
         ],
       }).finally(() => { perguntandoSair = false })
-      if (r === 'inicio') return void abrirTelaInicial()
+      if (r === 'inicio') return comandos['tela-inicial']()
       if (r !== 'fechar') return editor.focar()
     }
     if (execucao.emExecucao()) execucao.parar()
@@ -307,7 +306,6 @@ const comandos = {
   },
   idioma: async (id) => {
     prefs = await api.prefs.gravar({ idioma: id })
-    if (telaInicialAberta()) { fecharTelaInicial(); void abrirTelaInicial() }
   },
   desfazer: () => (document.activeElement?.closest('.cm-editor') ? editor.desfazer() : document.execCommand('undo')),
   refazer: () => (document.activeElement?.closest('.cm-editor') ? editor.refazer() : document.execCommand('redo')),
@@ -371,7 +369,10 @@ const comandos = {
     aplicarTema(id)
   },
   dica: () => mostrarDica(),
-  'tela-inicial': () => abrirTelaInicial(),
+  'tela-inicial': async () => {
+    if (execucao.emExecucao()) execucao.parar()
+    if (await podeDescartar(' Voltar para a tela inicial do MisterALG ')) api.janela.pagina({ pagina: 'inicio' })
+  },
   assistente: () => assistente.alternar(),
   'configurar-ia': () => assistente.configurar(),
   calculadora: () => dialogos.calculadora(),
@@ -388,8 +389,6 @@ const PERMITIDOS_COM_DIALOGO = new Set(['desfazer', 'refazer', 'cortar', 'copiar
 
 function rodar(id, dados) {
   if (document.querySelector('dialog[open]') && !PERMITIDOS_COM_DIALOGO.has(id)) return
-  // Um comando do menu (Novo, Abrir, F9...) fecha a tela inicial e segue normalmente.
-  if (telaInicialAberta() && id !== 'tela-inicial' && id !== 'idioma') fecharTelaInicial()
   comandos[id]?.(dados)
 }
 
@@ -584,30 +583,14 @@ if (pendente) {
   api.recuperacao.limpar()
 } else {
   carregar({ texto: esqueleto(prefs) })
+  // A escolha feita na página inicial: uma linguagem nova ou um arquivo para abrir.
+  const pedido = new URLSearchParams(location.search)
+  if (pedido.get('linguagem')) await comandos.novo(pedido.get('linguagem'))
+  else if (pedido.get('abrir')) await abrirResultado(await api.arquivo.abrirCaminho(pedido.get('abrir')))
 }
 
-async function abrirTelaInicial() {
-  const proximaDica = (prefs.dicaAtual ?? 0) % DICAS.length
-  const r = await telaInicial({
-    versao: VERSAO,
-    recentes: prefs.mru,
-    dica: DICAS[proximaDica],
-    prefs,
-    atalhos: { novo: ehMac ? '⌘N' : 'Ctrl+N', abrir: ehMac ? '⌘O' : 'Ctrl+A' },
-  })
-  document.documentElement.classList.remove('iniciando')
-  prefs = await api.prefs.gravar({ ...r.prefs, dicaAtual: (proximaDica + 1) % DICAS.length })
-  if (r.acao === 'idioma') return comandos.idioma(r.idioma)
-  if (r.acao === 'abrir') await comandos.abrir()
-  else if (r.acao === 'recente') await comandos['abrir-recente'](r.caminho)
-  else if (r.acao === 'novo' && (doc.modificado || r.linguagem !== doc.linguagem)) await comandos.novo(r.linguagem)
-  else if (!document.querySelector('dialog[open]')) editor.focar() // fechada por um comando que abriu uma janela
-}
-
-// A tela inicial já traz a dica do dia; com ela aberta, a janela da dica não aparece.
-const mostrarInicio = !api.automatizado && !pendente && !recuperado?.texto && prefs.telaInicial !== false
-if (mostrarInicio) void abrirTelaInicial()
-else document.documentElement.classList.remove('iniciando')
+// Vindo da página inicial (inicio.html), a dica do dia já foi mostrada lá.
+const veioDoInicio = Boolean(location.search)
 
 async function mostrarDica() {
   const r = await dialogos.dicaDoDia(DICAS, prefs.dicaAtual ?? 0, prefs.mostrarDicas !== false)
@@ -617,7 +600,7 @@ async function mostrarDica() {
 
 // Dica do dia ao abrir (como o VisuAlg). Não aparece logo depois dos termos (uma
 // janela de cada vez na primeira abertura) nem nos testes automatizados.
-if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto && !mostrarInicio) void mostrarDica()
+if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto && !veioDoInicio) void mostrarDica()
 
 // Para testes automatizados e depuração no DevTools.
 window.__misteralg = { editor, execucao, doc, comandos }

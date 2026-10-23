@@ -27,6 +27,7 @@ export default defineConfig({
   },
   renderer: {
     root: 'src/renderer',
-    build: { emptyOutDir: true }
+    // Duas páginas: a tela inicial sozinha (inicio.html) e a IDE (index.html).
+    build: { emptyOutDir: true, rollupOptions: { input: { index: resolve('src/renderer/index.html'), inicio: resolve('src/renderer/inicio.html') } } }
   }
 })

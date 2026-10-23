@@ -1,4 +1,4 @@
-// Tela inicial no estilo de um "launcher": barra de topo, faixa com a dica do dia, a grade das linguagens
+// Tela inicial (a página inicio.html) no estilo de um "launcher": barra de topo, faixa com a dica do dia, a grade das linguagens
 // (uma célula numerada por linguagem, com ícone, descrição, o que a IDE mostra e o botão de criar),
 // os arquivos recentes e a barra de rodapé com as opções.
 
@@ -17,28 +17,17 @@ export const LINGUAGENS = [
   { id: 'php', nome: 'PHP', ext: '.php', cor: '#ec4899', resumo: 'Páginas web geradas no servidor', visao: 'A página gerada, ao vivo', selo: 'Página ao vivo' },
 ]
 
-let fecharAtual = null
-
-/** Fecha a tela inicial, se estiver aberta (um comando do menu chegou primeiro). */
-export function fecharTelaInicial() {
-  fecharAtual?.({ acao: 'fechar' })
-}
-
-export const telaInicialAberta = () => fecharAtual !== null
-
 /**
  * @param {{versao:string, recentes:string[], dica:string, prefs:{telaInicial:boolean, abertura:boolean, idioma?:string}, atalhos:{novo:string, abrir:string}}} opcoes
- * @returns {Promise<{acao:'novo'|'abrir'|'recente'|'fechar'|'idioma', idioma?:string, linguagem?:string, caminho?:string, prefs:{telaInicial:boolean, abertura:boolean}}>}
+ * @returns {Promise<{acao:'novo'|'abrir'|'recente'|'idioma', idioma?:string, linguagem?:string, caminho?:string, prefs:{abertura:boolean}}>}
  */
 export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
-  fecharTelaInicial()
   const t = tradutor(prefs.idioma)
   return new Promise((resolve) => {
     const caixa = (rotulo, marcado) => {
       const input = el('input', { type: 'checkbox', checked: marcado })
       return [input, el('label', { className: 'inicio-opcao' }, input, rotulo)]
     }
-    const [mostrarTela, rotuloTela] = caixa(t('Mostrar esta tela ao abrir'), prefs.telaInicial !== false)
     const [animar, rotuloAnimar] = caixa(t('Animação de abertura'), prefs.abertura !== false)
     // Trocar o idioma refaz a tela inicial já traduzida (main.js).
     const idioma = el('select', { className: 'inicio-idioma', ariaLabel: t('Idioma') },
@@ -46,16 +35,11 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
     idioma.addEventListener('change', () => terminar({ acao: 'idioma', idioma: idioma.value }))
 
     const tela = el('div', { className: 'tela-inicial', role: 'dialog', ariaModal: 'true', ariaLabel: t('Tela inicial do MisterALG') })
-    // A IDE por trás fica inerte: o Tab não sai da tela inicial.
-    const inertes = [...document.body.children].filter((f) => !f.inert)
     const terminar = (escolha) => {
       if (!tela.isConnected) return
       tela.remove()
-      for (const f of inertes) f.inert = false
-      fecharAtual = null
-      resolve({ ...escolha, prefs: { telaInicial: mostrarTela.checked, abertura: animar.checked } })
+      resolve({ ...escolha, prefs: { abertura: animar.checked } })
     }
-    fecharAtual = terminar
 
     const botao = (classe, filhos, aoClicar, extra = {}) => {
       const b = el('button', { type: 'button', className: classe, ...extra }, ...filhos)
@@ -98,7 +82,6 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
         el('span', { className: 'inicio-espaco' }),
         el('label', { className: 'inicio-rotulo' }, t('Idioma'), idioma),
         botao('inicio-botao-claro', [t('Abrir…'), el('kbd', { textContent: atalhos.abrir })], () => terminar({ acao: 'abrir' })),
-        botao('inicio-botao-x', ['×'], () => terminar({ acao: 'fechar' }), { title: t('Fechar (Esc)'), ariaLabel: t('Fechar') }),
       ),
       el('div', { className: 'inicio-conteudo' },
         el('div', { className: 'inicio-faixa' },
@@ -118,20 +101,12 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
         ),
       ),
       el('footer', { className: 'inicio-rodape' },
-        rotuloTela, rotuloAnimar,
+        rotuloAnimar,
         el('span', { className: 'inicio-espaco' }),
         el('span', { className: 'inicio-rotulo', textContent: `MisterALG ${t('versão')} ${versao}` }),
       ),
     )
 
-    tela.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape') return
-      e.preventDefault()
-      e.stopPropagation()
-      terminar({ acao: 'fechar' })
-    })
-
-    for (const f of inertes) f.inert = true
     document.body.append(tela)
     cartoes[0].focus({ focusVisible: false }) // foco para o teclado, sem o contorno até usar o Tab
   })
