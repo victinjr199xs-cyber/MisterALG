@@ -891,3 +891,63 @@ body.pagina-inicio { background: #0f1115; }
   .tela-inicial, .inicio-faixa, .inicio-linguagem { animation: none; }
   .inicio-linguagem, .inicio-linguagem::after, .inicio-icone, .inicio-criar, .inicio-link, .inicio-botao-claro { transition: none; }
 }
+/* ---- IDE das linguagens de programação (body.modo-codigo, main.js) -------------------------------------
+   C#, JS, TS, Python, C, C++ e PHP: escura e de linhas finas, como a tela inicial e os editores de código;
+   o Portugol continua com as molduras coloridas do VisuAlg. Vale em qualquer tema. */
+body.modo-codigo {
+  --fundo-janela: #0f1115; --moldura-editor: #0f1115; --moldura-variaveis: #0f1115; --moldura-visualizacao: #0f1115;
+  --destaque: #a78bfa; --borda: #262a33; --borda-clara: transparent; --texto: #e6e8eb; --fundo-campo: #0b0d11;
+  --texto-barra: #e6e8eb; --icone-papel: #2a2f39; --botao-hover: #1c2029; --botao-ativo: #262b36;
+  --desabilitado: #5c6370; --desabilitado-fundo: #13161c; --desabilitado-campo: #5c6370;
+  --cabecalho: #13161c; --linha-grade: #1c2027; --selecao-grade: #2b2413;
+  --calha-borda: #1c2027; --calha-fim: #0b0d11; --calha-texto: #4b5263;
+  --linha-execucao: #2f4f8f; --texto-execucao: #ffffff; --linha-breakpoint: #7a1f1f; --linha-erro: #f14c4c; --linha-erro-fundo: #3b1717;
+  --selecao-texto: #2c3a5a; --mesma-palavra: #1f2633; --cursor: #a78bfa; --detalhe: #8b93a1;
+  --sx-comentario: #6b7385; --sx-literal: #98c379; --sx-chave: #c678dd; --sx-especial: #61afef; --sx-tipo: #e5c07b; --sx-variavel: #e6e8eb;
+  --mono: Consolas, 'Cascadia Mono', Menlo, monospace;
+  color-scheme: dark;
+}
+body.modo-codigo .barra { padding: 6px 10px; background: #0f1115; border-bottom: 1px solid var(--borda); box-shadow: none; }
+body.modo-codigo .botao { border-radius: 6px; }
+body.modo-codigo .separador { box-shadow: none; }
+body.modo-codigo main { gap: 0; padding: 0; border: 0; grid-template-columns: minmax(380px, 60fr) minmax(300px, 40fr); }
+body.modo-codigo .coluna-direita { gap: 0; grid-template-rows: 38fr 62fr; border-left: 1px solid var(--borda); }
+body.modo-codigo .moldura { border: 0; border-radius: 0; box-shadow: none; }
+body.modo-codigo .moldura-visualizacao { border-top: 1px solid var(--borda); }
+/* Rótulos como abas: o nome do arquivo no editor; VARIABLES e TERMINAL à direita. */
+body.modo-codigo .legenda {
+  padding: 10px 16px; border-bottom: 1px solid var(--borda); background: #0f1115;
+  color: #8b93a1; font: 600 11px/1 var(--mono); font-style: normal; letter-spacing: .14em; text-transform: uppercase;
+}
+body.modo-codigo #titulo-editor {
+  align-self: flex-start; padding: 10px 18px; border-bottom: 0; border-top: 2px solid var(--destaque); border-right: 1px solid var(--borda);
+  background: #0b0d11; color: #e6e8eb; font: 13px/1 var(--mono); letter-spacing: 0; text-transform: none;
+}
+body.modo-codigo .moldura-editor { border-bottom: 0; }
+body.modo-codigo .moldura-editor::after { content: ''; position: absolute; left: 0; right: 0; top: 35px; border-top: 1px solid var(--borda); z-index: -1; }
+body.modo-codigo .editor, body.modo-codigo .grade-rolagem, body.modo-codigo .visualizacao { margin: 0; border: 0; }
+body.modo-codigo .grade { font: 12.5px/22px var(--mono); }
+body.modo-codigo .grade th { border: 0; border-bottom: 1px solid var(--borda); color: #8b93a1; font: 600 10.5px/26px var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+body.modo-codigo .grade td { border: 0; border-bottom: 1px solid var(--linha-grade); }
+body.modo-codigo .grade tr.modificada td { background: var(--selecao-grade); color: #fbbf24; font-weight: 600; }
+body.modo-codigo .visualizacao { padding: 10px 16px; font: 13px/1.5 var(--mono); }
+/* O terminal: mesma área, sem a janela do MS-DOS. */
+body.modo-codigo .console { border: 0; background: #0b0d11; }
+body.modo-codigo .console-titulo {
+  padding: 8px 10px 8px 16px; background: #0f1115; border-bottom: 1px solid var(--borda);
+  color: #8b93a1; font: 600 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+}
+body.modo-codigo .console-icone { display: none; }
+body.modo-codigo .console-titulo::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #16a37f; box-shadow: 0 0 8px #16a37f; }
+body.modo-codigo .console-fechar { border: 1px solid var(--borda); border-radius: 4px; background: transparent; color: #8b93a1; }
+body.modo-codigo .console-fechar:hover { background: #c42b1c; color: #fff; }
+body.modo-codigo .console-tela { padding: 12px 16px; color: #e6e8eb; font: 13px/1.55 var(--mono); }
+body.modo-codigo .console-entrada { caret-color: #a78bfa; color: #fbbf24; }
+body.modo-codigo .previa-barra { background: #0f1115; color: #8b93a1; border-bottom: 1px solid var(--borda); }
+body.modo-codigo .status { padding: 0; border-top: 1px solid var(--borda); background: #0f1115; gap: 0; }
+body.modo-codigo .painel { border: 0; border-right: 1px solid var(--borda); padding: 6px 12px; color: #8b93a1; font: 11px/1 var(--mono); }
+body.modo-codigo .painel-dica { display: none; }
+body.modo-codigo ::-webkit-scrollbar { width: 10px; height: 10px; }
+body.modo-codigo ::-webkit-scrollbar-track { background: transparent; }
+body.modo-codigo ::-webkit-scrollbar-thumb { background: #262a33; border-radius: 5px; border: 2px solid #0b0d11; }
+body.modo-codigo ::-webkit-scrollbar-button { display: none; }

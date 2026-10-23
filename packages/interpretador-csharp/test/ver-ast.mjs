@@ -1,4 +1,4 @@
-﻿// Ferramenta de desenvolvimento: mostra a Ã¡rvore de um trecho de C#.  node test/ver-ast.mjs "int x = 5;"
+// Ferramenta de desenvolvimento: mostra a árvore de um trecho de C#.  node test/ver-ast.mjs "int x = 5;"
 import { criarAnalisador } from '../src/analisar.js'
 
 const { analisar } = await criarAnalisador()

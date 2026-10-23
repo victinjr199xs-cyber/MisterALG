@@ -76,15 +76,15 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
   await avaliar(`document.querySelector('.console-entrada').focus()`)
   await digitar('21')
   await tecla('Enter')
-  for (let i = 0; i < 240 && !(await temTexto('Fim da execução')); i += 1) await esperar(250) // PC lento/CI: o processo pode demorar a sair
-  conferir('saída do C', await avaliar('document.querySelector("#console-tela").textContent'), 'Valor: 21\nDobro = 42\n\n>>> Fim da execução do programa !')
+  for (let i = 0; i < 240 && !(await temTexto('Process finished')); i += 1) await esperar(250) // PC lento/CI: o processo pode demorar a sair
+  conferir('saída do C', await avaliar('document.querySelector("#console-tela").textContent'), 'Valor: 21\nDobro = 42\n\nProcess finished with exit code 0')
 
   // C++ com try/catch: liga a libexcecoes.a embutida no worker (exceções do WebAssembly).
   await avaliar(`${M}.doc.modificado = false`)
   await avaliar(`${M}.comandos.novo('cpp')`)
   await avaliar(`${M}.editor.definirTexto(${JSON.stringify(PROGRAMA_CPP)})`)
   await avaliar(`void ${M}.comandos.executar()`)
-  for (let i = 0; i < 360 && !(await temTexto('Fim da execução')); i += 1) await esperar(500)
-  conferir('saída do C++ com exceção', await avaliar('document.querySelector("#console-tela").textContent'), 'pegou: zero\n\n>>> Fim da execução do programa !')
+  for (let i = 0; i < 360 && !(await temTexto('Process finished')); i += 1) await esperar(500)
+  conferir('saída do C++ com exceção', await avaliar('document.querySelector("#console-tela").textContent'), 'pegou: zero\n\nProcess finished with exit code 0')
   console.log('Fumaça da IDE: tudo certo.')
 }

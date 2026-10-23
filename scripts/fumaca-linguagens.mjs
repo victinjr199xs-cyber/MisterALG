@@ -87,7 +87,7 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   // F9 sem passo a passo: roda direto e a saída vem inteira
   await novo('python', 'for i in range(3):\n    print(i)\n')
   await avaliar(`void ${M}.comandos.executar()`)
-  conferir('Python: F9', await ate(`document.querySelector('#console-tela').textContent.includes('Fim da execução')`, 80), true)
+  conferir('Python: F9', await ate(`document.querySelector('#console-tela').textContent.includes('Process finished')`, 80), true)
   conferir('Python: saída do F9', (await console_()).startsWith('0\n1\n2\n'), true)
 
   // Parar um laço infinito

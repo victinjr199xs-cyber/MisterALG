@@ -95,11 +95,13 @@ export function criarExecucao(op) {
     c: 'Memória do programa: pilha, heap e globais (setas = ponteiros)',
     objetos: 'Pilha de chamadas e objetos (setas = referências)',
   }
+  const LEGENDAS_EN = { c: 'Memory: stack, heap and globals', objetos: 'Call stack and objects' }
 
   /** qual: 'c', 'objetos' ou null (a grade de variáveis do Portugol). */
   function mostrarPainel(qual) {
     document.getElementById('variaveis').hidden = qual !== null
-    legendaVariaveis.textContent = LEGENDAS[qual] ?? legendaOriginal
+    const ingles = document.body.classList.contains('modo-codigo')
+    legendaVariaveis.textContent = (ingles ? LEGENDAS_EN : LEGENDAS)[qual] ?? (ingles ? 'Variables' : legendaOriginal)
     if (qual !== 'c') memoriaC.esconder()
     if (qual === 'objetos') {
       memoriaObjetos ??= criarMemoriaObjetos(molduraVariaveis.querySelector('.grade-rolagem'))
@@ -221,9 +223,11 @@ export function criarExecucao(op) {
     editor.somenteLeitura(false)
     tela.querySelector('.console-entrada')?.remove()
     const quebra = tela.textContent.endsWith('\n') || tela.textContent === '' ? '' : '\n'
-    if (estadoFinal === 'terminado') escrever(`${quebra}\n${TEXTOS.fimPrograma}`)
-    else if (estadoFinal === 'parado') escrever(`${quebra}${TEXTOS.terminadoUsuario}`)
-    else if (estadoFinal === 'erro') escrever(`${quebra}${TEXTOS.terminadoErro}`)
+    // Nas linguagens de programação (modo-codigo, main.js) o terminal fala inglês, como os de verdade.
+    const ingles = document.body.classList.contains('modo-codigo')
+    if (estadoFinal === 'terminado') escrever(`${quebra}\n${ingles ? 'Process finished with exit code 0' : TEXTOS.fimPrograma}`)
+    else if (estadoFinal === 'parado') escrever(`${quebra}${ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario}`)
+    else if (estadoFinal === 'erro') escrever(`${quebra}${ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro}`)
     status.estado()
     status.mensagem(TEXTOS.rodapeConsole)
     op.aoMudarEstado(false)

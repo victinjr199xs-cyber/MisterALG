@@ -131,9 +131,25 @@ document.addEventListener('mouseover', (e) => {
 
 // ---- documento -------------------------------------------------------------------
 
+// Portugol fica com as molduras do VisuAlg; as outras linguagens usam a IDE escura "de terminal",
+// com os rótulos em inglês (como nas ferramentas dessas linguagens). Os textos originais voltam no Portugol.
+const ROTULOS_CODIGO = [
+  ['.moldura-variaveis .legenda', 'Variables'],
+  ['.moldura-visualizacao > .legenda', 'Terminal'],
+  ['.console-titulo > span:not(.console-icone)', 'Terminal'],
+  ['#variaveis th:nth-child(1)', 'Scope'], ['#variaveis th:nth-child(2)', 'Name'],
+  ['#variaveis th:nth-child(3)', 'Type'], ['#variaveis th:nth-child(4)', 'Value'],
+]
+const rotulosOriginais = ROTULOS_CODIGO.map(([sel]) => $(sel).textContent)
+function aplicarModo(linguagem) {
+  const codigo = linguagem !== 'portugol'
+  document.body.classList.toggle('modo-codigo', codigo)
+  ROTULOS_CODIGO.forEach(([sel, texto], i) => { $(sel).textContent = codigo ? texto : rotulosOriginais[i] })
+}
+
 function atualizarTitulo() {
   const arquivo = doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.linguagem === 'portugol' ? doc.nome : `${doc.nome}.${EXTENSAO[doc.linguagem]}`
-  $('#titulo-editor').textContent = `Área dos algoritmos ( Edição do código fonte ) -> Nome do arquivo: [${arquivo}]`
+  $('#titulo-editor').textContent = doc.linguagem === 'portugol' ? `Área dos algoritmos ( Edição do código fonte ) -> Nome do arquivo: [${arquivo}]` : arquivo
   api.janela.titulo(`MisterALG — ${arquivo}${doc.modificado ? ' (modificado)' : ''}`)
   status.estado()
 }
@@ -161,6 +177,7 @@ function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 
   editor.definirLinguagem(linguagem)
   editor.definirTexto(texto)
   Object.assign(doc, { caminho, codificacao, nome, linguagem, modificado: false })
+  aplicarModo(linguagem)
   // Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve.
   if (linguagem === 'c' || linguagem === 'cpp') api.clang.aquecer({ linguagem, fonte: texto })
   else if (linguagem === 'python') api.programa.aquecer('python')
