@@ -9,6 +9,7 @@ import { INTERVALOS, criarExecucao } from './execucao.js'
 import { ICONES } from './icones.js'
 import { DICAS } from './dicas.js'
 import { fecharTelaInicial, telaInicial, telaInicialAberta } from './inicio.js'
+import { tradutor } from '../compartilhado/idiomas.js'
 import { criarAssistente } from './assistente.js'
 import { gerarPascal } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
@@ -102,13 +103,13 @@ const linguagemDoCaminho = (caminho) => (
   'portugol'
 )
 const MODELOS_NOVO = {
-  c: '#include <stdio.h>\n\nint main(void) {\n    printf("Olá, mundo!\\n");\n    return 0;\n}\n',
-  cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Olá, mundo!" << endl;\n    return 0;\n}\n',
-  csharp: 'using System;\n\nclass Program\n{\n    static void Main()\n    {\n        Console.WriteLine("Olá, mundo!");\n    }\n}\n',
-  javascript: 'console.log("Olá, mundo!")\n',
-  typescript: 'const msg: string = "Olá, mundo!"\nconsole.log(msg)\n',
-  python: 'print("Olá, mundo!")\n',
-  php: '<?php\necho "Olá, mundo!";\n',
+  c: '#include <stdio.h>\n\nint main(void) {\n    printf("Hello, World!\\n");\n    return 0;\n}\n',
+  cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}\n',
+  csharp: 'using System;\n\nclass Program\n{\n    static void Main()\n    {\n        Console.WriteLine("Hello, World!");\n    }\n}\n',
+  javascript: 'console.log("Hello, World!")\n',
+  typescript: 'const msg: string = "Hello, World!"\nconsole.log(msg)\n',
+  python: 'print("Hello, World!")\n',
+  php: '<?php\necho "Hello, World!";\n',
 }
 const esqueletoDe = (linguagem) => MODELOS_NOVO[linguagem] ?? esqueleto(prefs)
 let aleatorioLigado = false
@@ -262,6 +263,7 @@ const busca = criarBusca(editor,{ estado: status.estado, mensagem: (m) => status
 
 // ---- comandos (menu, barra e atalhos usam a mesma tabela) ------------------------------
 
+let perguntandoSair = false
 const comandos = {
   novo: async (linguagem = doc.linguagem) => {
     if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
@@ -283,8 +285,29 @@ const comandos = {
     return api.imprimir({ html })
   },
   sair: async () => {
+    // Antes de fechar, oferece voltar para a tela inicial (os testes automatizados fecham direto).
+    if (!api.automatizado) {
+      if (perguntandoSair) return
+      perguntandoSair = true
+      const t = tradutor(prefs.idioma)
+      const r = await dialogos.janela({
+        titulo: t('Sair'),
+        corpo: t('Você quer voltar para a tela inicial do MisterALG ou fechar o aplicativo?'),
+        botoes: [
+          { valor: 'inicio', texto: t('Voltar para a tela inicial'), principal: true },
+          { valor: 'fechar', texto: t('Fechar o MisterALG') },
+          { valor: 'cancelar', texto: t('Cancelar') },
+        ],
+      }).finally(() => { perguntandoSair = false })
+      if (r === 'inicio') return void abrirTelaInicial()
+      if (r !== 'fechar') return editor.focar()
+    }
     if (execucao.emExecucao()) execucao.parar()
     if (await podeDescartar(' Encerrando o algoritmo e fechando o MisterALG ')) api.janela.fechar()
+  },
+  idioma: async (id) => {
+    prefs = await api.prefs.gravar({ idioma: id })
+    if (telaInicialAberta()) { fecharTelaInicial(); void abrirTelaInicial() }
   },
   desfazer: () => (document.activeElement?.closest('.cm-editor') ? editor.desfazer() : document.execCommand('undo')),
   refazer: () => (document.activeElement?.closest('.cm-editor') ? editor.refazer() : document.execCommand('redo')),
@@ -366,7 +389,7 @@ const PERMITIDOS_COM_DIALOGO = new Set(['desfazer', 'refazer', 'cortar', 'copiar
 function rodar(id, dados) {
   if (document.querySelector('dialog[open]') && !PERMITIDOS_COM_DIALOGO.has(id)) return
   // Um comando do menu (Novo, Abrir, F9...) fecha a tela inicial e segue normalmente.
-  if (telaInicialAberta() && id !== 'tela-inicial') fecharTelaInicial()
+  if (telaInicialAberta() && id !== 'tela-inicial' && id !== 'idioma') fecharTelaInicial()
   comandos[id]?.(dados)
 }
 
@@ -574,6 +597,7 @@ async function abrirTelaInicial() {
   })
   document.documentElement.classList.remove('iniciando')
   prefs = await api.prefs.gravar({ ...r.prefs, dicaAtual: (proximaDica + 1) % DICAS.length })
+  if (r.acao === 'idioma') return comandos.idioma(r.idioma)
   if (r.acao === 'abrir') await comandos.abrir()
   else if (r.acao === 'recente') await comandos['abrir-recente'](r.caminho)
   else if (r.acao === 'novo' && (doc.modificado || r.linguagem !== doc.linguagem)) await comandos.novo(r.linguagem)

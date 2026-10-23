@@ -9,6 +9,7 @@
 import { app, Menu } from 'electron'
 import { basename } from 'node:path'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
+import { IDIOMAS, tradutor } from '../compartilhado/idiomas.js'
 
 const ehMac = process.platform === 'darwin'
 
@@ -20,7 +21,8 @@ const ATALHO = ehMac
 
 export function montarMenu(janela, prefs, estado = {}) {
   const enviar = (id, dados) => () => janela?.webContents.send('menu', id, dados)
-  const item = (label, id, accelerator, extra = {}) => ({ label, accelerator, click: enviar(id), ...extra })
+  const tr = tradutor(prefs.idioma)
+  const item = (label, id, accelerator, extra = {}) => ({ label: tr(label), accelerator, click: enviar(id), ...extra })
 
   const recentes = prefs.mru.map((caminho, i) => ({
     label: `&${i + 1}º - ${basename(caminho)}`,
@@ -38,18 +40,18 @@ export function montarMenu(janela, prefs, estado = {}) {
             { type: 'separator' },
             item('Configurações…', 'configuracoes', 'Cmd+,'),
             { type: 'separator' },
-            { role: 'services', label: 'Serviços' },
+            { role: 'services', label: tr('Serviços') },
             { type: 'separator' },
-            { role: 'hide', label: 'Ocultar MisterALG' },
-            { role: 'hideOthers', label: 'Ocultar outros' },
-            { role: 'unhide', label: 'Mostrar tudo' },
+            { role: 'hide', label: tr('Ocultar MisterALG') },
+            { role: 'hideOthers', label: tr('Ocultar outros') },
+            { role: 'unhide', label: tr('Mostrar tudo') },
             { type: 'separator' },
             item('Sair do MisterALG', 'sair', 'Cmd+Q'),
           ],
         }]
       : []),
     {
-      label: '&Arquivo',
+      label: tr('&Arquivo'),
       submenu: [
         item('&Novo', 'novo', 'CmdOrCtrl+N'),
         item('&Abrir…', 'abrir', ATALHO.abrir),
@@ -64,17 +66,17 @@ export function montarMenu(janela, prefs, estado = {}) {
       ],
     },
     {
-      label: 'E&ditar',
+      label: tr('E&ditar'),
       submenu: [
         item('&Desfazer', 'desfazer', 'CmdOrCtrl+Z'),
         item('&Refazer', 'refazer', 'Shift+CmdOrCtrl+Z'),
         { type: 'separator' },
-        { role: 'cut', label: 'Recor&tar' },
-        { role: 'copy', label: '&Copiar' },
-        { role: 'paste', label: 'Col&ar' },
+        { role: 'cut', label: tr('Recor&tar') },
+        { role: 'copy', label: tr('&Copiar') },
+        { role: 'paste', label: tr('Col&ar') },
         item('&Indentação', 'indentar', 'Ctrl+G'),
         { type: 'separator' },
-        { role: 'selectAll', label: '&Selecionar tudo', accelerator: ATALHO.selecionarTudo },
+        { role: 'selectAll', label: tr('&Selecionar tudo'), accelerator: ATALHO.selecionarTudo },
         { type: 'separator' },
         item('&Localizar…', 'localizar', ATALHO.localizar),
         item('Localizar o &Próximo', 'localizar-proximo', 'F3'),
@@ -87,7 +89,7 @@ export function montarMenu(janela, prefs, estado = {}) {
       ],
     },
     {
-      label: '&Run (executar)',
+      label: tr('&Run (executar)'),
       submenu: [
         item('Rodar o &Algoritmo', 'executar', 'F9'),
         item('Rodar &Passo a passo', 'passo', 'F8'),
@@ -106,7 +108,7 @@ export function montarMenu(janela, prefs, estado = {}) {
       ],
     },
     {
-      label: '&Exportar para',
+      label: tr('&Exportar para'),
       submenu: [
         item('a Linguagem &Pascal…', 'exportar-pascal'),
         item('a Linguagem &C / C++', 'exportar-c', undefined, { enabled: false }),
@@ -114,17 +116,22 @@ export function montarMenu(janela, prefs, estado = {}) {
       ],
     },
     {
-      label: '&Manutenção',
+      label: tr('&Manutenção'),
       submenu: [
         item('&Configurações', 'configuracoes', ehMac ? undefined : 'Ctrl+,'),
         {
-          label: '&Tema (cores)',
+          label: tr('&Tema (cores)'),
           submenu: TEMAS.map((tema) => ({
             label: tema.nome,
             type: 'radio',
             checked: tema.id === temaPorId(prefs.tema).id,
             click: enviar('tema', tema.id),
           })).concat([{ type: 'separator' }, item('Personalizar as cores do código…', 'configurar-cores')]),
+        },
+        { type: 'separator' },
+        {
+          label: tr('&Idioma'),
+          submenu: IDIOMAS.map((i) => ({ label: i.nome, type: 'radio', checked: (prefs.idioma ?? 'pt') === i.id, click: enviar('idioma', i.id) })),
         },
         { type: 'separator' },
         item('Assistente de &IA', 'assistente', 'CmdOrCtrl+I'),
@@ -135,7 +142,7 @@ export function montarMenu(janela, prefs, estado = {}) {
       ],
     },
     {
-      label: '&Help (Ajuda)',
+      label: tr('&Help (Ajuda)'),
       role: ehMac ? 'help' : undefined,
       submenu: [
         item('A &Tela do MisterALG', 'ajuda-tela', 'F1'),
@@ -147,7 +154,7 @@ export function montarMenu(janela, prefs, estado = {}) {
         item('&Sobre os autores do Software', 'sobre', 'Ctrl+F1'),
       ],
     },
-    ...(ehMac ? [{ role: 'windowMenu', label: 'Janela' }] : []),
+    ...(ehMac ? [{ role: 'windowMenu', label: tr('Janela') }] : []),
   ]
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
