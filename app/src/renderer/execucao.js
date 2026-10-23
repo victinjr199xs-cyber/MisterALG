@@ -6,6 +6,7 @@ import { SessaoC } from '@misteralg/interpretador-c'
 import { SessaoJSProxy } from './js/sessao-js.js'
 import { criarMemoriaObjetos } from './memoria-objetos.js'
 import { SessaoPython } from './python/sessao-python.js'
+import { criarPrevia } from './previa.js'
 import * as dialogos from './dialogos.js'
 import { criarMemoriaC } from './memoria-c.js'
 
@@ -394,8 +395,51 @@ export function criarExecucao(op) {
     else sessao.continuar()
   }
 
-  function iniciarPHP() {
-    status.mensagem(' MENSAGEM: PHP em preparação')
+  // ---- PHP: a página gerada, ao vivo ---------------------------------------------------------------
+  // Não há "execução" com passos: o PHP responde a cada requisição da página (main/previa.js) e o editor
+  // continua livre — ao editar, a página se atualiza sozinha.
+
+  const previa = criarPrevia({
+    aoFechar: () => { previa.esconder(); editor.focar() },
+    aoIrParaLinha: (linha) => editor.realcarErro(linha),
+  })
+  let pedidoManualPHP = false
+  let relogioPrevia = null
+
+  api.php.aoResponder((r) => {
+    const erro = r.diagnosticos.find((d) => d.principal && (d.nivel === 'fatal' || d.nivel === 'parse'))
+    editor.realcarErro(erro ? erro.linha : null)
+    status.mensagem(erro
+      ? ` MENSAGEM: ${erro.rotulo} na linha ${erro.linha}: ${erro.mensagem}`
+      : ` MENSAGEM: Página gerada pelo PHP em ${r.ms} ms — ela se atualiza sozinha quando você edita (F9 executa de novo)`)
+    if (erro && pedidoManualPHP) {
+      pedidoManualPHP = false
+      const e = { linha: erro.linha, mensagem: `${erro.rotulo}: ${erro.mensagem}`, explicacao: erro.explicacao }
+      op.aoErro?.(e)
+      dialogos.aviso(e, editor.textoDaLinha(erro.linha), op.iaAtiva?.()).then((x) => (x === 'ia' ? op.aoPedirIA() : editor.focar()))
+    }
+    if (!erro) pedidoManualPHP = false
+  })
+
+  async function iniciarPHP() {
+    pedidoManualPHP = true
+    await mostrarPaginaPHP()
+  }
+
+  async function mostrarPaginaPHP() {
+    const { nome, diretorio } = op.paginaPHP?.() ?? {}
+    consoleEl.hidden = true
+    mostrarMemoriaC(false)
+    status.estado(' PHP ')
+    const { url } = await api.php.definir({ fonte: editor.texto(), nome, diretorio })
+    previa.mostrar(url)
+  }
+
+  /** Chamado a cada edição: se a página está aberta, ela acompanha o que se escreve. */
+  function aoEditar() {
+    if (!previa.visivel || op.linguagem?.() !== 'php') return
+    clearTimeout(relogioPrevia)
+    relogioPrevia = setTimeout(() => mostrarPaginaPHP(), 700)
   }
 
   /** O Python (Pyodide) roda num processo à parte (main/programas.js), que pausa a cada linha. */
@@ -534,7 +578,14 @@ export function criarExecucao(op) {
     emExecucao,
     fecharConsole,
     /** Esc: fecha o console depois que o programa termina. */
+    aoEditar,
     teclaEsc() {
+      if (previa.visivel) {
+        previa.esconder()
+        status.estado()
+        status.mensagem('')
+        return true
+      }
       if (!emExecucao() && !consoleEl.hidden) {
         fecharConsole()
         status.mensagem('')
@@ -548,6 +599,7 @@ export function criarExecucao(op) {
     restaurar() {
       if (emExecucao()) parar()
       consoleEl.hidden = true
+      previa.esconder()
       mostrarMemoriaC(false)
       corpoGrade.replaceChildren()
       visualizacao.textContent = ''

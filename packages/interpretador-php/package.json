@@ -2,13 +2,18 @@
   "name": "@misteralg/interpretador-php",
   "version": "0.1.0",
   "private": true,
-  "description": "PHP no MisterALG: mostra a página gerada em tempo real",
+  "description": "PHP no MisterALG: php-wasm num processo à parte, mostrando a página gerada ao vivo",
   "type": "module",
   "main": "src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./executor": "./src/executor.mjs"
   },
   "scripts": {
     "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@php-wasm/node": "3.1.60",
+    "@php-wasm/universal": "3.1.60"
   }
 }

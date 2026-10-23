@@ -99,6 +99,21 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('Python: Ctrl+F2 para o laço', await ate(`${M}.execucao.emExecucao() === false`, 20), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
+  // ---- PHP: a página gerada ao vivo (servidor de desenvolvimento dentro do app) ---------------
+  await novo('php', '<h1>Olá, <?= strtoupper("php") ?>!</h1>\n<?php for ($i = 1; $i <= 3; $i++) echo "<p>$i</p>"; ?>\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('PHP: página aberta', await ate(`!!document.querySelector('#previa:not([hidden])') && document.querySelector('#previa-info').textContent.includes('HTTP 200')`, 80), true)
+  await avaliar(`document.querySelector('.previa-aba[data-modo="html"]').click()`)
+  conferir('PHP: HTML gerado', await ate(`document.querySelector('#previa-html').textContent.includes('<h1>Olá, PHP!</h1>')`, 40), true)
+  conferir('PHP: laço executado', (await avaliar(`document.querySelector('#previa-html').textContent`)).includes('<p>3</p>'), true)
+  await avaliar(`${M}.editor.definirTexto(${JSON.stringify('<h2>Mudou</h2>\n')})`)
+  conferir('PHP: a página acompanha a edição sozinha', await ate(`document.querySelector('#previa-html').textContent.includes('<h2>Mudou</h2>')`, 60), true)
+  await avaliar(`${M}.editor.definirTexto(${JSON.stringify('<p>antes</p>\n<?php\necho 1 / 0;\n')})`)
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('PHP: erro fatal abre o aviso com a linha', await ate(`/divisão por zero/.test(document.querySelector('dialog[open]')?.innerText ?? '')`, 60), true)
+  conferir('PHP: lista de avisos na página', await avaliar(`document.querySelectorAll('.previa-aviso').length`) >= 1, true)
+  await avaliar(`document.querySelector('dialog[open]')?.close()`)
+  await avaliar(`${M}.execucao.restaurar()`)
   const proprios = erros.filter((e) => !/Autofill|DevTools/.test(e))
   conferir('sem erros no console da página', proprios, [])
 }

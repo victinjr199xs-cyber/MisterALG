@@ -1,6 +1,7 @@
-// Python e PHP: cada programa roda num processo à parte (rodar-python.js, rodar-php.js) que fala com a
-// IDE por linhas de JSON. Um laço infinito ou um travamento ficam lá, longe da IDE; parar é matar o
-// processo. O Python demora alguns segundos para carregar, então um processo "aquecido" fica esperando.
+// Python: cada programa roda num processo à parte (rodar-python.js) que fala com a IDE por linhas de
+// JSON. Um laço infinito ou um travamento ficam lá, longe da IDE; parar é matar o processo. O Python
+// demora alguns segundos para carregar, então um processo "aquecido" fica esperando. (O PHP é outro
+// caso: um servidor de vida longa, em php.js e previa.js.)
 
 import { app } from 'electron'
 import { spawn } from 'node:child_process'
@@ -12,17 +13,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const arquivoVizinho = (nome) => fileURLToPath(new URL(nome, import.meta.url)).replace(/app\.asar([\\/])/, 'app.asar.unpacked$1')
 const requerer = createRequire(import.meta.url)
 
-// No app instalado, o Pyodide e o PHP vão em resources/linguagens (extraResources); em desenvolvimento, no node_modules.
+// No app instalado, o Pyodide vai em resources/linguagens (extraResources); em desenvolvimento, no node_modules.
 const LINGUAGENS = {
   python: {
     nome: 'Python',
     script: './rodar-python.js',
     modulo: () => (app.isPackaged ? join(process.resourcesPath, 'linguagens', 'pyodide', 'pyodide.mjs') : requerer.resolve('pyodide/pyodide.mjs')),
-  },
-  php: {
-    nome: 'PHP',
-    script: './rodar-php.js',
-    modulo: () => (app.isPackaged ? join(process.resourcesPath, 'linguagens', 'php', 'node_modules', '@php-wasm', 'node', 'index.js') : requerer.resolve('@php-wasm/node')),
   },
 }
 

@@ -66,6 +66,16 @@ contextBridge.exposeInMainWorld('misteralg', {
       return () => ipcRenderer.removeListener('programa:evento', ouvinte)
     },
   },
+  php: {
+    aquecer: invocar('php:aquecer'),
+    definir: invocar('php:definir'),
+    ultima: invocar('php:ultima'),
+    aoResponder(fn) {
+      const ouvinte = (_e, resposta) => fn(resposta)
+      ipcRenderer.on('php:resposta', ouvinte)
+      return () => ipcRenderer.removeListener('php:resposta', ouvinte)
+    },
+  },
   ia: {
     chaves: invocar('ia:chaves'),
     gravarChave: invocar('ia:gravarChave'),

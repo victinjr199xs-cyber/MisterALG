@@ -7,6 +7,8 @@ import { aquecer, arvore, compilar, enviarEntrada, executar, foiCancelado, parar
 import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
 import { criarJanelaPrincipal } from './janelas.js'
 import * as programas from './programas.js'
+import { aquecerPHP, pararPHP } from './php.js'
+import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
 import { montarMenu } from './menu.js'
 import {
   adicionarRecente,
@@ -18,6 +20,7 @@ import {
   removerRecente,
 } from './preferencias.js'
 
+registrarEsquema() // precisa vir antes do app ficar pronto
 app.setName('MisterALG')
 // Pasta de dados alternativa (usada pelos testes e pelas capturas da documentação).
 if (process.env.MISTERALG_DADOS) app.setPath('userData', process.env.MISTERALG_DADOS)
@@ -29,10 +32,15 @@ const FILTROS_ALG = [
   TODOS,
 ]
 const FILTROS_ABRIR = [
-  { name: 'Algoritmos e programas', extensions: ['alg', 'c', 'h', 'cpp', 'cc', 'cxx', 'hpp'] },
+  { name: 'Algoritmos e programas', extensions: ['alg', 'c', 'h', 'cpp', 'cc', 'cxx', 'hpp', 'cs', 'js', 'ts', 'py', 'php'] },
   { name: 'Algoritmos (Portugol)', extensions: ['alg'] },
   { name: 'Programas em C', extensions: ['c', 'h'] },
   { name: 'Programas em C++', extensions: ['cpp', 'cc', 'cxx', 'hpp'] },
+  { name: 'Programas em C#', extensions: ['cs'] },
+  { name: 'Programas em JavaScript', extensions: ['js'] },
+  { name: 'Programas em TypeScript', extensions: ['ts'] },
+  { name: 'Programas em Python', extensions: ['py'] },
+  { name: 'Programas em PHP', extensions: ['php'] },
   { name: 'Arquivos-texto', extensions: ['txt'] },
   TODOS,
 ]
@@ -40,6 +48,11 @@ const FILTROS_SALVAR = {
   alg: FILTROS_ALG,
   c: [{ name: 'Programas em C', extensions: ['c'] }, TODOS],
   cpp: [{ name: 'Programas em C++', extensions: ['cpp'] }, TODOS],
+  cs: [{ name: 'Programas em C#', extensions: ['cs'] }, TODOS],
+  js: [{ name: 'Programas em JavaScript', extensions: ['js'] }, TODOS],
+  ts: [{ name: 'Programas em TypeScript', extensions: ['ts'] }, TODOS],
+  py: [{ name: 'Programas em Python', extensions: ['py'] }, TODOS],
+  php: [{ name: 'Programas em PHP', extensions: ['php'] }, TODOS],
 }
 const FILTROS_BLOCO = [
   { name: 'Arquivos de inclusão', extensions: ['inc'] },
@@ -228,7 +241,7 @@ function registrarIpc() {
   // Python e PHP (main/programas.js): cada programa num processo à parte.
   ipcMain.handle('programa:aquecer', (_e, linguagem) => programas.aquecer(linguagem))
   ipcMain.handle('programa:iniciar', (e, pedido) => {
-    if (!['python', 'php'].includes(pedido?.linguagem) || typeof pedido.fonte !== 'string' || typeof pedido.id !== 'string') return { erro: 'Pedido inválido.' }
+    if (pedido?.linguagem !== 'python' || typeof pedido.fonte !== 'string' || typeof pedido.id !== 'string') return { erro: 'Pedido inválido.' }
     programas.iniciar(pedido, (evento) => {
       if (!e.sender.isDestroyed()) e.sender.send('programa:evento', pedido.id, evento)
     })
@@ -236,6 +249,11 @@ function registrarIpc() {
   })
   ipcMain.handle('programa:comando', (_e, { id, cmd }) => programas.comando(id, cmd))
   ipcMain.handle('programa:parar', (_e, id) => programas.parar(id))
+
+  // PHP: a página ao vivo (main/previa.js). O iframe da IDE abre a URL devolvida e o PHP responde a cada requisição.
+  ipcMain.handle('php:definir', (_e, { fonte, nome, diretorio }) => ({ url: definirPagina({ fonte, nome, diretorio }) }))
+  ipcMain.handle('php:ultima', () => ultimaResposta())
+  ipcMain.handle('php:aquecer', () => aquecerPHP())
 
   ipcMain.handle('externo:abrir', (_e, url) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url)
@@ -266,6 +284,7 @@ app.on('open-file', (evento, caminho) => {
 
 app.whenReady().then(() => {
   registrarIpc()
+  iniciarPrevia((resposta) => janela?.webContents.send('php:resposta', resposta))
   // Testes e capturas (pasta de dados própria) abrem direto, sem a animação.
   const abertura = lerPreferencias().abertura !== false && !process.env.MISTERALG_DADOS ? mostrarAbertura(app.getVersion()) : null
   janela = criarJanelaPrincipal(aplicarTemaNativo().fundo, abertura?.pronta)
@@ -296,4 +315,5 @@ app.on('window-all-closed', () => app.quit())
 app.on('will-quit', () => { // nenhum programa C/C++, Python ou PHP fica rodando depois que a IDE fecha
   pararTudo()
   programas.pararTudo()
+  pararPHP()
 })

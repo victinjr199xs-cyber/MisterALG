@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:5173; img-src 'self' data:"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src misteralg-previa:; connect-src 'self' ws://localhost:5173; img-src 'self' data:"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MisterALG</title>
@@ -35,6 +35,19 @@
         <section class="moldura moldura-visualizacao" data-dica="Mostra o resultado final de um programa escrito em Portugol depois de finalizado !">
           <h2 class="legenda">Área de visualização dos resultados</h2>
           <pre id="visualizacao" class="visualizacao"></pre>
+
+          <div id="previa" class="previa" hidden>
+            <div class="previa-barra">
+              <button type="button" class="previa-aba" data-modo="pagina" aria-pressed="true">Página</button>
+              <button type="button" class="previa-aba" data-modo="html" aria-pressed="false">HTML gerado</button>
+              <button type="button" id="previa-atualizar" class="previa-botao" title="Executar de novo (F9)">↻</button>
+              <span id="previa-info" class="previa-info"></span>
+              <button type="button" id="previa-fechar" class="console-fechar" title="Fechar (Esc)">×</button>
+            </div>
+            <div id="previa-avisos" class="previa-avisos" hidden></div>
+            <iframe id="previa-quadro" class="previa-quadro" sandbox="allow-scripts allow-forms" title="Página gerada pelo PHP"></iframe>
+            <pre id="previa-html" class="previa-html" hidden></pre>
+          </div>
 
           <div id="console" class="console" hidden>
             <div class="console-titulo">

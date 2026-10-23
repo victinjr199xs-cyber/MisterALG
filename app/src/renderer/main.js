@@ -146,7 +146,10 @@ function marcarModificado() {
 let execucao = null // criada logo abaixo; o editor precisa existir antes
 const editor = criarEditor($('#editor'), {
   prefs: () => prefs,
-  aoMudar: marcarModificado,
+  aoMudar: () => {
+    marcarModificado()
+    execucao?.aoEditar()
+  },
   aoMoverCursor: status.posicao,
   aoAlternarBreakpoint: (linhas) => execucao?.atualizarBreakpoints(linhas),
 })
@@ -159,6 +162,7 @@ function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 
   // Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve.
   if (linguagem === 'c' || linguagem === 'cpp') api.clang.aquecer({ linguagem, fonte: texto })
   else if (linguagem === 'python') api.programa.aquecer('python')
+  else if (linguagem === 'php') api.php.aquecer()
   atualizarTitulo()
   editor.focar()
 }
@@ -226,6 +230,11 @@ execucao = criarExecucao({
   iaAtiva: () => !!prefs.ia?.ativo,
   aoPedirIA: () => assistente.explicarErro(),
   linguagem: () => doc.linguagem,
+  // A página do PHP roda a pasta do arquivo salvo (include, css, imagens); sem salvar, só o que está no editor.
+  paginaPHP: () => ({
+    nome: doc.caminho ? doc.caminho.split(/[\\/]/).pop() : 'index.php',
+    diretorio: doc.caminho ? doc.caminho.replace(/[\\/][^\\/]*$/, '') : null,
+  }),
   aoMudarEstado: (rodando) => {
     if (rodando) ultimoErro = null
     api.menu.estado({ executando: rodando })

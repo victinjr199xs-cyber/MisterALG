@@ -19,7 +19,7 @@ import { autocompletion, closeBrackets, completionKeymap, startCompletion } from
 import { cpp } from '@codemirror/lang-cpp'
 import { javascript } from '@codemirror/lang-javascript'
 import { python } from '@codemirror/lang-python'
-import { html } from '@codemirror/lang-html'
+import { php } from '@codemirror/lang-php'
 import { highlightSelectionMatches } from '@codemirror/search'
 import { tags as t } from '@lezer/highlight'
 import { FUNCOES, PALAVRAS_CHAVE, normalizar } from '@misteralg/interpreter'
@@ -79,6 +79,11 @@ const coresC = HighlightStyle.define([
   { tag: [t.processingInstruction, t.macroName], color: 'var(--sx-especial)' },
   { tag: t.typeName, color: 'var(--sx-tipo)' },
   { tag: t.variableName, color: 'var(--sx-variavel)' },
+  // JavaScript, TypeScript, Python e PHP (com o HTML e o CSS que o PHP mistura).
+  { tag: [t.tagName, t.angleBracket, t.className], color: 'var(--sx-chave)' },
+  { tag: [t.attributeName, t.propertyName, t.attributeValue], color: 'var(--sx-tipo)' },
+  { tag: [t.definition(t.variableName), t.function(t.variableName)], color: 'var(--sx-especial)' },
+  { tag: [t.regexp, t.escape], color: 'var(--sx-literal)' },
 ])
 
 /** Realce, sugestões e recursos de edição de cada linguagem. */
@@ -86,10 +91,10 @@ const EXTENSOES = {
   portugol: () => [portugol, syntaxHighlighting(coresVisualg)],
   c: () => [cpp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
   cpp: () => [cpp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
-  javascript: () => [javascript(), bracketMatching(), closeBrackets()],
-  typescript: () => [javascript({ typescript: true }), bracketMatching(), closeBrackets()],
-  python: () => [python(), bracketMatching(), closeBrackets()],
-  php: () => [html({ base: 'text/x-php' }), bracketMatching(), closeBrackets()],
+  javascript: () => [javascript(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
+  typescript: () => [javascript({ typescript: true }), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
+  python: () => [python(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets(), indentUnit.of('    ')],
+  php: () => [php(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
 }
 
 // ---- pontos de parada (calha + linha vermelha) ---------------------------

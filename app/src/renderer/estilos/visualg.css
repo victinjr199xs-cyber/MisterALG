@@ -393,6 +393,45 @@ main {
 }
 .console-tela:focus { outline: none; }
 
+/* A página gerada pelo PHP (previa.js): cobre a área de visualização, como o console. */
+.previa {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--borda);
+  background: var(--fundo-campo);
+  z-index: 5;
+}
+.previa[hidden] { display: none; }
+.previa-barra {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 6px;
+  background: linear-gradient(var(--titulo-inicio), var(--titulo-fim));
+  color: var(--titulo-texto);
+}
+.previa-aba, .previa-botao {
+  padding: 1px 8px;
+  border: 1px solid var(--borda);
+  border-radius: 3px;
+  background: var(--fundo-campo);
+  color: var(--texto);
+  cursor: pointer;
+}
+.previa-aba[aria-pressed="true"] { border-color: var(--linha-execucao); background: var(--selecao-grade); font-weight: 700; }
+.previa-info { margin-left: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.previa-avisos { max-height: 30%; overflow: auto; border-bottom: 1px solid var(--borda); }
+.previa-avisos[hidden] { display: none; }
+.previa-aviso { display: block; width: 100%; padding: 2px 8px; border: 0; border-bottom: 1px solid var(--linha-grade); background: none; color: var(--texto); font: 12px var(--fonte-ui); text-align: left; cursor: pointer; }
+.previa-fatal, .previa-parse { background: var(--linha-erro-fundo); color: var(--linha-erro); font-weight: 700; }
+.previa-aviso:hover { background: var(--botao-hover); }
+.previa-quadro { flex: 1; min-height: 0; border: 0; background: #ffffff; }
+.previa-quadro[hidden] { display: none; }
+.previa-html { flex: 1; min-height: 0; margin: 0; padding: 4px 6px; overflow: auto; font: 12px/1.35 var(--fonte-codigo); white-space: pre-wrap; user-select: text; }
+.previa-html[hidden] { display: none; }
+
 .console-entrada {
   display: inline;
   min-width: 2ch;
