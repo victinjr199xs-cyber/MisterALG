@@ -6,6 +6,7 @@ import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
 import { aquecer, arvore, compilar, enviarEntrada, executar, foiCancelado, parar, pararTudo } from './clang.js'
 import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
 import { criarJanelaPrincipal } from './janelas.js'
+import * as programas from './programas.js'
 import { montarMenu } from './menu.js'
 import {
   adicionarRecente,
@@ -224,6 +225,18 @@ function registrarIpc() {
   ipcMain.handle('clang:entrada',(_e, { id, texto }) => enviarEntrada(id, String(texto)))
   ipcMain.handle('clang:parar', (_e, id) => parar(id))
 
+  // Python e PHP (main/programas.js): cada programa num processo à parte.
+  ipcMain.handle('programa:aquecer', (_e, linguagem) => programas.aquecer(linguagem))
+  ipcMain.handle('programa:iniciar', (e, pedido) => {
+    if (!['python', 'php'].includes(pedido?.linguagem) || typeof pedido.fonte !== 'string' || typeof pedido.id !== 'string') return { erro: 'Pedido inválido.' }
+    programas.iniciar(pedido, (evento) => {
+      if (!e.sender.isDestroyed()) e.sender.send('programa:evento', pedido.id, evento)
+    })
+    return {}
+  })
+  ipcMain.handle('programa:comando', (_e, { id, cmd }) => programas.comando(id, cmd))
+  ipcMain.handle('programa:parar', (_e, id) => programas.parar(id))
+
   ipcMain.handle('externo:abrir', (_e, url) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url)
   })
@@ -280,4 +293,7 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => app.quit())
-app.on('will-quit', pararTudo) // nenhum programa C/C++ fica rodando depois que a IDE fecha
+app.on('will-quit', () => { // nenhum programa C/C++, Python ou PHP fica rodando depois que a IDE fecha
+  pararTudo()
+  programas.pararTudo()
+})

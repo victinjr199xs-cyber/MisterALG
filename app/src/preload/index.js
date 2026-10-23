@@ -54,6 +54,18 @@ contextBridge.exposeInMainWorld('misteralg', {
       return () => ipcRenderer.removeListener('clang:evento', ouvinte)
     },
   },
+  // Python e PHP: programas que rodam num processo à parte (main/programas.js).
+  programa: {
+    aquecer: invocar('programa:aquecer'),
+    iniciar: invocar('programa:iniciar'),
+    comando: (id, cmd) => ipcRenderer.invoke('programa:comando', { id, cmd }),
+    parar: invocar('programa:parar'),
+    aoEvento(fn) {
+      const ouvinte = (_e, id, evento) => fn(id, evento)
+      ipcRenderer.on('programa:evento', ouvinte)
+      return () => ipcRenderer.removeListener('programa:evento', ouvinte)
+    },
+  },
   ia: {
     chaves: invocar('ia:chaves'),
     gravarChave: invocar('ia:gravarChave'),

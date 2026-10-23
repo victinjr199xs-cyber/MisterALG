@@ -156,7 +156,9 @@ function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 
   editor.definirLinguagem(linguagem)
   editor.definirTexto(texto)
   Object.assign(doc, { caminho, codificacao, nome, linguagem, modificado: false })
-  if (linguagem !== 'portugol') api.clang.aquecer({ linguagem, fonte: texto }) // carrega o compilador (e o PCH do C++) enquanto a pessoa escreve
+  // Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve.
+  if (linguagem === 'c' || linguagem === 'cpp') api.clang.aquecer({ linguagem, fonte: texto })
+  else if (linguagem === 'python') api.programa.aquecer('python')
   atualizarTitulo()
   editor.focar()
 }

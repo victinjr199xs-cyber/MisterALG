@@ -12,8 +12,7 @@
     "test": "node --test \"test/*.test.mjs\""
   },
   "dependencies": {
-    "@babel/core": "^7.29.0",
-    "@babel/plugin-transform-typescript": "7.29.9",
+    "@babel/standalone": "^7.29.10",
     "typescript": "5.9.3"
   }
 }

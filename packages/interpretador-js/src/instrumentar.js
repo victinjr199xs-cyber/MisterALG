@@ -5,8 +5,8 @@
 //    que o laço de eventos de runtime.js conduz (pilha de chamadas e filas visíveis).
 // Construtores, getters/setters e inicializadores de campos de classe rodam direto, sem passo a passo.
 
-import { transformSync } from '@babel/core'
-import pluginTypescript from '@babel/plugin-transform-typescript'
+// O Babel "standalone" é a versão feita para o navegador (o @babel/core pede módulos do Node, como o path).
+import { transform } from '@babel/standalone'
 
 const CRIADO = Symbol('criado pelo MisterALG')
 
@@ -40,13 +40,13 @@ export function instrumentar(fonte, { typescript = false } = {}) {
   const tiposDeclarados = {} // TypeScript: nome → tipo escrito pelo aluno (o último, se o nome se repetir)
   try {
     if (typescript) {
-      codigo = transformSync(fonte, {
+      codigo = transform(fonte, {
         filename: 'programa.ts', babelrc: false, configFile: false, sourceType: 'script',
         retainLines: true, // as linhas do JS gerado continuam as do .ts
-        plugins: [coletarTipos(tiposDeclarados), [pluginTypescript, { onlyRemoveTypeImports: true }]],
+        plugins: [coletarTipos(tiposDeclarados), ['transform-typescript', { onlyRemoveTypeImports: true }]],
       }).code
     }
-    const r = transformSync(codigo, {
+    const r = transform(codigo, {
       filename: 'programa.js', babelrc: false, configFile: false, sourceType: 'script',
       plugins: [pluginDoPassoAPasso],
     })

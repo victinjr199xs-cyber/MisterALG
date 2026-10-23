@@ -4,8 +4,8 @@
 import { TEXTOS, executar } from '@misteralg/interpreter'
 import { SessaoC } from '@misteralg/interpretador-c'
 import { SessaoJSProxy } from './js/sessao-js.js'
-import { criarMemoriaJS } from './js/memoria-js.js'
-import { SessaoPython } from '@misteralg/interpretador-python'
+import { criarMemoriaObjetos } from './memoria-objetos.js'
+import { SessaoPython } from './python/sessao-python.js'
 import * as dialogos from './dialogos.js'
 import { criarMemoriaC } from './memoria-c.js'
 
@@ -87,28 +87,28 @@ export function criarExecucao(op) {
   const molduraVariaveis = document.querySelector('.moldura-variaveis')
   const legendaVariaveis = molduraVariaveis.querySelector('.legenda')
   const legendaOriginal = legendaVariaveis.textContent
-  let containerMemoriaJS = null
-  let mostrarMemoriaJS = null
+  // JS e Python usam a mesma tela de objetos (pilha de chamadas, objetos ligados por setas e, no JS, as filas).
+  let memoriaObjetos = null
+  const LEGENDAS = {
+    c: 'Memória do programa: pilha, heap e globais (setas = ponteiros)',
+    objetos: 'Pilha de chamadas e objetos (setas = referências)',
+  }
 
-  function mostrarMemoria(sim, tipo = 'c') {
-    document.getElementById('variaveis').hidden = sim
-    if (tipo === 'c') {
-      if (containerMemoriaJS) containerMemoriaJS.hidden = true
-      legendaVariaveis.textContent = sim ? 'Memória do programa: pilha, heap e globais (setas = ponteiros)' : legendaOriginal
-      if (sim) molduraVariaveis.querySelector('.grade-rolagem').appendChild(memoriaC.container)
-      if (!sim) memoriaC.esconder()
-    } else {
-      if (!containerMemoriaJS) {
-        const r = criarMemoriaJS()
-        containerMemoriaJS = r.container
-        mostrarMemoriaJS = r.mostrarFoto
-      }
-      if (memoriaC.container.parentNode) memoriaC.container.remove()
-      legendaVariaveis.textContent = sim ? 'Pilha de chamadas, objetos e event loop' : legendaOriginal
-      containerMemoriaJS.hidden = !sim
-      if (sim && !containerMemoriaJS.parentNode) molduraVariaveis.querySelector('.grade-rolagem').appendChild(containerMemoriaJS)
+  /** qual: 'c', 'objetos' ou null (a grade de variáveis do Portugol). */
+  function mostrarPainel(qual) {
+    document.getElementById('variaveis').hidden = qual !== null
+    legendaVariaveis.textContent = LEGENDAS[qual] ?? legendaOriginal
+    if (qual !== 'c') memoriaC.esconder()
+    if (qual === 'objetos') {
+      memoriaObjetos ??= criarMemoriaObjetos(molduraVariaveis.querySelector('.grade-rolagem'))
+      memoriaObjetos.mostrarFoto(null)
+      memoriaObjetos.container.hidden = false
+    } else if (memoriaObjetos) {
+      memoriaObjetos.container.hidden = true
     }
   }
+  const mostrarMemoriaC = (sim) => mostrarPainel(sim ? 'c' : null)
+  const mostrarMemoriaObjetos = (foto) => memoriaObjetos?.mostrarFoto(foto)
 
   // ---- console ------------------------------------------------------------
 
@@ -154,7 +154,8 @@ export function criarExecucao(op) {
         const valor = campo.value
         campo.remove()
         status.mensagem(' MENSAGEM: Executando o algoritmo...')
-        if (sessao instanceof SessaoC) escrever(`${valor}\n`) // no C, o eco é do terminal (o Portugol escreve ele mesmo)
+        // Fora do Portugol, o eco é do terminal (o Portugol escreve ele mesmo).
+        if (sessao instanceof SessaoC || sessao instanceof SessaoJSProxy || sessao instanceof SessaoPython) escrever(`${valor}\n`)
         sessao?.fornecerEntrada(valor)
       } else if (e.key === 'Escape') {
         e.preventDefault()
@@ -356,51 +357,69 @@ export function criarExecucao(op) {
     entradaContinua(id)
   }
 
-  /** F8 (ou F9 com pontos de parada) em JavaScript: executa o código instrumentado linha a linha. */
-  function iniciarPassoJS(modo, linguagem) {
-    const fonte = editor.texto()
+  // ---- JavaScript, TypeScript e Python: passo a passo com a tela de objetos ------------------
+
+  /** Console limpo, editor travado e a tela de objetos no lugar da grade de variáveis. */
+  function prepararPassoAPasso() {
     tela.replaceChildren()
+    visualizacao.textContent = ''
     abrirConsole()
     editor.realcarErro(null)
     editor.somenteLeitura(true)
     op.aoMudarEstado(true)
-    mostrarMemoria(true, 'js')
-    const config = op.configuracao()
-    sessao = new SessaoJSProxy(fonte, {
+    mostrarPainel('objetos')
+  }
+
+  const aoPassar = ({ linha }) => {
+    editor.realcarExecucao(linha)
+    if (sessao?.estado === 'pausado') status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
+  }
+
+  /** O JavaScript roda aqui mesmo, instrumentado (packages/interpretador-js): cada linha é um ponto de pausa. */
+  function iniciarJS(modo, linguagem) {
+    prepararPassoAPasso()
+    sessao = new SessaoJSProxy(editor.texto(), {
       typescript: linguagem === 'typescript',
       modo,
-      timerMs: config.timerMs,
+      timerMs: op.configuracao().timerMs,
       breakpoints: editor.breakpoints(),
       onOutput: escrever,
-      onStep: ({ linha }) => {
-        editor.realcarExecucao(linha)
-        if (sessao?.estado === 'pausado') status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
-      },
-      onMemory: mostrarMemoriaJS,
+      onStep: aoPassar,
+      onMemory: mostrarMemoriaObjetos,
       onWaitInput: () => pedirEntrada(),
-      onEnd: (estado, erro) => terminou(estado === 'parado' ? 'parado' : estado, erro),
+      onEnd: terminou,
     })
     status.estado(' Executando ')
     if (modo === 'passo') sessao.passo()
     else sessao.continuar()
   }
 
-  /** F8 (ou F9) em Python: executa com Pyodide no navegador. */
-  function iniciarPassoPython(modo) {
-    const fonte = editor.texto()
-    tela.replaceChildren()
-    abrirConsole()
-    editor.realcarErro(null)
-    editor.somenteLeitura(true)
-    op.aoMudarEstado(true)
-    mostrarMemoria(false)
-    status.estado(' Carregando Python ')
-    status.mensagem(' MENSAGEM: Inicializando Pyodide no navegador…')
+  function iniciarPHP() {
+    status.mensagem(' MENSAGEM: PHP em preparação')
+  }
 
-    sessao = new SessaoPython(fonte, {
+  /** O Python (Pyodide) roda num processo à parte (main/programas.js), que pausa a cada linha. */
+  function iniciarPython(modo) {
+    prepararPassoAPasso()
+    status.estado(' Preparando ')
+    status.mensagem(' MENSAGEM: Iniciando o Python…')
+    sessao = new SessaoPython(editor.texto(), {
       modo,
-      onOutput: escrever,
-      onEnd: (estado, erro) => terminou(estado === 'parado' ? 'parado' : estado, erro),
+      timerMs: op.configuracao().timerMs,
+      breakpoints: editor.breakpoints(),
+      onStart: () => {
+        status.estado(' Executando ')
+        status.mensagem(` MENSAGEM: ${TEXTOS.inicio}`)
+      },
+      onOutput: (texto, erro) => { // o traceback do Python vem em vermelho
+        if (erro) corTexto = CORES.VERMELHO
+        escrever(texto)
+        corTexto = CORES.BRANCO
+      },
+      onStep: aoPassar,
+      onMemory: mostrarMemoriaObjetos,
+      onWaitInput: () => pedirEntrada(),
+      onEnd: terminou,
     })
   }
 
@@ -473,41 +492,34 @@ export function criarExecucao(op) {
   /** F9 (continuo), F8 (passo) ou Shift+F9 (timer). */
   function iniciar(modo) {
     modoAtual = modo
+    // Já tem um programa em andamento: F8/F9/Shift+F9 só retomam a sessão pausada (qualquer linguagem).
+    if (emExecucao()) return retomar(modo)
     const linguagem = op.linguagem?.() ?? 'portugol'
-    // JS/TS/Python: sempre passo a passo (não há F9 compilado)
-    if ((linguagem === 'javascript' || linguagem === 'typescript') && !(sessao instanceof SessaoJSProxy && !sessao.terminado)) {
-      if (emExecucao()) return
-      iniciarPassoJS(modo, linguagem)
-      return
-    }
-    if (linguagem === 'python' && !(sessao instanceof SessaoPython && !sessao.terminado)) {
-      if (emExecucao()) return
-      iniciarPassoPython(modo)
-      return
-    }
-    // C/C++ parado no meio do passo a passo segue pelo caminho de baixo (a SessaoC é igual à do Portugol).
-    if (linguagem !== 'portugol' && !(sessao instanceof SessaoC && !sessao.terminado)) {
-      if (emExecucao()) return
+    if (linguagem === 'javascript' || linguagem === 'typescript') return iniciarJS(modo, linguagem)
+    if (linguagem === 'python') return iniciarPython(modo)
+    if (linguagem === 'php') return iniciarPHP()
+    if (linguagem !== 'portugol') {
       // F9 sem pontos de parada roda o programa compilado de verdade; F8, Shift+F9 ou pontos de parada usam o passo a passo.
       if (modo !== 'continuo' || editor.breakpoints().size) iniciarPassoC(modo, linguagem)
       else iniciarCompilado(linguagem, modo)
       return
     }
-    if (emExecucao()) {
-      if (sessao.estado === 'pausado') {
-        sessao.modo = modo
-        editor.realcarExecucao(null)
-        if (modo === 'passo') sessao.passo()
-        else sessao.continuar()
-      } else if (sessao.estado === 'rodando') {
-        sessao.modo = modo
-        if (modo === 'passo') sessao.pararNaProxima = true
-      }
-      return
-    }
     novaSessao(modo)
     if (modo === 'passo') sessao.passo()
     else sessao.continuar()
+  }
+
+  function retomar(modo) {
+    if (!sessao || sessao.terminado) return // compilando, ou rodando um programa compilado (F9 do C/C++)
+    if (sessao.estado === 'pausado') {
+      sessao.modo = modo
+      editor.realcarExecucao(null)
+      if (modo === 'passo') sessao.passo()
+      else sessao.continuar()
+    } else if (sessao.estado === 'rodando') {
+      sessao.modo = modo
+      if (modo === 'passo') sessao.pararNaProxima = true
+    }
   }
 
   function parar() {
@@ -543,7 +555,7 @@ export function criarExecucao(op) {
       editor.realcarErro(null)
       status.mensagem('')
     },
-    mostrarPilha: () => dialogos.pilha(sessao && !sessao.terminado ? sessao.pilha() : []),
+    mostrarPilha: () => dialogos.pilha(sessao && !sessao.terminado && sessao.pilha ? sessao.pilha() : []),
     mostrarPerfil: () => dialogos.perfil(linhasDoPerfil, ultimoPerfil),
   }
 }

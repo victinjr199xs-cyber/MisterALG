@@ -628,31 +628,6 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
 .mc-seta { fill: none; stroke: currentColor; stroke-width: 1.6; opacity: .85; }
 .mc-secao { margin-bottom: 10px; }
 
-/* ---- Memória do passo a passo de JS (memoria-js.js) -------------------------------- */
-.memoria-js { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 6px; background: var(--fundo-campo); font: 11px/1.4 var(--fonte-ui); user-select: text; overflow: auto; }
-.memoria-js[hidden] { display: none; }
-.mjs-pilha, .mjs-objetos, .mjs-filas { border: 1px solid #ccc; border-radius: 2px; overflow: auto; background: #f9f9f9; }
-.mjs-pilha { grid-column: 1; grid-row: 1 / 3; }
-.mjs-objetos { grid-column: 2; }
-.mjs-filas { grid-column: 2; display: grid; grid-template-columns: 1fr; gap: 8px; }
-.mjs-pilha h3, .mjs-objetos h3, .mjs-filas h3 { margin: 0 0 4px 0; padding: 4px 6px; background: #e8e8e8; font-size: 11px; font-weight: bold; }
-.mjs-quadro { border: 1px solid #ddd; margin: 2px; padding: 4px; background: #fff; border-radius: 2px; }
-.mjs-quadro.ativo { background: #ffe; border-color: #f90; box-shadow: 0 0 4px #f90; }
-.mjs-nome { font-weight: bold; color: #00a; margin-bottom: 2px; }
-.mjs-vars { padding: 0 4px; border-left: 2px solid #f90; }
-.mjs-var { display: grid; grid-template-columns: 7rem 1fr; gap: 2px; margin: 1px 0; }
-.mjs-nome-var { color: #060; }
-.mjs-valor { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mjs-ref { color: #f00; font-weight: bold; }
-.mjs-objeto { border: 1px solid #ddd; margin: 2px; padding: 4px; background: #fff; border-radius: 2px; }
-.mjs-rotulo { font-weight: bold; color: #00a; margin-bottom: 2px; }
-.mjs-itens { padding: 0 4px; border-left: 2px solid #0a0; }
-.mjs-item { display: grid; grid-template-columns: 7rem 1fr; gap: 2px; margin: 1px 0; font-size: 10px; }
-.mjs-mais { color: #999; font-style: italic; font-size: 10px; margin: 1px 0; }
-.mjs-microtarefas h4, .mjs-tarefas h4 { margin: 0; padding: 3px 4px; background: #f0f0f0; font-size: 10px; font-weight: bold; border-bottom: 1px solid #ddd; }
-.mjs-lista-micro, .mjs-lista-tarefas { min-height: 2rem; overflow: auto; padding: 4px; }
-.mjs-fila-item { margin: 2px 0; padding: 2px; background: #ffd; border-radius: 2px; border-left: 2px solid #fd0; font-size: 10px; }
-.mjs-vazio { color: #999; font-style: italic; font-size: 10px; padding: 4px; text-align: center; }
 .mc-titulo { margin: 0 0 4px; color: var(--detalhe); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .mc-quadro { margin: 0 0 6px; border: 1px solid var(--borda); border-radius: 4px; }
 .mc-quadro.mc-atual { border-color: var(--linha-execucao); box-shadow: 0 0 0 1px var(--linha-execucao); }
@@ -680,6 +655,32 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
 .mc-rotulo::after { content: ':'; }
 .mc-liberado { opacity: .55; text-decoration: line-through; }
 .mc-vazio { padding: 3px 6px; color: var(--detalhe); font-style: italic; }
+
+/* ---- Memória do passo a passo de JavaScript, TypeScript e Python (memoria-objetos.js) ---- */
+.memoria-objetos { position: relative; min-height: 100%; padding: 6px; background: var(--fundo-campo); font: 12px/1.4 var(--fonte-ui); user-select: text; }
+.memoria-objetos[hidden] { display: none; }
+.mo-setas { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; color: var(--destaque); }
+.mo-seta { fill: none; stroke: currentColor; stroke-width: 1.6; opacity: .85; }
+.mo-colunas { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr); gap: 28px; align-items: start; }
+.mo-secao { margin-bottom: 10px; min-width: 0; }
+.mo-titulo { margin: 0 0 4px; color: var(--detalhe); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.mo-subtitulo { margin: 6px 0 2px; color: var(--detalhe); font-size: 11px; font-weight: 700; }
+.mo-quadro, .mo-objeto { margin: 0 0 6px; border: 1px solid var(--borda); border-radius: 4px; background: var(--fundo-campo); }
+.mo-quadro.mo-atual { border-color: var(--linha-execucao); box-shadow: 0 0 0 1px var(--linha-execucao); }
+.mo-cabecalho { padding: 2px 6px; background: var(--cabecalho); font-family: var(--fonte-codigo); font-weight: 700; overflow-wrap: anywhere; }
+.mo-id { color: var(--destaque); }
+.mo-linha { display: flex; gap: 8px; align-items: center; padding: 2px 6px; border-top: 1px solid var(--linha-grade); }
+.mo-chave { min-width: 3.5em; font-family: var(--fonte-codigo); font-weight: 700; }
+.mo-tipo { color: var(--sx-tipo); font-family: var(--fonte-codigo); font-size: 11px; }
+.mo-valor, .mo-ref { display: inline-block; max-width: 100%; padding: 0 5px; border: 1px solid var(--borda); border-radius: 3px; background: var(--fundo-campo); font-family: var(--fonte-codigo); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mo-valor { color: var(--sx-literal); }
+.mo-t-NoneType, .mo-t-undefined, .mo-t-null { color: var(--detalhe); font-style: italic; }
+.mo-ref { color: var(--destaque); }
+.mo-bolinha { margin-right: 4px; }
+.mo-mudou { border-color: var(--linha-execucao); background: var(--selecao-grade); font-weight: 700; }
+.mo-vazio { padding: 3px 6px; color: var(--detalhe); font-style: italic; }
+.mo-fila { margin-bottom: 4px; }
+.mo-fila-item { margin: 2px 0; padding: 1px 6px; border: 1px solid var(--borda); border-left: 3px solid var(--linha-execucao); border-radius: 3px; font-family: var(--fonte-codigo); }
 
 #variaveis .grade-aviso { padding: 8px; color: var(--detalhe); font-style: italic; white-space: normal; }
 

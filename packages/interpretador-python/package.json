@@ -2,16 +2,17 @@
   "name": "@misteralg/interpretador-python",
   "version": "0.1.0",
   "private": true,
-  "description": "Passo a passo de Python: executa com Pyodide e mostra objetos/referências",
+  "description": "Python no MisterALG: Pyodide num processo à parte, com passo a passo, objetos e referências",
   "type": "module",
   "main": "src/index.js",
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./executor": "./src/executor.mjs"
   },
   "scripts": {
     "test": "node --test \"test/*.test.mjs\""
   },
   "dependencies": {
-    "pyodide": "^0.24.0"
+    "pyodide": "^0.24.1"
   }
 }
