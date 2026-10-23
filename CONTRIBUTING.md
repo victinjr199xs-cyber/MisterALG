@@ -24,6 +24,14 @@ npm run dev     # abre a IDE com recarga automática
 - Mudou o interpretador? Acrescente um teste em `packages/interpreter/test/`.
 - Mudou algo visível? Rode `scripts/capturas.mjs` (veja o cabeçalho do arquivo) para atualizar as
   imagens da documentação.
+- Mudou uma linguagem que não é o Portugol? Os testes ficam no pacote dela (`packages/interpretador-*/test/`);
+  no C#, `test/programas/` compara o interpretador com o `csc` do .NET (`node test/gerar-esperados.mjs`).
+- Texto novo na interface? Ponha em `app/src/compartilhado/traducoes/chaves.js` (próximo número livre)
+  e em cada idioma; o `npm test` avisa o que faltar. Revisões de tradução por falantes nativos são
+  muito bem-vindas.
+- Rodou tudo? Teste também no app de verdade: `scripts/fumaca-ide.mjs` e `scripts/fumaca-linguagens.mjs`
+  (veja o cabeçalho de cada um).
+- Anote a mudança no [CHANGELOG.md](CHANGELOG.md).
 - O código, os comentários e as mensagens do programa são em português.
 
 ## Uma regra importante
