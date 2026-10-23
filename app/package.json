@@ -21,15 +21,19 @@
     "dist:linux": "electron-builder --linux --config electron-builder.json5"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^1.1.0",
     "@codemirror/autocomplete": "^6",
     "@codemirror/commands": "^6",
+    "@codemirror/lang-cpp": "^6.0.3",
     "@codemirror/language": "^6",
     "@codemirror/search": "^6",
     "@codemirror/state": "^6",
     "@codemirror/view": "^6",
     "@lezer/highlight": "^1",
     "@misteralg/editor-busca": "*",
+    "@misteralg/interpretador-c": "^0.1.0",
     "@misteralg/interpreter": "*",
+    "@yowasp/clang": "^22.0.0-git20542-10",
     "codemirror": "^6",
     "electron-vite": "^3",
     "vite": "^6"

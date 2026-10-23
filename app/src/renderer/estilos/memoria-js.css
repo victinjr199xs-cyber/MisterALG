@@ -1,0 +1,149 @@
+.memoria-js {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.5rem;
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+.mjs-pilha, .mjs-objetos, .mjs-filas {
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  overflow: auto;
+  background: #f9f9f9;
+}
+
+.mjs-pilha {
+  grid-column: 1;
+  grid-row: 1 / 3;
+}
+
+.mjs-objetos {
+  grid-column: 2;
+}
+
+.mjs-filas {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.mjs-pilha h3, .mjs-objetos h3, .mjs-filas h3 {
+  margin: 0 0 0.5rem 0;
+  padding: 0.25rem 0.5rem;
+  background: #e8e8e8;
+  font-size: 0.9rem;
+}
+
+.mjs-quadro {
+  border: 1px solid #ddd;
+  margin: 0.25rem;
+  padding: 0.5rem;
+  background: #fff;
+  border-radius: 0.25rem;
+}
+
+.mjs-quadro.ativo {
+  background: #ffe;
+  border-color: #f90;
+  box-shadow: 0 0 0.5rem #f90;
+}
+
+.mjs-nome {
+  font-weight: bold;
+  color: #00a;
+  margin-bottom: 0.25rem;
+}
+
+.mjs-vars {
+  padding: 0 0.5rem;
+  border-left: 2px solid #f90;
+}
+
+.mjs-var {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.25rem;
+  margin: 0.1rem 0;
+}
+
+.mjs-nome-var {
+  color: #060;
+}
+
+.mjs-valor {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mjs-ref {
+  color: #f00;
+  font-weight: bold;
+}
+
+.mjs-objeto {
+  border: 1px solid #ddd;
+  margin: 0.25rem;
+  padding: 0.5rem;
+  background: #fff;
+  border-radius: 0.25rem;
+}
+
+.mjs-rotulo {
+  font-weight: bold;
+  color: #00a;
+  margin-bottom: 0.25rem;
+}
+
+.mjs-itens {
+  padding: 0 0.5rem;
+  border-left: 2px solid #0a0;
+}
+
+.mjs-item {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.25rem;
+  margin: 0.1rem 0;
+  font-size: 0.8rem;
+}
+
+.mjs-mais {
+  color: #999;
+  font-style: italic;
+  font-size: 0.8rem;
+  margin: 0.1rem 0;
+}
+
+.mjs-microtarefas h4, .mjs-tarefas h4 {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  background: #f0f0f0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.mjs-lista-micro, .mjs-lista-tarefas {
+  min-height: 2rem;
+  overflow: auto;
+  padding: 0.5rem;
+}
+
+.mjs-fila-item {
+  margin: 0.2rem 0;
+  padding: 0.25rem;
+  background: #ffd;
+  border-radius: 0.2rem;
+  border-left: 2px solid #fd0;
+}
+
+.mjs-vazio {
+  color: #999;
+  font-style: italic;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+  text-align: center;
+}

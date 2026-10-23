@@ -12,7 +12,8 @@ async function alvo() {
   for (let i = 0; i < 50; i += 1) {
     try {
       const lista = await (await fetch(`http://127.0.0.1:${porta}/json`)).json()
-      const pagina = lista.find((t) => t.type === 'page')
+      // A tela de abertura (data: URL, sem JavaScript) não é a IDE.
+      const pagina = lista.find((t) => t.type === 'page' && !t.url.startsWith('data:'))
       if (pagina) return pagina.webSocketDebuggerUrl
     } catch {
       // app ainda subindo

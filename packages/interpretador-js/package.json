@@ -1,0 +1,19 @@
+{
+  "name": "@misteralg/interpretador-js",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Passo a passo de JavaScript e TypeScript no MisterALG: o código é instrumentado (Babel) e roda num laço de eventos próprio, com pilha de chamadas e filas visíveis",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/plugin-transform-typescript": "7.29.9",
+    "typescript": "5.9.3"
+  }
+}

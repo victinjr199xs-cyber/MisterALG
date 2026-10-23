@@ -128,7 +128,9 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 - As **mesmas mensagens** do VisuAlg, com a linha marcada
 - Uma **explicação** do que costuma causar os erros mais comuns
 - **Recuperação** do algoritmo se o app fechar de repente
-- Nada é enviado para a internet — tudo fica no seu computador
+- **C e C++** com a biblioteca padrão completa (clang embutido, sem instalar nada), com `system("pause")`, `conio.h` e `Sleep()` como no Windows
+- **Assistente de IA** opcional (Claude, ChatGPT/Codex, DeepSeek, Gemini, Ollama…): explica o código e o erro, com um **modo dica** que não entrega a resposta
+- Nada é enviado para a internet, a não ser que você ative o assistente de IA (com o Ollama, nem ele)
 
 </td>
 </tr>
@@ -268,6 +270,8 @@ compatibilidade. Se você usa Windows, conheça e prestigie o VisuAlg original.
 
 Feito com software livre: [Electron](https://www.electronjs.org/), [CodeMirror](https://codemirror.net/),
 [electron-vite](https://electron-vite.org/) e [electron-builder](https://www.electron.build/).
+O C e o C++ rodam com o [Clang/LLVM](https://llvm.org/) compilado para WebAssembly pelo projeto
+[YoWASP](https://yowasp.org/) (licenças Apache 2.0 com exceção LLVM e ISC).
 
 ## 🛠️ Para desenvolvedores
 

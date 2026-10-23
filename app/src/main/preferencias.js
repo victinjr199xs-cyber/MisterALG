@@ -16,6 +16,10 @@ export const PADRAO = {
   tema: 'classico', // ids em ../compartilhado/temas.js
   coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
   mostrarDicas: true, // dica do dia ao abrir
+  abertura: true, // animação de abertura (main/abertura.js)
+  telaInicial: true, // tela inicial com a escolha da linguagem (renderer/inicio.js)
+  // Assistente de IA (main/ia.js): desligado até o usuário ativar. As chaves ficam à parte, criptografadas.
+  ia: { ativo: false, provedor: 'claude', modelos: {}, urls: {}, modo: 'dica' },
   dicaAtual: 0,
   // Listas do comando `lista` (as 3 primeiras são as do listas.txt do VisuAlg).
   listas: [

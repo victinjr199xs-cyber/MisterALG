@@ -54,16 +54,19 @@ const EXPLICACOES = {
   100: 'O índice está fora da faixa declarada para o vetor. Confira os limites em "vetor[inicio..fim]".',
 }
 
-export function aviso(erro, textoLinha) {
+/** @param comIA mostra o botão "Perguntar à IA" (resolve com 'ia') */
+export function aviso(erro, textoLinha, comIA = false) {
   const corpo = el('div', {},
-    el('div', { textContent: `O MisterALG encontrou o seguinte problema em seu algoritmo, na linha ${erro.linha} :` }),
+    el('div', { textContent: `O MisterALG encontrou o seguinte problema em seu algoritmo${erro.linha ? `, na linha ${erro.linha}` : ''} :` }),
     el('div', { className: 'aviso-mensagem', textContent: erro.mensagem }),
     el('label', { textContent: 'Conteúdo da linha:' }),
     el('input', { className: 'aviso-linha', value: textoLinha, readOnly: true }),
     el('label', { textContent: 'Explicação:' }),
-    el('div', { className: 'aviso-explicacao', textContent: EXPLICACOES[erro.codigo] ?? 'Não há explicação disponível para este problema.' }),
+    el('div', { className: 'aviso-explicacao', textContent: erro.explicacao ?? EXPLICACOES[erro.codigo] ?? 'Não há explicação disponível para este problema.' }),
   )
-  return janela({ titulo: 'Aviso', corpo, botoes: [{ valor: 'ok', texto: 'Terminar', principal: true }], largura: '560px' })
+  const botoes = [{ valor: 'ok', texto: 'Terminar', principal: true }]
+  if (comIA) botoes.unshift({ valor: 'ia', texto: '✨ Perguntar à IA' })
+  return janela({ titulo: 'Aviso', corpo, botoes, largura: '560px' })
 }
 
 // ---- Pilha de ativação (Ctrl+F3) e Perfil (F7) ----------------------------------
@@ -293,7 +296,7 @@ export async function codigoPascal(codigo) {
 // ---- Dica do dia ------------------------------------------------------------------
 
 /** Texto com **negrito** em nós DOM (sem innerHTML). */
-const comNegrito = (texto) => texto.split('**').map((parte, i) => (i % 2 ? el('b', { textContent: parte }) : parte))
+export const comNegrito = (texto) => texto.split('**').map((parte, i) => (i % 2 ? el('b', { textContent: parte }) : parte))
 
 /** @returns {Promise<{indice:number, mostrar:boolean}>} a próxima dica a mostrar e a opção "mostrar ao abrir" */
 export async function dicaDoDia(dicas, indice, mostrarAoAbrir) {

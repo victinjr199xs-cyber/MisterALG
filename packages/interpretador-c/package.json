@@ -1,0 +1,16 @@
+{
+  "name": "@misteralg/interpretador-c",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Passo a passo do C no MisterALG: executa o AST do clang com uma memória de bytes (pilha, heap e ponteiros)",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./cabecalhos": "./src/cabecalhos.js",
+    "./cabecalhos-cpp": "./src/cabecalhos-cpp.js"
+  },
+  "scripts": {
+    "test": "node --no-warnings --test \"test/*.test.mjs\""
+  }
+}

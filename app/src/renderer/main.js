@@ -8,6 +8,8 @@ import { esqueleto } from './editor/modelos.js'
 import { INTERVALOS, criarExecucao } from './execucao.js'
 import { ICONES } from './icones.js'
 import { DICAS } from './dicas.js'
+import { fecharTelaInicial, telaInicial, telaInicialAberta } from './inicio.js'
+import { criarAssistente } from './assistente.js'
 import { gerarPascal } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
@@ -17,7 +19,7 @@ const VERSAO = '1.6.1'
 // Termos de uso: o mesmo texto que o instalador do Windows exibe (app/build/termos.txt).
 import TEXTO_TERMOS from '../../build/termos.txt?raw'
 const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')
-const VERSAO_TERMOS = '1.4'
+const VERSAO_TERMOS = '1.5'
 
 let prefs = await api.prefs.ler()
 /** Tema + cores de código que o usuário trocou para esse tema (Configurações → Cores). */
@@ -84,7 +86,25 @@ menuTemas.addEventListener('keydown', (e) => {
   e.preventDefault()
   e.stopPropagation()
 })
-const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modificado: false }
+const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modificado: false, linguagem: 'portugol' }
+
+// ---- linguagens --------------------------------------------------------------------
+
+const EXTENSAO = { portugol: 'alg', c: 'c', cpp: 'cpp', javascript: 'js', typescript: 'ts' }
+const linguagemDoCaminho = (caminho) => (
+  /\.ts$/i.test(caminho) ? 'typescript' :
+  /\.js$/i.test(caminho) ? 'javascript' :
+  /\.(cpp|cc|cxx|hpp|hh)$/i.test(caminho) ? 'cpp' :
+  /\.[ch]$/i.test(caminho) ? 'c' :
+  'portugol'
+)
+const MODELOS_NOVO = {
+  c: '#include <stdio.h>\n\nint main(void) {\n    printf("Olá, mundo!\\n");\n    return 0;\n}\n',
+  cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Olá, mundo!" << endl;\n    return 0;\n}\n',
+  javascript: 'console.log("Olá, mundo!")\n',
+  typescript: 'const msg: string = "Olá, mundo!"\nconsole.log(msg)\n',
+}
+const esqueletoDe = (linguagem) => MODELOS_NOVO[linguagem] ?? esqueleto(prefs)
 let aleatorioLigado = false
 
 // ---- barra de status -----------------------------------------------------------
@@ -106,7 +126,7 @@ document.addEventListener('mouseover', (e) => {
 // ---- documento -------------------------------------------------------------------
 
 function atualizarTitulo() {
-  const arquivo = doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.nome
+  const arquivo = doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.linguagem === 'portugol' ? doc.nome : `${doc.nome}.${EXTENSAO[doc.linguagem]}`
   $('#titulo-editor').textContent = `Área dos algoritmos ( Edição do código fonte ) -> Nome do arquivo: [${arquivo}]`
   api.janela.titulo(`MisterALG — ${arquivo}${doc.modificado ? ' (modificado)' : ''}`)
   status.estado()
@@ -127,10 +147,12 @@ const editor = criarEditor($('#editor'), {
   aoAlternarBreakpoint: (linhas) => execucao?.atualizarBreakpoints(linhas),
 })
 
-function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome' }) {
+function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome', linguagem = 'portugol' }) {
   execucao.restaurar()
+  editor.definirLinguagem(linguagem)
   editor.definirTexto(texto)
-  Object.assign(doc, { caminho, codificacao, nome, modificado: false })
+  Object.assign(doc, { caminho, codificacao, nome, linguagem, modificado: false })
+  if (linguagem !== 'portugol') api.clang.aquecer({ linguagem, fonte: texto }) // carrega o compilador (e o PCH do C++) enquanto a pessoa escreve
   atualizarTitulo()
   editor.focar()
 }
@@ -154,7 +176,7 @@ async function podeDescartar(titulo) {
 async function salvar(comoNovo = false) {
   const texto = editor.texto()
   let r
-  if (!doc.caminho || comoNovo) r = await api.arquivo.salvarComo({ texto, nome: doc.nome, codificacao: doc.codificacao })
+  if (!doc.caminho || comoNovo) r = await api.arquivo.salvarComo({ texto, nome: doc.nome, codificacao: doc.codificacao, extensao: EXTENSAO[doc.linguagem] })
   else r = await api.arquivo.salvar({ caminho: doc.caminho, texto, codificacao: doc.codificacao })
   if (!r) return false
   doc.caminho = r.caminho
@@ -173,7 +195,7 @@ async function abrirResultado(lido) {
     await api.mensagem({ type: 'warning', title: 'Pesquisa de algoritmo no MisterALG', message: lido.erro })
     return
   }
-  carregar({ ...lido, nome: lido.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, '') })
+  carregar({ ...lido, nome: lido.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(lido.caminho) })
 }
 
 const pastaAtual = () => (doc.caminho ? doc.caminho.replace(/[\\/][^\\/]*$/, '') : null)
@@ -194,19 +216,38 @@ execucao = criarExecucao({
       anexar: (nome, linha) => api.dados.anexar(nome, pastaAtual(), linha),
     },
   }),
+  aoErro: (erro) => { ultimoErro = erro },
+  iaAtiva: () => !!prefs.ia?.ativo,
+  aoPedirIA: () => assistente.explicarErro(),
+  linguagem: () => doc.linguagem,
   aoMudarEstado: (rodando) => {
+    if (rodando) ultimoErro = null
     api.menu.estado({ executando: rodando })
     for (const id of ['parar']) $(`[data-id="${id}"]`).disabled = !rodando
   },
 })
 
-const busca = criarBusca(editor, { estado: status.estado, mensagem: (m) => status.mensagem(m ? ` MENSAGEM: ${m}` : '') })
+let ultimoErro = null // para o Assistente de IA saber o que deu errado
+const assistente = criarAssistente({
+  prefs: () => prefs,
+  gravarPrefs: async (parcial) => (prefs = await api.prefs.gravar(parcial)),
+  contexto: () => ({
+    linguagem: { portugol: 'Portugol (VisuAlg)', c: 'C', cpp: 'C++' }[doc.linguagem],
+    codigo: editor.texto(),
+    erro: ultimoErro,
+    saida: $('#console-tela').textContent || $('#visualizacao').textContent,
+  }),
+  aoMudar: (aberto) => $('[data-id="assistente"]')?.setAttribute('aria-pressed', String(aberto)),
+})
+
+const busca = criarBusca(editor,{ estado: status.estado, mensagem: (m) => status.mensagem(m ? ` MENSAGEM: ${m}` : '') })
 
 // ---- comandos (menu, barra e atalhos usam a mesma tabela) ------------------------------
 
 const comandos = {
-  novo: async () => {
-    if (await podeDescartar(' Incluir um novo algoritmo no MisterALG ')) carregar({ texto: esqueleto(prefs) })
+  novo: async (linguagem = doc.linguagem) => {
+    if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
+    carregar({ texto: esqueletoDe(linguagem), linguagem, codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' })
   },
   abrir: async () => {
     if (await podeDescartar(' Abrir um algoritmo no MisterALG ')) abrirResultado(await api.arquivo.abrir())
@@ -260,6 +301,7 @@ const comandos = {
   perfil: () => execucao.mostrarPerfil(),
   pilha: () => execucao.mostrarPilha(),
   'exportar-pascal': async () => {
+    if (doc.linguagem !== 'portugol') return status.mensagem(' MENSAGEM: Exportar para Pascal só vale para algoritmos em Portugol.')
     let codigo
     try {
       codigo = gerarPascal(editor.texto()).codigo
@@ -288,6 +330,9 @@ const comandos = {
     aplicarTema(id)
   },
   dica: () => mostrarDica(),
+  'tela-inicial': () => abrirTelaInicial(),
+  assistente: () => assistente.alternar(),
+  'configurar-ia': () => assistente.configurar(),
   calculadora: () => dialogos.calculadora(),
   calendario: () => dialogos.calendario(),
   'ajuda-tela': () => abrirAjuda('tela'),
@@ -302,6 +347,8 @@ const PERMITIDOS_COM_DIALOGO = new Set(['desfazer', 'refazer', 'cortar', 'copiar
 
 function rodar(id, dados) {
   if (document.querySelector('dialog[open]') && !PERMITIDOS_COM_DIALOGO.has(id)) return
+  // Um comando do menu (Novo, Abrir, F9...) fecha a tela inicial e segue normalmente.
+  if (telaInicialAberta() && id !== 'tela-inicial') fecharTelaInicial()
   comandos[id]?.(dados)
 }
 
@@ -346,6 +393,7 @@ const BARRA = [
   ['calculadora', 'calculadora', 'Mostra uma calculadora prática'],
   ['calendario', 'calendario', 'Mostra um calendário do ano atual'],
   ['temas', 'temas', 'Botão Temas: escolhe as cores da tela (claras ou escuras)'],
+  ['assistente', 'assistente', 'Botão Assistente de IA: explica o código e dá dicas (⌘I)'],
   ['ajuda-tela', 'ajuda', 'Botão Ajuda on-line (F1)'],
   ['sair', 'sair', 'Sair do MisterALG'],
 ]
@@ -415,7 +463,7 @@ function montarBarra() {
       b.setAttribute('aria-label', dica)
       b.innerHTML = ICONES[icone]
       b.addEventListener('click', () => rodar(id))
-      if (id === 'aleatorio') b.setAttribute('aria-pressed', 'false')
+      if (id === 'aleatorio' || id === 'assistente') b.setAttribute('aria-pressed', 'false')
       if (id === 'parar') b.disabled = true
       barra.append(b)
     }
@@ -452,7 +500,7 @@ $('#console-fechar').addEventListener('click', () => (execucao.emExecucao() ? ex
 // ---- recuperação após falha (visualg3.tmp) ------------------------------------------------
 
 setInterval(() => {
-  if (doc.modificado) api.recuperacao.gravar({ texto: editor.texto(), caminho: doc.caminho, nome: doc.nome, codificacao: doc.codificacao })
+  if (doc.modificado) api.recuperacao.gravar({ texto: editor.texto(), caminho: doc.caminho, nome: doc.nome, codificacao: doc.codificacao, linguagem: doc.linguagem })
 }, 5000)
 
 // ---- início ----------------------------------------------------------------------------------
@@ -497,6 +545,26 @@ if (pendente) {
   carregar({ texto: esqueleto(prefs) })
 }
 
+async function abrirTelaInicial() {
+  const proximaDica = (prefs.dicaAtual ?? 0) % DICAS.length
+  const r = await telaInicial({
+    versao: VERSAO,
+    recentes: prefs.mru,
+    dica: DICAS[proximaDica],
+    prefs,
+    atalhos: { novo: ehMac ? '⌘N' : 'Ctrl+N', abrir: ehMac ? '⌘O' : 'Ctrl+A' },
+  })
+  prefs = await api.prefs.gravar({ ...r.prefs, dicaAtual: (proximaDica + 1) % DICAS.length })
+  if (r.acao === 'abrir') await comandos.abrir()
+  else if (r.acao === 'recente') await comandos['abrir-recente'](r.caminho)
+  else if (r.acao === 'novo' && (doc.modificado || r.linguagem !== doc.linguagem)) await comandos.novo(r.linguagem)
+  else if (!document.querySelector('dialog[open]')) editor.focar() // fechada por um comando que abriu uma janela
+}
+
+// A tela inicial já traz a dica do dia; com ela aberta, a janela da dica não aparece.
+const mostrarInicio = !api.automatizado && !pendente && !recuperado?.texto && prefs.telaInicial !== false
+if (mostrarInicio) void abrirTelaInicial()
+
 async function mostrarDica() {
   const r = await dialogos.dicaDoDia(DICAS, prefs.dicaAtual ?? 0, prefs.mostrarDicas !== false)
   prefs = await api.prefs.gravar({ dicaAtual: r.indice, mostrarDicas: r.mostrar })
@@ -505,7 +573,7 @@ async function mostrarDica() {
 
 // Dica do dia ao abrir (como o VisuAlg). Não aparece logo depois dos termos (uma
 // janela de cada vez na primeira abertura) nem nos testes automatizados.
-if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto) void mostrarDica()
+if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto && !mostrarInicio) void mostrarDica()
 
 // Para testes automatizados e depuração no DevTools.
 window.__misteralg = { editor, execucao, doc, comandos }

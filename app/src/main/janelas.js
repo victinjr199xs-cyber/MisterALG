@@ -8,8 +8,11 @@ const caminhoRenderer = fileURLToPath(new URL('../renderer/index.html', import.m
 // tela, em tamanho fixo, para o print sair igual em qualquer máquina.
 const MODO_CAPTURA = process.env.MISTERALG_CAPTURA === '1'
 
-/** @param fundo cor do tema escolhido, para a janela não piscar verde antes de a página pintar */
-export function criarJanelaPrincipal(fundo = '#c0dcc0') {
+/**
+ * @param fundo cor do tema escolhido, para a janela não piscar verde antes de a página pintar
+ * @param aguardar a janela só aparece quando isto resolver (o fim da tela de abertura)
+ */
+export function criarJanelaPrincipal(fundo = '#c0dcc0', aguardar = null) {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize
   const janela = new BrowserWindow({
     width: MODO_CAPTURA ? 1440 : Math.min(1366, width),
@@ -29,8 +32,10 @@ export function criarJanelaPrincipal(fundo = '#c0dcc0') {
     },
   })
 
-  janela.once('ready-to-show', () => {
+  janela.once('ready-to-show', async () => {
     if (MODO_CAPTURA) return
+    await aguardar
+    if (janela.isDestroyed()) return
     janela.maximize()
     janela.show()
   })

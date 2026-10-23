@@ -5,11 +5,14 @@
   directories: { buildResources: 'build', output: 'dist' },
   files: ['out/**/*', 'package.json'],
   // Tudo do renderer já vem empacotado pelo electron-vite; não há node_modules em runtime.
+  // C e C++: o clang em WebAssembly fica fora do asar, e o worker e o executor também
+  // (worker_threads e o processo filho não leem de dentro do app.asar). Ver main/clang.js.
+  extraResources: [{ from: '../node_modules/@yowasp/clang', to: 'clang', filter: ['package.json', 'gen/**'] }],
+  asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js'],
   npmRebuild: false,
   electronVersion: '44.8.0',
   fileAssociations: [
-    { ext: 'alg', name: 'Algoritmo em Portugol', role: 'Editor', icon: 'build/icon.png', mimeType: 'text/x-portugol' },
-  ],
+    { ext: 'alg', name: 'Algoritmo em Portugol', role: 'Editor', icon: 'build/icon.png', mimeType: 'text/x-portugol' },  ],
   mac: {
     target: [{ target: 'dmg', arch: ['universal'] }],
     // Sem conta Apple Developer: assinatura ad-hoc ("-"), necessária para o app

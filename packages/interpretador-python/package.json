@@ -1,0 +1,17 @@
+{
+  "name": "@misteralg/interpretador-python",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Passo a passo de Python: executa com Pyodide e mostra objetos/referências",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "pyodide": "^0.24.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@misteralg/interpretador-php",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PHP no MisterALG: mostra a página gerada em tempo real",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

@@ -11,6 +11,8 @@ const folha = '<path d="M6 2.5h8l4 4V21.5H6z" fill="#fff"/><path d="M14 2.5v4h4"
 export const ICONES = {
   // Paleta de pintor com quatro tintas: o botão que abre os temas de cores.
   temas: svg('<path d="M12 3.2a8.8 8.8 0 1 0 0 17.6c1.1 0 1.8-.7 1.8-1.6 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.7-1.6 1.6-1.6h1.9a4.9 4.9 0 0 0 4.9-4.9c0-4-4-7.1-9.2-7.1z" fill="#e8c89a" stroke="#7a4a1d"/><circle cx="7.3" cy="11.2" r="1.5" fill="#c00000" stroke="none"/><circle cx="9.4" cy="7.2" r="1.5" fill="#1c5ad6" stroke="none"/><circle cx="14" cy="6.6" r="1.5" fill="#2a9d2a" stroke="none"/><circle cx="17.4" cy="9.9" r="1.5" fill="#7b3fc4" stroke="none"/>'),
+  // Brilhos de "mágica": o botão do Assistente de IA.
+  assistente: svg('<path d="M10 3.5l1.8 5.2 5.2 1.8-5.2 1.8L10 17.5l-1.8-5.2L3 10.5l5.2-1.8z" fill="#ffd23f" stroke="#a66b00"/><path d="M18 13.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" fill="#b48cff" stroke="#5b2fb0"/><path d="M18.5 3v3M17 4.5h3" stroke="#5b2fb0"/>'),
   novo: svg(folha),
   abrir: svg('<path d="M2.5 6.5h6l2 2h9v10.5h-17z" fill="#f6d365" stroke="#8a6d00"/><path d="M2.5 19l3-7h16l-3 7" fill="#fbe39b" stroke="#8a6d00"/>'),
   salvar: svg('<rect x="3.5" y="3.5" width="17" height="17" rx="1.5" fill="#5b7fc7" stroke="#20365f"/><rect x="7" y="4" width="10" height="6" fill="#fff" stroke="#20365f"/><rect x="7" y="13.5" width="10" height="6.5" fill="#dfe7f5" stroke="#20365f"/>'),

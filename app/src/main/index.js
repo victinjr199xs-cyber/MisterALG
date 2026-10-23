@@ -1,7 +1,10 @@
 import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from 'electron'
 import { writeFileSync } from 'node:fs'
 import { temaPorId } from '../compartilhado/temas.js'
+import { mostrarAbertura } from './abertura.js'
 import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
+import { aquecer, arvore, compilar, enviarEntrada, executar, foiCancelado, parar, pararTudo } from './clang.js'
+import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
 import { criarJanelaPrincipal } from './janelas.js'
 import { montarMenu } from './menu.js'
 import {
@@ -18,11 +21,25 @@ app.setName('MisterALG')
 // Pasta de dados alternativa (usada pelos testes e pelas capturas da documentação).
 if (process.env.MISTERALG_DADOS) app.setPath('userData', process.env.MISTERALG_DADOS)
 
+const TODOS = { name: 'Todos os arquivos', extensions: ['*'] }
 const FILTROS_ALG = [
   { name: 'Algoritmos', extensions: ['alg'] },
   { name: 'Arquivos-texto', extensions: ['txt'] },
-  { name: 'Todos os arquivos', extensions: ['*'] },
+  TODOS,
 ]
+const FILTROS_ABRIR = [
+  { name: 'Algoritmos e programas', extensions: ['alg', 'c', 'h', 'cpp', 'cc', 'cxx', 'hpp'] },
+  { name: 'Algoritmos (Portugol)', extensions: ['alg'] },
+  { name: 'Programas em C', extensions: ['c', 'h'] },
+  { name: 'Programas em C++', extensions: ['cpp', 'cc', 'cxx', 'hpp'] },
+  { name: 'Arquivos-texto', extensions: ['txt'] },
+  TODOS,
+]
+const FILTROS_SALVAR = {
+  alg: FILTROS_ALG,
+  c: [{ name: 'Programas em C', extensions: ['c'] }, TODOS],
+  cpp: [{ name: 'Programas em C++', extensions: ['cpp'] }, TODOS],
+}
 const FILTROS_BLOCO = [
   { name: 'Arquivos de inclusão', extensions: ['inc'] },
   { name: 'Arquivos-texto', extensions: ['txt'] },
@@ -64,7 +81,7 @@ function registrarIpc() {
   ipcMain.handle('arquivo:abrir', async () => {
     const r = await dialog.showOpenDialog(janela, {
       title: 'Abrir algoritmo',
-      filters: FILTROS_ALG,
+      filters: FILTROS_ABRIR,
       properties: ['openFile'],
       defaultPath: documentos(),
     })
@@ -95,11 +112,11 @@ function registrarIpc() {
     return { caminho, codificacao: usada }
   })
 
-  ipcMain.handle('arquivo:salvarComo', async (_e, { texto, nome, codificacao }) => {
+  ipcMain.handle('arquivo:salvarComo', async (_e, { texto, nome, codificacao, extensao = 'alg' }) => {
     const r = await dialog.showSaveDialog(janela, {
-      title: 'Salvar algoritmo como',
-      filters: FILTROS_ALG,
-      defaultPath: `${documentos()}/${nome || 'semnome'}.alg`,
+      title: extensao === 'alg' ? 'Salvar algoritmo como' : 'Salvar programa como',
+      filters: FILTROS_SALVAR[extensao] ?? FILTROS_ALG,
+      defaultPath: `${documentos()}/${nome || 'semnome'}.${extensao}`,
     })
     if (r.canceled || !r.filePath) return null
     const usada = await gravarArquivo(r.filePath, texto, codificacao)
@@ -170,6 +187,43 @@ function registrarIpc() {
     folha.destroy()
   })
 
+  ipcMain.handle('ia:chaves', () => provedoresComChave())
+  ipcMain.handle('ia:gravarChave', (_e, { provedor, chave }) => {
+    gravarChave(provedor, typeof chave === 'string' ? chave.trim() : '')
+    return provedoresComChave()
+  })
+  ipcMain.handle('ia:perguntar', (e, { id, mensagens }) => {
+    const config = lerPreferencias().ia
+    if (!config?.ativo) return { erro: 'O assistente de IA está desligado. Ative em Configurar.' }
+    const validas = Array.isArray(mensagens) && mensagens.every((m) => ['user', 'assistant'].includes(m?.role) && typeof m.content === 'string')
+    if (!validas) return { erro: 'Pergunta inválida.' }
+    return perguntar(id, config, mensagens, (pedaco) => {
+      if (!e.sender.isDestroyed()) e.sender.send('ia:parte', id, pedaco)
+    })
+  })
+  ipcMain.handle('ia:cancelar', (_e, id) => cancelar(id))
+
+  // C e C++ (main/clang.js): compila e, se deu certo, já começa a rodar.
+  ipcMain.handle('clang:aquecer', (_e, pedido) => aquecer(pedido?.linguagem === 'cpp' ? 'cpp' : 'c', pedido?.fonte))
+  ipcMain.handle('clang:executar', async (e, { id, linguagem, fonte }) => {
+    if (!['c', 'cpp'].includes(linguagem) || typeof fonte !== 'string') return { erros: 'Pedido inválido.' }
+    const r = await compilar(linguagem, fonte)
+    if (r.erros !== undefined) return { erros: r.erros }
+    if (foiCancelado(id)) return { cancelado: true }
+    executar(id, r.wasm, (evento) => {
+      if (!e.sender.isDestroyed()) e.sender.send('clang:evento', id, evento)
+    })
+    return { avisos: r.avisos }
+  })
+  // Só compila (sem rodar): diz se um erro do passo a passo é do programa ou do passo a passo.
+  ipcMain.handle('clang:verificar', async (_e, { linguagem, fonte }) => {
+    const r = await compilar(linguagem, String(fonte))
+    return r.erros !== undefined ? { erros: r.erros } : { ok: true }
+  })
+  ipcMain.handle('clang:arvore', (_e, { fonte, linguagem }) => (typeof fonte === 'string' ? arvore(fonte, linguagem === 'cpp' ? 'cpp' : 'c') : { erros: 'Pedido inválido.' }))
+  ipcMain.handle('clang:entrada',(_e, { id, texto }) => enviarEntrada(id, String(texto)))
+  ipcMain.handle('clang:parar', (_e, id) => parar(id))
+
   ipcMain.handle('externo:abrir', (_e, url) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url)
   })
@@ -199,7 +253,10 @@ app.on('open-file', (evento, caminho) => {
 
 app.whenReady().then(() => {
   registrarIpc()
-  janela = criarJanelaPrincipal(aplicarTemaNativo().fundo)
+  // Testes e capturas (pasta de dados própria) abrem direto, sem a animação.
+  const abertura = lerPreferencias().abertura !== false && !process.env.MISTERALG_DADOS ? mostrarAbertura(app.getVersion()) : null
+  janela = criarJanelaPrincipal(aplicarTemaNativo().fundo, abertura?.pronta)
+  if (abertura) janela.once('show', abertura.fechar)
   atualizarMenu()
 
   // Fechar a janela pergunta ao renderer se há alterações não salvas.
@@ -223,3 +280,4 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => app.quit())
+app.on('will-quit', pararTudo) // nenhum programa C/C++ fica rodando depois que a IDE fecha

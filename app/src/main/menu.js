@@ -53,6 +53,7 @@ export function montarMenu(janela, prefs, estado = {}) {
       submenu: [
         item('&Novo', 'novo', 'CmdOrCtrl+N'),
         item('&Abrir…', 'abrir', ATALHO.abrir),
+        item('&Tela inicial', 'tela-inicial'),
         { type: 'separator' },
         item('&Salvar', 'salvar', 'CmdOrCtrl+S'),
         item('Salvar &Como…', 'salvar-como', ATALHO.salvarComo),
@@ -125,6 +126,9 @@ export function montarMenu(janela, prefs, estado = {}) {
             click: enviar('tema', tema.id),
           })).concat([{ type: 'separator' }, item('Personalizar as cores do código…', 'configurar-cores')]),
         },
+        { type: 'separator' },
+        item('Assistente de &IA', 'assistente', 'CmdOrCtrl+I'),
+        item('Configurar o assistente de IA…', 'configurar-ia'),
         { type: 'separator' },
         item('&A Calculadora', 'calculadora'),
         item('&O Calendário', 'calendario'),

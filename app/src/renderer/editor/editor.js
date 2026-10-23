@@ -13,9 +13,11 @@ import {
   lineNumbers,
   rectangularSelection,
 } from '@codemirror/view'
-import { defaultKeymap, history, historyKeymap, indentWithTab, redo, undo } from '@codemirror/commands'
-import { HighlightStyle, StreamLanguage, indentUnit, syntaxHighlighting } from '@codemirror/language'
-import { autocompletion, completionKeymap, startCompletion } from '@codemirror/autocomplete'
+import { defaultKeymap, history, historyKeymap, indentSelection, indentWithTab, redo, undo } from '@codemirror/commands'
+import { HighlightStyle, StreamLanguage, bracketMatching, indentUnit, syntaxHighlighting } from '@codemirror/language'
+import { autocompletion, closeBrackets, completionKeymap, startCompletion } from '@codemirror/autocomplete'
+import { cpp } from '@codemirror/lang-cpp'
+import { javascript } from '@codemirror/lang-javascript'
 import { highlightSelectionMatches } from '@codemirror/search'
 import { tags as t } from '@lezer/highlight'
 import { FUNCOES, PALAVRAS_CHAVE, normalizar } from '@misteralg/interpreter'
@@ -66,6 +68,25 @@ const coresVisualg = HighlightStyle.define([
   { tag: t.typeName, color: 'var(--sx-tipo)', textDecoration: 'underline' },
   { tag: t.variableName, color: 'var(--sx-variavel)', fontWeight: 'bold' },
 ])
+
+// C e C++: as mesmas variáveis de cor do tema, sem o sublinhado e o negrito do VisuAlg.
+const coresC = HighlightStyle.define([
+  { tag: t.comment, color: 'var(--sx-comentario)', fontStyle: 'italic' },
+  { tag: [t.string, t.character, t.number, t.bool, t.null], color: 'var(--sx-literal)' },
+  { tag: t.keyword, color: 'var(--sx-chave)', fontWeight: 'bold' },
+  { tag: [t.processingInstruction, t.macroName], color: 'var(--sx-especial)' },
+  { tag: t.typeName, color: 'var(--sx-tipo)' },
+  { tag: t.variableName, color: 'var(--sx-variavel)' },
+])
+
+/** Realce, sugestões e recursos de edição de cada linguagem. */
+const EXTENSOES = {
+  portugol: () => [portugol, syntaxHighlighting(coresVisualg)],
+  c: () => [cpp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
+  cpp: () => [cpp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
+  javascript: () => [javascript(), bracketMatching(), closeBrackets()],
+  typescript: () => [javascript({ typescript: true }), bracketMatching(), closeBrackets()],
+}
 
 // ---- pontos de parada (calha + linha vermelha) ---------------------------
 
@@ -155,12 +176,36 @@ function autodigitar(view, prefs) {
   return true
 }
 
-const opcoesCtrlJ = SUGESTOES.map(([label, detail]) => ({ label, detail, type: 'keyword' }))
+const comoOpcoes = (lista) => lista.map(([label, detail]) => ({ label, detail, type: 'keyword' }))
+const SUGESTOES_C = [
+  ['printf', 'printf("texto %d\\n", valor); — escreve na tela'], ['scanf', 'scanf("%d", &variavel); — lê do teclado'],
+  ['puts', 'puts("texto"); — escreve e pula linha'], ['fgets', 'fgets(texto, tamanho, stdin); — lê uma linha'],
+  ['getchar', 'getchar() — lê um caractere'], ['strlen', 'strlen(texto) — tamanho do texto (string.h)'],
+  ['strcpy', 'strcpy(destino, origem) — copia texto'], ['strcmp', 'strcmp(a, b) — compara textos (0 = iguais)'],
+  ['strcat', 'strcat(destino, origem) — junta textos'], ['malloc', 'malloc(n * sizeof(int)) — reserva memória (stdlib.h)'],
+  ['free', 'free(ponteiro) — devolve a memória'], ['sqrt', 'sqrt(x) — raiz quadrada (math.h)'], ['pow', 'pow(base, expoente) (math.h)'],
+  ['abs', 'abs(x) — valor absoluto'], ['rand', 'rand() % n — número aleatório'], ['srand', 'srand(time(NULL)); — sorteios diferentes a cada execução'],
+  ['system', 'system("pause") ou system("cls")'], ['for', 'for (int i = 0; i < n; i++) { }'], ['while', 'while (condição) { }'],
+  ['do', 'do { } while (condição);'], ['if', 'if (condição) { } else { }'], ['switch', 'switch (x) { case 1: break; default: break; }'],
+  ['struct', 'struct Nome { int campo; };'], ['typedef', 'typedef struct { int campo; } Nome;'], ['return', 'return valor;'],
+  ['int', 'número inteiro'], ['float', 'número real'], ['double', 'número real (mais precisão)'], ['char', 'caractere'],
+  ['const', 'valor que não muda'], ['void', 'função sem retorno'],
+]
+const SUGESTOES_CPP = [
+  ...SUGESTOES_C,
+  ['cout', 'cout << valor << endl; — escreve na tela'], ['cin', 'cin >> variavel; — lê do teclado'],
+  ['endl', 'fim de linha'], ['getline', 'getline(cin, texto); — lê uma linha inteira'], ['string', 'texto (#include <string>)'],
+  ['vector', 'vector<int> v; — vetor que cresce (#include <vector>)'], ['push_back', 'v.push_back(x); — põe no fim do vetor'],
+  ['size', 'v.size() — quantidade de elementos'], ['sort', 'sort(v.begin(), v.end()); (#include <algorithm>)'],
+  ['map', 'map<string, int> m; (#include <map>)'], ['class', 'class Nome { public: ... };'], ['auto', 'tipo deduzido pelo compilador'],
+  ['new', 'new Tipo — cria um objeto na memória'], ['delete', 'delete ponteiro; — destrói o objeto'],
+]
+const OPCOES_CTRL_J = { portugol: comoOpcoes(SUGESTOES), c: comoOpcoes(SUGESTOES_C), cpp: comoOpcoes(SUGESTOES_CPP) }
 
-function fonteCtrlJ(contexto) {
+function fonteCtrlJ(contexto, linguagem) {
   const palavra = contexto.matchBefore(/[\p{L}_][\p{L}\p{N}_]*/u)
   if (!palavra && !contexto.explicit) return null
-  return { from: palavra ? palavra.from : contexto.pos, options: opcoesCtrlJ, validFor: /^[\p{L}_][\p{L}\p{N}_]*$/u }
+  return { from: palavra ? palavra.from : contexto.pos, options: OPCOES_CTRL_J[linguagem], validFor: /^[\p{L}_][\p{L}\p{N}_]*$/u }
 }
 
 // ---- criação do editor ---------------------------------------------------------
@@ -173,6 +218,8 @@ export function criarEditor(parent, op) {
   const somenteLeitura = new Compartment()
   const numeracao = new Compartment()
   const aparencia = new Compartment()
+  const linguagem = new Compartment()
+  let linguagemAtual = 'portugol'
 
   const temaFonte = (prefs) => [
     EditorView.theme({
@@ -229,14 +276,14 @@ export function criarEditor(parent, op) {
         dropCursor(),
         rectangularSelection(),
         highlightSelectionMatches(),
-        portugol,
-        syntaxHighlighting(coresVisualg),
-        autocompletion({ override: [fonteCtrlJ], activateOnTyping: false, icons: false }),
+        linguagem.of(EXTENSOES.portugol()),
+        autocompletion({ override: [(c) => fonteCtrlJ(c, linguagemAtual)], activateOnTyping: false, icons: false }),
         aparencia.of(temaFonte(prefs0)),
         somenteLeitura.of([]),
         keymap.of([
-          { key: 'Ctrl-Space', run: (v) => autodigitar(v, op.prefs) },
-          { key: 'Alt-Space', run: (v) => autodigitar(v, op.prefs) },
+          // As abreviaturas do VisuAlg (dcn, escl...) só valem no Portugol.
+          { key: 'Ctrl-Space', run: (v) => linguagemAtual === 'portugol' && autodigitar(v, op.prefs) },
+          { key: 'Alt-Space', run: (v) => linguagemAtual === 'portugol' && autodigitar(v, op.prefs) },
           { key: 'Ctrl-j', run: startCompletion },
           { key: 'Mod-j', run: startCompletion },
           { key: 'Ctrl-g', run: () => (api.corrigirIndentacao(), true) },
@@ -313,7 +360,19 @@ export function criarEditor(parent, op) {
         ],
       })
     },
+    definirLinguagem(id) {
+      linguagemAtual = EXTENSOES[id] ? id : 'portugol'
+      view.dispatch({ effects: linguagem.reconfigure(EXTENSOES[linguagemAtual]()) })
+    },
     corrigirIndentacao() {
+      if (linguagemAtual !== 'portugol') {
+        // C/C++: o recuo vem da própria gramática do CodeMirror (lang-cpp).
+        const cursor = view.state.selection.main.head
+        view.dispatch({ selection: EditorSelection.single(0, view.state.doc.length) })
+        indentSelection(view)
+        view.dispatch({ selection: EditorSelection.cursor(Math.min(cursor, view.state.doc.length)) })
+        return
+      }
       const novo = corrigirIndentacao(api.texto(), op.prefs().tabulacao)
       if (novo !== api.texto()) {
         const linha = api.linhaDoCursor()

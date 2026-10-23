@@ -41,5 +41,29 @@ contextBridge.exposeInMainWorld('misteralg', {
   exportar: invocar('exportar:salvar'),
   abrirExterno: invocar('externo:abrir'),
   janela: { titulo: invocar('janela:titulo'), fechar: invocar('janela:fechar') },
+  clang: {
+    aquecer: invocar('clang:aquecer'),
+    executar: invocar('clang:executar'),
+    arvore: invocar('clang:arvore'),
+    verificar: invocar('clang:verificar'),
+    entrada: invocar('clang:entrada'),
+    parar: invocar('clang:parar'),
+    aoEvento(fn) {
+      const ouvinte = (_e, id, evento) => fn(id, evento)
+      ipcRenderer.on('clang:evento', ouvinte)
+      return () => ipcRenderer.removeListener('clang:evento', ouvinte)
+    },
+  },
+  ia: {
+    chaves: invocar('ia:chaves'),
+    gravarChave: invocar('ia:gravarChave'),
+    perguntar: invocar('ia:perguntar'),
+    cancelar: invocar('ia:cancelar'),
+    aoReceber(fn) {
+      const ouvinte = (_e, id, pedaco) => fn(id, pedaco)
+      ipcRenderer.on('ia:parte', ouvinte)
+      return () => ipcRenderer.removeListener('ia:parte', ouvinte)
+    },
+  },
   arquivoPendente: invocar('app:abrirPendente'),
 })

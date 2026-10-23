@@ -1,5 +1,5 @@
 ﻿MisterALG — Termos de Uso e Política de Privacidade
-Versão 1.4 — 17 de outubro de 2026
+Versão 1.5 — 22 de outubro de 2026
 
 Leia com atenção antes de instalar ou usar. Ao aceitar estes termos (no instalador, marcando "Eu aceito"; no aplicativo, clicando em "Aceito"), você declara que leu e concorda com eles.
 
@@ -20,7 +20,7 @@ O MisterALG é um programa gratuito para escrever, executar e depurar algoritmos
 
 3. PRIVACIDADE — QUAIS DADOS O PROGRAMA USA
 
-3.1. O MisterALG funciona 100% no seu computador. Ele não precisa de internet, não cria conta, não pede login e não envia nenhuma informação para servidores, para o autor ou para terceiros.
+3.1. O MisterALG funciona 100% no seu computador. Ele não precisa de internet, não cria conta, não pede login e não envia nenhuma informação para servidores, para o autor ou para terceiros. A única exceção é o Assistente de IA, que vem desligado e só funciona se você mesmo o ativar (item 3.6).
 
 3.2. Não há propaganda, rastreamento, telemetria nem coleta de estatísticas de uso.
 
@@ -32,6 +32,8 @@ O MisterALG é um programa gratuito para escrever, executar e depurar algoritmos
 3.4. O comando "arquivo" da linguagem lê e grava somente o arquivo de dados que o próprio algoritmo indicar.
 
 3.5. Ao desinstalar, o programa é removido. As preferências podem ser apagadas manualmente da pasta de dados do aplicativo (no Windows: %APPDATA%\MisterALG; no Mac: ~/Library/Application Support/MisterALG; no Linux: ~/.config/MisterALG).
+
+3.6. Assistente de IA (opcional, desligado por padrão). Se você o ativar em Manutenção → Assistente de IA e informar a chave de um provedor (Anthropic/Claude, OpenAI, DeepSeek, Google Gemini ou outro compatível), o código do algoritmo aberto, a mensagem de erro e a sua pergunta são enviados a esse provedor somente quando você pede uma resposta. O envio é feito direto do seu computador para o provedor, sem passar pelo autor, e segue os termos e a política de privacidade do provedor escolhido; o uso da chave pode ser cobrado por ele. A chave fica guardada criptografada no seu computador. Com o Ollama (IA que roda no próprio computador), nada sai da sua máquina.
 
 
 4. SEM GARANTIA
