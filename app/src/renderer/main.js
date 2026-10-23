@@ -572,6 +572,7 @@ async function abrirTelaInicial() {
     prefs,
     atalhos: { novo: ehMac ? '⌘N' : 'Ctrl+N', abrir: ehMac ? '⌘O' : 'Ctrl+A' },
   })
+  document.documentElement.classList.remove('iniciando')
   prefs = await api.prefs.gravar({ ...r.prefs, dicaAtual: (proximaDica + 1) % DICAS.length })
   if (r.acao === 'abrir') await comandos.abrir()
   else if (r.acao === 'recente') await comandos['abrir-recente'](r.caminho)
@@ -582,6 +583,7 @@ async function abrirTelaInicial() {
 // A tela inicial já traz a dica do dia; com ela aberta, a janela da dica não aparece.
 const mostrarInicio = !api.automatizado && !pendente && !recuperado?.texto && prefs.telaInicial !== false
 if (mostrarInicio) void abrirTelaInicial()
+else document.documentElement.classList.remove('iniciando')
 
 async function mostrarDica() {
   const r = await dialogos.dicaDoDia(DICAS, prefs.dicaAtual ?? 0, prefs.mostrarDicas !== false)

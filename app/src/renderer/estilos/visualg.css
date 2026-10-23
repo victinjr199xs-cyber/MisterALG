@@ -770,6 +770,10 @@ main.com-assistente { grid-template-columns: minmax(340px, 50fr) minmax(260px, 3
 .link-botao { margin-top: 3px; padding: 0; border: 0; background: none; color: var(--destaque); text-decoration: underline; cursor: pointer; font-size: 11px; }
 @media (prefers-reduced-motion: reduce) { .assistente-msg.pensando { animation: none; } }
 
+/* Enquanto a tela inicial não sai, a IDE fica escondida: o app abre direto na escolha da linguagem. */
+html.iniciando body { background: #1d1466; }
+html.iniciando :is(#barra, #area, .status) { visibility: hidden; }
+
 /* ---- Tela inicial (inicio.js): sempre nas cores da marca, em qualquer tema -------- */
 .tela-inicial {
   position: fixed; inset: 0; z-index: 50;
@@ -819,22 +823,16 @@ main.com-assistente { grid-template-columns: minmax(340px, 50fr) minmax(260px, 3
 .inicio-linguagem:focus-visible { outline: 2px solid #7df9ff; outline-offset: 2px; }
 .inicio-linguagem[aria-disabled] { cursor: default; opacity: .55; }
 .inicio-icone {
-  grid-row: span 2; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 13px; color: #fff;
-  background: linear-gradient(145deg, var(--cor), color-mix(in srgb, var(--cor) 55%, #000));
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), 0 6px 14px -4px color-mix(in srgb, var(--cor) 70%, transparent);
+  grid-row: span 2; display: grid; place-items: center; width: 58px; height: 58px; border-radius: 17px;
+  background: var(--cor); box-shadow: inset 0 0 0 1.5px rgb(0 0 0 / .18), 0 8px 18px -6px rgb(0 0 0 / .55);
   transition: transform .35s cubic-bezier(.3, 1.6, .5, 1);
 }
-.inicio-icone .ic { width: 32px; height: 32px; overflow: visible; }
-.ic-ponto { fill: currentColor; stroke: none; transform-box: fill-box; transform-origin: center; }
-/* Entrada: cada traço se desenha; ao passar o mouse ele se redesenha e o ícone dá um saltinho. */
-.ic-traco { stroke-dasharray: 100; animation: ic-desenhar .9s calc(.45s + var(--i, 0) * .07s) cubic-bezier(.6, 0, .2, 1) backwards; }
-.inicio-linguagem:hover:not([aria-disabled]) .ic-traco { animation: ic-desenhar .7s cubic-bezier(.6, 0, .2, 1); }
-.inicio-linguagem:hover:not([aria-disabled]) .inicio-icone { transform: rotate(-6deg) scale(1.1); }
-.inicio-linguagem:hover:not([aria-disabled]) .ic-ponto { animation: ic-pulso .8s ease-in-out infinite; }
-.ic-ponto { animation: ic-respirar 3.2s ease-in-out infinite; }
-@keyframes ic-desenhar { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
-@keyframes ic-pulso { 50% { transform: scale(1.7); } }
-@keyframes ic-respirar { 50% { transform: scale(1.25); opacity: .8; } }
+.inicio-icone .ic { width: 50px; height: 50px; overflow: visible; }
+.inicio-linguagem:hover:not([aria-disabled]) .inicio-icone, .inicio-linguagem:focus-visible:not([aria-disabled]) .inicio-icone {
+  animation: ic-balanco .6s cubic-bezier(.3, 1.4, .5, 1);
+  transform: rotate(-5deg) scale(1.1);
+}
+@keyframes ic-balanco { 0% { transform: none; } 40% { transform: rotate(7deg) scale(1.14); } 70% { transform: rotate(-7deg) scale(1.08); } 100% { transform: rotate(-5deg) scale(1.1); } }
 @keyframes inicio-subir { from { opacity: 0; transform: translateY(18px) scale(.96); } }.inicio-nome { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
 .inicio-breve { white-space: nowrap; padding: 1px 7px; border-radius: 99px; background: rgb(255 255 255 / .14); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .inicio-visao { font-size: 12px; line-height: 1.35; color: #cfc8ff; }
@@ -893,6 +891,6 @@ main.com-assistente { grid-template-columns: minmax(340px, 50fr) minmax(260px, 3
 .inicio-link:hover { transform: translateX(3px); }@media (max-width: 760px) { .inicio-corpo { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) {
   .tela-inicial, .inicio-marca .m-rastro, .inicio-marca .marca, .inicio-aurora i, .inicio-letra, .inicio-topo p, .inicio-lado,
-  .inicio-linguagem, .ic-traco, .ic-ponto { animation: none !important; }
+  .inicio-linguagem, .inicio-icone { animation: none !important; }
   .inicio-linguagem, .inicio-icone, .inicio-acao, .inicio-link { transition: none; }
 }

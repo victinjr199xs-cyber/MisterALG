@@ -6,14 +6,14 @@ import { comNegrito, el } from './dialogos.js'
 import { ICONES_LINGUAGEM } from './icones-linguagens.js'
 
 export const LINGUAGENS = [
-  { id: 'portugol', nome: 'Portugol', sigla: 'Pt', cor: '#7b5cff', visao: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', pronta: true },
-  { id: 'csharp', nome: 'C#', sigla: 'C#', cor: '#68217a', visao: 'Pilha de chamadas, objetos e referências (setas)', pronta: true },
-  { id: 'javascript', nome: 'JavaScript', sigla: 'JS', cor: '#f0db4f', tinta: '#1b1b1b', visao: 'Pilha de chamadas e fila de eventos', pronta: true },
-  { id: 'typescript', nome: 'TypeScript', sigla: 'TS', cor: '#3178c6', visao: 'O tipo de cada valor durante a execução', pronta: true },
-  { id: 'python', nome: 'Python', sigla: 'Py', cor: '#3776ab', visao: 'Objetos e referências, ligados por setas', pronta: true },
-  { id: 'c', nome: 'C', sigla: 'C', cor: '#5c6bc0', visao: 'Biblioteca padrão completa (clang). Em breve: memória e ponteiros', pronta: true },
-  { id: 'cpp', nome: 'C++', sigla: 'C++', cor: '#00599c', visao: 'Biblioteca padrão completa (clang). Em breve: objetos', pronta: true },
-  { id: 'php', nome: 'PHP', sigla: 'PHP', cor: '#777bb4', visao: 'A página gerada, ao vivo', pronta: true },
+  { id: 'portugol', nome: 'Portugol', sigla: 'Pt', cor: '#8b5cf6', visao: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', pronta: true },
+  { id: 'csharp', nome: 'C#', sigla: 'C#', cor: '#e5533d', visao: 'Pilha de chamadas, objetos e referências (setas)', pronta: true },
+  { id: 'javascript', nome: 'JavaScript', sigla: 'JS', cor: '#f2b705', visao: 'Pilha de chamadas e fila de eventos', pronta: true },
+  { id: 'typescript', nome: 'TypeScript', sigla: 'TS', cor: '#2f6fde', visao: 'O tipo de cada valor durante a execução', pronta: true },
+  { id: 'python', nome: 'Python', sigla: 'Py', cor: '#16a37f', visao: 'Objetos e referências, ligados por setas', pronta: true },
+  { id: 'c', nome: 'C', sigla: 'C', cor: '#4361ee', visao: 'Biblioteca padrão completa (clang). Em breve: memória e ponteiros', pronta: true },
+  { id: 'cpp', nome: 'C++', sigla: 'C++', cor: '#0ea5c6', visao: 'Biblioteca padrão completa (clang). Em breve: objetos', pronta: true },
+  { id: 'php', nome: 'PHP', sigla: 'PHP', cor: '#ec4899', visao: 'A página gerada, ao vivo', pronta: true },
 ]
 
 let fecharAtual = null
@@ -72,7 +72,6 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
       const icone = el('span', { className: 'inicio-icone' })
       icone.innerHTML = ICONES_LINGUAGEM[l.id] // texto fixo do próprio app
       icone.style.setProperty('--cor', l.cor)
-      if (l.tinta) icone.style.color = l.tinta
       const b = botao('inicio-linguagem', [
         icone,
         el('span', { className: 'inicio-nome', textContent: l.nome }, l.pronta ? null : el('span', { className: 'inicio-breve', textContent: 'em breve' })),
