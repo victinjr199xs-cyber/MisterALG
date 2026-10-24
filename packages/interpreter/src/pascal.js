@@ -46,7 +46,7 @@ function identificador(v) {
 const textoPascal = (s) => `'${s.replace(/'/g, "''")}'`
 
 /** Comentários `//` do fonte, por linha (o lexer os descarta). */
-function extrairComentarios(fonte) {
+export function extrairComentarios(fonte) {
   const mapa = new Map()
   String(fonte).replace(/\r\n?/g, '\n').split('\n').forEach((texto, i) => {
     let dentro = false
@@ -71,7 +71,7 @@ export function gerarPascal(fonte) {
   return { codigo: new GeradorPascal(prog, extrairComentarios(fonte)).gerar() }
 }
 
-class GeradorPascal {
+export class GeradorPascal {
   constructor(prog, comentarios) {
     this.prog = prog
     this.comentarios = comentarios

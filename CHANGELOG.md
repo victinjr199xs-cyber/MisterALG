@@ -3,6 +3,33 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.10.0] — 2026-10-24
+
+### Novidades
+
+- **Exportar para C/C++ e Java**: o menu **Exportar para** agora gera, além do Pascal, o algoritmo em C (C99)
+  e em Java (uma classe com `main` e `Scanner`).
+- **Arquivo → Exemplos**: exemplos prontos de cada linguagem (vetores, recursão, entrada de dados) e um banco
+  de escola no SQL. Abrem como documento novo, sem mexer no original.
+- **SQL: setas das chaves estrangeiras** no painel do banco, ligando a coluna `REFERENCES` à tabela de origem.
+
+### Correções
+
+- **Salvar mais seguro**: o arquivo é gravado primeiro numa cópia temporária, sincronizado no disco e só
+  então troca de lugar com o original. Tirar o pen drive ou faltar espaço no meio não deixa mais o
+  algoritmo vazio, e um erro ao salvar agora aparece numa mensagem (antes não acontecia nada).
+- **JavaScript e TypeScript isolados**: o programa do aluno roda num Web Worker, sem acesso à tela da IDE
+  nem aos arquivos do computador. Um laço infinito é encerrado pelo **Parar**.
+- SQL e PHP: se o motor não consegue abrir, a mensagem aparece na hora (antes esperava 20 s com o aviso errado).
+- Voltar para a tela inicial também encerra o PHP.
+- Atualizador: o botão **Atualizar** só aparece se a versão nova tiver o arquivo do seu sistema.
+- Teste novo para a comparação de versões do atualizador.
+- Salvar mantém o atributo "oculto" do arquivo no Windows.
+- **Pilha de ativação** (Ctrl+F3) agora funciona em JavaScript e TypeScript.
+- As explicações dos erros do SQL aparecem no idioma escolhido (antes só em português).
+- Testes novos: gravação de arquivos e, no teste do app, entrada de dados, laço infinito, fim normal e
+  isolamento do JavaScript.
+
 ## [1.9.0] — 2026-10-24
 
 ### Atualizações pelo próprio app

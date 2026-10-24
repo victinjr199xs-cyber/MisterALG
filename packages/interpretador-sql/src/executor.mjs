@@ -42,6 +42,11 @@ export async function lerBanco(db) {
     join information_schema.key_column_usage kcu on kcu.constraint_name = tc.constraint_name and kcu.table_schema = tc.table_schema
     join information_schema.constraint_column_usage ccu on ccu.constraint_name = tc.constraint_name and ccu.table_schema = tc.table_schema
     where tc.constraint_type = 'FOREIGN KEY' and tc.table_schema = 'public'`)
+  const fks = await q(`select c.conname as nome, t.relname as tabela, rt.relname as ref_tabela,
+    (select array_agg(a.attname::text order by k.o) from unnest(c.conkey) with ordinality k(n, o) join pg_attribute a on a.attrelid = c.conrelid and a.attnum = k.n) as colunas,
+    (select array_agg(a.attname::text order by k.o) from unnest(c.confkey) with ordinality k(n, o) join pg_attribute a on a.attrelid = c.confrelid and a.attnum = k.n) as ref_colunas
+    from pg_constraint c join pg_class t on t.oid = c.conrelid join pg_class rt on rt.oid = c.confrelid join pg_namespace n on n.oid = t.relnamespace
+    where c.contype = 'f' and n.nspname = 'public' order by c.oid`)
   const resultado = []
   for (const { nome: t } of tabelas) {
     // Pela chave primária: senão um UPDATE "move" a linha para o fim e a tela pula.
@@ -59,6 +64,7 @@ export async function lerBanco(db) {
           ? (({ ref_tabela, ref_coluna }) => ({ tabela: ref_tabela, coluna: ref_coluna }))(estrangeiras.find((f) => f.tabela === t && f.coluna === c.nome))
           : null,
       })),
+      estrangeiras: fks.filter((f) => f.tabela === t).map((f) => ({ nome: f.nome, colunas: [...f.colunas], tabela: f.ref_tabela, referencias: [...f.ref_colunas] })),
       linhas: r.rows.slice(0, LINHAS_NA_TELA).map((l) => l.map((v, i) => (v === null ? null : textoDoValor(v, r.fields[i]?.dataTypeID)))),
       total,
     })

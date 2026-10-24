@@ -84,3 +84,11 @@ export function fotografar(rt, tiposDeclarados = {}) {
   while (fila.length) objetos.push(expandir(fila.shift()))
   return { quadros, objetos, filas: rt.filas() }
 }
+
+// A pilha de ativação do diálogo (Ctrl+F3): o quadro de baixo é o corpo principal; cada chamada volta na linha atual de quem chamou.
+export function pilhaDe(foto) {
+  const quadros = (foto?.quadros ?? []).filter((q) => !q.global)
+  return quadros.map((q, i) => i === 0 && q.nome === '(programa principal)'
+    ? { tipo: 'Corpo Principal do Programa', nome: q.nome, linhaChamada: 0 }
+    : { tipo: 'Funcao', nome: q.nome, assinatura: '', linhaChamada: quadros[i - 1]?.linha ?? 0 })
+}

@@ -55,6 +55,31 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   }
   conferir('JS: F8 até o fim', (await console_()).includes('4'), true)
 
+  // JS: prompt() com entrada, fim normal, isolamento da página e laço infinito
+  await novo('javascript', 'const n = prompt("nome?")\nconsole.log("oi " + n)\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('JS: prompt() pede a entrada', await ate(`!!document.querySelector('.console-entrada')`, 40), true)
+  await avaliar(`document.querySelector('.console-entrada').focus()`)
+  await digitar('Ana')
+  await tecla('Enter')
+  conferir('JS: fim normal depois do prompt', await ate(`document.querySelector('#console-tela').textContent.includes('Process finished')`, 40), true)
+  conferir('JS: saída com a entrada', (await console_()).includes('oi Ana'), true)
+  conferir('JS: saiu do estado de execução', await ate(`${M}.execucao.emExecucao() === false`, 20), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
+  await novo('javascript', 'console.log(typeof window, typeof document, typeof misteralg)\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('JS: isolado da página', await ate(`document.querySelector('#console-tela').textContent.includes('undefined undefined undefined')`, 40), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
+  await novo('javascript', 'while (true) {}\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  await esperar(1500)
+  conferir('JS: laço infinito em execução', await avaliar(`${M}.execucao.emExecucao()`), true)
+  await avaliar(`${M}.comandos.parar()`)
+  conferir('JS: Ctrl+F2 para o laço', await ate(`${M}.execucao.emExecucao() === false`, 20), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
   // ---- TypeScript ---------------------------------------------------------------------------
   await novo('typescript', 'const n: number = 20\nconst m: number = n + 1\nconsole.log(m)\n')
   await avaliar(`void ${M}.comandos.executar()`)
@@ -140,7 +165,7 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   await avaliar(`${M}.execucao.restaurar()`)
 
   // ---- SQL: PostgreSQL (PGlite) num processo à parte; F8 pára antes de cada comando ------------
-  await novo('sql', "CREATE TABLE t (id SERIAL PRIMARY KEY, nome TEXT);\nINSERT INTO t (nome) VALUES ('Ana'), ('Bia');\nUPDATE t SET nome = 'Ana Maria' WHERE id = 1;\nSELECT nome FROM t ORDER BY id;\n")
+  await novo('sql', "CREATE TABLE t (id SERIAL PRIMARY KEY, nome TEXT);\nINSERT INTO t (nome) VALUES ('Ana'), ('Bia');\nUPDATE t SET nome = 'Ana Maria' WHERE id = 1;\nCREATE TABLE p (id SERIAL PRIMARY KEY, t_id INT REFERENCES t (id));\nSELECT nome FROM t ORDER BY id;\n")
   await avaliar(`void ${M}.comandos.passo()`)
   conferir('SQL: F8 pára antes do primeiro comando', await ate(`document.querySelector('#st-mensagem').textContent.includes('linha 1')`, 120), true)
   for (const linha of [2, 3]) {
@@ -150,6 +175,8 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('SQL: tabela na tela do banco, linhas novas em destaque', await ate(`document.querySelectorAll('.mb-tabela .mb-nova').length === 2`, 40), true)
   await avaliar(`void ${M}.comandos.passo()`)
   conferir('SQL: UPDATE marca a linha alterada', await ate(`document.querySelector('.mb-alterada')?.textContent.includes('Ana Maria') === true`, 40), true)
+  await avaliar(`void ${M}.comandos.passo()`)
+  conferir('SQL: seta da chave estrangeira entre as tabelas', await ate(`document.querySelectorAll('.mb-setas path.mb-seta').length === 1 && document.querySelector('th.mb-fk-col') !== null`, 40), true)
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('SQL: resultado no formato do psql', await ate(`/Ana Maria\\n Bia\\n\\(2 rows\\)/.test(document.querySelector('#console-tela').textContent)`, 60), true)
   await avaliar(`${M}.execucao.restaurar()`)

@@ -27,3 +27,12 @@ test('textos preenchidos são reconhecidos', () => {
   assert.equal(t.reconhecer('texto que não existe'), null)
   assert.equal(tradutor('pt')('Fechar'), 'Fechar')
 })
+
+test('explicações do SQL são traduzidas', async () => {
+  const { EXPLICACOES_SQL } = await import('../../../packages/interpretador-sql/src/erros.js')
+  for (const id of Object.keys(TRADUCOES)) {
+    const t = tradutor(id)
+    for (const pt of Object.values(EXPLICACOES_SQL)) assert.notEqual(t(pt), pt, `${id}: ${pt}`)
+  }
+  assert.equal(tradutor('en')(EXPLICACOES_SQL['22012']), 'Division by zero.')
+})

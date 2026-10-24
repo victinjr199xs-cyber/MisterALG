@@ -57,6 +57,7 @@ export async function comandoSQL(pedido) {
   servidor ??= subir()
   const s = servidor
   await s.pronto
+  if (s.filho.exitCode !== null || s.filho.signalCode !== null) return { erro: { codigo: null, mensagem: 'O banco de dados não abriu (o PostgreSQL do MisterALG não pôde ser iniciado).', parado: true } }
   const id = ++proximoId
   return new Promise((resolver) => {
     const relogio = setTimeout(() => {

@@ -1,6 +1,28 @@
 import { test } from 'node:test'
 import assert from 'node:assert'
-import { rodarJS } from '../src/index.js'
+import { rodarJS, SessaoJS, pilhaDe } from '../src/index.js'
+
+test('pilha de ativação lista quem chamou e quem foi chamado', () => {
+  let pilha = []
+  const s = new SessaoJS(`function interna() {
+  return 1
+}
+function externa() {
+  return interna()
+}
+externa()
+`, { modo: 'passo', onMemory: (foto) => { pilha = pilhaDe(foto) } })
+  let max = []
+  for (let i = 0; i < 20 && !s.terminado; i++) {
+    s.passo()
+    if (pilha.length > max.length) max = pilha
+  }
+  assert.deepEqual(max.map((f) => f.nome), ['(programa principal)', 'externa', 'interna'])
+  assert.equal(max[0].tipo, 'Corpo Principal do Programa')
+  assert.equal(max[1].linhaChamada, 7)
+  assert.equal(max[2].linhaChamada, 5)
+  assert.ok(pilha.length <= 1)
+})
 
 test('programa vazio', async () => {
   const { status, saida } = await rodarJS('')

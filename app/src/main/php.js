@@ -64,6 +64,7 @@ export async function executar(pedido) {
   servidor ??= subir()
   const s = servidor
   await s.pronto
+  if (s.filho.exitCode !== null || s.filho.signalCode !== null) return respostaDeErro('O PHP não abriu (o PHP do MisterALG não pôde ser iniciado).')
   const id = ++proximoId
   return new Promise((resolver) => {
     const relogio = setTimeout(() => {

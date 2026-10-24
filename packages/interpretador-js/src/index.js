@@ -6,7 +6,7 @@ import { instrumentar } from './instrumentar.js'
 import { ErroJS, criarRuntime } from './runtime.js'
 
 export { instrumentar } from './instrumentar.js'
-export { fotografar } from './fotografia.js'
+export { fotografar, pilhaDe } from './fotografia.js'
 
 const FATIA = 20000
 const imediato = globalThis.setImmediate ?? ((f) => setTimeout(f, 0))

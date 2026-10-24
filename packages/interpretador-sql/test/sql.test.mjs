@@ -69,6 +69,9 @@ select idade
   assert.deepEqual(banco.map((t) => t.nome), ['curso', 'aluno'])
   const aluno = banco[1]
   assert.deepEqual(aluno.colunas.find((c) => c.nome === 'curso_id').referencia, { tabela: 'curso', coluna: 'id' })
+  assert.deepEqual(aluno.estrangeiras.map(({ nome, ...f }) => f), [{ colunas: ['curso_id'], tabela: 'curso', referencias: ['id'] }])
+  assert.match(aluno.estrangeiras[0].nome, /curso_id_fkey/)
+  assert.deepEqual(banco[0].estrangeiras, [])
   assert.equal(aluno.colunas.find((c) => c.nome === 'id').chave, true)
   assert.equal(aluno.total, 2)
 

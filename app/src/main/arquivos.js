@@ -2,8 +2,9 @@
 // Windows-1252; gravamos no mesmo formato para continuarem abrindo lá, e só
 // caímos para UTF-8 se o texto tiver algum caractere fora do 1252.
 
-import { readFile, writeFile } from 'node:fs/promises'
+import { open, readFile, rename, rm } from 'node:fs/promises'
 import { readFileSync, appendFileSync, existsSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import { isAbsolute, join } from 'node:path'
 
 const cp1252 = new TextDecoder('windows-1252')
@@ -55,8 +56,40 @@ export async function lerArquivo(caminho) {
 
 export async function gravarArquivo(caminho, texto, codificacao) {
   const r = codificar(texto, codificacao)
-  await writeFile(caminho, r.bytes)
+  // Grava num .tmp e troca de nome: uma falha no meio nunca deixa o original vazio.
+  const tmp = `${caminho}.${process.pid}.misteralg-tmp`
+  try {
+    const arquivo = await open(tmp, 'w')
+    try {
+      await arquivo.writeFile(r.bytes)
+      await arquivo.datasync() // no pen drive, garante os bytes no disco antes da troca
+    } finally {
+      await arquivo.close()
+    }
+    const oculto = estaOculto(caminho)
+    await rename(tmp, caminho)
+    if (oculto) ocultar(caminho)
+  } catch (e) {
+    await rm(tmp, { force: true }).catch(() => {})
+    throw e
+  }
   return r.codificacao
+}
+
+// No Windows o rename troca o arquivo e perde o atributo "oculto"; reaplicamos (falhar aqui não pode derrubar o salvar).
+function estaOculto(caminho) {
+  if (process.platform !== 'win32' || !existsSync(caminho)) return false
+  try {
+    return execFileSync('attrib', [caminho], { encoding: 'utf8', windowsHide: true }).slice(0, 20).includes('H')
+  } catch {
+    return false
+  }
+}
+
+function ocultar(caminho) {
+  try {
+    execFileSync('attrib', ['+h', caminho], { windowsHide: true })
+  } catch {}
 }
 
 // ---- comando `arquivo "dados.txt"` do Portugol (chamado de forma síncrona) ----

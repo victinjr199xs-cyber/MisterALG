@@ -5,6 +5,7 @@
 
 import { app } from 'electron'
 import electronUpdater from 'electron-updater'
+import { maisNova } from '../compartilhado/versoes.js'
 
 const { autoUpdater } = electronUpdater
 const REPO = 'victinjr199xs-cyber/MisterALG'
@@ -18,17 +19,6 @@ autoUpdater.logger = null
 export const instalaSozinho = () =>
   app.isPackaged && ((process.platform === 'win32' && !process.env.PORTABLE_EXECUTABLE_DIR) || (process.platform === 'linux' && !!process.env.APPIMAGE))
 
-/** "1.10.0" > "1.9.2"? (só números; um sufixo como -beta conta como versão anterior) */
-export function maisNova(a, b) {
-  const partes = (v) => String(v).replace(/^v/, '').split('-')
-  const [na, sa] = partes(a)
-  const [nb, sb] = partes(b)
-  const x = na.split('.').map(Number)
-  const y = nb.split('.').map(Number)
-  for (let i = 0; i < 3; i += 1) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0)
-  return !sa && !!sb
-}
-
 /** A última release do GitHub, se for mais nova que esta. @returns {Promise<{versao, notas, pagina, automatica} | {atual} | {erro}>} */
 export async function procurar() {
   // Só para testar a tela da atualização sem publicar uma versão nova.
@@ -40,7 +30,8 @@ export async function procurar() {
     const versao = String(release.tag_name ?? '').replace(/^v/, '')
     if (!versao || !maisNova(versao, atual)) return { atual }
     // Sem o latest.yml na release, o electron-updater não tem o que baixar: fica o botão de download.
-    const temManifesto = (release.assets ?? []).some((a) => /^latest(-linux)?\.yml$/.test(a.name))
+    const manifesto = { win32: 'latest.yml', linux: 'latest-linux.yml' }[process.platform]
+    const temManifesto = !!manifesto && (release.assets ?? []).some((a) => a.name === manifesto)
     return { versao, notas: String(release.body ?? '').slice(0, 4000), pagina: release.html_url ?? PAGINA_RELEASES, automatica: instalaSozinho() && temManifesto }
   } catch (e) {
     return { erro: String(e?.message ?? e) }

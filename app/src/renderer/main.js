@@ -12,7 +12,7 @@ import { tradutor } from '../compartilhado/idiomas.js'
 import { traduzirPagina } from './traduzir-pagina.js'
 import { procurarNaIDE } from './atualizacao.js'
 import { criarAssistente } from './assistente.js'
-import { gerarPascal } from '@misteralg/interpreter'
+import { gerarPascal, gerarC, gerarJava } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
 const api = window.misteralg
@@ -212,8 +212,13 @@ async function podeDescartar(titulo) {
 async function salvar(comoNovo = false) {
   const texto = editor.texto()
   let r
-  if (!doc.caminho || comoNovo) r = await api.arquivo.salvarComo({ texto, nome: doc.nome, codificacao: doc.codificacao, extensao: EXTENSAO[doc.linguagem] })
-  else r = await api.arquivo.salvar({ caminho: doc.caminho, texto, codificacao: doc.codificacao })
+  try {
+    if (!doc.caminho || comoNovo) r = await api.arquivo.salvarComo({ texto, nome: doc.nome, codificacao: doc.codificacao, extensao: EXTENSAO[doc.linguagem] })
+    else r = await api.arquivo.salvar({ caminho: doc.caminho, texto, codificacao: doc.codificacao })
+  } catch (e) {
+    await api.mensagem({ type: 'error', title: 'Salvar', message: tradutor(prefs.idioma)('Não deu para salvar o arquivo: {0}', e.message) })
+    return false
+  }
   if (!r) return false
   doc.caminho = r.caminho
   doc.codificacao = r.codificacao
@@ -286,6 +291,24 @@ const busca = criarBusca(editor,{ estado: status.estado, mensagem: (m) => status
 // ---- comandos (menu, barra e atalhos usam a mesma tabela) ------------------------------
 
 let perguntandoSair = false
+/** Exportar para Pascal / C / Java: mostra o programa gerado e, se pedido, grava o arquivo. */
+async function exportarPrograma(linguagem, rotulo, extensao, gerar) {
+  if (doc.linguagem !== 'portugol') return status.mensagem(` MENSAGEM: Exportar para ${rotulo} só vale para algoritmos em Portugol.`)
+  let gerado
+  try {
+    gerado = gerar(editor.texto())
+  } catch (e) {
+    if (!e.codigo) throw e
+    editor.realcarErro(e.linha)
+    return dialogos.aviso(e, editor.textoDaLinha(e.linha))
+  }
+  if (await dialogos.codigoExportado(gerado.codigo, linguagem) === 'salvar') {
+    // Em Java o arquivo precisa ter o nome da classe pública.
+    const caminho = await api.exportar({ texto: gerado.codigo, nome: gerado.classe ?? doc.nome, extensao })
+    if (caminho) status.mensagem(` MENSAGEM: Programa ${rotulo} gravado em ${caminho}`)
+  }
+}
+
 const comandos = {
   novo: async (linguagem = doc.linguagem) => {
     if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
@@ -296,6 +319,10 @@ const comandos = {
   },
   'abrir-recente': async (caminho) => {
     if (await podeDescartar(' Abrir um algoritmo no MisterALG ')) abrirResultado(await api.arquivo.abrirCaminho(caminho))
+  },
+  exemplo: async ({ nome, texto }) => {
+    if (!(await podeDescartar(' Abrir um algoritmo no MisterALG '))) return
+    carregar({ texto, nome: nome.replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(nome), codificacao: /\.alg$/.test(nome) ? 'windows-1252' : 'utf-8' })
   },
   salvar: () => salvar(false),
   'salvar-como': () => salvar(true),
@@ -365,21 +392,9 @@ const comandos = {
   aleatorio: () => alternarAleatorio(),
   perfil: () => execucao.mostrarPerfil(),
   pilha: () => execucao.mostrarPilha(),
-  'exportar-pascal': async () => {
-    if (doc.linguagem !== 'portugol') return status.mensagem(' MENSAGEM: Exportar para Pascal só vale para algoritmos em Portugol.')
-    let codigo
-    try {
-      codigo = gerarPascal(editor.texto()).codigo
-    } catch (e) {
-      if (!e.codigo) throw e
-      editor.realcarErro(e.linha)
-      return dialogos.aviso(e, editor.textoDaLinha(e.linha))
-    }
-    if (await dialogos.codigoPascal(codigo) === 'salvar') {
-      const caminho = await api.exportar({ texto: codigo, nome: doc.nome })
-      if (caminho) status.mensagem(` MENSAGEM: Programa Pascal gravado em ${caminho}`)
-    }
-  },
+  'exportar-pascal': () => exportarPrograma('pascal', 'Pascal', 'pas', gerarPascal),
+  'exportar-c': () => exportarPrograma('c', 'C / C++', 'c', gerarC),
+  'exportar-java': () => exportarPrograma('java', 'Java', 'java', gerarJava),
   configuracoes: async (aba) => {
     const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema, aba })
     if (novas) {

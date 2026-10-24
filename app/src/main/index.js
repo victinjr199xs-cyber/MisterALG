@@ -175,12 +175,18 @@ function registrarIpc() {
     return (await lerArquivo(r.filePaths[0])).texto
   })
 
-  // Exportar para Pascal: grava o .pas gerado no renderer, em UTF-8.
-  ipcMain.handle('exportar:salvar', async (_e, { texto, nome }) => {
+  // Exportar para Pascal / C / Java: grava o programa gerado no renderer, em UTF-8.
+  const EXPORTACOES = {
+    pas: { titulo: 'Exportar para a linguagem Pascal', filtro: 'Programas Pascal' },
+    c: { titulo: 'Exportar para a linguagem C / C++', filtro: 'Programas C' },
+    java: { titulo: 'Exportar para a linguagem Java', filtro: 'Programas Java' },
+  }
+  ipcMain.handle('exportar:salvar', async (_e, { texto, nome, extensao = 'pas' }) => {
+    if (!EXPORTACOES[extensao]) return null
     const r = await dialog.showSaveDialog(janela, {
-      title: trMain('Exportar para a linguagem Pascal'),
-      filters: [{ name: 'Programas Pascal', extensions: ['pas'] }, { name: 'Todos os arquivos', extensions: ['*'] }],
-      defaultPath: `${documentos()}/${nome || 'semnome'}.pas`,
+      title: trMain(EXPORTACOES[extensao].titulo),
+      filters: [{ name: EXPORTACOES[extensao].filtro, extensions: [extensao] }, { name: 'Todos os arquivos', extensions: ['*'] }],
+      defaultPath: `${documentos()}/${nome || 'semnome'}.${extensao}`,
     })
     if (r.canceled || !r.filePath) return null
     writeFileSync(r.filePath, texto, 'utf8')
@@ -318,6 +324,7 @@ function registrarIpc() {
     pararTudo()
     programas.pararTudo()
     pararSQL()
+    pararPHP()
     void irPara(pagina, params && typeof params === 'object' ? params : {}) // a página atual vai embora; não há resposta a esperar
   })
   ipcMain.handle('janela:fechar', () => {

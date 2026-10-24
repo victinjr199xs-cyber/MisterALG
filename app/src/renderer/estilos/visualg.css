@@ -957,7 +957,7 @@ body.modo-codigo ::-webkit-scrollbar-thumb { background: #262a33; border-radius:
 body.modo-codigo ::-webkit-scrollbar-button { display: none; }
 
 /* ---- SQL: a tela do banco de dados (memoria-banco.js) ---------------------------------------------- */
-.mb-banco { display: flex; flex-direction: column; gap: 14px; padding: 12px 14px; font: 12.5px/1.4 var(--mono, Consolas, monospace); }
+.mb-banco { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 12px 52px 12px 14px; font: 12.5px/1.4 var(--mono, Consolas, monospace); }
 .mb-banco[hidden] { display: none; }
 .mb-vazio, .mb-vazia { margin: 0; color: #8b93a1; }
 .mb-tabela { border: 1px solid #262a33; background: #0b0d11; }
@@ -972,6 +972,9 @@ body.modo-codigo ::-webkit-scrollbar-button { display: none; }
 .mb-tabela th { color: #8b93a1; font-weight: 600; font-size: 11px; letter-spacing: .04em; }
 .mb-pk { font-size: 10px; }
 .mb-fk { color: #a78bfa; font-weight: 400; }
+.mb-fk-col { background: #1a1730; box-shadow: inset 0 -2px 0 #a78bfa66; }
+.mb-setas { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; color: #a78bfa; }
+.mb-seta { fill: none; stroke: currentColor; stroke-width: 1.6; opacity: .85; }
 .mb-tabela td { color: #e6e8eb; }
 .mb-nulo { color: #5c6370 !important; font-style: italic; }
 .mb-nova td { background: #0f2a20; color: #4ade80; }

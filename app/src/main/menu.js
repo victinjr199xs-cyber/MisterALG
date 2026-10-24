@@ -7,7 +7,9 @@
 // Ctrl+U, F3 e F4.
 
 import { app, Menu } from 'electron'
-import { basename } from 'node:path'
+import { readdirSync } from 'node:fs'
+import { basename, join } from 'node:path'
+import { lerArquivo } from './arquivos.js'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 import { IDIOMAS, tradutor } from '../compartilhado/idiomas.js'
 
@@ -18,6 +20,23 @@ const ehMac = process.platform === 'darwin'
 const ATALHO = ehMac
   ? { abrir: 'Cmd+O', salvarComo: 'Shift+Cmd+S', selecionarTudo: 'Cmd+A', localizar: 'Cmd+F', substituir: 'Alt+Cmd+F' }
   : { abrir: 'Ctrl+A', salvarComo: 'Ctrl+Alt+C', selecionarTudo: 'Ctrl+T', localizar: 'Ctrl+L', substituir: 'Ctrl+U' }
+
+// Exemplos: a pasta exemplos/ (na raiz do repositório; instalado, em resources/exemplos). Os .alg soltos são do
+// Portugol; cada subpasta é uma linguagem. O renderer abre como documento novo, sem caminho (não sobrescreve o exemplo).
+const NOMES_EXEMPLOS = { portugol: 'Portugol', c: 'C', cpp: 'C++', csharp: 'C#', javascript: 'JavaScript', typescript: 'TypeScript', python: 'Python', php: 'PHP', sql: 'SQL' }
+
+function menuExemplos(enviar) {
+  const raiz = app.isPackaged ? join(process.resourcesPath, 'exemplos') : join(app.getAppPath(), '..', 'exemplos')
+  const listar = (pasta) => { try { return readdirSync(pasta, { withFileTypes: true }) } catch { return [] } }
+  const abrir = (caminho) => async () => enviar('exemplo', { nome: basename(caminho), texto: (await lerArquivo(caminho)).texto })()
+  const grupos = { portugol: listar(raiz).filter((e) => e.isFile() && e.name.endsWith('.alg')).map((e) => join(raiz, e.name)) }
+  for (const pasta of listar(raiz).filter((e) => e.isDirectory())) {
+    grupos[pasta.name] = listar(join(raiz, pasta.name)).filter((e) => e.isFile()).map((e) => join(raiz, pasta.name, e.name))
+  }
+  return Object.entries(grupos)
+    .filter(([, arquivos]) => arquivos.length)
+    .map(([id, arquivos]) => ({ label: NOMES_EXEMPLOS[id] ?? id, submenu: arquivos.map((c) => ({ label: basename(c), click: abrir(c) })) }))
+}
 
 export function montarMenu(janela, prefs, estado = {}) {
   const enviar = (id, dados) => () => janela?.webContents.send('menu', id, dados)
@@ -30,6 +49,8 @@ export function montarMenu(janela, prefs, estado = {}) {
     accelerator: `Ctrl+${i + 1}`,
     click: enviar('abrir-recente', caminho),
   }))
+
+  const exemplos = menuExemplos(enviar)
 
   const template = [
     ...(ehMac
@@ -56,6 +77,7 @@ export function montarMenu(janela, prefs, estado = {}) {
         item('&Novo', 'novo', 'CmdOrCtrl+N'),
         item('&Abrir…', 'abrir', ATALHO.abrir),
         item('&Tela inicial', 'tela-inicial'),
+        ...(exemplos.length ? [{ label: tr('&Exemplos'), submenu: exemplos }] : []),
         { type: 'separator' },
         item('&Salvar', 'salvar', 'CmdOrCtrl+S'),
         item('Salvar &Como…', 'salvar-como', ATALHO.salvarComo),
@@ -111,8 +133,8 @@ export function montarMenu(janela, prefs, estado = {}) {
       label: tr('&Exportar para'),
       submenu: [
         item('a Linguagem &Pascal…', 'exportar-pascal'),
-        item('a Linguagem &C / C++', 'exportar-c', undefined, { enabled: false }),
-        item('a Linguagem &Java', 'exportar-java', undefined, { enabled: false }),
+        item('a Linguagem &C / C++', 'exportar-c'),
+        item('a Linguagem &Java', 'exportar-java'),
       ],
     },
     {

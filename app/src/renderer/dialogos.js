@@ -272,20 +272,27 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aba = 'editor
   }
 }
 
-// ---- Exportar para Pascal ---------------------------------------------------------
+// ---- Exportar para Pascal / C / Java ----------------------------------------------
 
-/** Mostra o programa Pascal gerado. Resolve com 'salvar', 'copiar' ou 'cancelar'. */
-export async function codigoPascal(codigo) {
+const EXPORTACOES = {
+  pascal: { titulo: 'Exportar para a linguagem Pascal', nota: 'Programa gerado para o Free Pascal. Comandos sem equivalente aparecem como comentário.', salvar: 'Salvar .pas…' },
+  c: { titulo: 'Exportar para a linguagem C / C++', nota: 'Programa gerado em C (C99). Comandos sem equivalente aparecem como comentário.', salvar: 'Salvar .c…' },
+  java: { titulo: 'Exportar para a linguagem Java', nota: 'Programa gerado em Java (uma classe pública com main). Comandos sem equivalente aparecem como comentário.', salvar: 'Salvar .java…' },
+}
+
+/** Mostra o programa gerado ('pascal', 'c' ou 'java'). Resolve com 'salvar', 'copiar' ou 'cancelar'. */
+export async function codigoExportado(codigo, linguagem) {
+  const e = EXPORTACOES[linguagem]
   const r = await janela({
-    titulo: 'Exportar para a linguagem Pascal',
+    titulo: e.titulo,
     corpo: el('div', {},
-      el('p', { className: 'nota', textContent: 'Programa gerado para o Free Pascal. Comandos sem equivalente aparecem como comentário.' }),
+      el('p', { className: 'nota', textContent: e.nota }),
       el('pre', { className: 'codigo-pascal', textContent: codigo }),
     ),
     botoes: [
       { valor: 'copiar', texto: 'Copiar' },
       { valor: 'cancelar', texto: 'Fechar' },
-      { valor: 'salvar', texto: 'Salvar .pas…', principal: true },
+      { valor: 'salvar', texto: e.salvar, principal: true },
     ],
     largura: '760px',
   })

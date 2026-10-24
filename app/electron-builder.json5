@@ -9,7 +9,9 @@
   // (worker_threads e o processo filho não leem de dentro do app.asar). Ver main/clang.js.
   extraResources: [{ from: '../node_modules/@yowasp/clang', to: 'clang', filter: ['package.json', 'gen/**'] },
     // Python (Pyodide), PHP (php-wasm 8.3), C# (tree-sitter) e SQL (PGlite): scripts/preparar-linguagens.mjs monta esta pasta.
-    { from: 'build/linguagens', to: 'linguagens' }],
+    { from: 'build/linguagens', to: 'linguagens' },
+    // Menu Arquivo > Exemplos (src/main/menu.js).
+    { from: '../exemplos', to: 'exemplos', filter: ['**/*', '!README.md'] }],
   asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js', 'out/main/rodar-python.js', 'out/main/rodar-php.js', 'out/main/rodar-sql.js'],
   npmRebuild: false,
   // Onde o app procura e baixa as versões novas (electron-updater). O CI só anexa os arquivos; quem publica a release é ele.
