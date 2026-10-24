@@ -455,6 +455,10 @@ export const expressoes = {
       const cv = this.conversaoDoAluno(v, t)
       if (cv !== undefined) return cv
     }
+    if (def && !this.ehTipo(v, t)) {
+      const cv = this.conversaoParaClasse(v, t, false) // (Fracao)3 com um explicit operator Fracao(int)
+      if (cv !== undefined) return cv
+    }
     if (t === 'string' && typeof v !== 'string') throw this.excecao('InvalidCastException', `Unable to cast object of type '${this.nomeDoTipoDe(v)}' to type 'System.String'.`)
     if (def && !this.ehTipo(v, t)) throw this.excecao('InvalidCastException', `Unable to cast object of type '${this.nomeDoTipoDe(v)}' to type '${def.nome}'.`)
     void n

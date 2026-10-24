@@ -245,7 +245,12 @@ export class Sessao {
     if (e) {
       erroFinal = e instanceof ErroVisualg
         ? e
-        : Object.assign(new ErroVisualg(28, this.linhaAtual), { mensagem: `Erro interno: ${e.message}`, interno: e })
+        : Object.assign(new ErroVisualg(28, this.linhaAtual), {
+          mensagem: e instanceof RangeError && /call stack/i.test(e.message)
+            ? 'Estouro de pilha: recursão profunda demais (falta a condição de parada?).'
+            : `Erro interno: ${e.message}`,
+          interno: e,
+        })
     }
     if (this.maq) {
       this.op.onVariables?.(this.inspecionar())

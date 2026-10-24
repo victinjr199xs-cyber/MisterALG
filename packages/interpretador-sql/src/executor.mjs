@@ -10,7 +10,7 @@
 // Uso: node rodar-sql.js <url do @electric-sql/pglite/dist/index.js>
 
 import { writeSync } from 'node:fs'
-import { textoDoValor } from './formatar.js'
+import { tabelaCriadaPorConsulta, textoDoValor } from './formatar.js'
 
 const LINHAS_NA_TELA = 50
 
@@ -52,7 +52,7 @@ export async function lerBanco(db) {
     // Pela chave primária: senão um UPDATE "move" a linha para o fim e a tela pula.
     const pk = chaves.filter((k) => k.tabela === t).map((k) => nome(k.coluna))
     const ordem = pk.length ? ` order by ${pk.join(', ')}` : ''
-    const r = await db.query(`select * from public.${nome(t)}${ordem} limit ${LINHAS_NA_TELA + 1}`, [], { rowMode: 'array' })
+    const r = await db.query(`select * from public.${nome(t)}${ordem} limit ${LINHAS_NA_TELA + 1}`, [], { rowMode: 'array', parsers: await conversoresDeTexto(db) })
     const total = (await db.query(`select count(*)::int as n from public.${nome(t)}`)).rows[0].n
     resultado.push({
       nome: t,
@@ -72,14 +72,41 @@ export async function lerBanco(db) {
   return resultado
 }
 
+// O PGlite converte os valores para objetos do JS (data → Date, jsonb → objeto, vetor → Array, bigint...), e aí se perde o
+// texto que o PostgreSQL escreveu (1e+15, {1,2,3}, {"a": 1}, infinity, 2024-03-15 00:00:00-03). O psql mostra esse texto, então
+// todos os tipos (inclusive os vetores) ficam com o conversor "não faz nada" e o valor chega como o servidor o escreveu.
+const naoConverter = (texto) => texto
+const conversores = new WeakMap()
+async function conversoresDeTexto(db) {
+  let c = conversores.get(db)
+  if (!c) {
+    try {
+      const r = await db.query('select oid::int4 as oid from pg_type', [], { rowMode: 'array' })
+      c = Object.fromEntries(r.rows.map(([oid]) => [oid, naoConverter]))
+      conversores.set(db, c)
+    } catch {
+      c ??= {}
+    }
+  }
+  return c
+}
+
 /** Um comando: as linhas (como vieram do PostgreSQL) ou o erro. */
 export async function executarComando(db, sql) {
   try {
-    const r = await db.query(sql, [], { rowMode: 'array' })
+    const parsers = await conversoresDeTexto(db)
+    const r = await db.query(sql, [], { rowMode: 'array', parsers })
+    if (/\b(create|alter|drop)\b/i.test(sql)) conversores.delete(db) // tipos novos (tabela, enum...) ganham o conversor na próxima
+    let afetadas = r.affectedRows ?? 0
+    const criada = tabelaCriadaPorConsulta(sql)
+    if (criada) {
+      // CREATE TABLE AS / SELECT INTO: o PGlite não conta as linhas, e o psql escreve "SELECT n"
+      try { afetadas = (await db.query(`select count(*)::int4 from ${criada}`, [], { rowMode: 'array' })).rows[0][0] } catch { afetadas = 0 }
+    }
     return {
       campos: r.fields.map((f) => ({ nome: f.name, tipo: f.dataTypeID })),
       linhas: r.rows.map((l) => l.map((v, i) => (v === null ? null : textoDoValor(v, r.fields[i]?.dataTypeID)))),
-      afetadas: r.affectedRows ?? 0,
+      afetadas,
     }
   } catch (e) {
     return { erro: { codigo: e.code ?? null, mensagem: e.message, posicao: e.position ?? null, dica: e.hint ?? null, detalhe: e.detail ?? null } }

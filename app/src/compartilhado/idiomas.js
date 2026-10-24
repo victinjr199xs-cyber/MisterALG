@@ -61,7 +61,7 @@ function dicionario(idioma) {
       if (!alvo) continue
       exatos.set(pt, alvo)
       if (/\{\d+\}/.test(pt)) {
-        const re = new RegExp(`^${escaparRegex(pt).replace(/\{(\d+)\}/g, '(.+?)')}$`, 's')
+        const re = new RegExp(`^${escaparRegex(pt).replace(/\{(\d+)\}/g, '(.*?)')}$`, 's')
         modelos.push({ re, alvo, ordem: [...pt.matchAll(/\{(\d+)\}/g)].map((m) => Number(m[1])) })
       }
     }

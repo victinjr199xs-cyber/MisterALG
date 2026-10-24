@@ -1,0 +1,272 @@
+@@@ 01-aritmetica
+using System;
+class P {
+    static void Main() {
+        int[] a = { 7, -7, 0, 100, -100, 13 }; int[] b = { 2, 2, 3, -7, 7, -4 };
+        for (int i = 0; i < a.Length; i++) Console.WriteLine($"{a[i]} / {b[i]} = {a[i] / b[i]}, % = {a[i] % b[i]}, {Math.DivRem(a[i], b[i]).Item1} {Math.DivRem(a[i], b[i]).Item2}");
+        Console.WriteLine(7 / 2.0); Console.WriteLine(1.0 / 3); Console.WriteLine(10 / 4); Console.WriteLine(10.0 / 4);
+        Console.WriteLine(0.1 + 0.2); Console.WriteLine(0.1f + 0.2f); Console.WriteLine(1e21); Console.WriteLine(1e-7); Console.WriteLine(123456789.123456789);
+        Console.WriteLine((int)3.99); Console.WriteLine((int)-3.99); Console.WriteLine((long)1e18); int big = 300; Console.WriteLine((byte)big);
+        int mx = int.MaxValue; Console.WriteLine(mx + 1 == int.MinValue ? "wrap" : "sem wrap");
+        unchecked { int x = int.MaxValue; x++; Console.WriteLine(x); }
+        try { checked { int y = int.MaxValue; y++; Console.WriteLine(y); } } catch (OverflowException e) { Console.WriteLine("overflow: " + e.Message); }
+        Console.WriteLine(Math.Round(2.5)); Console.WriteLine(Math.Round(3.5)); Console.WriteLine(Math.Round(-2.5)); Console.WriteLine(Math.Round(2.675, 2)); Console.WriteLine(Math.Round(2.5, MidpointRounding.AwayFromZero));
+        Console.WriteLine(Math.Floor(-2.5)); Console.WriteLine(Math.Ceiling(-2.5)); Console.WriteLine(Math.Truncate(-2.7)); Console.WriteLine(Math.Sqrt(2)); Console.WriteLine(Math.Pow(2, 10)); Console.WriteLine(Math.Abs(-5));
+        Console.WriteLine(double.NaN); Console.WriteLine(1.0 / 0); Console.WriteLine(-1.0 / 0); Console.WriteLine(double.MaxValue); Console.WriteLine(double.Epsilon); Console.WriteLine(float.MaxValue);
+        Console.WriteLine(5 & 3); Console.WriteLine(5 | 3); Console.WriteLine(5 ^ 3); Console.WriteLine(~5); Console.WriteLine(1 << 10); Console.WriteLine(-17 >> 2);
+        Console.WriteLine(decimal.Parse("1.10") * 3); Console.WriteLine(1.1m / 3); Console.WriteLine((decimal)0.1 + 0.2m); Console.WriteLine(Math.Round(2.345m, 2));
+        Console.WriteLine(long.MaxValue); Console.WriteLine(ulong.MaxValue); Console.WriteLine(new System.Numerics.BigInteger(2) << 100);
+    }
+}
+@@@ 02-formatacao
+using System;
+using System.Globalization;
+class P {
+    static void Main() {
+        double d = 1234.5678; int n = 42;
+        Console.WriteLine(d.ToString("F2") + " " + d.ToString("N2") + " " + d.ToString("E3") + " " + d.ToString("C") + " " + d.ToString("P1") + " " + d.ToString("0.00") + " " + d.ToString("#,##0.0") + " " + d.ToString("G4"));
+        Console.WriteLine(n.ToString("D5") + " " + n.ToString("X") + " " + n.ToString("x4") + " " + n.ToString("N0") + " " + n.ToString("000") + " " + n.ToString("+0;-0") + " " + (-n).ToString("0;(0)"));
+        Console.WriteLine($"[{n,6}] [{n,-6}] [{d,12:F1}] [{d,-12:F1}] [{"ab",5}] [{"ab",-5}] {n:X2} {d:N0} {0.5:P0} {DateTime.MinValue.Year}");
+        Console.WriteLine(string.Format("{0} {1:F3} {2,8:N1} {0:D4}", n, d, d));
+        Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0:N2} {1:C}", 1234567.891, 9.5));
+        Console.WriteLine(1234567.891.ToString("N2", new CultureInfo("pt-BR")) + " " + 9.5.ToString("C", new CultureInfo("pt-BR")) + " " + 0.256.ToString("P", new CultureInfo("pt-BR")));
+        Console.WriteLine(1.0.ToString() + " " + 1.5f.ToString() + " " + 100.0.ToString() + " " + 1e15.ToString() + " " + 1e16.ToString() + " " + 0.0001.ToString() + " " + 0.00001.ToString() + " " + (1.0 / 3).ToString() + " " + (2.0 / 3).ToString("R"));
+        Console.WriteLine(true.ToString() + " " + 'x'.ToString() + " " + ((object)null ?? "nulo") + " " + 5.ToString().PadLeft(3, '0') + " " + "ab".PadRight(4, '.') + "|");
+        Console.WriteLine(new DateTime(2024, 3, 5, 14, 7, 9).ToString("yyyy-MM-dd HH:mm:ss") + " " + new DateTime(2024, 3, 5).ToString("dd/MM/yyyy") + " " + new DateTime(2024, 3, 5).DayOfWeek + " " + new DateTime(2024, 3, 5).AddDays(30).ToString("d MMM yyyy", CultureInfo.InvariantCulture));
+        Console.WriteLine(TimeSpan.FromMinutes(135).ToString() + " " + new TimeSpan(1, 2, 3, 4).TotalHours.ToString("F2"));
+        Console.WriteLine(Convert.ToString(255, 2) + " " + Convert.ToString(255, 16) + " " + Convert.ToInt32("ff", 16) + " " + Convert.ToInt32("101", 2) + " " + Convert.ToDouble("3.5", CultureInfo.InvariantCulture) + " " + int.Parse("-12") + " " + double.Parse("1e3", CultureInfo.InvariantCulture));
+        Console.WriteLine(int.TryParse("12x", out int r) + " " + r + " " + int.TryParse(" 7 ", out r) + " " + r + " " + double.TryParse("1,5", NumberStyles.Any, new CultureInfo("pt-BR"), out double dd) + " " + dd);
+        Console.WriteLine("{0}{{}}{1}", 1, 2); Console.WriteLine($"{{{n}}}"); Console.WriteLine($"{(n > 5 ? "grande" : "pequeno")}"); Console.WriteLine($@"c:\x\{n}");
+    }
+}
+@@@ 03-strings
+using System;
+using System.Linq;
+using System.Text;
+class P {
+    static void Main() {
+        string s = "Olá, Mundo! Ação çãõ";
+        Console.WriteLine(s + " " + s.Length + " " + s.ToUpper() + " " + s.ToLower() + " " + s.IndexOf("Mundo") + " " + s.IndexOf('z') + " " + s.LastIndexOf('o') + " " + s.Contains("Ação") + " " + s.StartsWith("Ol") + " " + s.EndsWith("x"));
+        Console.WriteLine(s.Substring(5) + "|" + s.Substring(5, 5) + "|" + s.Replace("o", "0") + "|" + "  x ".Trim() + "|" + "  x ".TrimStart() + "|" + "xxaxx".Trim('x') + "|" + s.Remove(3) + "|" + s.Insert(3, "_"));
+        Console.WriteLine(string.Join(",", s.Split(' ')) + " " + string.Join("-", "a,b;c".Split(',', ';')) + " " + "a  b".Split(' ').Length + " " + "a  b".Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).Length);
+        Console.WriteLine(string.Concat("a", 1, 'c', 2.5, true, null) + " " + string.IsNullOrEmpty("") + " " + string.IsNullOrWhiteSpace("  ") + " " + string.Compare("a", "b") + " " + "a".CompareTo("a") + " " + string.Equals("A", "a", StringComparison.OrdinalIgnoreCase) + " " + ("abc" == "ab" + "c"));
+        Console.WriteLine(new string('*', 5) + " " + new string(new[] { 'a', 'b' }) + " " + s[0] + s[^1] + " " + s[1..4] + " " + (char)('a' + 1) + " " + (int)'a' + " " + char.ToUpper('x') + " " + char.IsDigit('5') + " " + char.IsLetter('ç') + " " + char.GetNumericValue('7'));
+        var sb = new StringBuilder(); for (int i = 0; i < 5; i++) sb.Append(i).Append(','); sb.Insert(0, "[").Append(']').Append("!").AppendFormat("{0:00}", 7); Console.WriteLine(sb.ToString() + " " + sb.Length);
+        Console.WriteLine(new string("abc".Reverse().ToArray()) + " " + string.Join("", "banana".Distinct()) + " " + "banana".Count(c => c == 'a') + " " + "Hello".ToCharArray().Length + " " + "a-b".Split('-')[1] + " " + "abc".CompareTo("abd"));
+        Console.WriteLine("ß".ToUpper() + " " + "İ".ToLower().Length + " " + "\u00e9\t|\\|\"|'" + " " + @"verbatim\n");
+        string txt = "o rato roeu a roupa"; Console.WriteLine(string.Join(" ", txt.Split(' ').Select(w => char.ToUpper(w[0]) + w.Substring(1))) + " " + txt.Split(' ').OrderByDescending(w => w.Length).ThenBy(w => w).First() + " " + txt.Replace(" ", "").GroupBy(c => c).Where(g => g.Count() > 2).Select(g => g.Key + "" + g.Count()).Aggregate((x, y) => x + y));
+    }
+}
+@@@ 04-colecoes
+using System;
+using System.Collections.Generic;
+using System.Linq;
+class P {
+    static void Main() {
+        var l = new List<int> { 5, 2, 9, 1, 7 }; l.Add(3); l.Insert(0, 100); l.AddRange(new[] { 8, 8 });
+        Console.WriteLine(string.Join(" ", l) + " " + l.Count + " " + l.IndexOf(9) + " " + l.Contains(4) + " " + l.Max() + " " + l.Min() + " " + l.Sum() + " " + l.Average() + " " + l.Count(x => x > 5));
+        l.Sort(); Console.WriteLine(string.Join(" ", l)); l.Reverse(); l.Remove(8); l.RemoveAt(0); l.RemoveAll(x => x == 1); Console.WriteLine(string.Join(" ", l));
+        var d = new Dictionary<string, int> { ["b"] = 2, ["a"] = 1 }; d["c"] = 3; d.Add("d", 4); d.Remove("a");
+        foreach (var kv in d) Console.Write(kv.Key + "=" + kv.Value + ";"); Console.WriteLine(d.ContainsKey("b") + " " + d.TryGetValue("z", out int v) + " " + v + " " + d.Count + " " + string.Join(",", d.Keys) + " " + d.Values.Sum());
+        var hs = new HashSet<int> { 3, 1, 2, 3 }; hs.UnionWith(new[] { 9 }); Console.WriteLine(string.Join(",", hs.OrderBy(x => x)) + " " + hs.Count + " " + hs.Contains(2));
+        var q = new Queue<string>(); q.Enqueue("a"); q.Enqueue("b"); var st = new Stack<int>(); st.Push(1); st.Push(2); Console.WriteLine(q.Dequeue() + q.Peek() + " " + st.Pop() + st.Peek() + " " + q.Count + st.Count);
+        int[,] m = new int[2, 3]; for (int i = 0; i < 2; i++) for (int j = 0; j < 3; j++) m[i, j] = i * j; Console.WriteLine(m.GetLength(0) + " " + m.GetLength(1) + " " + m[1, 2]);
+        int[][] jag = { new[] { 1 }, new[] { 2, 3 } }; Console.WriteLine(jag.Sum(r => r.Length) + " " + jag[1][1]);
+        var arr = new[] { 3, 1, 2 }; Array.Sort(arr); Array.Reverse(arr); Console.WriteLine(string.Join(",", arr) + " " + Array.IndexOf(arr, 2) + " " + arr.Length + " " + string.Join(",", new int[3]) + " " + string.Join(",", Enumerable.Range(1, 5)) + " " + string.Join(",", Enumerable.Repeat("x", 3)));
+        var tup = (nome: "Ana", idade: 20); var (n2, i2) = tup; Console.WriteLine(tup + " " + tup.nome + " " + n2 + i2 + " " + (1, "a").Equals((1, "a")));
+        var sorted = new SortedDictionary<string, int> { ["z"] = 1, ["a"] = 2 }; Console.WriteLine(string.Join(",", sorted.Keys) + " " + new List<string> { "b", "A", "c" }.OrderBy(x => x).First());
+        var ll = new LinkedList<int>(new[] { 1, 2, 3 }); ll.AddFirst(0); Console.WriteLine(string.Join(",", ll) + " " + ll.First.Value + ll.Last.Value);
+        Console.WriteLine(new List<int>().Count + " " + (new List<int>().FirstOrDefault()) + " " + new[] { 1, 2, 3 }.Skip(1).Take(1).Single() + " " + new[] { 1, 2, 3, 4 }.Where(x => x % 2 == 0).Select(x => x * x).ToList().Count);
+    }
+}
+@@@ 05-linq-moderno
+using System;
+using System.Collections.Generic;
+using System.Linq;
+record Pessoa(string Nome, int Idade, string Cidade);
+class P {
+    static void Main() {
+        var ps = new List<Pessoa> { new("Ana", 30, "SP"), new("Bia", 25, "RJ"), new("Caio", 35, "SP"), new("Dani", 25, "MG") };
+        foreach (var g in ps.GroupBy(p => p.Cidade).OrderBy(g => g.Key)) Console.WriteLine($"{g.Key}: {string.Join(", ", g.Select(p => p.Nome))} media={g.Average(p => p.Idade):F1}");
+        Console.WriteLine(ps.OrderBy(p => p.Idade).ThenByDescending(p => p.Nome).First());
+        Console.WriteLine(ps[0] == new Pessoa("Ana", 30, "SP"));
+        Console.WriteLine(ps[0] with { Idade = 31 });
+        var (nome, idade, _) = ps[1]; Console.WriteLine(nome + idade);
+        var q = from p in ps where p.Idade > 24 orderby p.Nome descending select new { p.Nome, Dobro = p.Idade * 2 };
+        foreach (var x in q) Console.WriteLine(x);
+        Console.WriteLine(ps.Any(p => p.Idade > 33) + " " + ps.All(p => p.Idade > 33) + " " + ps.Max(p => p.Idade) + " " + ps.Sum(p => p.Idade) + " " + ps.Select(p => p.Cidade).Distinct().Count());
+        Console.WriteLine(string.Join(",", ps.Zip(Enumerable.Range(1, 10), (p, i) => p.Nome + i)) + " " + string.Join(",", ps.Select((p, i) => i + p.Nome)) + " " + ps.Skip(1).Take(2).Count() + " " + string.Join(",", new[] { 1, 2, 3 }.Concat(new[] { 3, 4 }).Except(new[] { 2 }).Intersect(new[] { 1, 3, 4 })));
+        var dic = ps.ToDictionary(p => p.Nome, p => p.Idade); Console.WriteLine(dic["Caio"]);
+        Console.WriteLine(string.Join(",", Enumerable.Range(2, 19).Where(n => Enumerable.Range(2, n - 2).All(d => n % d != 0))) + " " + Enumerable.Range(1, 5).Aggregate(1, (a, b) => a * b) + " " + new[] { 5, 3, 8 }.OrderBy(x => x).Last() + " " + new[] { "b", "a" }.OrderBy(x => x).Select(x => x.ToUpper()).First());
+        object o = 42; string desc = o switch { int i when i > 40 => "int grande", int => "int", string s => "string", null => "nulo", _ => "outro" }; Console.WriteLine(desc);
+        Console.WriteLine(o is int n && n > 3 ? $"n={n}" : "nao"); Console.WriteLine((o as string) ?? "nao eh string"); int? ni = null; Console.WriteLine(ni ?? -1); Console.WriteLine(ni.HasValue + " " + (ni?.ToString() ?? "null"));
+    }
+}
+@@@ 06-classes-heranca
+using System;
+using System.Collections.Generic;
+abstract class Forma {
+    public string Nome { get; protected set; }
+    public static int Total;
+    protected Forma(string nome) { Nome = nome; Total++; }
+    public abstract double Area();
+    public virtual string Descricao() => $"{Nome} area={Area():F2}";
+    public override string ToString() => Descricao();
+}
+class Circulo : Forma { public double R { get; } public Circulo(double r) : base("Circulo") { R = r; } public override double Area() => Math.PI * R * R; }
+class Ret : Forma {
+    public double L, A;
+    public Ret(double l, double a) : base("Ret") { L = l; A = a; }
+    public override double Area() => L * A;
+    public override string Descricao() => base.Descricao() + " (retangulo)";
+}
+interface IVoa { void Voar(); string Nome => "voador"; }
+class Passaro : IVoa { public void Voar() => Console.WriteLine("bate asas"); }
+struct Pt { public int X, Y; public Pt(int x, int y) { X = x; Y = y; } public override string ToString() => $"({X},{Y})"; public static Pt operator +(Pt a, Pt b) => new Pt(a.X + b.X, a.Y + b.Y); }
+enum Cor { Vermelho, Verde = 5, Azul }
+class P {
+    static void Main() {
+        var fs = new List<Forma> { new Circulo(1.5), new Ret(2, 3.5) };
+        foreach (var f in fs) Console.WriteLine(f);
+        Console.WriteLine(Forma.Total + " " + (fs[0] is Circulo c ? c.R : 0) + " " + fs[1].GetType().Name + " " + (fs[1] is Forma));
+        IVoa v = new Passaro(); v.Voar(); Console.WriteLine(((IVoa)v).Nome);
+        Pt p = new Pt(1, 2) + new Pt(3, 4); Pt q = p; q.X = 99; Console.WriteLine(p + " " + q);
+        Console.WriteLine(Cor.Verde + " " + (int)Cor.Azul + " " + (Cor)0 + " " + Enum.Parse(typeof(Cor), "Azul") + " " + string.Join(",", Enum.GetNames(typeof(Cor))) + " " + Cor.Verde.ToString("D"));
+        object[] objs = { 1, "dois", 3.0, 'c', null, new Pt(1, 1), Cor.Azul, new int[] { 1 } };
+        foreach (var o in objs) Console.Write((o?.GetType().Name ?? "null") + ";"); Console.WriteLine();
+        var anon = new { A = 1, B = "x" }; Console.WriteLine(anon + " " + anon.A + " " + anon.Equals(new { A = 1, B = "x" }));
+    }
+}
+@@@ 07-excecoes
+using System;
+using System.Linq;
+using System.Collections.Generic;
+class MeuErro : Exception { public int Cod; public MeuErro(string m, int c) : base(m) { Cod = c; } }
+class P {
+    static int F(int x) { try { return 10 / x; } catch (DivideByZeroException e) { Console.WriteLine("zero: " + e.Message); return -1; } finally { Console.WriteLine("finally " + x); } }
+    static void Main() {
+        Console.WriteLine(F(2) + " " + F(0));
+        try { int[] a = new int[3]; a[5] = 1; } catch (IndexOutOfRangeException e) { Console.WriteLine(e.GetType().Name + ": " + e.Message); }
+        try { string s = null; Console.WriteLine(s.Length); } catch (NullReferenceException e) { Console.WriteLine(e.GetType().Name + ": " + e.Message); }
+        try { int.Parse("abc"); } catch (FormatException e) { Console.WriteLine(e.GetType().Name + ": " + e.Message); }
+        try { var l = new List<int>(); Console.WriteLine(l[0]); } catch (ArgumentOutOfRangeException e) { Console.WriteLine(e.GetType().Name); }
+        try { var d = new Dictionary<string, int>(); Console.WriteLine(d["x"]); } catch (KeyNotFoundException e) { Console.WriteLine(e.GetType().Name + ": " + e.Message); }
+        try { object o = "s"; int i = (int)o; } catch (InvalidCastException e) { Console.WriteLine(e.GetType().Name); }
+        try { throw new MeuErro("customizado", 7); } catch (MeuErro e) when (e.Cod > 5) { Console.WriteLine(e.Message + e.Cod); }
+        try { try { throw new InvalidOperationException("interna"); } catch (Exception e) { throw new ApplicationException("externa", e); } } catch (Exception e) { Console.WriteLine(e.Message + " <- " + e.InnerException.Message); }
+        try { Convert.ToInt32("99999999999"); } catch (OverflowException e) { Console.WriteLine(e.GetType().Name); }
+        try { throw new ArgumentNullException("param"); } catch (ArgumentException e) { Console.WriteLine(e.GetType().Name + " " + e.ParamName); }
+        try { Console.WriteLine(new int[] { 1 }.First(x => x > 5)); } catch (InvalidOperationException e) { Console.WriteLine(e.Message); }
+        try { Console.WriteLine(Enumerable_()); } catch (Exception e) { Console.WriteLine("generico " + e.GetType().Name); }
+        Console.WriteLine("antes do fim");
+        int zero = 0; Console.WriteLine(1 / zero);
+        Console.WriteLine("nunca");
+    }
+    static int Enumerable_() { throw new NotImplementedException(); }
+}
+@@@ 08-entrada
+using System;
+using System.Linq;
+class P {
+    static void Main() {
+        Console.Write("Nome: "); string nome = Console.ReadLine();
+        Console.Write("Idade: "); int idade = int.Parse(Console.ReadLine());
+        Console.WriteLine($"Olá, {nome.Trim()}! Ano que vem: {idade + 1}");
+        double[] nums = Console.ReadLine().Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(double.Parse).ToArray();
+        Console.WriteLine($"{nums.Length} {nums.Sum()} {nums.Average():F2} {nums.Max()}");
+        string linha; int cont = 0;
+        while ((linha = Console.ReadLine()) != null && linha != "") { cont++; Console.WriteLine(cont + ": " + linha.ToUpper()); }
+        Console.WriteLine(Console.ReadLine() ?? "fim da entrada");
+        Console.WriteLine(Console.ReadLine() == null);
+    }
+}
+--- entrada
+  João da Silva
+29
+3 1.5  4 1e2
+ação
+çãõ
+
+linha depois do vazio
+@@@ 09-generics-delegates
+using System;
+using System.Collections.Generic;
+using System.Linq;
+class Pilha<T> { private List<T> d = new List<T>(); public void Push(T x) => d.Add(x); public T Pop() { var x = d[^1]; d.RemoveAt(d.Count - 1); return x; } public int Count => d.Count; }
+class P {
+    delegate int Op(int a, int b);
+    static T Maior<T>(T a, T b) where T : IComparable<T> => a.CompareTo(b) > 0 ? a : b;
+    static IEnumerable<int> Gera(int n) { for (int i = 0; i < n; i++) yield return i * i; }
+    static event Action<string> Evento;
+    static void Main() {
+        var p = new Pilha<string>(); p.Push("a"); p.Push("b"); Console.WriteLine(p.Pop() + p.Count);
+        Console.WriteLine(Maior(3, 7) + " " + Maior("abc", "abd") + " " + Maior(2.5, 1.5));
+        Op soma = (a, b) => a + b; Op mult = delegate (int a, int b) { return a * b; }; Console.WriteLine(soma(2, 3) + " " + mult(2, 3));
+        Func<int, int> dobra = x => x * 2; Func<int, Func<int, int>> somador = a => b => a + b; Action<string> pr = s => Console.WriteLine("<" + s + ">"); pr(dobra(4) + "" + somador(1)(2));
+        Predicate<int> par = x => x % 2 == 0; Console.WriteLine(par(4) + " " + new List<int> { 1, 2, 3, 4 }.FindAll(par).Count);
+        Evento += s => Console.WriteLine("ev1 " + s); Evento += s => Console.WriteLine("ev2 " + s); Evento?.Invoke("disparou");
+        Console.WriteLine(string.Join(",", Gera(5)) + " " + Gera(100).Take(3).Sum());
+        int cont = 0; Action inc = () => cont++; inc(); inc(); Console.WriteLine(cont);
+        var funcs = new List<Func<int>>(); for (int i = 0; i < 3; i++) { int j = i; funcs.Add(() => j); } Console.WriteLine(string.Join(",", funcs.Select(f => f())));
+        Func<int, int> fat = null; fat = n => n <= 1 ? 1 : n * fat(n - 1); Console.WriteLine(fat(10));
+        static int Local(int x) => x + 1; Console.WriteLine(Local(1));
+        Console.WriteLine(default(int) + " " + default(string) + "|" + typeof(int).Name + " " + sizeof(int));
+        var (min, max) = Mm(new[] { 3, 1, 4 }); Console.WriteLine(min + "-" + max);
+    }
+    static (int, int) Mm(int[] a) => (a.Min(), a.Max());
+}
+@@@ 10-algoritmos
+using System;
+using System.Linq;
+using System.Collections.Generic;
+class P {
+    static long Fat(int n) => n <= 1 ? 1 : n * Fat(n - 1);
+    static int Fib(int n) => n < 2 ? n : Fib(n - 1) + Fib(n - 2);
+    static void Hanoi(int n, char a, char b, char c, ref int cont) { if (n == 0) return; Hanoi(n - 1, a, c, b, ref cont); cont++; Hanoi(n - 1, c, b, a, ref cont); }
+    static int Mdc(int a, int b) => b == 0 ? a : Mdc(b, a % b);
+    static void Troca<T>(ref T a, ref T b) { T t = a; a = b; b = t; }
+    static void Bolha(int[] v) { for (int i = 0; i < v.Length; i++) for (int j = 0; j < v.Length - 1 - i; j++) if (v[j] > v[j + 1]) (v[j], v[j + 1]) = (v[j + 1], v[j]); }
+    static bool TryDiv(int a, int b, out int r) { r = 0; if (b == 0) return false; r = a / b; return true; }
+    static void Main() {
+        Console.WriteLine(Fat(20) + " " + Fat(5) + " " + Fib(20) + " " + Mdc(1071, 462));
+        int c = 0; Hanoi(10, 'A', 'B', 'C', ref c); Console.WriteLine(c);
+        int x = 1, y = 2; Troca(ref x, ref y); Console.WriteLine(x + "" + y);
+        var v = new[] { 64, 34, 25, 12, 22, 11, 90 }; Bolha(v); Console.WriteLine(string.Join(" ", v));
+        Console.WriteLine(TryDiv(7, 2, out var r) + " " + r + " " + TryDiv(1, 0, out r) + " " + r);
+        for (int l = 1; l <= 4; l++) Console.WriteLine(new string(' ', 4 - l) + new string('*', 2 * l - 1));
+        var primos = new List<int>(); for (int n = 2; primos.Count < 12; n++) if (primos.All(p => n % p != 0)) primos.Add(n); Console.WriteLine(string.Join(",", primos));
+        long soma = 0; for (int i = 0; i < 1000000; i++) soma += i % 7; Console.WriteLine(soma);
+        var m = new int[3, 3]; int k = 1; for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) m[i, j] = k++; for (int i = 0; i < 3; i++) { for (int j = 0; j < 3; j++) Console.Write($"{m[i, j],3}"); Console.WriteLine(); }
+        string bin = ""; for (int n = 37; n > 0; n /= 2) bin = n % 2 + bin; Console.WriteLine(bin);
+        double pi = 0; for (int i = 0; i < 100000; i++) pi += (i % 2 == 0 ? 4.0 : -4.0) / (2 * i + 1); Console.WriteLine(pi);
+        outer: for (int i = 0; i < 3; i++) { for (int j = 0; j < 3; j++) { if (j == 2) goto outer_end; Console.Write(i + "" + j + " "); } } outer_end: Console.WriteLine();
+        switch (3) { case 1: Console.WriteLine("um"); break; case 3: Console.WriteLine("tres"); goto case 4; case 4: Console.WriteLine("quatro"); break; default: break; }
+    }
+}
+@@@ 11-misc-moderno
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+public class Conta {
+    private decimal saldo;
+    public string Titular { get; init; }
+    public decimal Saldo => saldo;
+    public void Depositar(decimal v) { if (v <= 0) throw new ArgumentException("valor invalido"); saldo += v; }
+    public bool Sacar(decimal v) { if (v > saldo) return false; saldo -= v; return true; }
+}
+class P {
+    static void Main() {
+        var c = new Conta { Titular = "Ana" }; c.Depositar(100.50m); Console.WriteLine(c.Sacar(30) + " " + c.Sacar(100) + " " + c.Saldo + " " + c.Titular);
+        try { c.Depositar(-1); } catch (ArgumentException e) { Console.WriteLine(e.Message); }
+        string s = null; Console.WriteLine(s?.Length ?? -1); s ??= "default"; Console.WriteLine(s);
+        var dict = new Dictionary<string, List<int>>(); dict.TryAdd("a", new List<int>()); dict["a"].Add(1); Console.WriteLine(dict["a"].Count);
+        var texto = "um dois tres dois um dois"; var freq = texto.Split(' ').GroupBy(w => w).ToDictionary(g => g.Key, g => g.Count()); foreach (var kv in freq.OrderByDescending(k => k.Value).ThenBy(k => k.Key)) Console.Write($"{kv.Key}:{kv.Value} "); Console.WriteLine();
+        Console.WriteLine(DateTime.Today.Year > 2000); Console.WriteLine(Guid.NewGuid().ToString().Length); Console.WriteLine(new Random(42).Next(1, 1) + " " + (new Random().NextDouble() < 1));
+        Console.WriteLine(string.Format("{0,-10}|{1,10}|", "esq", "dir") + Environment.NewLine + "linha2");
+        Console.WriteLine(Math.Max(1, 2) + Math.Min(1.5, 2) + " " + Math.PI + " " + Math.E + " " + Math.Sin(1) + " " + Math.Log(10) + " " + Math.Log10(1000) + " " + Math.Atan2(1, 1) + " " + Math.Cbrt(27) + " " + Math.Sign(-3));
+        Console.WriteLine(int.MaxValue + " " + int.MinValue + " " + long.MinValue + " " + byte.MaxValue + " " + short.MinValue + " " + char.MaxValue.GetHashCode() + " " + (uint)4000000000 + " " + (sbyte)-5);
+        Console.WriteLine("x".GetHashCode() == "x".GetHashCode()); Console.WriteLine(object.ReferenceEquals("a", "a")); Console.WriteLine(new int[] { 1 }.Equals(new int[] { 1 }));
+        Console.WriteLine("fim");
+    }
+}

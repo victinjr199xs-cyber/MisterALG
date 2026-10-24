@@ -2,7 +2,7 @@
 // O F8 pára ANTES de cada comando (a linha marcada é a que vai rodar); a tela do banco mostra o que mudou.
 // Mesma interface das outras sessões: estado, modo, pararNaProxima, breakpoints, passo(), continuar(), parar().
 
-import { descreverErroSQL, devolveTabela, dividirComandos, rotuloDoComando, tabelaPsql } from '@misteralg/interpretador-sql'
+import { descreverErroSQL, dividirComandos, resultadoPsql } from '@misteralg/interpretador-sql'
 
 const api = window.misteralg
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -83,7 +83,7 @@ export class SessaoSQL {
           await this.mostrarBanco()
           return this.fim('erro', descreverErroSQL(r.erro, c))
         }
-        this.op.onOutput(`${devolveTabela(c.sql, r.campos) ? tabelaPsql(r.campos, r.linhas) : rotuloDoComando(c.sql, r.afetadas)}\n\n`, 'resultado')
+        this.op.onOutput(`${resultadoPsql(c.sql, r.campos, r.linhas, r.afetadas)}\n\n`, 'resultado')
         if (this.modo !== 'continuo') await this.mostrarBanco()
         if (this.modo === 'timer') await esperar(this.timerMs)
       }

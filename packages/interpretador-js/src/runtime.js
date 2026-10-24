@@ -8,8 +8,10 @@
 //  - fila de tarefas: os callbacks cujo tempo já chegou;
 //  - microtarefas: as reações de Promise (then, await), que sempre passam na frente.
 
-export const GERADOR = Symbol('gerador')
-export const INFO = Symbol('info')
+import { GERADOR, INFO } from './simbolos.js'
+import { formatarArgumentos, inspecionar, tabela } from './inspecionar.js'
+
+export { GERADOR, INFO }
 const MAX_CHAMADAS = 700 // cada chamada usa vários quadros de gerador no JS; acima disso a pilha do próprio JS estoura
 
 export class ErroJS extends Error {
@@ -49,28 +51,42 @@ export function criarRuntime(op = {}) {
     return { tipo: 'linha', linha }
   }
 
+  // O invólucro tem de parecer a função do aluno: .length (nº de parâmetros) e toString() (o código dela).
+  function disfarcar(F, info) {
+    Object.defineProperty(F, 'length', { value: info.aridade ?? 0, configurable: true })
+    if (info.texto !== undefined) Object.defineProperty(F, 'toString', { value: () => info.texto, writable: true, configurable: true })
+  }
+
+  // (não enumeráveis: o console.log e o Object.keys do aluno não podem ver as marcas)
+  function marcar(F, gerador, info) {
+    Object.defineProperty(F, GERADOR, { value: gerador, writable: true, configurable: true })
+    Object.defineProperty(F, INFO, { value: info, writable: true, configurable: true })
+  }
+
   function __funcao(gerador, info) {
     const F = function (...args) { return __sincrono(F, this, args) }
-    F[GERADOR] = gerador
-    F[INFO] = info
+    marcar(F, gerador, info)
     Object.defineProperty(F, 'name', { value: info.nome === '(anônima)' ? '' : info.nome })
+    disfarcar(F, info)
     return F
   }
 
   function __registrar(F, gerador, info) {
-    F[GERADOR] = gerador
-    F[INFO] = info
+    marcar(F, gerador, info)
+    disfarcar(F, info)
   }
 
-  function __envolverMetodos(Classe, metodos) {
+  function __envolverMetodos(Classe, metodos, texto) {
     for (const m of metodos) {
       const alvo = m.estatico ? Classe : Classe.prototype
       const gerador = alvo[m.chave]
       const W = function (...args) { return __sincrono(W, this, args) }
-      W[GERADOR] = gerador
-      W[INFO] = { ...m.info, nome: `${Classe.name}.${m.info.nome}` }
+      marcar(W, gerador, { ...m.info, nome: `${Classe.name}.${m.info.nome}` })
+      disfarcar(W, m.info)
+      Object.defineProperty(W, 'name', { value: m.info.nome })
       Object.defineProperty(alvo, m.chave, { value: W, writable: true, configurable: true, enumerable: false })
     }
+    if (texto !== undefined && !Object.hasOwn(Classe, 'toString')) Object.defineProperty(Classe, 'toString', { value: () => texto, writable: true, configurable: true })
     return Classe
   }
 
@@ -328,34 +344,51 @@ export function criarRuntime(op = {}) {
 
   // ---- console, prompt ------------------------------------------------------------------
 
-  const formatarArgs = (args) => {
-    if (typeof args[0] === 'string' && /%[sdifoOc]/.test(args[0])) {
-      let i = 1
-      const primeiro = args[0].replace(/%([sdifoOc%])/g, (m, c) => {
-        if (c === '%') return '%'
-        if (i >= args.length) return m
-        const v = args[i++]
-        if (c === 's') return String(v)
-        if (c === 'd' || c === 'i') return String(Number.parseInt(v, 10))
-        if (c === 'f') return String(Number(v))
-        if (c === 'c') return ''
-        return inspecionar(v)
-      })
-      return [primeiro, ...args.slice(i).map((a) => (typeof a === 'string' ? a : inspecionar(a)))].join(' ')
-    }
-    return args.map((a) => (typeof a === 'string' ? a : inspecionar(a))).join(' ')
-  }
   let recuo = ''
+  // (a saída de erro e a padrão vão para o mesmo lugar: a tela do aluno)
+  const escrever = (texto) => saida(`${recuo}${recuo ? texto.replace(/\n/g, `\n${recuo}`) : texto}\n`)
+  const contadores = new Map()
+  const relogios = new Map()
   const console = {
-    log: (...a) => saida(`${recuo}${formatarArgs(a)}\n`),
-    info: (...a) => saida(`${recuo}${formatarArgs(a)}\n`),
-    debug: (...a) => saida(`${recuo}${formatarArgs(a)}\n`),
-    warn: (...a) => saida(`${recuo}${formatarArgs(a)}\n`),
-    error: (...a) => saida(`${recuo}${formatarArgs(a)}\n`),
-    table: (dados) => saida(`${inspecionar(dados)}\n`),
+    log: (...a) => escrever(formatarArgumentos(a)),
+    info: (...a) => escrever(formatarArgumentos(a)),
+    debug: (...a) => escrever(formatarArgumentos(a)),
+    warn: (...a) => escrever(formatarArgumentos(a)),
+    error: (...a) => escrever(formatarArgumentos(a)),
+    dirxml: (...a) => escrever(formatarArgumentos(a)),
+    trace: (...a) => escrever(`Trace${a.length ? `: ${formatarArgumentos(a)}` : ''}`),
+    dir: (valor, opcoes) => escrever(inspecionar(valor, opcoes ?? {})),
+    table: (dados, colunas) => escrever(tabela(dados, colunas) ?? formatarArgumentos([dados])),
+    assert: (condicao, ...a) => { if (!condicao) escrever(`Assertion failed${a.length ? `: ${formatarArgumentos(a)}` : ''}`) },
+    count: (rotulo = 'default') => { rotulo = `${rotulo}`; const n = (contadores.get(rotulo) ?? 0) + 1; contadores.set(rotulo, n); escrever(`${rotulo}: ${n}`) },
+    countReset: (rotulo = 'default') => { contadores.delete(`${rotulo}`) },
+    time: (rotulo = 'default') => { relogios.set(`${rotulo}`, performance.now()) },
+    timeEnd: (rotulo = 'default') => { const t = relogios.get(`${rotulo}`); relogios.delete(`${rotulo}`); if (t !== undefined) escrever(`${rotulo}: ${(performance.now() - t).toFixed(3)}ms`) },
+    timeLog: (rotulo = 'default', ...a) => { const t = relogios.get(`${rotulo}`); if (t !== undefined) escrever(`${rotulo}: ${(performance.now() - t).toFixed(3)}ms${a.length ? ` ${formatarArgumentos(a)}` : ''}`) },
     clear: () => saida('\f'),
-    group: (...a) => { if (a.length) saida(`${recuo}${formatarArgs(a)}\n`); recuo += '  ' },
+    group: (...a) => { if (a.length) escrever(formatarArgumentos(a)); recuo += '  ' },
+    groupCollapsed: (...a) => { if (a.length) escrever(formatarArgumentos(a)); recuo += '  ' },
     groupEnd: () => { recuo = recuo.slice(2) },
+  }
+  const SAIDA_DO_PROGRAMA = Symbol.for('misteralg.saida')
+  // O mínimo do `process` do Node que programas de aluno usam (process.stdout.write, argv, exit...).
+  const processo = {
+    stdout: { write: (t) => { saida(String(t)); return true }, isTTY: false, columns: 80 },
+    stderr: { write: (t) => { saida(String(t)); return true } },
+    argv: ['node', 'programa.js'],
+    env: {},
+    platform: 'linux',
+    version: 'v20.0.0',
+    versions: { node: '20.0.0' },
+    pid: 1,
+    exitCode: undefined,
+    cwd: () => '/',
+    uptime: () => relogio / 1000,
+    hrtime: Object.assign((anterior) => { const t = performance.now(); const s = Math.floor(t / 1000); const ns = Math.round((t % 1000) * 1e6); return anterior ? [s - anterior[0], ns - anterior[1]] : [s, ns] }, { bigint: () => BigInt(Math.round(performance.now() * 1e6)) }),
+    memoryUsage: () => ({ rss: 0, heapTotal: 0, heapUsed: 0, external: 0 }),
+    nextTick: (f, ...args) => enfileirarMicro(`process.nextTick(${nomeDaFuncao(f)})`, function* () { yield* __chamar(f, undefined, args) }),
+    exit: () => { throw { [SAIDA_DO_PROGRAMA]: true } },
+    on: () => processo,
   }
 
   function* prompt(_este, args) {
@@ -461,6 +494,7 @@ export function criarRuntime(op = {}) {
       clearInterval: cancelar,
       queueMicrotask: (f) => enfileirarMicro(`queueMicrotask(${nomeDaFuncao(f)})`, function* () { yield* __chamar(f, undefined, []) }),
       prompt: promptDoAluno,
+      process: processo,
       alert: (msg) => saida(`${String(msg)}\n`),
     },
   }
@@ -477,35 +511,7 @@ export function descreverCurto(v) {
 
 function descreverErro(e) {
   if (e instanceof Error) return `${e.name}: ${e.message}`
-  return inspecionar(e)
+  return formatarArgumentos([e])
 }
 
-/** Como o console.log do Node mostra valores (simplificado). */
-export function inspecionar(v, profundidade = 0, vistos = new Set()) {
-  if (typeof v === 'string') return profundidade ? `'${v}'` : v
-  if (typeof v === 'number' || typeof v === 'boolean' || v === undefined || v === null) return Object.is(v, -0) ? '-0' : String(v)
-  if (typeof v === 'bigint') return `${v}n`
-  if (typeof v === 'symbol') return v.toString()
-  if (typeof v === 'function') {
-    if (/^class\b/.test(Function.prototype.toString.call(v))) return `[class ${v.name}]`
-    return `[Function: ${nomeDaFuncao(v)}]`
-  }
-  if (vistos.has(v)) return '[Circular]'
-  if (v instanceof Error) return `${v.name}: ${v.message}`
-  if (v?.[Symbol.toStringTag] === 'Promise' && 'estado' in v) {
-    return `Promise { ${v.estado === 'pendente' ? '<pending>' : v.estado === 'rejeitada' ? `<rejected> ${inspecionar(v.valor, profundidade + 1, vistos)}` : inspecionar(v.valor, profundidade + 1, vistos)} }`
-  }
-  if (profundidade > 2) return Array.isArray(v) ? '[Array]' : '[Object]'
-  vistos.add(v)
-  try {
-    if (Array.isArray(v)) return v.length ? `[ ${v.map((x) => inspecionar(x, profundidade + 1, vistos)).join(', ')} ]` : '[]'
-    if (v instanceof Map) return `Map(${v.size}) { ${[...v].map(([k, x]) => `${inspecionar(k, profundidade + 1, vistos)} => ${inspecionar(x, profundidade + 1, vistos)}`).join(', ')} }`
-    if (v instanceof Set) return `Set(${v.size}) { ${[...v].map((x) => inspecionar(x, profundidade + 1, vistos)).join(', ')} }`
-    if (v instanceof Date) return v.toISOString()
-    const nome = v.constructor && v.constructor !== Object ? `${v.constructor.name} ` : ''
-    const campos = Object.keys(v).map((k) => `${/^[A-Za-z_$][\w$]*$/.test(k) ? k : `'${k}'`}: ${inspecionar(v[k], profundidade + 1, vistos)}`)
-    return campos.length ? `${nome}{ ${campos.join(', ')} }` : `${nome}{}`
-  } finally {
-    vistos.delete(v)
-  }
-}
+export { inspecionar }

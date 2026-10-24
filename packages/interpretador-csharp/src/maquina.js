@@ -583,7 +583,7 @@ export class MaquinaCS {
 
   /** Operador implicit definido pelo aluno (class A { public static implicit operator int(A a) }). */
   conversaoImplicita(v, tipoAlvo) {
-    if (!(v instanceof Objeto)) return undefined
+    if (!(v instanceof Objeto)) return this.conversaoParaClasse(v, tipoAlvo, true)
     const procurar = (def) => {
       for (let c = def; c; c = c.base) {
         const cv = c.conversoes.find((x) => x.implicita && semNulo(x.tipoRetorno) === tipoAlvo)
@@ -593,6 +593,18 @@ export class MaquinaCS {
     }
     const cv = procurar(v.cls)
     return cv ? this.rodarSync(this.chamarMetodo(cv, null, [v], cv.cls)) : undefined
+  }
+
+  /** Operador de conversão declarado na classe de destino: static implicit/explicit operator Fracao(int i). */
+  conversaoParaClasse(v, tipoAlvo, soImplicita) {
+    if (v === null || v === undefined || typeof tipoAlvo !== 'string') return undefined
+    const def = this.buscarClasse(partesGenericas(semNulo(tipoAlvo)).nome)
+    if (!def || def.tipo === 'enum') return undefined
+    for (let c = def; c; c = c.base) {
+      const cv = c.conversoes.find((x) => (!soImplicita || x.implicita) && semNulo(x.tipoRetorno) === def.nome && x.params?.length === 1 && this.combina(v, x.params[0].tipo) >= 0)
+      if (cv) return this.rodarSync(this.chamarMetodo(cv, null, [v], cv.cls))
+    }
+    return undefined
   }
 
   /** v é do tipo `tipo`? (para is, as, catch e casts) */
@@ -674,7 +686,8 @@ export class MaquinaCS {
         this.linhaAtual = md.corpo.l
         quadro.linha = md.corpo.l
         yield { tipo: 'linha', linha: md.corpo.l }
-        r = yield* this.aval(md.corpo.f[0], amb)
+        // (com o tipo de retorno, um `=> new(5)` sabe o que criar)
+        r = md.tipoRetorno && md.tipoRetorno !== 'void' ? yield* this.avalComTipo(md.corpo.f[0], amb, md.tipoRetorno) : yield* this.aval(md.corpo.f[0], amb)
       } else {
         const c = yield* this.execBloco(md.corpo, amb, false)
         r = c && c.t === 'return' ? c.v : undefined

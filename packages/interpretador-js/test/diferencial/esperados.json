@@ -1,0 +1,86 @@
+{
+ "01-aritmetica": {
+  "saida": "7 2 3.5 3 3 1 1\n-7 2 -3.5 -3 -4 -1 1\n7 -2 -3.5 -3 -4 1 -1\n0 5 0 0 0 0 0\n1024 0.5 0.30000000000000004 false 0.3333333333333333 2.5 1e+21 1e-7 123456789.12345679 -0 true\n1 7 6 -6 1024 -5 15 -2147483648\n3 -2 4 9 Infinity -Infinity 1.4142135623730951 3.141592653589793 3\n42 NaN 3.14 0 7 1000 0 NaN 1 NaN\nInfinity -Infinity NaN false true false 9007199254740991 true\n9007199254740992 9007199254740992 123456789012345680000 0.000001 1e-7 Infinity\n121932631112635269n 1267650600228229401496703205376n bigint 3n -1n\n1234.57 1 2 3 1.00 1e+21 ff 11111111 0.10000000000000000555\n1234.57 1.23e-4 1,234.568 1.234.567,891\n",
+  "erro": null
+ },
+ "02-arrays": {
+  "saida": "[\n  100, 5, 2, 9,\n    1, 7, 3\n] 7 3 false\n[\n  1, 100, 2, 3,\n  5,   7, 9\n] [\n  1, 2,   3, 5,\n  7, 9, 100\n] [ 5, 2 ] [ 3, 9, 2, 5, 100 ] [ 7, 1 ] [ 3, 9, 2, 5, 100 ]\n[ 6, 18, 4, 10, 200 ] [ 9, 5, 100 ] 119 9 1 true true\n[ 1, 2, 3, 4 ] [ 1, 2, 3 ] [ 0, 1, 4 ] [ 0, 0, 0 ] [ <5 empty items> ] [ 1, <1 empty item>, 3 ]\n[ 100, 20, 3 ] [ 'C', 'a', 'b' ] [ false, true ] [ 1, 3, null, undefined ]\n1-2-3 1,2,3 1,2  true [ 1, 2, [ 3 ] ]\n[ [ 1, 2, 3 ], [ 4, 5, 6 ] ] 6 1 2 3\n4 5 6\n1 10 [ 3, 4 ]\ntrue object 100 [ '0', '1' ] [ 'a', 'b', 'c' ] [ 7, 8 ]\n[\n   0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11,\n  12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,\n  24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,\n  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,\n  48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,\n  60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,\n  72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83,\n  84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95,\n  96, 97, 98, 99,\n  ... 20 more items\n]\n[\n  'item0', 'item1',\n  'item2', 'item3',\n  'item4', 'item5',\n  'item6'\n] [ 1.5, 2.25, -0 ] [ \"a'b\", 'c\"d', 'e\\nf' ]\n",
+  "erro": null
+ },
+ "03-strings": {
+  "saida": "Olá, Mundo! Ação çãõ 20 OLÁ, MUNDO! AÇÃO ÇÃÕ olá, mundo! ação çãõ [ 'Olá,', 'Mundo!', 'Ação', 'çãõ' ] [\n  'O', 'l', 'á', ',', ' ',\n  'M', 'u', 'n', 'd', 'o',\n  '!', ' ', 'A', 'ç', 'ã',\n  'o', ' ', 'ç', 'ã', 'õ'\n] 5  çãõ á,  lá,\nx| ***ab ab---| abcabc a+b-c a+b+c c\nb 98 AB b true -1 -1 1\n120 2 1 128512 2 SS\nsoma: 3, obj: [object Object], arr: 1,2, nul: null, und: undefined multi\nlinha aspas \"duplas\" aspas 'simples' tab\tchar nl\\n\n[ 'a', 'b', 'c' ] [ 'o', 'o' ] [ 'll', index: 2, input: 'Hello', groups: undefined ] 2 [ '10-20', '10', '20', index: 0, input: '10-20', groups: undefined ] x<1>y<22>\na,b null undefined 123 true Symbol(s) [object Object] () => 1  \ncba [ 'tITLE', 'cASE', 'mE' ] 5\ntem escape a%C3%A7%C3%A3o%20%26%20x ç aGVsbG8= hello\nAna tem 30.5 anos e 30, 2.5, 1 [ 1 ] % extra\n estilo depois\na b 1 true null undefined [] {} \n\n\n",
+  "erro": null
+ },
+ "04-objetos": {
+  "saida": "{\n  '3': 'tres',\n  nome: 'Ana',\n  idade: 20,\n  endereco: { rua: 'A', numero: 5, geo: { lat: 1, lon: 2, extra: [Object] } },\n  hobbies: [ 'x', 'y' ],\n  f: [Function: f],\n  g: [Function: g],\n  'chave-estranha': 1\n}\n[\n  '3',\n  'nome',\n  'idade',\n  'endereco',\n  'hobbies',\n  'f',\n  'g',\n  'chave-estranha'\n] [ 1, [ 2 ] ] [ [ 'a', 1 ], [ 'b', 2 ] ] {\"3\":\"tres\",\"nome\":\"Ana\",\"idade\":20,\"endereco\":{\"rua\":\"A\",\"numero\":5,\"geo\":{\"lat\":1,\"lon\":2,\"extra\":{\"fundo\":true}}},\"hobbies\":[\"x\",\"y\"],\"chave-estranha\":1} {\n  \"a\": [\n    1,\n    {\n      \"b\": 2\n    }\n  ],\n  \"c\": \"x\",\n  \"e\": null\n}\n{ x: [ 1, 2, { y: null } ], z: 'ç' } \"ação\\n\" [null,null,\"1970-01-01T00:00:00.000Z\"] {\"a\":true}\nAna 20 A [ '3', 'hobbies', 'f', 'g', 'chave-estranha' ]\nBia Ana true 1\n{} [] { a: {} } { a: [] } [ {} ] [ [] ] { a: { b: { c: [Object] } } } [ [ [ [Array] ] ] ] null undefined\n{\n  a: 1,\n  b: 'dois',\n  c: [ 3 ],\n  d: { e: 4 },\n  f: null,\n  g: undefined,\n  h: true,\n  i: 1.5,\n  j: -0,\n  k: NaN,\n  l: 10n,\n  m: Symbol(q)\n}\n{\n  primeiro: 'valor um bem longo',\n  segundo: 'valor dois bem longo',\n  terceiro: 'valor tres bem longo',\n  quarto: 4\n}\n[ { a: 1, b: 2 }, { a: 3, b: 4 } ] {\n  arr: [\n    1, 2, 3, 4,  5,\n    6, 7, 8, 9, 10\n  ]\n} { s: \"it's\", t: 'say \"hi\"', u: `both ' \"` }\n{ a: 1 } true { a: 1, b: 2 } [ '0', '1', 'length' ]\n<ref *1> { n: 1, self: [Circular *1] }\nobject undefined object object function symbol bigint d undefined A undefined\n",
+  "erro": null
+ },
+ "05-classes": {
+  "saida": "Cao { nome: 'Rex', raca: 'vira-lata' } Animal(Rex) Animal(Rex) Rex faz ... Au 84 1 true Cao true\nAnimal { nome: 'Z' } [ Cao { nome: 'Rex', raca: 'vira-lata' } ] { c: Cao { nome: 'Rex', raca: 'vira-lata' } } function [class Animal] { total: 2 } [class Cao extends Animal] [Function: falar] [class (anonymous)] Foo { x: 1 }\nR [ 'nome', 'raca', '_ap' ] true true\n8 Velha { x: 4 } true\no object [ 'o' ] outro b\n2 [ 1, 2 ] Pilha {}\n",
+  "erro": null
+ },
+ "06-closures-funcoes": {
+  "saida": "2 1\n[ 3, 3, 3 ]\n[ 0, 1, 2 ]\niçado undefined object [ 1, 2, [ 3, 4 ] ]\ntrue\nReferenceError naoDeclarada is not defined\nTypeError: Assignment to constant variable.\ntrue Cannot read properties of null (reading 'x')\nReferenceError undefinedFn is not defined\nReduce of empty array with no initial value\nRangeError Invalid array length\nSyntaxError\ncod 1\nfim\n3628800 2432902008176640000 1.5511210043330986e+25 7.257415615307994e+306 Infinity\n12586269025 2880067194370816000\nrecebi a\nrecebi undefined\n{ value: 1, done: false } { value: 2, done: false } { value: 3, done: false } { value: 4, done: true } { value: undefined, done: true } [ 1, 2, 3 ]\n11\n5050 [ '1', '2', '3' ] [ 1, 2, 3 ] [ 1, NaN, NaN ]\n0 0\n1 0\ntres\nquatro (cai)\n",
+  "erro": null
+ },
+ "07-map-set": {
+  "saida": "Map(4) { 'a' => 1, 'b' => { x: 2 }, 'c' => [ 3 ], 1 => 'um' } 4 1 false [ 'a', 'b', 'c', 1 ] [ 1, { x: 2 }, [ 3 ], 'um' ] [ [ 'a', 1 ], [ 'b', { x: 2 } ], [ 'c', [ 3 ] ], [ 1, 'um' ] ] { '1': 'um', a: 1, b: { x: 2 }, c: [ 3 ] }\nSet(4) { 3, 1, 'a', { o: 1 } } 4 [ 3, 1, 'a', { o: 1 } ] true Set(4) { 'h', 'e', 'l', 'o' }\n1 false WeakMap { <items unknown> }\na 1\nb { x: 2 }\nc [ 3 ]\n1 um\na => 1\nb => { x: 2 }\nc => [ 3 ]\n1 => um\nMap(0) {} Set(0) {} Map(1) { { a: 1 } => Set(1) { 1 } } [ Map(1) { 1 => 2 } ] { m: Map(1) { 1 => 2 }, s: Set(1) { 1 } }\n{ a: 5, b: 2, r: 2, c: 1, d: 1 } [ 'a', 5 ]\nSymbol(a) Symbol(b) [ Symbol(x) ] { Symbol(k): 1 } symbol\n1970-01-01T00:00:00.000Z 1 1710072000000 NaN number\n[ 1970-01-01T00:00:00.000Z ] { d: 1970-01-02T00:00:00.000Z } 1970-01-01T00:00:00.000Z\nboom TypeError: t [object Array] [object Null]\n/ab+c/gi /x/g [ /a/ ] b a[1]b[2] true\n1.5 0025 [ 1, 10, 9 ] [ 1, 9, 10 ] 5 2\n",
+  "erro": null
+ },
+ "08-entrada": {
+  "saida": "Nome? João da Silva\nIdade? 29\nOlá, João da Silva! Ano que vem: 30\nNúmeros: 3 1 4 1 5 9 2 6\n[\n  3, 1, 4, 1,\n  5, 9, 2, 6\n] 31 9 3.88\nação çãõ  com espaços\n[ 'ação çãõ  com espaços' ] 21 string\nvazio? fim? false null\n",
+  "erro": null
+ },
+ "09-async": {
+  "saida": "1 sincrono\n2 async inicio\n2b fim do script\nPromise { 42 } true\n3 microtask\n4 queueMicrotask\n4b depois do await\n5 timeout 0\n5b resolvido\ncapturado falhou\n[ 1, 2, 3 ]\n[\n  { status: 'fulfilled', value: 1 },\n  { status: 'rejected', reason: 'x' }\n]\nrapido\ntick\ntick\ntick\n8 timeout 500\n9 timeout 900\n",
+  "erro": null
+ },
+ "10-numeros-formatados": {
+  "saida": "19.9 19.90 19.9 19.9 R$ 19,90\n5 5.00 5.00 5 R$ 5,00\n100.456 100.46 100 100.46 R$ 100,46\n0.30000000000000004 0.30 0.300 0.3 R$ 0,30\n0.3333333333333333 0.33 0.333 0.33 R$ 0,33\n0.6666666666666666 0.67 0.667 0.67 R$ 0,67\n1000000 1000000.00 1.00e+6 1000000 R$ 1.000.000,00\n1234567.891 1234567.89 1.23e+6 1234567.89 R$ 1.234.567,89\n0.000123 0.00 0.000123 0 R$ 0,00\n1.234,5 26% 1,000,000,000 1.234,50\n0.30000000000000004 0.7999999999999999 56.99999999999999 1.2100000000000002 434.99999999999994 9.9 1.4 8.35 10.23\n33.333333333333336 3.142857142857143 1e+21 1.4142135623730951 3 5 -1 -4 3 5.5 0.7853981633974483\n1.7976931348623157e+308 5e-324 -Infinity 5e-324 1.7976931348623157e+308 5e-324 0.7999999999999999 3.3000000000000003\n0.9999999999999999 false true\n1e+21 1.23e-18 123.456 -1.1 0.1 73 255 3 15 1000\n",
+  "erro": null
+ },
+ "11-algoritmos": {
+  "saida": "[\n  11, 12, 22, 25,\n  34, 64, 90\n]\n[\n   2,  3,  5,  7, 11, 13,\n  17, 19, 23, 29, 31, 37,\n  41, 43, 47\n]\nAB AC CA AB BC BA AB AC CA CB BC CA AB AC CA\n   *\n  ***\n *****\n*******\n\n1\n1 2\n1 2 3\n1 2 3 4\n1 2 3 4 5\n{ o: 4, r: 3, a: 3, t: 1, e: 1, u: 2, p: 1 }\n[ 1.6666666666666667, 1, 2.6666666666666665 ] [ '01100001', '01100010', '01100011' ]\n[ [ 1, 4 ], [ 9, 16 ] ] [ [ 1, 3 ], [ 2, 4 ] ]\n111\naaabnn 3 groupBy toSorted\ntrue\n",
+  "erro": null
+ },
+ "12-console-extras": {
+  "saida": "┌─────────┬───┬───┐\n│ (index) │ a │ b │\n├─────────┼───┼───┤\n│ 0       │ 1 │ 2 │\n│ 1       │ 3 │ 4 │\n└─────────┴───┴───┘\n┌─────────┬───┬───┐\n│ (index) │ 0 │ 1 │\n├─────────┼───┼───┤\n│ 0       │ 1 │ 2 │\n│ 1       │ 3 │ 4 │\n└─────────┴───┴───┘\nGrupo\n  dentro\n    mais dentro { a: 1 }\nfora\ninfo\ndebug\n{ a: [Object] }\ndefault: 1\ndefault: 2\nx: 1\ndefault: 1\n[ '1', '2', '3' ] false\n",
+  "erro": null
+ },
+ "13-regex-datas": {
+  "saida": "2024 1 29 13 true Thu Feb 29 2024 29/02/2024 13:45:30\n1 29 15 quarta-feira, 25 de dezembro\n[ 2024, 3, 10 ] [ '10', '03', '2024' ] [ 'a', 'b', 'c' ] Camel Case String\n[ '1@1', '2@3', '3@5' ] 3 true true aBc\n",
+  "erro": null
+ },
+ "14-erros-nao-capturados": {
+  "saida": "antes\n",
+  "erro": "TypeError: Cannot read properties of null (reading 'propriedade')"
+ },
+ "15-getters-setters-iter": {
+  "saida": "10 { _v: 10, v: [Getter/Setter], dyn2: 'd', ab: [Function: ab] } true\n[ 1, 2, 3, 4 ] [ 1, 2, 3, 4 ] 4\n1\n2\n3\n4\n1\n3\na\nb\n0 string\n1 string\n0 a\n1 b\na|b|c\\n1,2\nfalse true -1 false true false true true baNaNa\nnumber false 1,10,5 1,2,3 [object Object] ts 0 NaN [object Object]\n2\n1\n2 true  nomeada parseInt\nfunction soma(a, b) { return a + b } x => x * 2 class A { m() {} }\n",
+  "erro": null
+ },
+ "16-this-arguments": {
+  "saida": "[ 'object', 2, [ 1, 2 ] ] [ 'object', 1, [ 3 ] ] [ 'object', 3, [ 4, 5, 6 ] ] [ 'object', 1, [ 7 ] ]\n1 object [ 'object', 'object' ] [ 1 ]\nundefined\nCtor { a: 5 } 6\n[ 1, 2, 3, undefined, 9, [ 8, 7 ] ] [ 1, 5, 3, 4, 0, [] ] 1\nundefined 1\nobject object undefined\n",
+  "erro": null
+ },
+ "17-geradores-iteradores": {
+  "saida": "[ 0, 1, 2, 3, 4 ] [ 0, 10, 20 ]\na? b? 1 { value: 3, done: true } { value: undefined, done: true }\n[ 1, 2, 3 ]\n0 1 [ 2, 3, 4 ]\n[ 'a1' ] { value: [ 1, 2 ], done: false } [object Array Iterator]\n",
+  "erro": null
+ },
+ "18-excecoes-fluxo": {
+  "saida": "finally roda\nfinally b\ni 0\nf 0\nf 1\nf 2\ntry catch sem binding fim\nMeuErro deu ruim 42 true true MeuErro: deu ruim [object Error]\nRangeError no comparador\nno forEach 2\nSyntaxError\nTypeError\nURIError URI malformed\nRangeError Invalid count value: -1\nno ctor\nError: m Error: m sem new porque\ncatch async: rejeitada\nfinally async\nTypeError\ndentro do timeout\n",
+  "erro": null
+ },
+ "19-recursao-desempenho": {
+  "saida": "6765\n599994\n[ 0, 5, 6, 7, 8 ] 5000\n80200\n111\n1000 01234567890123456789\n189225\n",
+  "erro": null
+ },
+ "20-classes-avancadas": {
+  "saida": "50 5 1 bloco estatico true false {\"tipo\":\"A\"} A! 42 A!\n11 2 true [ 'constructor', 'publico', 'x', 'toJSON' ]\nmixin C C \nTemp { k: 1 } Temp function\n Nomeada { z: 1 }\n",
+  "erro": null
+ },
+ "21-entrada-loop": {
+  "saida": "valor (vazio encerra): 10,5\nvalor (vazio encerra): 2.25\nvalor (vazio encerra): abc\nvalor (vazio encerra): 7\nvalor (vazio encerra): \nLidos: 4, soma: NaN, média: NaN\nResposta (s/n)? Sim\nsim\nNome 1: Zoé\nNome 2: Álvaro\n[ 'Álvaro', 'Zoé' ]\nsem entrada: null fim\n",
+  "erro": null
+ }
+}

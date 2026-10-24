@@ -41,6 +41,26 @@ function converter(cursor) {
   return o
 }
 
+const COM_OPERANDO_A_DIREITA = new Set(['binary_expression', 'prefix_unary_expression'])
+
+/**
+ * A gramática lê "a" + s?.Length como ("a" + s)?.Length, e no C# o ?. pega só o último operando: "a" + (s?.Length).
+ * (Sem isto, Console.WriteLine("Nome: " + p?.Nome) escreve a coisa errada.) Reescreve a árvore: o operando mais à
+ * direita do binário (ou o operando do unário) vira a condição do ?., e o binário passa a ficar por fora.
+ */
+function corrigirAcessoCondicional(n) {
+  if (!n.f) return n
+  n.f = n.f.map(corrigirAcessoCondicional)
+  if (n.t !== 'conditional_access_expression') return n
+  const cond = n.f.find((x) => x.k === 'condition') ?? n.f[0]
+  if (!cond || !COM_OPERANDO_A_DIREITA.has(cond.t)) return n
+  const idx = cond.t === 'binary_expression' ? cond.f.findIndex((x) => x.k === 'right') : cond.f.length - 1
+  if (idx < 0) return n
+  const operando = cond.f[idx]
+  const ca = corrigirAcessoCondicional({ ...n, k: operando.k, l: operando.l, c: operando.c, f: n.f.map((x) => (x === cond ? { ...operando, k: 'condition' } : x)) })
+  return { ...cond, k: n.k, f: cond.f.map((x, i) => (i === idx ? ca : x)) }
+}
+
 const FECHAMENTOS = { ')': 'o parêntese )', '}': 'a chave }', ']': 'o colchete ]', '"': 'as aspas ("")' }
 
 /** Os erros de escrita (o tree-sitter marca com ERROR e MISSING), em português, na ordem do arquivo. */
@@ -102,7 +122,7 @@ export async function criarAnalisador({ moduloTreeSitter, wasmMotor, wasmLinguag
           coletarErros(cursor, fonte.split('\n'), erros)
           return { erros: erros.length ? erros : [{ linha: 1, coluna: 0, mensagem: 'erro de escrita no programa' }] }
         }
-        return { ast: converter(cursor) }
+        return { ast: corrigirAcessoCondicional(converter(cursor)) }
       } finally {
         cursor.delete()
         arvore.delete()

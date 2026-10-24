@@ -45,7 +45,7 @@ const enviar = (method, params = {}) => new Promise((res, rej) => {
   const limite = setTimeout(() => {
     pendentes.delete(meu)
     rej(new Error(`sem resposta do app para ${method} ${JSON.stringify(params).slice(0, 120)}`))
-  }, 15000)
+  }, 30000) // a compilação do C++ pode deixar a página sem responder por um bom tempo em PC lento
   pendentes.set(meu, (msg) => {
     clearTimeout(limite)
     res(msg)
@@ -53,10 +53,20 @@ const enviar = (method, params = {}) => new Promise((res, rej) => {
   ws.send(JSON.stringify({ id: meu, method, params }))
 })
 
-await enviar('Runtime.enable')
+// Na primeira abertura o app pode demorar a responder (carregando a página): tenta de novo antes de desistir.
+for (let tentativa = 1; ; tentativa += 1) {
+  try {
+    await enviar('Runtime.enable')
+    break
+  } catch (e) {
+    if (tentativa >= 3) throw e
+  }
+}
 await enviar('Page.enable')
 
 const ferramentas = {
+  /** Comando CDP cru (ex.: cdp('Browser.setWindowBounds', {...})). */
+  cdp: (method, params) => enviar(method, params),
   esperar: (ms) => new Promise((r) => setTimeout(r, ms)),
   async avaliar(expr) {
     const r = await enviar('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true })

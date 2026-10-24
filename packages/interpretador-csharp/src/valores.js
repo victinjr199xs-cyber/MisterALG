@@ -258,7 +258,7 @@ export function tipoDaConta(a, b) {
 // ---- formatação de double (o texto mais curto, com as regras do .NET) -----------------------------
 
 /** double.ToString(): "R" do .NET Core 3.0+ — o mais curto que volta ao mesmo número; E+15 a partir de 1e15. */
-export function textoDouble(n, virgula = true) {
+export function textoDouble(n, virgula = true, limite = 17) {
   if (Number.isNaN(n)) return 'NaN'
   if (n === Infinity) return virgula ? '∞' : 'Infinity'
   if (n === -Infinity) return virgula ? '-∞' : '-Infinity'
@@ -268,7 +268,7 @@ export function textoDouble(n, virgula = true) {
   const digitos = mant.replace('-', '').replace('.', '')
   const sinal = n < 0 ? '-' : ''
   let r
-  if (exp >= 15 || exp < -4) {
+  if (exp >= limite || exp < -4) { // (notação científica a partir de 17 casas no double e 9 no float, como o .NET moderno)
     const m = digitos.length > 1 ? `${digitos[0]}.${digitos.slice(1)}` : digitos
     r = `${sinal}${m}E${exp < 0 ? '-' : '+'}${String(Math.abs(exp)).padStart(2, '0')}`
   } else if (exp >= 0) {
@@ -284,7 +284,7 @@ export function textoFloat(n, virgula = true) {
   if (!Number.isFinite(n)) return textoDouble(n, virgula)
   for (let p = 1; p <= 9; p += 1) {
     const t = Number(n.toPrecision(p))
-    if (Math.fround(t) === n) return textoDouble(t, virgula)
+    if (Math.fround(t) === n) return textoDouble(t, virgula, 9)
   }
-  return textoDouble(n, virgula)
+  return textoDouble(n, virgula, 9)
 }

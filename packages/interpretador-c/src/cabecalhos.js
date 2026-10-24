@@ -40,6 +40,9 @@ int sprintf(char *destino, const char *formato, ...);
 int snprintf(char *destino, size_t tamanho, const char *formato, ...);
 int sscanf(const char *texto, const char *formato, ...);
 int fflush(FILE *arquivo);
+int feof(FILE *arquivo);
+int ferror(FILE *arquivo);
+void clearerr(FILE *arquivo);
 void setbuf(FILE *arquivo, char *buffer);
 void perror(const char *texto);
 `,
@@ -79,6 +82,8 @@ int strncmp(const char *a, const char *b, size_t n);
 char *strchr(const char *s, int c);
 char *strrchr(const char *s, int c);
 char *strstr(const char *s, const char *procurado);
+size_t strcspn(const char *s, const char *rejeitados);
+size_t strspn(const char *s, const char *aceitos);
 char *strtok(char *s, const char *separadores);
 char *strdup(const char *s);
 void *memset(void *destino, int valor, size_t n);

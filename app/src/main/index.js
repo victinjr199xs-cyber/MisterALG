@@ -75,7 +75,15 @@ let arquivoParaAbrir = null // arquivo .alg aberto pelo Finder antes da janela e
 
 let naInicio = false // a janela está na página inicial (sem a IDE)
 /** Traduz um texto das janelas do sistema para o idioma escolhido (compartilhado/idiomas.js). */
-const trMain = (texto) => tradutor(lerPreferencias().idioma)(texto)
+const trMain = (texto) => {
+  if (typeof texto !== 'string' || !texto.trim()) return texto
+  const t = tradutor(lerPreferencias().idioma)
+  const limpo = texto.trim()
+  const r = t.reconhecer(limpo) // também reconhece o texto já preenchido ("O algoritmo [x] foi modificado...")
+  return r == null ? texto : texto.replace(limpo, () => r) // preserva os espaços das bordas dos títulos
+}
+/** Nomes dos filtros das caixas de abrir/salvar no idioma escolhido. */
+const filtros = (lista) => lista.map((f) => ({ ...f, name: trMain(f.name) }))
 
 // Na página inicial não há menu da IDE (no Mac o menu do app continua, por causa do ⌘Q).
 const atualizarMenu = () => (naInicio && process.platform !== 'darwin' ? Menu.setApplicationMenu(null) : montarMenu(janela, lerPreferencias(), estadoMenu))
@@ -114,7 +122,7 @@ function registrarIpc() {
   ipcMain.handle('arquivo:abrir', async () => {
     const r = await dialog.showOpenDialog(janela, {
       title: trMain('Abrir algoritmo'),
-      filters: FILTROS_ABRIR,
+      filters: filtros(FILTROS_ABRIR),
       properties: ['openFile'],
       defaultPath: documentos(),
     })
@@ -134,7 +142,7 @@ function registrarIpc() {
     } catch {
       removerRecente(caminho)
       atualizarMenu()
-      return { erro: `O arquivo ${caminho} não pode ser encontrado.` }
+      return { erro: tradutor(lerPreferencias().idioma)('O arquivo {0} não pode ser encontrado.', caminho) }
     }
   })
 
@@ -147,8 +155,8 @@ function registrarIpc() {
 
   ipcMain.handle('arquivo:salvarComo', async (_e, { texto, nome, codificacao, extensao = 'alg' }) => {
     const r = await dialog.showSaveDialog(janela, {
-      title: extensao === 'alg' ? 'Salvar algoritmo como' : 'Salvar programa como',
-      filters: FILTROS_SALVAR[extensao] ?? FILTROS_ALG,
+      title: trMain(extensao === 'alg' ? 'Salvar algoritmo como' : 'Salvar programa como'),
+      filters: filtros(FILTROS_SALVAR[extensao] ?? FILTROS_ALG),
       defaultPath: `${documentos()}/${nome || 'semnome'}.${extensao}`,
     })
     if (r.canceled || !r.filePath) return null
@@ -159,7 +167,7 @@ function registrarIpc() {
   })
 
   ipcMain.handle('bloco:gravar', async (_e, texto) => {
-    const r = await dialog.showSaveDialog(janela, { title: trMain('Gravar bloco de algoritmo'), filters: FILTROS_BLOCO })
+    const r = await dialog.showSaveDialog(janela, { title: trMain('Gravar bloco de algoritmo'), filters: filtros(FILTROS_BLOCO) })
     if (r.canceled || !r.filePath) return false
     await gravarArquivo(r.filePath, texto, 'windows-1252')
     return true
@@ -168,7 +176,7 @@ function registrarIpc() {
   ipcMain.handle('bloco:inserir', async () => {
     const r = await dialog.showOpenDialog(janela, {
       title: trMain('Inserir bloco de algoritmo'),
-      filters: FILTROS_BLOCO,
+      filters: filtros(FILTROS_BLOCO),
       properties: ['openFile'],
     })
     if (r.canceled || !r.filePaths[0]) return null
@@ -185,7 +193,7 @@ function registrarIpc() {
     if (!EXPORTACOES[extensao]) return null
     const r = await dialog.showSaveDialog(janela, {
       title: trMain(EXPORTACOES[extensao].titulo),
-      filters: [{ name: EXPORTACOES[extensao].filtro, extensions: [extensao] }, { name: 'Todos os arquivos', extensions: ['*'] }],
+      filters: filtros([{ name: EXPORTACOES[extensao].filtro, extensions: [extensao] }, { name: 'Todos os arquivos', extensions: ['*'] }]),
       defaultPath: `${documentos()}/${nome || 'semnome'}.${extensao}`,
     })
     if (r.canceled || !r.filePath) return null

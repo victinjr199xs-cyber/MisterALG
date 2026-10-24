@@ -1,0 +1,77 @@
+{
+ "01-aritmetica": {
+  "saida": "7 / 2 = 3, % = 1, 3 1\n-7 / 2 = -3, % = -1, -3 -1\n0 / 3 = 0, % = 0, 0 0\n100 / -7 = -14, % = 2, -14 2\n-100 / 7 = -14, % = -2, -14 -2\n13 / -4 = -3, % = 1, -3 1\n3,5\n0,3333333333333333\n2\n2,5\n0,30000000000000004\n0,3\n1E+21\n1E-07\n123456789,12345679\n3\n-3\n1000000000000000000\n44\nwrap\n-2147483648\noverflow: Arithmetic operation resulted in an overflow.\n2\n4\n-2\n2,68\n3\n-3\n-2\n-2\n1,4142135623730951\n1024\n5\nNaN\n∞\n-∞\n1,7976931348623157E+308\n5E-324\n3,4028235E+38\n1\n7\n6\n-6\n1024\n-5\n330\n0,3666666666666666666666666667\n0,3\n2,34\n9223372036854775807\n18446744073709551615\n2535301200456458802993406410752\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "02-formatacao": {
+  "saida": "1234,57 1.234,57 1,235E+003 R$ 1.234,57 123.456,8% 1234,57 1.234,6 1235\n00042 2A 002a 42 042 +42 (42)\n[    42] [42    ] [      1234,6] [1234,6      ] [   ab] [ab   ] 2A 1.235 50% 1\n42 1234,568  1.234,6 0042\n1,234,567.89 ¤9.50\n1.234.567,89 R$ 9,50 25,60%\n1 1,5 100 1000000000000000 10000000000000000 0,0001 1E-05 0,3333333333333333 0,6666666666666666\nTrue x nulo 005 ab..|\n2024-03-05 14:07:09 05/03/2024 Tuesday 4 Apr 2024\n02:15:00 26,05\n11111111 ff 255 5 3,5 -12 1000\nFalse 0 True 7 True 1,5\n1{}2\n{42}\ngrande\nc:\\x\\42\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "03-strings": {
+  "saida": "Olá, Mundo! Ação çãõ 20 OLÁ, MUNDO! AÇÃO ÇÃÕ olá, mundo! ação çãõ 5 -1 15 True True False\nMundo! Ação çãõ|Mundo|Olá, Mund0! Açã0 çãõ|x|x |a|Olá|Olá_, Mundo! Ação çãõ\nOlá,,Mundo!,Ação,çãõ a-b-c 3 2\na1c2,5True True True -1 0 True True\n***** ab Oõ lá, b 97 X True True 7\n[0,1,2,3,4,]!07 15\ncba ban 3 5 b -1\nß 1 é\t|\\|\"|' verbatim\\n\nO Rato Roeu A Roupa roupa o4r3a3\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "04-colecoes": {
+  "saida": "100 5 2 9 1 7 3 8 8 9 3 False 100 1 143 15,88888888888889 5\n1 2 3 5 7 8 8 9 100\n9 8 7 5 3 2\nb=2;c=3;d=4;True False 0 3 b,c,d 9\n1,2,3,9 4 True\nab 21 11\n2 3 2\n3 3\n3,2,1 1 3 0,0,0 1,2,3,4,5 x,x,x\n(Ana, 20) Ana Ana20 True\na,z A\n0,1,2,3 03\n0 0 2 2\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "05-linq-moderno": {
+  "saida": "MG: Dani media=25,0\nRJ: Bia media=25,0\nSP: Ana, Caio media=32,5\nPessoa { Nome = Dani, Idade = 25, Cidade = MG }\nTrue\nPessoa { Nome = Ana, Idade = 31, Cidade = SP }\nBia25\n{ Nome = Dani, Dobro = 50 }\n{ Nome = Caio, Dobro = 70 }\n{ Nome = Bia, Dobro = 50 }\n{ Nome = Ana, Dobro = 60 }\nTrue False 35 115 3\nAna1,Bia2,Caio3,Dani4 0Ana,1Bia,2Caio,3Dani 2 1,3,4\n35\n2,3,5,7,11,13,17,19 120 8 A\nint grande\nn=42\nnao eh string\n-1\nFalse null\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "06-classes-heranca": {
+  "saida": "Circulo area=7,07\nRet area=7,00 (retangulo)\n2 1,5 Ret True\nbate asas\nvoador\n(4,6) (99,6)\nVerde 6 Vermelho Azul Vermelho,Verde,Azul 5\nInt32;String;Double;Char;null;Pt;Cor;Int32[];\n{ A = 1, B = x } 1 True\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "07-excecoes": {
+  "saida": "finally 2\nzero: Attempted to divide by zero.\nfinally 0\n5 -1\nIndexOutOfRangeException: Index was outside the bounds of the array.\nNullReferenceException: Object reference not set to an instance of an object.\nFormatException: The input string 'abc' was not in a correct format.\nArgumentOutOfRangeException\nKeyNotFoundException: The given key 'x' was not present in the dictionary.\nInvalidCastException\ncustomizado7\nexterna <- interna\nOverflowException\nArgumentNullException param\nSequence contains no matching element\ngenerico NotImplementedException\nantes do fim\n",
+  "codigo": 3221225620,
+  "erro": "Unhandled exception. System.DivideByZeroException: Attempted to divide by zero."
+ },
+ "08-entrada": {
+  "saida": "Nome: Idade: Olá, João da Silva! Ano que vem: 30\n4 122 30,50 100\n1: AÇÃO\n2: ÇÃÕ\nlinha depois do vazio\nTrue\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "09-generics-delegates": {
+  "saida": "b1\n7 abd 2,5\n5 6\n<83>\nTrue 2\nev1 disparou\nev2 disparou\n0,1,4,9,16 5\n2\n0,1,2\n3628800\n2\n0 |Int32 4\n1-4\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "10-algoritmos": {
+  "saida": "2432902008176640000 120 6765 21\n1023\n21\n11 12 22 25 34 64 90\nTrue 3 False 0\n   *\n  ***\n *****\n*******\n2,3,5,7,11,13,17,19,23,29,31,37\n2999997\n  1  2  3\n  4  5  6\n  7  8  9\n100101\n3,1415826535897198\n00 01 \ntres\nquatro\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "11-misc-moderno": {
+  "saida": "True False 70,50 Ana\nvalor invalido\n-1\ndefault\n1\ndois:3 um:2 tres:1 \nTrue\n36\n1 True\nesq       |       dir|\nlinha2\n3,5 3,141592653589793 2,718281828459045 0,8414709848078965 2,302585092994046 3 0,7853981633974483 3 -1\n2147483647 -2147483648 -9223372036854775808 255 -32768 -1 4000000000 -5\nTrue\nTrue\nFalse\nfim\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "12-menu-estoque": {
+  "saida": "  1 | Caneta       |    R$ 1,50 |  100\n  2 | Caderno      |   R$ 12,90 |    5\n  3 | Mochila      |  R$ 149,90 |    2\n  4 | Lápis        |    R$ 0,80 |  300\nTotal: 754,30\nMochila, Caderno\nTrue False True Mochila\n50,73 50,733\n149,9 Mochila\nOpcao: invalida: 7\nQtd: qtd invalida\nPreco: de novo: 19,99\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "13-interfaces-polimorfismo": {
+  "saida": "[Quad] area=4,00 perim=8,00\n[Tri] area=6,00 perim=12,00\n[Circulo] area=7,07 perim=9,42\n[Quad] area=9,00 perim=12,00\nQuad Tri Circulo Quad\nQuad True True 1\n[Quad] area=4,00 perim=8,00\n26,069 2 True\nforma Quad\nQuad Quad True True\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "14-propriedades-estaticos-operadores": {
+  "saida": "5/4 3/8 -1/2 True True 1,25 3 -3/4\n0,5 True\ndenominador zero\nstatic ctor\n2 12\n212\n0\nvalue: abaixo do zero absoluto (Parameter 'value')\n2\nmeio\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "15-texto-processamento": {
+  "saida": "True False\nKhoor, Zruog! Hello, World!\nthe     3\nbrown   1\ndog     1\neoh\n5 quick 13\nThe Quick Brown Fox Jumps Over The Lazy Dog The End\n1,2,3,4,5\nTotal: 53 8 5a 98 b 1,5 3 1 3,3333333333333335\n34 55 53 5 53 5\n-1 1 0 -1 False -1 106\n[]vazioTrueTrue\na\tb\\n\"q\"c:\\dir\\nAB'1\n    x|x    |   12,50|  -3|  True|  c|01\n",
+  "codigo": 0,
+  "erro": null
+ }
+}

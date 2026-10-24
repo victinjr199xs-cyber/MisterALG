@@ -3,6 +3,9 @@
 import { CULTURAS, formatarData } from '../formatar.js'
 import { Dbl, ValorEnum, comoNumero } from '../valores.js'
 
+// 01/01/0001 (o construtor Date(1, 0, 1) do JS entende o ano 1 como 1901)
+const ANO_1 = (() => { const d = new Date(2000, 0, 1); d.setFullYear(1, 0, 1); return d.getTime() })()
+
 const MS_DIA = 86400000
 
 const dois = (n) => String(n).padStart(2, '0')
@@ -227,7 +230,7 @@ const dataOuErro = (m, s) => {
 export const DATETIME = {
   nome: 'DateTime',
   criar(m, args) {
-    if (args.length === 0) return nova(new Date(1, 0, 1).getTime())
+    if (args.length === 0) return nova(ANO_1)
     if (args.length === 1) return nova(Number(args[0]) / 10000 - 62135596800000)
     const [a, b, c, h = 0, mi = 0, s = 0, ms = 0] = args.map((x) => (x instanceof ValorEnum ? x.v : comoNumero(x)))
     const d = new Date(a, b - 1, c, h, mi, s, ms)
@@ -235,7 +238,7 @@ export const DATETIME = {
     if (a < 1 || a > 9999 || b < 1 || b > 12 || c < 1 || c > new Date(a, b, 0).getDate()) throw m.excecao('ArgumentOutOfRangeException', 'Year, Month, and Day parameters describe an un-representable DateTime.')
     return nova(d.getTime())
   },
-  const: { MinValue: nova(new Date(1, 0, 1).getTime()), MaxValue: nova(new Date(9999, 11, 31, 23, 59, 59).getTime()) },
+  const: { MinValue: nova(ANO_1), MaxValue: nova(new Date(9999, 11, 31, 23, 59, 59).getTime()) },
   props: {
     Now: { get: (m) => nova(m.agoraMs()) },
     UtcNow: { get: (m) => nova(m.agoraMs(), 1) },
@@ -246,7 +249,7 @@ export const DATETIME = {
     TryParse(m, [s, saida]) {
       const d = analisar(m, s)
       if (!d || Number.isNaN(d.getTime())) {
-        saida.v = nova(new Date(1, 0, 1).getTime())
+        saida.v = nova(ANO_1)
         return false
       }
       saida.v = nova(d.getTime())

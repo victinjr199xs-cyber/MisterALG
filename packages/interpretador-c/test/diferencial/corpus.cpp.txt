@@ -1,0 +1,156 @@
+@@@ 01-cout-basico
+#include <iostream>
+#include <iomanip>
+using namespace std;
+int main() {
+    cout << "Olá, mundo! ção" << endl;
+    cout << 42 << ' ' << -7 << ' ' << 3.0 << ' ' << 2.5 << ' ' << 1.0 / 3 << ' ' << 100000.0 << ' ' << 1234567.0 << ' ' << 0.0001 << ' ' << 1e-5 << endl;
+    cout << true << false << ' ' << 'x' << ' ' << 1e10 << ' ' << 123456789.0 << ' ' << 1.5f << endl;
+    cout << fixed << setprecision(2) << 3.14159 << ' ' << 2.0 << ' ' << 0.125 << ' ' << 0.135 << ' ' << 2.675 << endl;
+    cout << setprecision(0) << 2.5 << ' ' << 3.5 << endl;
+    cout << defaultfloat << setprecision(3) << 3.14159 << ' ' << 1234.5678 << endl;
+    cout << "[" << setw(6) << 42 << "][" << setw(8) << "abc" << "][" << setfill('*') << setw(5) << 7 << "]" << endl;
+    cout << setprecision(10) << 0.1 + 0.2 << endl;
+    cout << 7 / 2 << ' ' << -7 / 2 << ' ' << -7 % 3 << ' ' << 7 / 2.0 << endl;
+    cout << (long long)1 << 40 << ' ' << (1LL << 40) << endl;
+    return 0;
+}
+@@@ 02-entrada
+#include <iostream>
+#include <string>
+using namespace std;
+int main() {
+    int n; double d; string nome, linha;
+    cin >> n >> d >> nome;
+    cout << n << "|" << d << "|" << nome << endl;
+    cin.ignore();
+    getline(cin, linha);
+    cout << "linha=[" << linha << "]" << endl;
+    char c; cin >> c; cout << c << endl;
+    int soma = 0, x; while (cin >> x) soma += x;
+    cout << "soma=" << soma << " eof=" << cin.eof() << endl;
+    return 0;
+}
+--- entrada
+5 2.75 Joana
+uma linha inteira com acentuação
+z
+1 2 3
+4 5
+@@@ 03-vector-string
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+using namespace std;
+int main() {
+    vector<int> v = {5, 2, 9, 1, 7};
+    v.push_back(3);
+    sort(v.begin(), v.end());
+    for (int x : v) cout << x << " "; cout << endl;
+    reverse(v.begin(), v.end());
+    cout << v.size() << " " << v.front() << " " << v.back() << " " << *max_element(v.begin(), v.end()) << endl;
+    v.erase(v.begin() + 1); v.insert(v.begin(), 100);
+    for (size_t i = 0; i < v.size(); i++) cout << v[i] << (i + 1 < v.size() ? "," : "\n");
+    vector<string> nomes = {"zeca", "ana", "bia"}; sort(nomes.begin(), nomes.end());
+    for (auto &s : nomes) cout << s << ";"; cout << endl;
+    string s = "Hello"; s += ", "; s += "World"; s.push_back('!');
+    cout << s << " " << s.size() << " " << s.substr(7, 5) << " " << s.find("World") << " " << (s.find("xyz") == string::npos) << endl;
+    cout << (string("abc") < string("abd")) << (s == "Hello") << " " << s[0] << s.at(1) << endl;
+    string t = to_string(42) + "-" + to_string(1.5); cout << t << endl;
+    vector<vector<int>> m(3, vector<int>(3, 0)); for (int i = 0; i < 3; i++) m[i][i] = i + 1;
+    for (auto &r : m) { for (int x : r) cout << x << ' '; cout << '\n'; }
+    return 0;
+}
+@@@ 04-classes
+#include <iostream>
+#include <string>
+using namespace std;
+class Animal {
+protected: string nome;
+public:
+    Animal(string n) : nome(n) {}
+    virtual ~Animal() { cout << "~Animal " << nome << endl; }
+    virtual string som() const { return "..."; }
+    void fala() const { cout << nome << " diz " << som() << endl; }
+};
+class Cao : public Animal {
+public:
+    Cao(string n) : Animal(n) {}
+    string som() const override { return "Au"; }
+    ~Cao() { cout << "~Cao" << endl; }
+};
+class Gato : public Animal { public: Gato(string n) : Animal(n) {} string som() const override { return "Miau"; } };
+struct Conta {
+    double saldo = 0; static int total;
+    Conta() { total++; }
+    void depositar(double v) { saldo += v; }
+    bool sacar(double v) { if (v > saldo) return false; saldo -= v; return true; }
+};
+int Conta::total = 0;
+int main() {
+    Animal *a[3] = {new Cao("Rex"), new Gato("Tom"), new Animal("Bicho")};
+    for (int i = 0; i < 3; i++) a[i]->fala();
+    for (int i = 0; i < 3; i++) delete a[i];
+    Conta c, d; c.depositar(100.5); cout << c.sacar(50) << c.sacar(100) << " " << c.saldo << " " << Conta::total << endl;
+    return 0;
+}
+@@@ 05-excecoes
+#include <iostream>
+#include <stdexcept>
+using namespace std;
+double divide(int a, int b) { if (b == 0) throw runtime_error("divisao por zero"); return (double)a / b; }
+int main() {
+    try { cout << divide(7, 2) << endl; cout << divide(1, 0) << endl; cout << "nao chega" << endl; }
+    catch (const runtime_error &e) { cout << "erro: " << e.what() << endl; }
+    try { throw 42; } catch (int x) { cout << "int " << x << endl; }
+    try { try { throw invalid_argument("interna"); } catch (const logic_error &e) { cout << "logic " << e.what() << endl; throw; } }
+    catch (const exception &e) { cout << "exception " << e.what() << endl; }
+    try { throw out_of_range("fora"); } catch (...) { cout << "qualquer" << endl; }
+    return 0;
+}
+@@@ 06-templates-ref
+#include <iostream>
+using namespace std;
+template <typename T> T maior(T a, T b) { return a > b ? a : b; }
+template <typename T> class Pilha {
+    T dados[10]; int topo = 0;
+public:
+    void push(T x) { dados[topo++] = x; }
+    T pop() { return dados[--topo]; }
+    bool vazia() const { return topo == 0; }
+};
+void troca(int &a, int &b) { int t = a; a = b; b = t; }
+int &ref(int *v, int i) { return v[i]; }
+int main() {
+    cout << maior(3, 7) << " " << maior(2.5, 1.5) << " " << maior('a', 'z') << endl;
+    Pilha<int> p; for (int i = 1; i <= 4; i++) p.push(i * i);
+    while (!p.vazia()) cout << p.pop() << " "; cout << endl;
+    int a = 1, b = 2; troca(a, b); cout << a << b << endl;
+    int v[3] = {1, 2, 3}; ref(v, 1) = 20; cout << v[1] << endl;
+    const int &r = a; a = 99; cout << r << endl;
+    auto x = 5 / 2.0; cout << x << " " << sizeof(x) << endl;
+    return 0;
+}
+@@@ 07-operadores
+#include <iostream>
+using namespace std;
+struct V2 {
+    double x, y;
+    V2(double x = 0, double y = 0) : x(x), y(y) {}
+    V2 operator+(const V2 &o) const { return V2(x + o.x, y + o.y); }
+    V2 operator*(double k) const { return V2(x * k, y * k); }
+    bool operator==(const V2 &o) const { return x == o.x && y == o.y; }
+    V2 &operator+=(const V2 &o) { x += o.x; y += o.y; return *this; }
+};
+ostream &operator<<(ostream &os, const V2 &v) { return os << "(" << v.x << ", " << v.y << ")"; }
+int main() {
+    V2 a(1, 2), b(3.5, -1);
+    cout << a + b << " " << a * 2 << " " << (a == b) << endl;
+    a += b; cout << a << endl;
+    int i = 5; cout << i++ << ++i << i-- << --i << endl;
+    cout << (5 > 3 ? "sim" : "nao") << endl;
+    unsigned u = 0; u--; cout << u << endl;
+    cout << (char)('a' + 2) << (int)'a' << endl;
+    return 0;
+}

@@ -151,7 +151,7 @@ export class SessaoCS {
           if (this.entradas.length) {
             envio = this.entradas.shift()
             temEnvio = true
-            if (envio !== null) this.buffer += `${envio}\n`
+            if (envio !== null && this.op.eco !== false) this.buffer += `${envio}\n` // eco, como no terminal
             continue
           }
           this.descarregar()

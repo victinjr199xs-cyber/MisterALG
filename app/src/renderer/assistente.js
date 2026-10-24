@@ -66,7 +66,7 @@ export function criarAssistente(op) {
 
   const painel = el('section', { className: 'moldura assistente', hidden: true, ariaLabel: 'Assistente de IA' },
     el('header', { className: 'assistente-topo' },
-      el('h2', { className: 'legenda', textContent: '✨ Assistente de IA' }),
+      el('h2', { className: 'legenda' }, '✨ ', el('span', { textContent: 'Assistente de IA' })),
       subtitulo,
       botaoTopo('⟲', 'Nova conversa', () => novaConversa()),
       botaoTopo('⚙', 'Configurar o assistente', () => configurar()),

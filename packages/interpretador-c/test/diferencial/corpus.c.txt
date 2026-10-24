@@ -1,0 +1,318 @@
+@@@ 01-aritmetica
+#include <stdio.h>
+int main() {
+    int a[] = {7, -7, 0, 100, -100, 13};
+    int b[] = {2, 2, 3, -7, 7, -4};
+    for (int i = 0; i < 6; i++) {
+        printf("%d / %d = %d, %d %% %d = %d\n", a[i], b[i], a[i] / b[i], a[i], b[i], a[i] % b[i]);
+    }
+    int x = 10;
+    x += 5; x -= 2; x *= 3; x /= 4; x %= 7;
+    printf("x=%d\n", x);
+    printf("%d\n", 7 / 2 * 2.0 > 6);
+    printf("%f\n", 7 / 2.0);
+    printf("%d\n", (int)3.99);
+    printf("%d\n", (int)-3.99);
+    printf("%d\n", 1 << 10);
+    printf("%d\n", -17 >> 2);
+    printf("%d %d %d\n", 5 & 3, 5 | 3, 5 ^ 3);
+    printf("%d\n", ~5);
+    printf("%d %d\n", !0, !5);
+    return 0;
+}
+@@@ 02-vetores
+#include <stdio.h>
+#define N 10
+void bolha(int v[], int n) {
+    for (int i = 0; i < n - 1; i++)
+        for (int j = 0; j < n - 1 - i; j++)
+            if (v[j] > v[j + 1]) { int t = v[j]; v[j] = v[j + 1]; v[j + 1] = t; }
+}
+int main() {
+    int v[N] = {64, 34, 25, 12, 22, 11, 90, -5, 0, 34};
+    int soma = 0, maior = v[0], menor = v[0];
+    for (int i = 0; i < N; i++) {
+        soma += v[i];
+        if (v[i] > maior) maior = v[i];
+        if (v[i] < menor) menor = v[i];
+    }
+    printf("soma=%d media=%.2f maior=%d menor=%d\n", soma, (double)soma / N, maior, menor);
+    bolha(v, N);
+    for (int i = 0; i < N; i++) printf("%d%c", v[i], i == N - 1 ? '\n' : ' ');
+    int zeros[5] = {0};
+    int parcial[5] = {1, 2};
+    for (int i = 0; i < 5; i++) printf("[%d,%d]", zeros[i], parcial[i]);
+    printf("\n");
+    printf("sizeof(v)/sizeof(v[0]) = %d\n", (int)(sizeof(v) / sizeof(v[0])));
+    return 0;
+}
+@@@ 03-strings
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+int main() {
+    char s[50] = "Ola Mundo";
+    char t[50];
+    strcpy(t, s);
+    strcat(t, "!!");
+    printf("%s|%s|%d|%d\n", s, t, (int)strlen(s), (int)strlen(t));
+    printf("%d %d %d\n", strcmp("abc", "abd") < 0, strcmp("b", "a") > 0, strcmp("x", "x"));
+    for (int i = 0; s[i]; i++) putchar(toupper(s[i]));
+    putchar('\n');
+    int vogais = 0;
+    for (int i = 0; s[i] != '\0'; i++) if (strchr("aeiouAEIOU", s[i])) vogais++;
+    printf("vogais=%d\n", vogais);
+    char buf[64];
+    sprintf(buf, "%05d-%s-%.1f", 42, "x", 2.55);
+    puts(buf);
+    char rev[50]; int n = strlen(s);
+    for (int i = 0; i < n; i++) rev[i] = s[n - 1 - i];
+    rev[n] = 0;
+    printf("%s\n", rev);
+    printf("%d %ld %f\n", atoi("123abc"), atol("-99"), atof("3.5e2"));
+    char *p = strstr(s, "Mun");
+    printf("%s %d\n", p, (int)(p - s));
+    printf("[%10s][%-10s][%.3s]\n", "dir", "esq", "truncado");
+    return 0;
+}
+@@@ 04-formatacao
+#include <stdio.h>
+#include <math.h>
+int main() {
+    double d = 3.14159265358979;
+    printf("%f %.0f %.1f %.2f %.10f\n", d, d, d, d, d);
+    printf("%e %E %g %G\n", 12345.6789, 0.000123, 100000.0, 1e-5);
+    printf("%g %g %g %g\n", 1.0, 0.5, 123456789.0, 1234567.0);
+    printf("[%8.3f][%-8.1f][%+d][% d][%08.2f]\n", d, d, 5, 5, -d);
+    printf("%x %X %o %#x %#o\n", 255, 255, 8, 255, 8);
+    printf("%c %c %%\n", 'A', 66);
+    printf("%5d|%-5d|%05d\n", 42, 42, 42);
+    printf("%.2f %.2f %.2f %.2f\n", 0.125, 0.135, 2.675, 1.005);
+    printf("%.0f %.0f %.0f %.0f\n", 0.5, 1.5, 2.5, 3.5);
+    printf("%f %f\n", 1.0/3, 2.0/3);
+    printf("%.3f %.3f\n", sqrt(2), pow(2, 0.5));
+    printf("%f %f %f\n", floor(-2.5), ceil(-2.5), fabs(-2.5));
+    printf("%f %f %f\n", sin(1.0), cos(1.0), log(10.0));
+    printf("%lf\n", 1.5);
+    float f = 0.1f;
+    printf("%f %.10f %f\n", f, f, f * 3);
+    printf("%d\n", (int)round(2.5));
+    printf("%f\n", 1e10);
+    printf("%f\n", 123456789.123456789);
+    printf("%s\n", 0.1 + 0.2 == 0.3 ? "igual" : "diferente");
+    printf("%.17g\n", 0.1 + 0.2);
+    return 0;
+}
+@@@ 05-recursao
+#include <stdio.h>
+long long fat(int n) { return n <= 1 ? 1 : n * fat(n - 1); }
+int fib(int n) { return n < 2 ? n : fib(n - 1) + fib(n - 2); }
+void hanoi(int n, char a, char b, char c, int *cont) {
+    if (n == 0) return;
+    hanoi(n - 1, a, c, b, cont);
+    (*cont)++;
+    if (*cont <= 5) printf("mover %d de %c para %c\n", n, a, c);
+    hanoi(n - 1, c, b, a, cont);
+}
+int mdc(int a, int b) { return b == 0 ? a : mdc(b, a % b); }
+int pot(int b, int e) { if (e == 0) return 1; int m = pot(b, e / 2); return e % 2 ? m * m * b : m * m; }
+int main() {
+    for (int i = 0; i <= 20; i += 4) printf("%d! = %lld\n", i, fat(i));
+    for (int i = 0; i < 15; i++) printf("%d ", fib(i));
+    printf("\n");
+    int c = 0;
+    hanoi(6, 'A', 'B', 'C', &c);
+    printf("total=%d\n", c);
+    printf("mdc=%d pot=%d\n", mdc(1071, 462), pot(3, 13));
+    return 0;
+}
+@@@ 06-structs
+#include <stdio.h>
+#include <string.h>
+typedef struct { char nome[20]; int idade; float nota; } Aluno;
+struct Ponto { int x, y; };
+struct Ponto soma(struct Ponto a, struct Ponto b) { struct Ponto r = {a.x + b.x, a.y + b.y}; return r; }
+void aniversario(Aluno *a) { a->idade++; }
+int main() {
+    Aluno al[3] = {{"Ana", 20, 8.5f}, {"Bruno", 22, 7.25f}, {"Carla", 19, 9.0f}};
+    float total = 0;
+    for (int i = 0; i < 3; i++) { aniversario(&al[i]); total += al[i].nota; printf("%-6s %3d %5.2f\n", al[i].nome, al[i].idade, al[i].nota); }
+    printf("media=%.3f\n", total / 3);
+    struct Ponto p = soma((struct Ponto){1, 2}, (struct Ponto){10, -20});
+    printf("(%d,%d)\n", p.x, p.y);
+    Aluno c = al[0]; strcpy(c.nome, "Copia"); printf("%s %s\n", al[0].nome, c.nome);
+    printf("%d\n", (int)sizeof(struct Ponto));
+    return 0;
+}
+@@@ 07-lista
+#include <stdio.h>
+#include <stdlib.h>
+typedef struct No { int v; struct No *prox; } No;
+No *push(No *h, int v) { No *n = malloc(sizeof(No)); n->v = v; n->prox = h; return n; }
+int main() {
+    No *h = NULL;
+    for (int i = 1; i <= 5; i++) h = push(h, i * i);
+    for (No *p = h; p; p = p->prox) printf("%d -> ", p->v);
+    printf("NULL\n");
+    int *a = malloc(5 * sizeof(int));
+    for (int i = 0; i < 5; i++) a[i] = i * 10;
+    a = realloc(a, 8 * sizeof(int));
+    for (int i = 5; i < 8; i++) a[i] = -i;
+    for (int i = 0; i < 8; i++) printf("%d ", a[i]);
+    printf("\n");
+    int *z = calloc(4, sizeof(int)); printf("%d %d\n", z[0], z[3]);
+    int x = 5, *px = &x, **ppx = &px; **ppx = 9; printf("%d %d\n", x, *px);
+    int arr[4] = {1,2,3,4}; int *q = arr; printf("%d %d %d\n", *(q + 2), q[3], (int)((arr + 3) - arr));
+    while (h) { No *t = h->prox; free(h); h = t; }
+    free(a); free(z);
+    return 0;
+}
+@@@ 08-entrada
+#include <stdio.h>
+int main() {
+    int n; double d; char nome[30]; char c;
+    scanf("%d", &n);
+    int s = 0;
+    for (int i = 0; i < n; i++) { int v; scanf("%d", &v); s += v; }
+    printf("soma=%d\n", s);
+    scanf("%lf", &d);
+    printf("d=%.3f\n", d);
+    scanf("%s", nome);
+    printf("nome=%s\n", nome);
+    scanf(" %c", &c);
+    printf("c=%c\n", c);
+    char linha[80];
+    scanf(" %[^\n]", linha);
+    printf("linha=[%s]\n", linha);
+    int r = scanf("%d", &n);
+    printf("r=%d\n", r);
+    return 0;
+}
+--- entrada
+4
+10 20
+30 -5
+2.5
+Maria
+x
+olá mundo com espaços
+@@@ 09-grandes
+#include <stdio.h>
+#include <limits.h>
+#include <stdint.h>
+int main() {
+    printf("%d %d\n", INT_MAX, INT_MIN);
+    unsigned int u = UINT_MAX; u += 2; printf("%u\n", u);
+    long long big = 1LL << 62; printf("%lld\n", big);
+    unsigned long long ull = 18446744073709551615ULL; printf("%llu\n", ull);
+    printf("%lld\n", LLONG_MAX);
+    long long f = 1; for (int i = 1; i <= 25; i++) { f *= i; if (i >= 20 && i <= 20) printf("%d! = %lld\n", i, f); }
+    unsigned char c = 250; c += 10; printf("%d\n", c);
+    signed char sc = 127; sc++; printf("%d\n", sc);
+    short sh = 32767; sh++; printf("%d\n", sh);
+    unsigned int a = 3, b = 5; printf("%u %d\n", a - b, (int)(a - b));
+    printf("%lu %lu %lu\n", (unsigned long)sizeof(int), (unsigned long)sizeof(long long), (unsigned long)sizeof(double));
+    int64_t x = -9007199254740993LL; printf("%lld\n", (long long)x);
+    printf("%d\n", -7 / 2); printf("%lld\n", -7LL % 3);
+    double dd = 1e308 * 10; printf("%f %f\n", dd, -dd);
+    return 0;
+}
+@@@ 10-matriz
+#include <stdio.h>
+int main() {
+    int a[3][3] = {{1,2,3},{4,5,6},{7,8,9}}, b[3][3], c[3][3] = {0};
+    for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) b[i][j] = a[j][i];
+    for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) for (int k = 0; k < 3; k++) c[i][j] += a[i][k] * b[k][j];
+    for (int i = 0; i < 3; i++) { for (int j = 0; j < 3; j++) printf("%4d", c[i][j]); printf("\n"); }
+    int diag = 0; for (int i = 0; i < 3; i++) diag += a[i][i]; printf("traco=%d\n", diag);
+    char g[3][4] = {"abc", "def", "ghi"}; for (int i = 0; i < 3; i++) printf("%s ", g[i]); printf("\n");
+    double m[2][3] = {{1.5, 2.5, 3.5}, {4, 5, 6}}; double s = 0; for (int i = 0; i < 2; i++) for (int j = 0; j < 3; j++) s += m[i][j]; printf("%.1f\n", s);
+    return 0;
+}
+@@@ 11-controle
+#include <stdio.h>
+int main() {
+    for (int i = 1; i <= 15; i++) {
+        switch (i % 5) { case 0: printf("zero "); break; case 1: case 2: printf("um-dois "); break; default: printf("outro "); }
+        if (i % 3 == 0) continue;
+        printf("%d;", i);
+    }
+    printf("\n");
+    int n = 27, passos = 0; while (n != 1) { n = n % 2 ? 3 * n + 1 : n / 2; passos++; } printf("collatz=%d\n", passos);
+    int k = 0; do { k += 3; } while (k < 10); printf("%d\n", k);
+    int i = 0; laco: if (i < 3) { printf("goto%d ", i); i++; goto laco; } printf("\n");
+    for (int a = 0, b = 10; a < b; a += 3, b -= 2) printf("(%d,%d)", a, b); printf("\n");
+    for (int l = 1; l <= 4; l++) { for (int e = 0; e < 4 - l; e++) printf(" "); for (int s = 0; s < 2 * l - 1; s++) printf("*"); printf("\n"); }
+    int p = 0; for (int x = 2; x < 50; x++) { int primo = 1; for (int d = 2; d * d <= x; d++) if (x % d == 0) { primo = 0; break; } if (primo) p++; } printf("primos=%d\n", p);
+    return 0;
+}
+@@@ 12-ponteiros-func
+#include <stdio.h>
+#include <stdlib.h>
+int cmp(const void *a, const void *b) { return *(const int *)a - *(const int *)b; }
+int dobra(int x) { return 2 * x; }
+int quad(int x) { return x * x; }
+void aplica(int *v, int n, int (*f)(int)) { for (int i = 0; i < n; i++) v[i] = f(v[i]); }
+void troca(int *a, int *b) { int t = *a; *a = *b; *b = t; }
+int main() {
+    int v[] = {5, 3, 9, 1, 7, -2};
+    qsort(v, 6, sizeof(int), cmp);
+    for (int i = 0; i < 6; i++) printf("%d ", v[i]); printf("\n");
+    aplica(v, 6, dobra); aplica(v, 6, quad);
+    for (int i = 0; i < 6; i++) printf("%d ", v[i]); printf("\n");
+    int a = 1, b = 2; troca(&a, &b); printf("%d %d\n", a, b);
+    static int cont = 0; for (int i = 0; i < 3; i++) cont += i; printf("%d\n", cont);
+    enum Cor { VERMELHO, VERDE = 5, AZUL }; printf("%d %d %d\n", VERMELHO, VERDE, AZUL);
+    const char *nomes[] = {"zero", "um", "dois"}; for (int i = 0; i < 3; i++) printf("%s,", nomes[i]); printf("\n");
+    printf("%d\n", abs(-4) + atoi("8"));
+    return 0;
+}
+@@@ 13-acentos
+#include <stdio.h>
+#include <string.h>
+int main() {
+    printf("Olá, João! Ação, coração, pingüim, 日本 ✓\n");
+    const char *s = "café";
+    printf("%s tem %d bytes\n", s, (int)strlen(s));
+    for (int i = 0; s[i]; i++) printf("%02x ", (unsigned char)s[i]);
+    printf("\n");
+    putchar('\t'); puts("tab"); printf("a\\b \"q\" \'s\' \x41 \101\n");
+    return 0;
+}
+@@@ 14-bits-char
+#include <stdio.h>
+void bin(unsigned n) { for (int i = 7; i >= 0; i--) putchar((n >> i) & 1 ? '1' : '0'); putchar('\n'); }
+int main() {
+    bin(5); bin(255); bin(0xA5 & 0x0F); bin(1 << 7);
+    char c = 'a'; printf("%c %d %c\n", c, c, c - 32);
+    for (char ch = 'a'; ch <= 'e'; ch++) printf("%c%d ", ch, ch - 'a'); printf("\n");
+    printf("%d\n", '0' + 5); printf("%c\n", '0' + 5);
+    unsigned x = 0xFFu; printf("%u %x\n", x << 4, x >> 2);
+    int neg = -1; printf("%u %x\n", neg, neg);
+    printf("%d\n", 'A' < 'a');
+    int cnt = 0; unsigned v = 0xF0F0; while (v) { cnt += v & 1; v >>= 1; } printf("bits=%d\n", cnt);
+    return 0;
+}
+@@@ 15-misc
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#define QUAD(x) ((x)*(x))
+int g = 100;
+int incrementa() { return ++g; }
+double media(double *v, int n) { double s = 0; for (int i = 0; i < n; i++) s += v[i]; return s / n; }
+int main() {
+    printf("%d %d\n", MAX(3, 9), QUAD(2 + 3));
+    int a1 = incrementa(); int a2 = incrementa(); printf("%d %d %d\n", a1, a2, g);
+    double v[] = {1.5, 2.5, 3.5, 4.5}; printf("%.2f\n", media(v, 4));
+    double desv = 0, m = media(v, 4); for (int i = 0; i < 4; i++) desv += (v[i] - m) * (v[i] - m); printf("%.4f\n", sqrt(desv / 4));
+    int x = 5; int y = x > 3 ? (x < 10 ? 1 : 2) : 3; printf("%d\n", y);
+    printf("%d\n", 5 && 0 || 1);
+    float f = 5 / 2; float g2 = 5 / 2.0f; printf("%.1f %.1f\n", f, g2);
+    printf("%.2f\n", 100 * 1.1);
+    printf("%d\n", (int)(0.1 + 0.7) * 10); printf("%d\n", (int)((0.1 + 0.7) * 10));
+    printf("%lld\n", (long long)1e9 * 3);
+    return 3;
+}

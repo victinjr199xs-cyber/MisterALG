@@ -12,19 +12,66 @@ const bitsDe = (arg, mod) => {
   return Math.max(32, (arg.tipo?.tamanho ?? 4) * 8)
 }
 
+// Conversão exata de double para decimal, como a glibc/msvcrt: o valor binário é exato, então um empate
+// (0.125 com %.2f) vai para o dígito par (0.12), o que o toFixed/toExponential do JS não faz.
+const f64 = new Float64Array(1)
+const u64 = new BigUint64Array(f64.buffer)
+
+function racional(v) { // v finito e > 0  →  [numerador, denominador] exatos
+  f64[0] = v
+  const bits = u64[0]
+  const e = Number((bits >> 52n) & 0x7ffn)
+  const m = (bits & ((1n << 52n) - 1n)) | (e ? 1n << 52n : 0n)
+  const e2 = (e || 1) - 1075
+  return e2 >= 0 ? [m << BigInt(e2), 1n] : [m, 1n << BigInt(-e2)]
+}
+
+/** round_half_even(v * 10^k) como BigInt. */
+function arredondar(v, k) {
+  let [n, d] = racional(v)
+  if (k >= 0) n *= 10n ** BigInt(k)
+  else d *= 10n ** BigInt(-k)
+  const q = n / d
+  const r2 = (n % d) * 2n
+  return r2 > d || (r2 === d && q % 2n === 1n) ? q + 1n : q
+}
+
+function fixo(v, prec) {
+  if (v === 0) return prec ? `0.${'0'.repeat(prec)}` : '0'
+  const s = arredondar(v, prec).toString().padStart(prec + 1, '0')
+  return prec ? `${s.slice(0, -prec)}.${s.slice(-prec)}` : s
+}
+
+/** Dígitos significativos (prec + 1) e expoente decimal de v. */
+function digitosExp(v, prec) {
+  if (v === 0) return ['0'.repeat(prec + 1), 0]
+  let x = Math.floor(Math.log10(v))
+  for (;;) {
+    const n = arredondar(v, prec - x)
+    if (n >= 10n ** BigInt(prec + 1)) x += 1
+    else if (n < 10n ** BigInt(prec)) x -= 1
+    else return [n.toString(), x]
+  }
+}
+
 function exponencial(v, prec, maiusculo) {
-  let s = v.toExponential(prec).replace(/e([+-])(\d)$/, 'e$10$2')
-  if (maiusculo) s = s.toUpperCase()
-  return s
+  const [dig, x] = digitosExp(v, prec)
+  const ex = `${x < 0 ? '-' : '+'}${String(Math.abs(x)).padStart(2, '0')}`
+  const s = `${dig[0]}${prec ? `.${dig.slice(1)}` : ''}e${ex}`
+  return maiusculo ? s.toUpperCase() : s
 }
 
 /** %g do C: escolhe entre %f e %e e tira os zeros do final (a não ser com #). */
 function geral(v, prec, alternativo, maiusculo) {
   const p = prec === 0 ? 1 : prec
-  if (v === 0) return alternativo ? (0).toFixed(p - 1) : '0'
-  const x = Math.floor(Math.log10(Math.abs(Number(v.toExponential(p - 1)))))
-  let s = p > x && x >= -4 ? v.toFixed(p - 1 - x) : exponencial(v, p - 1, maiusculo)
-  if (!alternativo) s = s.replace(/\.?0+(e|E|$)/, '$1').replace(/(\.\d*?)0+(e|E)/, '$1$2')
+  const x = v === 0 ? 0 : digitosExp(v, p - 1)[1]
+  let s = p > x && x >= -4 ? fixo(v, p - 1 - x) : exponencial(v, p - 1, maiusculo)
+  if (!alternativo) {
+    const i = s.search(/[eE]/)
+    let mant = i < 0 ? s : s.slice(0, i)
+    if (mant.includes('.')) mant = mant.replace(/\.?0+$/, '')
+    s = mant + (i < 0 ? '' : s.slice(i))
+  }
   return s
 }
 
@@ -98,7 +145,7 @@ export function formatar(formato, args, lerCadeia) {
           corpo = Number.isNaN(v) ? 'nan' : 'inf'
           if (maiusculo) corpo = corpo.toUpperCase()
           numerico = false
-        } else if (conv === 'f' || conv === 'F') corpo = v.toFixed(Math.min(precisao ?? 6, 100))
+        } else if (conv === 'f' || conv === 'F') corpo = fixo(v, Math.min(precisao ?? 6, 100))
         else if (conv === 'e' || conv === 'E') corpo = exponencial(v, Math.min(precisao ?? 6, 100), maiusculo)
         else if (conv === 'a' || conv === 'A') corpo = v.toString(16)
         else corpo = geral(v, Math.min(precisao ?? 6, 100), flags.includes('#'), maiusculo)

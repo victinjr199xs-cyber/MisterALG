@@ -114,7 +114,9 @@ export function criarMemoriaC(rolagem) {
       const foto = maq.instantaneo()
       const quadros = [...foto.quadros].reverse().map((q, i) => {
         const caixa = el('div', `mc-quadro${i === 0 ? ' mc-atual' : ''}`)
-        caixa.append(el('div', 'mc-cabecalho', `${q.funcao}()  ·  linha ${q.linha}`))
+        const cabecalho = el('div', 'mc-cabecalho')
+    cabecalho.append(`${q.funcao}()  ·  `, el('span', '', `linha ${q.linha}`)) // "linha N" é traduzido pela página
+    caixa.append(cabecalho)
         for (const v of q.variaveis) caixa.append(linhaDeVariavel(v.nome, v.tipoTexto, descrever(maq, v.endereco, v.tipo), v.endereco))
         if (!q.variaveis.length) caixa.append(el('div', 'mc-vazio', 'sem variáveis'))
         return caixa

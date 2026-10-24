@@ -17,10 +17,10 @@ const MAXIMOS = {
 const NOME_DOTNET = { sbyte: 'SByte', byte: 'Byte', short: 'Int16', ushort: 'UInt16', int: 'Int32', uint: 'UInt32', long: 'Int64', ulong: 'UInt64', float: 'Single', double: 'Double', decimal: 'Decimal' }
 
 /** Converte o texto digitado em número do tipo dado (com as regras de cultura do pt-BR). null se inválido. */
-export function analisarNumero(m, texto, tipo, estiloInvariante = false) {
+export function analisarNumero(m, texto, tipo, estiloInvariante = false, cultura = null) {
   if (texto === null || texto === undefined) return { erro: 'nulo' }
   let t = String(texto).trim()
-  const c = estiloInvariante ? m.cultura.nome === '' ? m.cultura : null : m.cultura
+  const c = cultura ?? m.cultura
   const decimal = estiloInvariante ? '.' : c.decimal
   const milhar = estiloInvariante ? ',' : c.milhar
   if (t === '') return { erro: 'formato' }
@@ -56,8 +56,11 @@ function mensagemErro(r, texto, tipo) {
   return ['FormatException', `The input string '${texto}' was not in a correct format.`]
 }
 
-export function parse(m, texto, tipo) {
-  const r = analisarNumero(m, texto, tipo)
+/** O IFormatProvider (CultureInfo) entre os argumentos de Parse/TryParse/Convert, se houver. */
+export const culturaDe = (args) => args.find((a) => a && typeof a === 'object' && a.cultura && typeof a.cultura.decimal === 'string')?.cultura ?? null
+
+export function parse(m, texto, tipo, cultura = null) {
+  const r = analisarNumero(m, texto, tipo, false, cultura)
   if (r.erro) {
     const [classe, msg] = mensagemErro(r, texto, tipo)
     throw m.excecao(classe, msg)
@@ -66,8 +69,9 @@ export function parse(m, texto, tipo) {
 }
 
 export function tryParse(m, args, tipo) {
-  const [texto, saida] = args
-  const r = analisarNumero(m, texto, tipo)
+  const texto = args[0]
+  const saida = args[args.length - 1]
+  const r = analisarNumero(m, texto, tipo, false, culturaDe(args))
   if (r.erro) {
     saida.v = m.valorPadrao(tipo)
     return false
@@ -183,7 +187,7 @@ export function tipoNumericoNativo(tipo) {
     nome,
     const: {},
     estatico: {
-      Parse: (m, [t]) => parse(m, t, tipo),
+      Parse: (m, [t, ...resto]) => parse(m, t, tipo, culturaDe(resto)),
       TryParse: (m, a) => tryParse(m, a, tipo),
       Equals: (m, [a, b]) => igualValor(m, a, b),
       Compare: (m, [a, b]) => m.comparar(a, b),
@@ -233,9 +237,9 @@ export function tipoNumericoNativo(tipo) {
 
 // ---- Convert --------------------------------------------------------------------------------------------
 
-function paraNumeroConvert(m, v, tipo) {
+function paraNumeroConvert(m, v, tipo, cultura = null) {
   if (v === null || v === undefined) return m.valorPadrao(tipo)
-  if (typeof v === 'string') return parse(m, v, tipo)
+  if (typeof v === 'string') return parse(m, v, tipo, cultura)
   if (typeof v === 'boolean') return converterNumero(v ? 1 : 0, tipo)
   if (v instanceof Chr) {
     if (tipo === 'char') return v
@@ -266,16 +270,16 @@ function paraNumeroConvert(m, v, tipo) {
 export const CONVERT = {
   nome: 'Convert',
   estatico: {
-    ToInt32: (m, [v, base]) => (typeof v === 'string' && typeof base === 'number' ? parseInt(v, base) | 0 : paraNumeroConvert(m, v, 'int')),
+    ToInt32: (m, [v, base]) => (typeof v === 'string' && typeof base === 'number' ? parseInt(v, base) | 0 : paraNumeroConvert(m, v, 'int', culturaDe([base]))),
     ToInt64: (m, [v]) => paraNumeroConvert(m, v, 'long'),
     ToInt16: (m, [v]) => paraNumeroConvert(m, v, 'short'),
     ToUInt32: (m, [v]) => paraNumeroConvert(m, v, 'uint'),
     ToUInt64: (m, [v]) => paraNumeroConvert(m, v, 'ulong'),
     ToByte: (m, [v]) => paraNumeroConvert(m, v, 'byte'),
     ToSByte: (m, [v]) => paraNumeroConvert(m, v, 'sbyte'),
-    ToDouble: (m, [v]) => paraNumeroConvert(m, v, 'double'),
-    ToSingle: (m, [v]) => paraNumeroConvert(m, v, 'float'),
-    ToDecimal: (m, [v]) => paraNumeroConvert(m, v, 'decimal'),
+    ToDouble: (m, [v, p]) => paraNumeroConvert(m, v, 'double', culturaDe([p])),
+    ToSingle: (m, [v, p]) => paraNumeroConvert(m, v, 'float', culturaDe([p])),
+    ToDecimal: (m, [v, p]) => paraNumeroConvert(m, v, 'decimal', culturaDe([p])),
     ToChar: (m, [v]) => (typeof v === 'string' ? new Chr(v.charCodeAt(0)) : paraNumeroConvert(m, v, 'char')),
     ToBoolean(m, [v]) {
       if (typeof v === 'boolean') return v

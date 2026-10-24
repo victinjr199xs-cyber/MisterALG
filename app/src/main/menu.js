@@ -144,7 +144,7 @@ export function montarMenu(janela, prefs, estado = {}) {
         {
           label: tr('&Tema (cores)'),
           submenu: TEMAS.map((tema) => ({
-            label: tema.nome,
+            label: tr(tema.nome),
             type: 'radio',
             checked: tema.id === temaPorId(prefs.tema).id,
             click: enviar('tema', tema.id),

@@ -31,7 +31,7 @@ export function decodificar(bytes) {
 
 /** Texto → bytes em CP1252 (com CRLF, como no Windows), ou null se não couber. */
 function emCp1252(texto) {
-  const comCrlf = texto.replace(/\r?\n/g, '\r\n')
+  const comCrlf = texto.replace(/\r?\n/g, '\r\n') // .alg: sempre CRLF, como o VisuAlg do Windows
   const saida = new Uint8Array(comCrlf.length)
   for (let i = 0; i < comCrlf.length; i += 1) {
     const b = TABELA.get(comCrlf[i])
@@ -46,7 +46,9 @@ export function codificar(texto, codificacao = 'windows-1252') {
     const bytes = emCp1252(texto)
     if (bytes) return { bytes, codificacao }
   }
-  return { bytes: Buffer.from(texto.replace(/\r?\n/g, '\r\n'), 'utf8'), codificacao: 'utf-8' }
+  // Programas em outras linguagens (UTF-8): CRLF só no Windows; no Mac e no Linux ficam com LF (um .py ou .sh com CRLF quebra lá).
+  const fim = codificacao === 'windows-1252' || process.platform === 'win32' ? '\r\n' : '\n'
+  return { bytes: Buffer.from(texto.replace(/\r?\n/g, fim), 'utf8'), codificacao: 'utf-8' }
 }
 
 export async function lerArquivo(caminho) {

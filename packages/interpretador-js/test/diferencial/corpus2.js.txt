@@ -1,0 +1,89 @@
+@@@ 16-this-arguments
+function f() { return [typeof this, arguments.length, [...arguments]] }
+console.log(f(1, 2), f.call("x", 3), f.apply(null, [4, 5, 6]), f.bind(1)(7))
+const o = { v: 1, normal() { return this.v }, seta: () => typeof this, aninhada() { return [1, 2].map(function () { return typeof this }) }, aninhada2() { return [1].map(() => this.v) } }
+console.log(o.normal(), o.seta(), o.aninhada(), o.aninhada2())
+const solta = o.normal; try { console.log(solta()) } catch (e) { console.log("erro", e.constructor.name) }
+function Ctor(a) { this.a = a }
+console.log(new Ctor(5), new Ctor(6).a)
+function dflt(a, b = a * 2, { c = 3, d } = {}, [e, ...r] = [9, 8, 7]) { return [a, b, c, d, e, r] }
+console.log(dflt(1), dflt(1, 5, { d: 4 }, [0]), dflt.length)
+console.log((function () { "use strict"; return this })(), (() => { try { return undeclaredVar = 1 } catch (e) { return e.name } })())
+var self = this; console.log(typeof self, typeof globalThis, typeof window)
+@@@ 17-geradores-iteradores
+function* naturais() { let n = 0; while (true) yield n++ }
+function* take(it, k) { let i = 0; for (const x of it) { if (i++ >= k) return; yield x } }
+console.log([...take(naturais(), 5)], Array.from(take(naturais(), 3), x => x * 10))
+function* troca() { const a = yield "a?"; const b = yield `b? ${a}`; return a + b }
+const g = troca(); console.log(g.next().value, g.next(1).value, g.next(2), g.next())
+class Arvore { constructor(v, l, r) { this.v = v; this.l = l; this.r = r } *[Symbol.iterator]() { if (this.l) yield* this.l; yield this.v; if (this.r) yield* this.r } }
+console.log([...new Arvore(2, new Arvore(1), new Arvore(3))])
+const [x, y, ...z] = naturais().constructor === undefined ? [] : take(naturais(), 5); console.log(x, y, z)
+console.log(Object.entries({ a: 1 }).map(([k, v]) => k + v), new Map([[1, 2]]).entries().next(), [..."ab"].entries().toString())
+@@@ 18-excecoes-fluxo
+function a() { try { return "try" } finally { console.log("finally roda") } }
+function b() { try { throw new Error("x") } catch { return "catch sem binding" } finally { console.log("finally b") } }
+function c() { for (let i = 0; i < 3; i++) { try { if (i === 1) continue; if (i === 2) break; console.log("i", i) } finally { console.log("f", i) } } return "fim" }
+console.log(a(), b(), c())
+class MeuErro extends Error { constructor(m, cod) { super(m); this.name = "MeuErro"; this.cod = cod } }
+try { throw new MeuErro("deu ruim", 42) } catch (e) { console.log(e.name, e.message, e.cod, e instanceof MeuErro, e instanceof Error, String(e), Object.prototype.toString.call(e)) }
+try { [3, 1, 2].sort((p, q) => { throw new RangeError("no comparador") }) } catch (e) { console.log(e.name, e.message) }
+try { [1, 2, 3].forEach(n => { if (n === 2) throw new Error("no forEach " + n) }) } catch (e) { console.log(e.message) }
+try { JSON.parse("{'a':1}") } catch (e) { console.log(e.name) }
+try { null.f() } catch (e) { console.log(e.name) }
+try { decodeURIComponent("%") } catch (e) { console.log(e.name, e.message) }
+try { "abc".repeat(-1) } catch (e) { console.log(e.name, e.message) }
+try { new (class { constructor() { throw new Error("no ctor") } })() } catch (e) { console.log(e.message) }
+const p = Promise.reject(new Error("rejeitada")); p.catch(e => console.log("catch async:", e.message)).finally(() => console.log("finally async"))
+new Promise((_, rej) => rej(new TypeError("tipo"))).then(() => console.log("nunca")).catch(e => console.log(e.name))
+setTimeout(() => { try { throw new Error("dentro do timeout") } catch (e) { console.log(e.message) } }, 10)
+console.log(String(new Error("m")), new Error("m").toString(), Error("sem new").message, new Error("c", { cause: "porque" }).cause)
+@@@ 19-recursao-desempenho
+const fib = n => n < 2 ? n : fib(n - 1) + fib(n - 2)
+console.log(fib(20))
+let s = 0; for (let i = 0; i < 200000; i++) s += i % 7; console.log(s)
+const arr = Array.from({ length: 5000 }, (_, i) => (i * 7919) % 10007); arr.sort((a, b) => a - b); console.log(arr.slice(0, 5), arr.length)
+const soma = (n) => n === 0 ? 0 : n + soma(n - 1); console.log(soma(400))
+const memo = new Map(); const col = n => n === 1 ? 0 : memo.get(n) ?? (memo.set(n, 1 + col(n % 2 ? 3 * n + 1 : n / 2)), memo.get(n)); console.log(col(27))
+let str = ""; for (let i = 0; i < 1000; i++) str += i % 10; console.log(str.length, str.slice(0, 20))
+const mat = Array.from({ length: 30 }, (_, i) => Array.from({ length: 30 }, (_, j) => i * j)); console.log(mat.flat().reduce((a, b) => a + b))
+@@@ 20-classes-avancadas
+class A {
+  static #contagem = 0
+  static { A.inicial = "bloco estatico" }
+  #priv = 1
+  static criar() { A.#contagem++; return new A() }
+  static get total() { return A.#contagem }
+  #metodoPrivado() { return this.#priv * 10 }
+  publico() { return this.#metodoPrivado() }
+  get x() { return this.#priv }
+  set x(v) { this.#priv = v }
+  static ehA(o) { return #priv in o }
+  toJSON() { return { tipo: "A" } }
+  [Symbol.toPrimitive](h) { return h === "number" ? 42 : "A!" }
+}
+const a = A.criar(); a.x = 5
+console.log(a.publico(), a.x, A.total, A.inicial, A.ehA(a), A.ehA({}), JSON.stringify(a), `${a}`, +a, a + "")
+class B extends A { publico() { return super.publico() + 1 } get x() { return super.x * 2 } }
+const b = new B(); console.log(b.publico(), b.x, B.criar() instanceof A, Object.getOwnPropertyNames(A.prototype))
+const Mixin = (S) => class extends S { dizer() { return "mixin " + this.constructor.name } }
+class C extends Mixin(Object) {} console.log(new C().dizer(), C.name, Mixin(Object).name)
+class Temp { static from(x) { return Object.assign(new Temp(), x) } } console.log(Temp.from({ k: 1 }), Temp.name, typeof Temp.from)
+console.log(class {}.name, (class Nomeada {}).name, new (class { constructor() { this.z = 1 } })())
+@@@ 21-entrada-loop
+let total = 0, cont = 0, linha
+while ((linha = prompt("valor (vazio encerra):")) !== null && linha !== "") { total += parseFloat(linha.replace(",", ".")); cont++ }
+console.log(`Lidos: ${cont}, soma: ${total.toFixed(2)}, média: ${cont ? (total / cont).toFixed(2) : "n/a"}`)
+const r = prompt("Resposta (s/n)?")
+if (r?.toLowerCase().startsWith("s")) console.log("sim") ; else console.log("não")
+const nomes = []; for (let i = 0; i < 2; i++) nomes.push(prompt(`Nome ${i + 1}:`)); console.log(nomes.sort((x, y) => x.localeCompare(y)))
+console.log(prompt("sem entrada:"), "fim")
+--- entrada
+10,5
+2.25
+abc
+7
+
+Sim
+Zoé
+Álvaro

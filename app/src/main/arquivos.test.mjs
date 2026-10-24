@@ -26,6 +26,16 @@ test('caractere fora do 1252 cai para UTF-8', async () => {
   assert.equal((await lerArquivo(caminho)).texto, texto)
 })
 
+test('programa em UTF-8: CRLF só no Windows; .alg sempre CRLF', async () => {
+  const eol = process.platform === 'win32' ? '\r\n' : '\n'
+  const js = join(pasta, 'p.js')
+  await gravarArquivo(js, 'a\nb\n', 'utf-8')
+  assert.equal(readFileSync(js, 'utf8'), `a${eol}b${eol}`)
+  const alg = join(pasta, 'p.alg')
+  await gravarArquivo(alg, 'a\nb\n', 'windows-1252')
+  assert.equal(readFileSync(alg, 'latin1'), 'a\r\nb\r\n')
+})
+
 test('sobrescrever mantém o conteúdo novo e não deixa .misteralg-tmp', async () => {
   const caminho = join(pasta, 'sobre.alg')
   await gravarArquivo(caminho, 'antigo\n')

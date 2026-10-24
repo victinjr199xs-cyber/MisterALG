@@ -1,0 +1,118 @@
+{
+ "c/01-aritmetica": {
+  "saida": "7 / 2 = 3, 7 % 2 = 1\n-7 / 2 = -3, -7 % 2 = -1\n0 / 3 = 0, 0 % 3 = 0\n100 / -7 = -14, 100 % -7 = 2\n-100 / 7 = -14, -100 % 7 = -2\n13 / -4 = -3, 13 % -4 = 1\nx=2\n0\n3.500000\n3\n-3\n1024\n-5\n1 7 6\n-6\n1 0\n",
+  "codigo": 0
+ },
+ "c/02-vetores": {
+  "saida": "soma=287 media=28.70 maior=90 menor=-5\n-5 0 11 12 22 25 34 34 64 90\n[0,1][0,2][0,0][0,0][0,0]\nsizeof(v)/sizeof(v[0]) = 10\n",
+  "codigo": 0
+ },
+ "c/03-strings": {
+  "saida": "Ola Mundo|Ola Mundo!!|9|11\n1 1 0\nOLA MUNDO\nvogais=4\n00042-x-2.5\nodnuM alO\n123 -99 350.000000\nMundo 4\n[       dir][esq       ][tru]\n",
+  "codigo": 0
+ },
+ "c/04-formatacao": {
+  "saida": "3.141593 3 3.1 3.14 3.1415926536\n1.234568e+04 1.230000E-04 100000 1E-05\n1 0.5 1.23457e+08 1.23457e+06\n[   3.142][3.1     ][+5][ 5][-0003.14]\nff FF 10 0xff 010\nA B %\n   42|42   |00042\n0.12 0.14 2.67 1.00\n0 2 2 4\n0.333333 0.666667\n1.414 1.414\n-3.000000 -2.000000 2.500000\n0.841471 0.540302 2.302585\n1.500000\n0.100000 0.1000000015 0.300000\n3\n10000000000.000000\n123456789.123457\ndiferente\n0.30000000000000004\n",
+  "codigo": 0
+ },
+ "c/05-recursao": {
+  "saida": "0! = 1\n4! = 24\n8! = 40320\n12! = 479001600\n16! = 20922789888000\n20! = 2432902008176640000\n0 1 1 2 3 5 8 13 21 34 55 89 144 233 377 \nmover 1 de A para B\nmover 2 de A para C\nmover 1 de C para A\nmover 3 de A para B\nmover 1 de B para C\ntotal=63\nmdc=21 pot=1594323\n",
+  "codigo": 0
+ },
+ "c/06-structs": {
+  "saida": "Ana     21  8.50\nBruno   23  7.25\nCarla   20  9.00\nmedia=8.250\n(11,-18)\nAna Copia\n8\n",
+  "codigo": 0
+ },
+ "c/07-lista": {
+  "saida": "25 -> 16 -> 9 -> 4 -> 1 -> NULL\n0 10 20 30 40 -5 -6 -7 \n0 0\n9 9\n3 4 3\n",
+  "codigo": 0
+ },
+ "c/08-entrada": {
+  "saida": "soma=55\nd=2.500\nnome=Maria\nc=x\nlinha=[olá mundo com espaços]\nr=-1\n",
+  "codigo": 0
+ },
+ "c/09-grandes": {
+  "saida": "2147483647 -2147483648\n1\n4611686018427387904\n18446744073709551615\n9223372036854775807\n20! = 2432902008176640000\n4\n-128\n-32768\n4294967294 -2\n4 8 8\n-9007199254740993\n-3\n-1\ninf -inf\n",
+  "codigo": 0
+ },
+ "c/10-matriz": {
+  "saida": "  14  32  50\n  32  77 122\n  50 122 194\ntraco=15\nabc def ghi \n22.5\n",
+  "codigo": 0
+ },
+ "c/11-controle": {
+  "saida": "um-dois 1;um-dois 2;outro outro 4;zero 5;um-dois um-dois 7;outro 8;outro zero 10;um-dois 11;um-dois outro 13;outro 14;zero \ncollatz=111\n12\ngoto0 goto1 goto2 \n(0,10)(3,8)\n   *\n  ***\n *****\n*******\nprimos=15\n",
+  "codigo": 0
+ },
+ "c/12-ponteiros-func": {
+  "saida": "-2 1 3 5 7 9 \n16 4 36 100 196 324 \n2 1\n3\n0 5 6\nzero,um,dois,\n12\n",
+  "codigo": 0
+ },
+ "c/13-acentos": {
+  "saida": "Olá, João! Ação, coração, pingüim, 日本 ✓\ncafé tem 5 bytes\n63 61 66 c3 a9 \n\ttab\na\\b \"q\" 's' A A\n",
+  "codigo": 0
+ },
+ "c/14-bits-char": {
+  "saida": "00000101\n11111111\n00000101\n10000000\na 97 A\na0 b1 c2 d3 e4 \n53\n5\n4080 3f\n4294967295 ffffffff\n1\nbits=8\n",
+  "codigo": 0
+ },
+ "c/15-misc": {
+  "saida": "9 25\n101 102 102\n3.00\n1.1180\n1\n1\n2.0 2.5\n110.00\n0\n7\n3000000000\n",
+  "codigo": 3
+ },
+ "cpp/01-cout-basico": {
+  "saida": "Olá, mundo! ção\n42 -7 3 2.5 0.333333 100000 1.23457e+06 0.0001 1e-05\n10 x 1e+10 1.23457e+08 1.5\n3.14 2.00 0.12 0.14 2.67\n2 4\n3.14 1.23e+03\n[    42][     abc][****7]\n0.3\n3 -3 -1 3.5\n140 1099511627776\n",
+  "codigo": 0
+ },
+ "cpp/02-entrada": {
+  "saida": "5|2.75|Joana\nlinha=[uma linha inteira com acentuação]\nz\nsoma=15 eof=1\n",
+  "codigo": 0
+ },
+ "cpp/03-vector-string": {
+  "saida": "1 2 3 5 7 9 \n6 9 1 9\n100,9,5,3,2,1\nana;bia;zeca;\nHello, World! 13 World 7 1\n10 He\n42-1.500000\n1 0 0 \n0 2 0 \n0 0 3 \n",
+  "codigo": 0
+ },
+ "cpp/04-classes": {
+  "saida": "Rex diz Au\nTom diz Miau\nBicho diz ...\n~Cao\n~Animal Rex\n~Animal Tom\n~Animal Bicho\n10 50.5 2\n",
+  "codigo": 0
+ },
+ "cpp/05-excecoes": {
+  "saida": "3.5\nerro: divisao por zero\nint 42\nlogic interna\nexception interna\nqualquer\n",
+  "codigo": 0
+ },
+ "cpp/06-templates-ref": {
+  "saida": "7 2.5 z\n16 9 4 1 \n21\n20\n99\n2.5 8\n",
+  "codigo": 0
+ },
+ "cpp/07-operadores": {
+  "saida": "(4.5, 1) (2, 4) 0\n(4.5, 1)\n5775\nsim\n4294967295\nc97\n",
+  "codigo": 0
+ },
+ "c/16-fgets-getchar": {
+  "saida": "[Primeira linha com espaços] 27\nn=12 letras=6\num=1\ndois=22\nfim eof=0\n",
+  "codigo": 0
+ },
+ "c/17-memoria-string": {
+  "saida": "xxxxx\n1 4\n<um><dois><tres><quatro>\nabcde 0\n3 42 3.5 xyz\nCopia\n/c\n1\n[0][1][2]\n8\n",
+  "codigo": 0
+ },
+ "c/18-algoritmos": {
+  "saida": "3 -1\n1 0\n11111111\nFF\n144\n0\nabc acb bac bca cba cab \n12586269025\n3.141583\na:3 o:4 r:3 u:2 \n",
+  "codigo": 0
+ },
+ "c/19-struct-aninhada": {
+  "saida": "Bia nasceu 31/12/1999, amiga: Ana\n2001\nAna;Bia;\n12\n",
+  "codigo": 0
+ },
+ "c/20-float-misc": {
+  "saida": "3.300000 3.3000002 0\n1.000000000000000 0\n333333.33 0.29\n3 0\n1.500000 -1.500000\n1024.000000 0.010000 2.718282\n0.7854 0.5463 3.0000\n1\n-1 0\n-3.000000 -2.000000\n   1234.57|1234.57   |+1234.6|1235\n0.000000e+00\n0.0001 1e-05\n1e+100\n1.23e+03 1234.5678\n 45.7%\n0.33333\n3.000000 3.500000\n10\n-2 2\n1\n",
+  "codigo": 0
+ },
+ "c/21-escopo-static": {
+  "saida": "1 2 3 \n30 20 10\n0 1 100\n4 1\n0 5\n9\n8\n",
+  "codigo": 0
+ },
+ "c/22-sair-codigo": {
+  "saida": "antes\n",
+  "codigo": 7
+ }
+}

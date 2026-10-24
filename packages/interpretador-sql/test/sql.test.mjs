@@ -25,12 +25,17 @@ select 1`
 test('tabela no formato do psql', () => {
   const campos = [{ nome: 'id', tipo: 23 }, { nome: 'nome', tipo: 25 }]
   assert.equal(tabelaPsql(campos, [['1', 'Ana'], ['10', null]]), [
-    ' id | nome',
+    ' id | nome ', // (o psql de verdade não tira os espaços do fim do cabeçalho; na última coluna de texto não enche, mas põe o espaço da frente)
     '----+------',
     '  1 | Ana',
-    ' 10 |',
+    ' 10 | ',
     '(2 rows)',
   ].join('\n'))
+  // valor com várias linhas: o psql põe "+" no fim de cada linha menos a última
+  assert.equal(tabelaPsql([{ nome: 'a', tipo: 25 }, { nome: 'b', tipo: 23 }], [['x\ny', '1']]), ' a | b \n---+---\n x+| 1\n y | \n(1 row)')
+  assert.equal(tabelaPsql([], [[]]), '--\n(1 row)')
+  // letras largas (japonês, emoji) ocupam 2 colunas na tela
+  assert.equal(tabelaPsql([{ nome: 't', tipo: 25 }], [['日本'], ['ab']]), '  t   \n------\n 日本\n ab\n(2 rows)')
   assert.equal(tabelaPsql([{ nome: 'n', tipo: 23 }], [['5']]).endsWith('(1 row)'), true)
 })
 

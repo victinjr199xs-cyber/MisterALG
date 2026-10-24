@@ -22,6 +22,17 @@ function nomeMembro(n) {
 
 const semRef = (v) => (v instanceof Ref ? v.v : v)
 
+/** A cadeia a?.b().c: há um ?. no começo dela (descendo por .membro, (chamada) e [índice])? */
+function temAcessoCondicionalNaEspinha(n) {
+  for (let x = n; x; ) {
+    if (x.t === 'conditional_access_expression') return true
+    if (x.t === 'member_access_expression' || x.t === 'element_access_expression') x = filho(x, 'expression')
+    else if (x.t === 'invocation_expression') x = filho(x, 'function')
+    else return false
+  }
+  return false
+}
+
 export const invocacao = {
   // ---- ordem natural dos valores ---------------------------------------------------------------------------
 
@@ -261,7 +272,7 @@ export const invocacao = {
   *avalInvocacao(n, amb) {
     const f = filho(n, 'function')
     const lista = filho(n, 'arguments')
-    if (f.t === 'identifier' && f.x === 'nameof') {
+    if (f.t === 'identifier' && (f.x === 'nameof' || f.f?.[0]?.t === 'nameof')) { // (a gramática põe o nameof como identificador com um filho)
       const e = lista.f[0].f[lista.f[0].f.length - 1]
       return e.t === 'member_access_expression' ? nomeMembro(filho(e, 'name')).nome : e.x ?? e.f?.[0]?.x ?? ''
     }
@@ -280,7 +291,7 @@ export const invocacao = {
       case 'conditional_access_expression': {
         // a?.Metodo(args): se "a" é null, nem os argumentos são calculados
         const v = yield* this.aval(filho(f, 'condition') ?? f.f[0], amb)
-        if (v === null || v === undefined) return null
+        if (v === null || v === undefined) { this.sinalCurto = true; return null }
         const b = f.f[f.f.length - 1]
         if (b.t === 'member_binding_expression') {
           const { nome, targs } = nomeMembro(filho(b, 'name'))
@@ -401,7 +412,14 @@ export const invocacao = {
 
   /** O lado esquerdo de uma cadeia: se for a?.b e "a" for null, a cadeia toda (a?.b.c(...)) vale null. */
   *avalAlvoCadeia(alvo, amb) {
-    if (alvo.t !== 'conditional_access_expression') return { curto: false, v: yield* this.aval(alvo, amb) }
+    if (alvo.t !== 'conditional_access_expression') {
+      if (!temAcessoCondicionalNaEspinha(alvo)) return { curto: false, v: yield* this.aval(alvo, amb) }
+      // a?.M().P: o ?. vale para a cadeia inteira; se "a" é null, o .P nem é tentado (em vez de NullReferenceException)
+      this.sinalCurto = false
+      const v = yield* this.aval(alvo, amb)
+      if ((v === null || v === undefined) && this.sinalCurto) { this.sinalCurto = false; return { curto: true } }
+      return { curto: false, v }
+    }
     const cond = yield* this.aval(filho(alvo, 'condition') ?? alvo.f[0], amb)
     if (cond === null || cond === undefined) return { curto: true }
     ;(this.pilhaLigacao ??= []).push(cond)
@@ -564,7 +582,7 @@ export const invocacao = {
   *avalAcessoCondicional(n, amb) {
     const cond = filho(n, 'condition') ?? n.f[0]
     const v = yield* this.aval(cond, amb)
-    if (v === null || v === undefined) return null
+    if (v === null || v === undefined) { this.sinalCurto = true; return null }
     const resto = n.f[n.f.length - 1]
     ;(this.pilhaLigacao ??= []).push(v)
     try {
@@ -782,7 +800,8 @@ export const invocacao = {
           const lista = esq.f.find((x) => x.t === 'bracketed_argument_list')
           const args = yield* this.avalIndices(lista, amb)
           const lv = lvIndice(this, obj, args)
-          yield* lv.gravar(yield* this.aval(dir, amb))
+          const tv = !(obj instanceof Objeto) ? obj?.tipoV ?? obj?.tipoElem : undefined
+          yield* lv.gravar(yield* this.avalComTipo(dir, amb, typeof tv === 'string' && tv !== 'object' ? tv : undefined))
         } else if (esq.t === 'identifier') {
           const lv = obj instanceof Objeto ? (this.lvMembro(obj, esq.x) ?? this.lvMembroLivre(obj, esq.x)) : lvNativo(this, obj, esq.x)
           const tipo = lv.tipo?.()
@@ -791,7 +810,9 @@ export const invocacao = {
         } else throw new ErroCS('inicializador de objeto inválido', item.l)
       } else {
         // item de coleção: Add(valor) ou Add(a, b) para { a, b }
-        const valores = item.t === 'initializer_expression' ? yield* this.avalLista(item, amb) : [yield* this.aval(item, amb)]
+        // (o tipo dos elementos deixa um new("a", 1) sem nome de tipo, dentro de new List<Pessoa> { ... }, saber o que criar)
+        const te = !(obj instanceof Objeto) && typeof obj?.tipoElem === 'string' && obj.tipoElem !== 'object' ? obj.tipoElem : undefined
+        const valores = item.t === 'initializer_expression' ? yield* this.avalLista(item, amb) : [yield* this.avalComTipo(item, amb, te)]
         yield* this.adicionarInicial(obj, valores)
       }
     }

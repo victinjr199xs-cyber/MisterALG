@@ -6,7 +6,7 @@ import { Multicast, binario, igualValor } from '../operadores.js'
 import { partesGenericas, semNulo } from '../tipos.js'
 import { Arr, Chr, Dbl, Dec, Flt, Num, Objeto, Ref, Tupla, ValorEnum, ehNumero, tipoNumerico } from '../valores.js'
 import { ClasseDef, IteradorUsuario } from '../maquina.js'
-import { Suspende } from '../refs.js'
+import { Indice, Suspende } from '../refs.js'
 import { DictCS, ConjuntoCS, FilaCS, LigadaCS, ListaCS, NoCS, PilhaCS, PrioridadeCS, ARRAY, METODOS_ARRAY, PROPS_ARRAY, TIPOS_COLECAO } from './colecoes.js'
 import { CronometroCS, DataCS, DATETIME, STOPWATCH, TIMESPAN, TempoCS } from './datas.js'
 import { AgrupamentoCS, ENUMERABLE, LINQ, OrdenadaCS, SeqCS } from './linq.js'
@@ -270,12 +270,21 @@ export class Biblioteca {
   }
 
   indexar(m, v, args) {
+    args = this.indiceDoFim(v, args)
     const t = this.tabelaDe(v)
     if (t.indice?.get) return t.indice.get(m, v, args)
     throw new ErroCS(`${m.nomeDoTipoDe(v)} não tem indexador ([ ])`, m.linhaAtual, 'Só arrays, textos, listas, dicionários e classes com this[...] aceitam colchetes. CS0021.')
   }
 
+  /** lista[^1]: o índice a partir do fim vira a posição. */
+  indiceDoFim(v, args) {
+    if (args.length !== 1 || !(args[0] instanceof Indice)) return args
+    const n = v?.itens?.length ?? v?.s?.length
+    return n === undefined ? args : [args[0].em(n)]
+  }
+
   gravarIndice(m, v, args, valor) {
+    args = this.indiceDoFim(v, args)
     const t = this.tabelaDe(v)
     if (t.indice?.set) return t.indice.set(m, v, args, valor)
     throw new ErroCS(`${m.nomeDoTipoDe(v)} não aceita atribuição com [ ]`, m.linhaAtual)

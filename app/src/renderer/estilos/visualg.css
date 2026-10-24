@@ -724,7 +724,7 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
 #variaveis .grade-aviso { padding: 8px; color: var(--detalhe); font-style: italic; white-space: normal; }
 
 /* ---- Assistente de IA (assistente.js): terceira coluna da área ------------------ */
-main.com-assistente { grid-template-columns: minmax(340px, 50fr) minmax(260px, 30fr) minmax(300px, 380px); }
+main.com-assistente { grid-template-columns: minmax(300px, 50fr) minmax(220px, 30fr) minmax(280px, 380px); } /* soma dos mínimos cabe nos 900 px da janela */
 .assistente { background: var(--dialogo-fundo); }
 .assistente[hidden] { display: none; } /* o display:flex da .moldura venceria o atributo hidden */
 .assistente-topo { display: flex; align-items: center; gap: 2px; padding-right: 4px; }
@@ -990,3 +990,10 @@ body.modo-codigo ::-webkit-scrollbar-button { display: none; }
 }
 .inicio-botao-linha:hover { color: var(--texto); border-color: #3a404c; }
 .inicio-botao-claro:disabled { opacity: .6; cursor: progress; }
+/* ---- Arabe (RTL): a interface espelha; codigo, console, setas de memoria e nomes de linguagem ficam da esquerda para a direita ---- */
+:root[dir="rtl"] .cm-editor, :root[dir="rtl"] .console, :root[dir="rtl"] .visualizacao, :root[dir="rtl"] pre, :root[dir="rtl"] code,
+:root[dir="rtl"] .aviso-linha, :root[dir="rtl"] .memoria-c, :root[dir="rtl"] .memoria-objetos, :root[dir="rtl"] .mb-banco,
+:root[dir="rtl"] .previa-quadro, :root[dir="rtl"] .previa-html, :root[dir="rtl"] .calculadora output { direction: ltr; text-align: left; }
+:root[dir="rtl"] .inicio-nome, :root[dir="rtl"] .inicio-ext, :root[dir="rtl"] .inicio-numero, :root[dir="rtl"] kbd,
+:root[dir="rtl"] .inicio-link small, :root[dir="rtl"] .amostra-tema { unicode-bidi: isolate; direction: ltr; }
+:root[dir="rtl"] .inicio-link:hover { padding-left: 0; padding-right: 10px; }

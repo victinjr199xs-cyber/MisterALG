@@ -1,0 +1,62 @@
+{
+ "01-aritmetica": {
+  "saida": "7 2 3 1 (3, 1) 3.5\n-7 2 -4 1 (-4, 1) -3.5\n7 -2 -4 -1 (-4, -1) -3.5\n-7 -2 3 -1 (3, -1) 3.5\n0 5 0 0 (0, 0) 0.0\n100 7 14 2 (14, 2) 14.285714285714286\n1024 0.5 -8 100000000000000000000 3.0 -4.0 1.5 0.5\n3 -3 2 4 -2 2.67 1200.0\n5 5.5 9 1 6.5\n1 7 6 -6 1024 -5\n2.5 2.0 0.3333333333333333 0.6666666666666666 1000.0 0.001 1e+16 1000000000000000.0 123456789.12345679\n0.30000000000000004 False 3.3000000000000003 3.3000000000000003\n2 6.0 True True\ninf -inf nan inf\n",
+  "erro": null
+ },
+ "02-listas": {
+  "saida": "[100, 5, 2, 9, 1, 7, 3, 8, 8] 9 2 3\n[1, 2, 3, 5, 7, 8, 8, 9, 100]\n[100, 9, 8, 8, 7, 5, 3, 2, 1]\n[1, 2, 3] [1, 2, 3, 5, 7, 8, 8, 9, 100] [9, 8, 8] [2, 1] [100, 8, 7, 3, 1]\n[0, 4, 16, 36, 64]\n1 100 [9, 8, 7, 5, 3, 2]\n[[1, 2, 3], [4, 5, 6]] [[1, 4], [2, 5], [3, 6]] 21\n[1, 2, 3, 4] [1, 2, 3, 4] [1, 2, 3, 4, 5] True False\n[10, 7, 4, 1] [2, 3] [1, 'a']\n[(1, 'a'), (2, 'b')] [(1, 'a'), (2, 'b')]\n[1, 2, 3] [0, 0, 0, 0] True True 2 9\n",
+  "erro": null
+ },
+ "03-strings": {
+  "saida": "Olá, Mundo! Ação çãõ 20 OLÁ, MUNDO! AÇÃO ÇÃÕ olá, mundo! ação çãõ Olá, Mundo! Ação Çãõ oLÁ, mUNDO! aÇÃO ÇÃÕ\n['Olá,', 'Mundo!', 'Ação', 'çãõ'] ['Olá', ' Mundo! Ação çãõ'] Olá, Mund0! Açã0 çãõ 5 -1 2\nespaço| ['a', 'b', '', 'c'] x-y-z cba\nO õ á,  2 4 **x** 005\nTrue aaa True True True True False\n97 d 231 5-x-3.14 1-b aab\n'aspas \\'simples\\' \"duplas\"' 'a\\nb' None True 1.0 1e+20 1e-07\ntab\there a\\b raw\\n tri\nple\n('a', ' ', 'b c') b'abc' b'\\xc3\\xa7' 2\n",
+  "erro": null
+ },
+ "04-formatacao": {
+  "saida": "3.14159265358979 3.14      3.142| 3.1       |    3.1    | +3.14e+00 3.14159 314.159265%\n   42|42   |00042|2a|2A|52|101010|0x2a|1,234,567|1,234,567.89|11111111\n   abc|abc   | abc  |**abc**|ab\n0 2 2 0.12 0.14 2.67 1.00\n10000000000.000000 0.000000 1.234568e+08 1.234e-05 1e+100 100000 1.23457e+06\n-5 +5  5 True None [1, 'a'] (1,) {literal}\nnome='Ana' n*2=6 'Ana'     3 3.0 0.667\n 45.7% ab   | 00042 ff A 1.234568e+04 0.0001\n3.0 3.1 0.3333333333333333 0.6666666666666666 3.3333333333333335 1e+22 1.5e-09 100.0 1.2345678901234567e+19\n3.142 2 0 2 42 3.5 7 1000.0\n",
+  "erro": null
+ },
+ "05-recursao": {
+  "saida": "120 15511210043330985984000000 7\n[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377] 2880067194370816120\n31 [('A', 'C'), ('A', 'B'), ('B', 'A')]\n21 True\n['abc', 'acb', 'bac', 'bca', 'cab', 'cba']\n500\n",
+  "erro": null
+ },
+ "06-classes": {
+  "saida": "Cao(Rex) Au <Rex>\nGato(Tom) Miau <Tom>\nAnimal(Zed) ... <Zed>\n3 [<Rex>, <Tom>, <Zed>] True True True\n[<Rex>, <Tom>, <Zed>]\nPt(4, 6) 5.0 Pt(0, 0) Pt(5, 6)\n3 [0, 1, 2] 1 True\n",
+  "erro": null
+ },
+ "07-excecoes": {
+  "saida": "finally 2\nzero: division by zero\nfinally 0\n5.0 None\n12\nValueError: invalid literal for int() with base 10: 'abc'\nValueError: invalid literal for int() with base 10: ''\nValueError: invalid literal for int() with base 10: '3.5'\nIndexError: list index out of range\nKeyError: 'b' KeyError('b')\nAttributeError: 'NoneType' object has no attribute 'x'\nTypeError: unsupported operand type(s) for +: 'int' and 'str'\nNameError: name 'undefined_var' is not defined\nValueError\nfalhou 7 ('falhou',)\nb ValueError('a')\n1\ngen fechado\nassert msg\nantes do erro\n",
+  "erro": "IndexError: list index out of range"
+ },
+ "08-entrada": {
+  "saida": "n? soma -5\ndois: 5.5 6.0 0.375\nNome: Oi, João Da Silva! (15)\nAÇÃO ÇÃÕ\nx y z\n",
+  "erro": null
+ },
+ "09-grandes": {
+  "saida": "1267650600228229401496703205376 18446744073709551615 -9223372036854775808 142857142857142857142857142857 1 1.4285714285714285e+29\n121932631112635269 9999999999800000000001 999999999999999999999999999999 1e+25 10000000000000000905969664\n265252859812191058636308480000000 6 1.4142135623730951 3.141592653589793 2.718281828459045 -3 -2 -2\n0.8414709848078965 2.302585092994046 3.0 3.0 1.4142135623730951 5.0 9 120\n5050 332833500 0b11111111 0xff 0o10 255 5 5 15 255\n2.6457513110645907 2.0 (1.0000000000000002+1.7320508075688772j) 24 1000000 True\n9223372036854775807 9007199254740992.0 9007199254740993\n(33333333333333333333, 1) -333333333333333333334 100000000000000000000\n",
+  "erro": null
+ },
+ "10-dicts-sets": {
+  "saida": "{'b': 2, 'c': 3, 'd': 4} ['b', 'c', 'd'] [2, 3, 4] [('b', 2), ('c', 3), ('d', 4)] None 0 True 3\nd 4; c 3; b 2; \n{'a': 5, 'b': 2, 'r': 2, 'c': 1, 'd': 1} a\n{1, 2, 3} {1, 2, 3, 4} {2, 3} {1} {1, 4} [1, 2, 3] 3 True\n{0: 0, 1: 1, 2: 4, 3: 9} {0, 1, 2} {'a': 1, 'b': 2} {'a': 0, 'b': 0}\n(1, 'a', 2.5) 1 a 2.5 ('a', 2.5) (1, 'a', 2.5, 9) (1,) ()\n2 {'c': 3, 'd': 4, 'q': 9} 9 {'c': 3, 'd': 4, 'q': 9}\n[('i', 4), ('s', 4)] {'a': 1} deque([2, 3], maxlen=2)\nfrozenset({1, 2}) {1: 'c'} {'x': [1, {'y': None}]}\n",
+  "erro": null
+ },
+ "11-funcoes": {
+  "saida": "(1, 2, (), 3, {}) (1, 5, (6, 7), 9, {'z': 1}) (1, 2, (), 4, {})\n[0, 1, 4, 9, 16] 6\n1 2 3\n[0, 1, 4, 9, 16] 14 0\n0 1 [2]\nchamando soma\n5\n['A', 'b', 'c'] [3, 2, 1] True False [3, 2, 1]\n20\n10\n<class 'int'> <class 'float'> <class 'str'> <class 'list'> <class 'NoneType'> <class 'function'> True True\nTrue True True\n120\n",
+  "erro": null
+ },
+ "12-controle": {
+  "saida": "1 2 Fizz 4 Buzz Fizz 7 8 Fizz Buzz 11 Fizz 13 14 FizzBuzz \n111\n0 0|0 1|2 0|2 1|for-else\n\nwhile-else 3\n[2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47]\n   *\n  ***\n *****\n*******\ngrande\ncinco ou seis\nTrue False True x  True {}\n1 [2, 3, 4] 5\n2 1\n1-2-3!\nab\nsem newline\n",
+  "erro": null
+ },
+ "13-unicode": {
+  "saida": "ação ñandú 日本語 😀 é 18 AÇÃO ÑANDÚ 日本語 😀 É é 😀 語本日 údnañ oãça ['ç', 'ã'] 128512 😀 é α\nFalse 2 SS True strasse\n['a', 'b', 'e', 'é'] True b'A\\xc3\\xa7\\xc3\\xa3o' é\n    日本|é  | tab\tx nl\\n\na​b 'a\\u200bb' 'é' '\\xe9' '😀'\n",
+  "erro": null
+ },
+ "14-algoritmos": {
+  "saida": "[11, 12, 22, 25, 34, 64, 90] 2 11111111 FF\n3.1415826535897198\n8.25 8.25 8.2\n['roupa', 'rato', 'roeu', 'roma', 'rei', 'de', 'do', 'a', 'o']\naaaaddeeei 5 9\n  1   2   3\n  2   4   6\n  3   6   9\n4.5 2 3 -3 -4\n",
+  "erro": null
+ },
+ "15-misc": {
+  "saida": "True True True\n{\"a\": [1, 2, {\"b\": null}], \"c\": \"\\u00e7\"} {\n  \"a\": 1\n} {'x': [1, 2.5, True]}\n['1', '22', '333'] a b c True\n2024-02-29 29 0\nTrue True\n[(1, 2), (1, 3), (2, 1), (2, 3)] [('a', 'b'), ('a', 'c'), ('b', 'c')] abcde [5, 6, 7]\n['linha1', 'linha2']\nb'\\x00\\x00\\x00' bytearray(b'ab') 97 1\n__main__\n",
+  "erro": null
+ }
+}

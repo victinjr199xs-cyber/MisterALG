@@ -128,6 +128,9 @@ export const BIBLIOTECA = {
     if (n(args, 0) === m.arquivo('stdin')) m.leitor.descartarPendente()
     return 0
   },
+  * feof(m) { return m.fimDaEntrada ? 1 : 0 },
+  * ferror() { return 0 },
+  * clearerr(m) { m.fimDaEntrada = false; return undefined },
   * setbuf() { return undefined },
   * perror(m, args) {
     m.saida(`${m.cadeia(v(args, 0))}: erro\n`)
@@ -259,6 +262,20 @@ export const BIBLIOTECA = {
     const c = n(args, 1) & 0xff
     const i = c === 0 ? s.length : s.lastIndexOf(String.fromCharCode(c))
     return i < 0 ? 0 : n(args, 0) + i
+  },
+  * strcspn(m, args) {
+    const s = m.cadeia(v(args, 0))
+    const rej = m.cadeia(v(args, 1))
+    let i = 0
+    while (i < s.length && !rej.includes(s[i])) i += 1
+    return i
+  },
+  * strspn(m, args) {
+    const s = m.cadeia(v(args, 0))
+    const ac = m.cadeia(v(args, 1))
+    let i = 0
+    while (i < s.length && ac.includes(s[i])) i += 1
+    return i
   },
   * strstr(m, args) {
     const i = m.cadeia(v(args, 0)).indexOf(m.cadeia(v(args, 1)))

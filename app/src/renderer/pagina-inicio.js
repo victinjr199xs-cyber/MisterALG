@@ -37,7 +37,8 @@ for (;;) {
   const r = await promessa
   prefs = await api.prefs.gravar({ ...r.prefs, dicaAtual: (dica + 1) % DICAS.length })
   // A página inteira já foi traduzida para o idioma anterior: recarregar é o jeito simples de trocar.
-  if (r.acao === 'idioma') { await api.prefs.gravar({ idioma: r.idioma }); location.reload(); break }
+  // (location.reload() é barrado pelo will-navigate da janela e deixava a tela em branco: a troca de página passa pelo main.)
+  if (r.acao === 'idioma') { await api.prefs.gravar({ idioma: r.idioma }); await api.janela.pagina({ pagina: 'inicio' }); break }
   else if (r.acao === 'novo') { await irParaIDE({ linguagem: r.linguagem }); break }
   else if (r.acao === 'recente') { await irParaIDE({ abrir: r.caminho }); break }
   else if (r.acao === 'abrir') {

@@ -86,7 +86,10 @@ export function criarMemoriaObjetos(rolagem) {
   function quadros(foto) {
     return [...foto.quadros].reverse().map((q, i) => {
       const caixa = el('div', `mo-quadro${i === 0 ? ' mo-atual' : ''}`)
-      caixa.append(el('div', 'mo-cabecalho', q.global ? q.nome : `${q.nome}${q.nome.startsWith('(') ? '' : '()'}  ·  linha ${q.linha}`))
+      const cabecalho = el('div', 'mo-cabecalho')
+  if (q.global) cabecalho.append(q.nome)
+  else cabecalho.append(el('span', '', `${q.nome}${q.nome.startsWith('(') ? '' : '()'}`), '  ·  ', el('span', '', `linha ${q.linha}`)) // textos soltos: a página os traduz
+  caixa.append(cabecalho)
       for (const v of q.variaveis) caixa.append(linha(v.nome, v.valor, v.tipoDeclarado))
       if (!q.variaveis.length) caixa.append(el('div', 'mo-vazio', 'sem variáveis'))
       return caixa

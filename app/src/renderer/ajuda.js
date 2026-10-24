@@ -1,65 +1,57 @@
 // Ajuda embutida (texto próprio do MisterALG): a tela, a linguagem e a referência.
+// Os textos em português são as chaves de tradução (compartilhado/traducoes); **negrito** e `código` são marcas dentro delas.
 
 import { el, janela } from './dialogos.js'
 
-const html = (texto) => {
-  const d = document.createElement('div')
-  d.className = 'ajuda'
-  // Conteúdo estático escrito aqui mesmo (sem entrada do usuário).
-  d.innerHTML = texto
-  return d
-}
+const escapar = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c])
+/** Texto com **negrito** e `código` em HTML (o texto vem daqui mesmo e é escapado antes). */
+const marcado = (s) => escapar(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`(.+?)`/g, '<code>$1</code>')
 
-const TELA = `
-<h3>A tela</h3>
-<p>À esquerda fica a <b>Área dos algoritmos</b> (o editor). À direita, em cima, as <b>variáveis de memória</b>
-(escopo, nome, tipo e valor, atualizadas a cada passo); embaixo, a <b>Área de visualização dos resultados</b>,
-coberta pelo <b>console</b> enquanto o programa roda. Na barra de status: linha:coluna, estado
-(Modificado, Executando…), dica de teclado e a mensagem do item sob o mouse.</p>
-<h3>Atalhos</h3>
-<table>
-<tr><th>Tecla</th><th>Ação</th></tr>
-<tr><td>F9</td><td>Executar (ou continuar depois de uma pausa)</td></tr>
-<tr><td>F8</td><td>Passo a passo (executa a linha em azul e para na próxima)</td></tr>
-<tr><td>Shift+F9</td><td>Executar com tempo (intervalo escolhido na barra)</td></tr>
-<tr><td>Ctrl+F2</td><td>Parar</td></tr>
-<tr><td>F5 / clique na margem</td><td>Liga/desliga ponto de parada na linha</td></tr>
-<tr><td>Ctrl+F5</td><td>Desmarca todos os pontos de parada</td></tr>
-<tr><td>F7</td><td>Perfil (quantas vezes cada linha rodou)</td></tr>
-<tr><td>Ctrl+F3</td><td>Pilha de ativação (procedimentos e funções em andamento)</td></tr>
-<tr><td>⌘F ou Ctrl+L</td><td>Localizar</td></tr>
-<tr><td>F3 / F4 (ou ⌘G / ⇧⌘G)</td><td>Localizar o próximo / o anterior</td></tr>
-<tr><td>⌥⌘F ou Ctrl+U</td><td>Substituir</td></tr>
-<tr><td>Ctrl+G</td><td>Corrigir indentação</td></tr>
-<tr><td>Ctrl+Espaço (ou ⌥Espaço)</td><td>Auto-digitação: digite uma abreviatura (ex.: <code>see</code>, <code>par</code>, <code>dci</code>, <code>!</code>) e tecle</td></tr>
-<tr><td>Ctrl+J</td><td>Lista de comandos e funções</td></tr>
-<tr><td>Esc</td><td>Durante um <code>leia</code>, termina o programa; depois do fim, fecha o console</td></tr>
-</table>
-<p>No Mac as teclas F podem precisar da tecla <b>fn</b> (ou ative "Usar F1, F2 etc. como teclas de função padrão" nos Ajustes do Sistema › Teclado).</p>`
+const TELA = [
+  ['h3', 'A tela'],
+  ['p', 'À esquerda fica a **Área dos algoritmos** (o editor). À direita, em cima, as **variáveis de memória** (escopo, nome, tipo e valor, atualizadas a cada passo); embaixo, a **Área de visualização dos resultados**, coberta pelo **console** enquanto o programa roda. Na barra de status: linha:coluna, estado (Modificado, Executando…), dica de teclado e a mensagem do item sob o mouse.'],
+  ['h3', 'Atalhos'],
+  ['tabela', ['Tecla', 'Ação'], [
+    ['F9', 'Executar (ou continuar depois de uma pausa)'],
+    ['F8', 'Passo a passo (executa a linha em azul e para na próxima)'],
+    ['Shift+F9', 'Executar com tempo (intervalo escolhido na barra)'],
+    ['Ctrl+F2', 'Parar'],
+    ['F5 / clique na margem', 'Liga/desliga ponto de parada na linha'],
+    ['Ctrl+F5', 'Desmarca todos os pontos de parada'],
+    ['F7', 'Perfil (quantas vezes cada linha rodou)'],
+    ['Ctrl+F3', 'Pilha de ativação (procedimentos e funções em andamento)'],
+    ['⌘F ou Ctrl+L', 'Localizar'],
+    ['F3 / F4 (ou ⌘G / ⇧⌘G)', 'Localizar o próximo / o anterior'],
+    ['⌥⌘F ou Ctrl+U', 'Substituir'],
+    ['Ctrl+G', 'Corrigir indentação'],
+    ['Ctrl+Espaço (ou ⌥Espaço)', 'Auto-digitação: digite uma abreviatura (ex.: `see`, `par`, `dci`, `!`) e tecle'],
+    ['Ctrl+J', 'Lista de comandos e funções'],
+    ['Esc', 'Durante um `leia`, termina o programa; depois do fim, fecha o console'],
+  ]],
+  ['p', 'No Mac as teclas F podem precisar da tecla **fn** (ou ative "Usar F1, F2 etc. como teclas de função padrão" nos Ajustes do Sistema › Teclado).'],
+]
 
-const LINGUAGEM = `
-<h3>Estrutura</h3>
-<pre>algoritmo "nome"
+// Blocos de código em Portugol: ficam como estão (é a própria linguagem).
+const LINGUAGEM = [
+  ['h3', 'Estrutura'],
+  ['pre', `algoritmo "nome"
 var
    nota1, nota2 : real
    nome : caractere
 inicio
    leia(nome)
    escreval("Olá, ", nome)
-fimalgoritmo</pre>
-<p>Um comando por linha; maiúsculas e minúsculas tanto faz; acentos opcionais nas palavras-chave
-(<code>então</code> = <code>entao</code>). Comentários com <code>//</code>.</p>
-<h3>Tipos</h3>
-<p><code>inteiro</code>, <code>real</code> (ou <code>numerico</code>), <code>caractere</code> (ou <code>caracter</code>, <code>literal</code>),
-<code>logico</code> (<code>verdadeiro</code>/<code>falso</code>), vetores <code>vetor[1..10] de real</code>,
-matrizes <code>vetor[1..3,1..3] de inteiro</code>, constantes (<code>const MAX = 10</code>) e registros:</p>
-<pre>tipo
+fimalgoritmo`],
+  ['p', 'Um comando por linha; maiúsculas e minúsculas tanto faz; acentos opcionais nas palavras-chave (`então` = `entao`). Comentários com `//`.'],
+  ['h3', 'Tipos'],
+  ['p', '`inteiro`, `real` (ou `numerico`), `caractere` (ou `caracter`, `literal`), `logico` (`verdadeiro`/`falso`), vetores `vetor[1..10] de real`, matrizes `vetor[1..3,1..3] de inteiro`, constantes (`const MAX = 10`) e registros:'],
+  ['pre', `tipo
    aluno = registro
       nome : caractere
       nota : real
-   fimregistro</pre>
-<h3>Comandos</h3>
-<pre>x &lt;- 10                        // ou x := 10
+   fimregistro`],
+  ['h3', 'Comandos'],
+  ['pre', `x <- 10                        // ou x := 10
 escreva("x = ", x)             // escreval pula linha; x:6:2 formata
 leia(a, b)
 se cond entao ... senao ... fimse
@@ -74,53 +66,71 @@ fimescolha
 para i de 1 ate 10 passo 2 faca ... fimpara
 enquanto cond faca ... fimenquanto
 repita ... ate cond             // ou repita ... fimrepita
-interrompa                      // sai do laço</pre>
-<h3>Procedimentos e funções</h3>
-<pre>procedimento troca(var a, b : inteiro)
+interrompa                      // sai do laço`],
+  ['h3', 'Procedimentos e funções'],
+  ['pre', `procedimento troca(var a, b : inteiro)
 var t : inteiro
 inicio
-   t &lt;- a
-   a &lt;- b
-   b &lt;- t
+   t <- a
+   a <- b
+   b <- t
 fimprocedimento
 
 funcao dobro(x : real) : real
 inicio
    retorne x * 2
-fimfuncao</pre>
-<h3>Operadores</h3>
-<p><code>+ - * /</code>, <code>\\</code> ou <code>div</code> (divisão inteira), <code>mod</code> ou <code>%</code> (resto), <code>^</code> (potência),
-<code>= &lt;&gt; &lt; &gt; &lt;= &gt;=</code>, <code>e ou nao xou</code>. Textos se juntam com <code>+</code>.</p>
-<h3>Comandos especiais</h3>
-<p><code>aleatorio [on | off | min, max [, casas]]</code>, <code>timer on | off | ms</code>, <code>eco on | off</code>,
-<code>cronometro on | off</code>, <code>pausa</code>, <code>debug condição</code>, <code>limpatela</code>,
-<code>mudacor("amarelo", "frente")</code>, <code>arquivo "dados.txt"</code> (na seção de declarações).</p>`
+fimfuncao`],
+  ['h3', 'Operadores'],
+  ['p', '`+ - * /`, `\\` ou `div` (divisão inteira), `mod` ou `%` (resto), `^` (potência), `= <> < > <= >=`, `e ou nao xou`. Textos se juntam com `+`.'],
+  ['h3', 'Comandos especiais'],
+  ['p', '`aleatorio [on | off | min, max [, casas]]`, `timer on | off | ms`, `eco on | off`, `cronometro on | off`, `pausa`, `debug condição`, `limpatela`, `mudacor("amarelo", "frente")`, `arquivo "dados.txt"` ', '(na seção de declarações).'],
+]
 
-const REFERENCIA = `
-<h3>Funções pré-definidas</h3>
-<table>
-<tr><th>Função</th><th>Retorna</th></tr>
-<tr><td>abs(x)</td><td>valor absoluto</td></tr>
-<tr><td>arccos(x), arcsen(x), arctan(x)</td><td>ângulo em radianos</td></tr>
-<tr><td>sen(x), cos(x), tan(x), cotan(x)</td><td>funções trigonométricas (radianos)</td></tr>
-<tr><td>grauprad(g), radpgrau(r)</td><td>converte graus ↔ radianos</td></tr>
-<tr><td>exp(base, expoente)</td><td>potência (base elevado ao expoente)</td></tr>
-<tr><td>int(x)</td><td>parte inteira</td></tr>
-<tr><td>log(x), logn(x)</td><td>logaritmo na base 10 / neperiano</td></tr>
-<tr><td>quad(x), raizq(x)</td><td>quadrado / raiz quadrada</td></tr>
-<tr><td>pi</td><td>3.14159265358979…</td></tr>
-<tr><td>rand, randi(n)</td><td>real em [0,1) / inteiro em [0,n)</td></tr>
-<tr><td>asc(s), carac(n)</td><td>código do caractere / caractere do código</td></tr>
-<tr><td>caracpnum(s), numpcarac(n)</td><td>texto → número / número → texto</td></tr>
-<tr><td>compr(s)</td><td>quantidade de caracteres</td></tr>
-<tr><td>copia(s, p, n)</td><td>n caracteres a partir da posição p (começa em 1)</td></tr>
-<tr><td>maiusc(s), minusc(s)</td><td>maiúsculas / minúsculas</td></tr>
-<tr><td>pos(sub, s)</td><td>posição de sub dentro de s (0 se não houver)</td></tr>
-</table>`
+const REFERENCIA = [
+  ['h3', 'Funções pré-definidas'],
+  ['tabela', ['Função', 'Retorna'], [
+    ['abs(x)', 'valor absoluto'],
+    ['arccos(x), arcsen(x), arctan(x)', 'ângulo em radianos'],
+    ['sen(x), cos(x), tan(x), cotan(x)', 'funções trigonométricas (radianos)'],
+    ['grauprad(g), radpgrau(r)', 'converte graus ↔ radianos'],
+    ['exp(base, expoente)', 'potência (base elevado ao expoente)'],
+    ['int(x)', 'parte inteira'],
+    ['log(x), logn(x)', 'logaritmo na base 10 / neperiano'],
+    ['quad(x), raizq(x)', 'quadrado / raiz quadrada'],
+    ['pi', '3.14159265358979…'],
+    ['rand, randi(n)', 'real em [0,1) / inteiro em [0,n)'],
+    ['asc(s), carac(n)', 'código do caractere / caractere do código'],
+    ['caracpnum(s), numpcarac(n)', 'texto → número / número → texto'],
+    ['compr(s)', 'quantidade de caracteres'],
+    ['copia(s, p, n)', 'n caracteres a partir da posição p (começa em 1)'],
+    ['maiusc(s), minusc(s)', 'maiúsculas / minúsculas'],
+    ['pos(sub, s)', 'posição de sub dentro de s (0 se não houver)'],
+  ]],
+]
 
 const PAGINAS = { tela: ['A Tela do MisterALG', TELA], linguagem: ['A Linguagem (Portugol)', LINGUAGEM], referencia: ['Referência da Linguagem', REFERENCIA] }
 
-export function abrirAjuda(pagina) {
-  const [titulo, conteudo] = PAGINAS[pagina] ?? PAGINAS.tela
-  return janela({ titulo, corpo: el('div', {}, html(conteudo)), largura: '800px' })
+/** Monta a página da ajuda; `t` traduz cada texto em português (idioma escolhido). */
+function pagina(blocos, t) {
+  const raiz = el('div', { className: 'ajuda' })
+  const html = (tag, texto) => { const e = document.createElement(tag); e.innerHTML = texto; return e } // texto escapado em marcado()
+  for (const [tipo, a, b] of blocos) {
+    if (tipo === 'h3') raiz.append(el('h3', { textContent: t(a) }))
+    else if (tipo === 'pre') raiz.append(el('pre', { textContent: a }))
+    else if (tipo === 'p') raiz.append(html('p', marcado(t(a)) + (b ? ` ${marcado(t(b))}` : '')))
+    else if (tipo === 'tabela') {
+      const linhas = b.map(([c1, c2]) => {
+        const tr = document.createElement('tr')
+        tr.append(html('td', marcado(t(c1))), html('td', marcado(t(c2))))
+        return tr
+      })
+      raiz.append(el('table', {}, el('tbody', {}, el('tr', {}, ...a.map((c) => el('th', { textContent: t(c) }))), ...linhas)))
+    }
+  }
+  return raiz
+}
+
+export function abrirAjuda(pagina_, t = (x) => x) {
+  const [titulo, blocos] = PAGINAS[pagina_] ?? PAGINAS.tela
+  return janela({ titulo: t(titulo), corpo: pagina(blocos, t), largura: '800px' })
 }

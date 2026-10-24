@@ -169,6 +169,7 @@ export class SessaoJS {
       }
     } catch (e) {
       this.rodando = false
+      if (e?.[Symbol.for('misteralg.saida')]) return this.finalizar('terminado') // process.exit()
       return this.finalizar('erro', e)
     }
   }

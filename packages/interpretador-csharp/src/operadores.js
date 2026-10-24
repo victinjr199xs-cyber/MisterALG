@@ -198,6 +198,15 @@ export function binario(m, op, a, b) {
       default:
     }
   }
+  // DateTime, TimeSpan e BigInteger sabem fazer as suas contas (a - b, data + intervalo, big * 3, big << 100...)
+  if (a !== null && typeof a === 'object' && typeof a.operarNativo === 'function') {
+    const r = a.operarNativo(m, op, b, true)
+    if (r !== undefined) return r
+  }
+  if (b !== null && typeof b === 'object' && typeof b.operarNativo === 'function') {
+    const r = b.operarNativo(m, op, a, false)
+    if (r !== undefined) return r
+  }
   switch (op) {
     case '+':
       if (typeof a === 'string' || typeof b === 'string') return m.aTexto(a) + m.aTexto(b)

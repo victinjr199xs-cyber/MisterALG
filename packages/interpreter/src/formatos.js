@@ -4,6 +4,8 @@
 /** Real sem formato: até 10 casas, sem zeros à direita, sem ponto sobrando, sem "-0". */
 export function textoReal(x, casas = 10) {
   if (!Number.isFinite(x)) return String(x)
+  // 15 dígitos significativos: evita o ruído de double (123456789.123456 -> ...0013)
+  if (Math.abs(x) >= 1 && Math.abs(x) < 1e15) casas = Math.min(casas, Math.max(0, 15 - (Math.floor(Math.log10(Math.abs(x))) + 1)))
   let s = Math.abs(x) < 1e21 ? x.toFixed(casas) : String(x)
   if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '')
   if (s === '-0') s = '0'

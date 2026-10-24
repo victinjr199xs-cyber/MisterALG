@@ -5,7 +5,7 @@ import { SearchSession } from '@misteralg/editor-busca/session'
 import { wordAt } from '@misteralg/editor-busca'
 import { el, janela } from './dialogos.js'
 
-export function criarBusca(editor, { estado, mensagem }) {
+export function criarBusca(editor, { estado, mensagem, t = (x) => x }) {
   const sessao = new SearchSession()
 
   function sugestao() {
@@ -102,7 +102,7 @@ export function criarBusca(editor, { estado, mensagem }) {
       editor.selecionar(match.start, match.end)
     }
     estado('Confirmando')
-    const corpo = el('p', {}, 'Substituir ', el('b', { textContent: `"${match.text}"` }), ' por ', el('b', { textContent: `"${replacement}"` }), '?')
+    const corpo = el('p', {}, ...t('Substituir {0} por {1}?', '\u0001', '\u0002').split(/([\u0001\u0002])/).map((p) => (p === '\u0001' ? el('b', { textContent: `"${match.text}"` }) : p === '\u0002' ? el('b', { textContent: `"${replacement}"` }) : p))) // a ordem das partes muda por idioma
     return janela({
       titulo: 'Confirmar a substituição',
       corpo,

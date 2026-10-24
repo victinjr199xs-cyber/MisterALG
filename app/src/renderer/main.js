@@ -206,6 +206,7 @@ async function podeDescartar(titulo) {
   })
   if (r === 2) return false
   if (r === 0) return salvar()
+  void api.recuperacao.limpar() // descartado de propósito: um travamento depois disso não deve oferecer o texto antigo
   return true
 }
 
@@ -286,7 +287,7 @@ const assistente = criarAssistente({
   aoMudar: (aberto) => $('[data-id="assistente"]')?.setAttribute('aria-pressed', String(aberto)),
 })
 
-const busca = criarBusca(editor,{ estado: status.estado, mensagem: (m) => status.mensagem(m ? ` MENSAGEM: ${m}` : '') })
+const busca = criarBusca(editor, { estado: status.estado, mensagem: (m) => status.mensagem(m ? ` MENSAGEM: ${m}` : ''), t: (...a) => tradutor(prefs.idioma)(...a) })
 
 // ---- comandos (menu, barra e atalhos usam a mesma tabela) ------------------------------
 
@@ -418,9 +419,9 @@ const comandos = {
   'configurar-ia': () => assistente.configurar(),
   calculadora: () => dialogos.calculadora(),
   calendario: () => dialogos.calendario(),
-  'ajuda-tela': () => abrirAjuda('tela'),
-  'ajuda-linguagem': () => abrirAjuda('linguagem'),
-  'ajuda-referencia': () => abrirAjuda('referencia'),
+  'ajuda-tela': () => abrirAjuda('tela', tradutor(prefs.idioma)),
+  'ajuda-linguagem': () => abrirAjuda('linguagem', tradutor(prefs.idioma)),
+  'ajuda-referencia': () => abrirAjuda('referencia', tradutor(prefs.idioma)),
   sobre: () => dialogos.sobre(VERSAO),
   atualizacoes: () => procurarNaIDE(tradutor(prefs.idioma), {
     podeDescartar: () => podeDescartar(' Encerrando o algoritmo e fechando o MisterALG '),

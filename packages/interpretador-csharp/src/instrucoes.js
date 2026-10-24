@@ -66,6 +66,11 @@ export const instrucoes = {
         }
       }
       const r = yield* this.exec(st, amb)
+      if (r?.t === 'goto') {
+        // goto rótulo; para um rótulo deste mesmo bloco (para frente ou para trás); senão sobe até o bloco que o tem
+        const alvo = stmts.findIndex((s) => { let l = s; while (l.t === 'labeled_statement') { if (l.f.find((x) => x.t === 'identifier')?.x === r.rotulo) return true; l = l.f[l.f.length - 1] } return false })
+        if (alvo >= 0) { i = alvo - 1; continue }
+      }
       if (r) return r
     }
     return undefined
@@ -208,8 +213,12 @@ export const instrucoes = {
         return undefined
       case 'labeled_statement':
         return yield* this.exec(n.f[n.f.length - 1], amb)
-      case 'goto_statement':
-        throw new ErroCS('o comando goto ainda não funciona no passo a passo', n.l, 'Troque o goto por um laço (while/for) ou um if.')
+      case 'goto_statement': {
+        yield* this.linha(n, amb)
+        if (n.f.some((x) => x.t === 'default')) return { t: 'goto-case', padrao: true }
+        if (n.f.some((x) => x.t === 'case')) return { t: 'goto-case', valor: yield* this.aval(n.f[n.f.length - 1], amb) }
+        return { t: 'goto', rotulo: n.f.find((x) => x.t === 'identifier')?.x }
+      }
       default:
         throw new ErroCS(`o passo a passo do C# ainda não conhece este comando (${n.t})`, n.l)
     }
@@ -437,29 +446,44 @@ export const instrucoes = {
     const corpo = filho(n, 'body') ?? n.f.find((x) => x.t === 'switch_body')
     const escopo = new Amb(amb)
     const secoes = corpo.f.filter((x) => x.t === 'switch_section')
-    let escolhida = null
-    let padrao = null
-    for (const s of secoes) {
-      const rotulos = s.f.filter((x) => x.t === 'case_switch_label' || x.t === 'default_switch_label' || x.t === 'case_pattern_switch_label')
-      for (const r of rotulos) {
-        if (r.t === 'default_switch_label') {
-          padrao = s
-          continue
+    const escolher = function* (maq, v) {
+      let escolhida = null
+      let padrao = null
+      for (const s of secoes) {
+        const rotulos = s.f.filter((x) => x.t === 'case_switch_label' || x.t === 'default_switch_label' || x.t === 'case_pattern_switch_label')
+        for (const r of rotulos) {
+          if (r.t === 'default_switch_label') {
+            padrao = s
+            continue
+          }
+          if (yield* maq.casarRotulo(r, v, escopo)) {
+            escolhida = s
+            break
+          }
         }
-        if (yield* this.casarRotulo(r, valor, escopo)) {
-          escolhida = s
-          break
-        }
+        if (escolhida) break
       }
-      if (escolhida) break
+      return { escolhida, padrao }
     }
-    const alvo = escolhida ?? padrao
+    let { escolhida, padrao } = yield* escolher(this, valor)
+    let alvo = escolhida ?? padrao
     if (!alvo) return undefined
-    const stmts = alvo.f.filter((x) => !['case_switch_label', 'default_switch_label', 'case_pattern_switch_label'].includes(x.t))
-    yield* this.declararLocais(stmts, escopo)
-    const r = yield* this.execLista(stmts, escopo)
-    if (r === BREAK) return undefined
-    return r
+    for (;;) {
+      const stmts = alvo.f.filter((x) => !['case_switch_label', 'default_switch_label', 'case_pattern_switch_label'].includes(x.t))
+      yield* this.declararLocais(stmts, escopo)
+      const r = yield* this.execLista(stmts, escopo)
+      if (r?.t === 'goto-case') { // goto case 3; / goto default;
+        if (r.padrao) alvo = padrao
+        else {
+          const e = yield* escolher(this, r.valor)
+          alvo = e.escolhida ?? e.padrao
+        }
+        if (!alvo) return undefined
+        continue
+      }
+      if (r === BREAK) return undefined
+      return r
+    }
   },
 
   *casarRotulo(rotulo, valor, amb) {

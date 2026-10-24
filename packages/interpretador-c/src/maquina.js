@@ -458,8 +458,13 @@ export class MaquinaC {
     const marcaVariaveis = quadro.variaveis.length
     try {
       let r
-      for (const s of lista) {
-        r = yield* this.exec(s)
+      for (let i = 0; i < lista.length; i += 1) {
+        r = yield* this.exec(lista[i])
+        if (r?.tipo === 'goto') {
+          // goto para um rótulo deste mesmo bloco (para frente ou para trás); senão sobe até o bloco que o tem.
+          const alvo = lista.findIndex((s) => { let l = s; while (l.kind === 'LabelStmt') { if (l.declId === r.alvo) return true; l = l.inner[0] } return false })
+          if (alvo >= 0) { i = alvo - 1; r = undefined; continue }
+        }
         if (r) break
       }
       // C++: os objetos declarados neste bloco são destruídos ao sair dele (na ordem inversa).
@@ -531,7 +536,7 @@ export class MaquinaC {
       case 'LabelStmt': return yield* this.exec(no.inner[0])
       case 'CaseStmt': return yield* this.exec(no.inner[no.inner.length - 1])
       case 'DefaultStmt': return yield* this.exec(no.inner[0])
-      case 'GotoStmt': throw new ErroC('goto ainda não funciona no passo a passo (rode com F9)')
+      case 'GotoStmt': yield this.linha(no); return { tipo: 'goto', alvo: no.targetLabelDeclId }
       case 'CXXTryStmt': return yield* this.tentar(no)
       default:
         if (!ehExpressao(no)) throw new ErroC(`o passo a passo ainda não sabe executar "${no.kind}"`)
@@ -629,7 +634,10 @@ export class MaquinaC {
       }
     }
     if (x.kind === 'InitListExpr') {
-      const itens = x.inner ?? []
+      let itens = x.inner ?? []
+      // O clang despeja o preenchimento do vetor E os valores dados em `array_filler` quando a lista é parcial
+      // (int v[5] = {1, 2}): o 1º é o preenchimento, o resto são os valores.
+      if (!itens.length && Array.isArray(x.array_filler) && x.array_filler.length > 1) itens = x.array_filler.slice(1)
       this.mem.preencher(e, 0, tamanhoDe(t))
       if (t.k === 'array') {
         const tam = tamanhoDe(t.elem)

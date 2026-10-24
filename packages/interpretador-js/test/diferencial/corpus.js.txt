@@ -1,0 +1,213 @@
+@@@ 01-aritmetica
+for (const [a, b] of [[7, 2], [-7, 2], [7, -2], [0, 5]]) console.log(a, b, a / b, Math.trunc(a / b), Math.floor(a / b), a % b, ((a % b) + b) % b)
+console.log(2 ** 10, 2 ** -1, 0.1 + 0.2, 0.1 + 0.2 === 0.3, 1 / 3, 10 / 4, 1e21, 1e-7, 123456789.123456789, -0, 0 === -0)
+console.log(5 & 3, 5 | 3, 5 ^ 3, ~5, 1 << 10, -17 >> 2, -17 >>> 28, 2 ** 31 | 0)
+console.log(Math.round(2.5), Math.round(-2.5), Math.round(3.5), Math.max(1, 9, 3), Math.min(), Math.max(), Math.sqrt(2), Math.PI, Math.abs(-3))
+console.log(parseInt("42px"), parseInt("abc"), parseFloat("3.14abc"), Number(""), Number("  7 "), Number("1e3"), Number(null), Number(undefined), Number(true), +"x")
+console.log(1 / 0, -1 / 0, 0 / 0, NaN === NaN, Number.isNaN(NaN), isFinite(1 / 0), Number.MAX_SAFE_INTEGER, Number.EPSILON > 0)
+console.log(9007199254740993, 2 ** 53 + 1, 123456789012345680000, 0.000001, 0.0000001, 1.5e300 * 1e10)
+console.log(123456789n * 987654321n, 2n ** 100n, typeof 1n, 7n / 2n, -7n % 3n)
+console.log((1234.5678).toFixed(2), (0.5).toFixed(0), (1.5).toFixed(0), (2.5).toFixed(0), (1.005).toFixed(2), (1e21).toFixed(2), (255).toString(16), (255).toString(2), (0.1).toFixed(20))
+console.log((1234.5678).toPrecision(6), (0.00012345).toExponential(2), (1234.5678).toLocaleString("en-US"), (1234567.891).toLocaleString("pt-BR"))
+@@@ 02-arrays
+const v = [5, 2, 9, 1, 7]
+v.push(3); v.unshift(100); console.log(v, v.length, v.indexOf(9), v.includes(4))
+console.log([...v].sort(), [...v].sort((a, b) => a - b), v.slice(1, 3), v.reverse(), v.splice(1, 2), v)
+console.log(v.map(x => x * 2), v.filter(x => x > 3), v.reduce((a, b) => a + b, 0), v.find(x => x > 5), v.findIndex(x => x > 5), v.some(x => x > 50), v.every(x => x > 0))
+console.log([1, [2, [3, [4]]]].flat(Infinity), [[1, 2], [3]].flatMap(x => x), Array.from({ length: 3 }, (_, i) => i * i), Array(3).fill(0), new Array(5), [1, , 3])
+console.log([3, 20, 100].sort(), ["b", "a", "C"].sort(), [true, false].sort(), [undefined, 3, null, 1].sort())
+console.log([1, 2, 3].join("-"), [1, [2, 3]].toString(), String([1, 2]), [] + [], [1] == 1, [].concat([1], 2, [[3]]))
+const m = [[1, 2, 3], [4, 5, 6]]; console.log(m, m[1][2], m.map(r => r.join(" ")).join("\n"))
+const [a, b = 10, ...resto] = [1, undefined, 3, 4]; console.log(a, b, resto)
+console.log(Array.isArray(v), typeof v, v.at(-1), Object.keys(["a", "b"]), [..."abc"], Array.of(7, 8))
+const grande = Array.from({ length: 120 }, (_, i) => i); console.log(grande)
+console.log(Array.from({ length: 7 }, (_, i) => "item" + i), [1.5, 2.25, -0], ["a'b", 'c"d', `e\nf`])
+@@@ 03-strings
+const s = "Olá, Mundo! Ação çãõ"
+console.log(s, s.length, s.toUpperCase(), s.toLowerCase(), s.split(" "), s.split(""), s.indexOf("Mundo"), s.slice(-4), s.substring(2, 5), s.substr(1, 3))
+console.log("  x ".trim() + "|", "ab".padStart(5, "*"), "ab".padEnd(5, "-") + "|", "abc".repeat(2), "a-b-c".replace("-", "+"), "a-b-c".replaceAll("-", "+"), "abc".at(-1))
+console.log("abc".charAt(1), "abc".charCodeAt(1), String.fromCharCode(65, 66), "abc"[1], "abc" < "abd", "a".localeCompare("b"), "ä".localeCompare("z", "de"), "b".localeCompare("a"))
+console.log("x".codePointAt(0), "😀".length, [..."😀"].length, "😀".codePointAt(0), "é".normalize("NFD").length, "ß".toUpperCase())
+console.log(`soma: ${1 + 2}, obj: ${{}}, arr: ${[1, 2]}, nul: ${null}, und: ${undefined}`, `multi
+linha`, 'aspas "duplas"', "aspas 'simples'", "tab\tchar", "nl\\n")
+console.log("a,b;c".split(/[,;]/), "Hello World".match(/o/g), "Hello".match(/l+/), "abc".search(/c/), /(\d+)-(\d+)/.exec("10-20"), "x1y22".replace(/\d+/g, m => `<${m}>`))
+console.log(["a", "b"].toString(), String(null), String(undefined), String(123), String(true), String(Symbol("s")), String({}), String(() => 1), String([null]), `${[]}`)
+console.log("abc".split("").reverse().join(""), "Title Case Me".split(" ").map(w => w[0].toLowerCase() + w.slice(1).toUpperCase()), "mississippi".split("s").length)
+console.log(escape ? "tem escape" : "", encodeURIComponent("ação & x"), decodeURIComponent("%C3%A7"), btoa("hello"), atob("aGVsbG8="))
+console.log("%s tem %d anos e %i, %f, %j %O %%", "Ana", 30.5, 30.9, "2.5", 1, [1], "extra")
+console.log("%c estilo", "color: red", "depois")
+console.log("a", "b", 1, true, null, undefined, [], {}, "")
+console.log("")
+console.log()
+@@@ 04-objetos
+const o = { nome: "Ana", idade: 20, endereco: { rua: "A", numero: 5, geo: { lat: 1, lon: 2, extra: { fundo: true } } }, hobbies: ["x", "y"], f() { return 1 }, g: () => 2, "chave-estranha": 1, 3: "tres" }
+console.log(o)
+console.log(Object.keys(o), Object.values({ a: 1, b: [2] }), Object.entries({ a: 1, b: 2 }), JSON.stringify(o), JSON.stringify({ a: [1, { b: 2 }], c: "x", d: undefined, e: null, f: () => 1 }, null, 2))
+console.log(JSON.parse('{"x":[1,2,{"y":null}],"z":"ç"}'), JSON.stringify("ação\n"), JSON.stringify([undefined, NaN, new Date(0)]), JSON.stringify({ a: 1n === 1n }))
+const { nome, idade: anos, endereco: { rua }, ...outros } = o; console.log(nome, anos, rua, Object.keys(outros))
+const copia = { ...o, nome: "Bia" }; console.log(copia.nome, o.nome, copia.endereco === o.endereco, structuredClone({ a: { b: 1 } }).a.b)
+console.log({}, [], { a: {} }, { a: [] }, [{}], [[]], { a: { b: { c: { d: 1 } } } }, [[[[1]]]], null, undefined)
+console.log({ a: 1, b: "dois", c: [3], d: { e: 4 }, f: null, g: undefined, h: true, i: 1.5, j: -0, k: NaN, l: 10n, m: Symbol("q") })
+const longo = { primeiro: "valor um bem longo", segundo: "valor dois bem longo", terceiro: "valor tres bem longo", quarto: 4 }; console.log(longo)
+console.log([{ a: 1, b: 2 }, { a: 3, b: 4 }], { arr: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }, { s: "it's", t: 'say "hi"', u: `both ' "` })
+console.log(Object.freeze({ a: 1 }), Object.isFrozen(Object.freeze({})), Object.assign({}, { a: 1 }, { b: 2 }), Object.getOwnPropertyNames("ab"))
+const circ = { n: 1 }; circ.self = circ; console.log(circ)
+console.log(typeof null, typeof undefined, typeof {}, typeof [], typeof (() => 1), typeof Symbol(), typeof 1n, null ?? "d", undefined?.x, o?.endereco?.rua, o.nada?.x.y)
+@@@ 05-classes
+class Animal {
+  static total = 0
+  #segredo = 42
+  constructor(nome) { this.nome = nome; Animal.total++ }
+  get dobro() { return this.#segredo * 2 }
+  set apelido(v) { this._ap = v }
+  falar() { return `${this.nome} faz ...` }
+  toString() { return `Animal(${this.nome})` }
+  static criar(n) { return new this(n) }
+}
+class Cao extends Animal {
+  constructor(nome, raca) { super(nome); this.raca = raca }
+  falar() { return super.falar() + " Au" }
+}
+const c = new Cao("Rex", "vira-lata")
+console.log(c, String(c), `${c}`, c.falar(), c.dobro, Animal.total, c instanceof Animal, c.constructor.name, Object.getPrototypeOf(c) === Cao.prototype)
+console.log(Animal.criar("Z"), [c], { c }, typeof Animal, Animal, Cao, Animal.prototype.falar, class {}, new (class Foo { x = 1 })())
+c.apelido = "R"; console.log(c._ap, Object.keys(c), "nome" in c, c.hasOwnProperty("raca"))
+function Velha(x) { this.x = x }
+Velha.prototype.dobra = function () { return this.x * 2 }
+console.log(new Velha(4).dobra(), new Velha(4), Velha.prototype.constructor === Velha)
+const obj = { nome: "o", f() { return this.nome }, g: () => typeof this, h() { return [1].map(() => this.nome) } }
+console.log(obj.f(), obj.g(), obj.h(), (0, obj.f).call({ nome: "outro" }), obj.f.bind({ nome: "b" })())
+class Pilha { #d = []; push(x) { this.#d.push(x); return this } get tamanho() { return this.#d.length } *[Symbol.iterator]() { yield* this.#d } }
+const p = new Pilha().push(1).push(2); console.log(p.tamanho, [...p], p)
+@@@ 06-closures-funcoes
+function contador() { let n = 0; return { inc: () => ++n, get valor() { return n } } }
+const c1 = contador(), c2 = contador(); c1.inc(); c1.inc(); c2.inc(); console.log(c1.valor, c2.valor)
+var fs = []; for (var i = 0; i < 3; i++) fs.push(() => i); console.log(fs.map(f => f()))
+let gs = []; for (let i = 0; i < 3; i++) gs.push(() => i); console.log(gs.map(f => f()))
+console.log(hoisted(), typeof naoExiste, (function () { return typeof arguments })(), ((a, b = 2, ...r) => [a, b, r])(1, undefined, 3, 4))
+function hoisted() { return "içado" }
+console.log(typeof tdz === "undefined"); var tdz = 1
+try { console.log(naoDeclarada) } catch (e) { console.log(e.name, e.message) }
+try { const k = 1; k = 2 } catch (e) { console.log(e.name + ": " + e.message) }
+try { null.x } catch (e) { console.log(e instanceof TypeError, e.message) }
+try { undefinedFn() } catch (e) { console.log(e.name, e.message) }
+try { [].reduce((a, b) => a) } catch (e) { console.log(e.message) }
+try { new Array(-1) } catch (e) { console.log(e.name, e.message) }
+try { JSON.parse("{x") } catch (e) { console.log(e.name) }
+try { throw { cod: 1 } } catch ({ cod }) { console.log("cod", cod) } finally { console.log("fim") }
+const fat = n => n <= 1 ? 1 : n * fat(n - 1); console.log(fat(10), fat(20), fat(25), fat(170), fat(171))
+const fib = (n, m = {}) => n < 2 ? n : m[n] ?? (m[n] = fib(n - 1, m) + fib(n - 2, m)); console.log(fib(50), fib(90))
+function* gen() { let x = yield 1; console.log("recebi", x); yield* [2, 3]; return 4 }
+const g = gen(); console.log(g.next(), g.next("a"), g.next(), g.next(), g.next(), [...gen()])
+const comp = (...fns) => x => fns.reduceRight((v, f) => f(v), x); console.log(comp(x => x + 1, x => x * 2)(5))
+console.log((function f(n) { return n ? n + f(n - 1) : 0 })(100), [3, 1, 2].sort().map(String), ["1", "2", "3"].map(Number), ["1", "2", "3"].map(parseInt))
+label: for (let i = 0; i < 3; i++) { for (let j = 0; j < 3; j++) { if (j === 1) continue label; if (i === 2) break label; console.log(i, j) } }
+switch (3) { case 1: console.log("um"); case 3: console.log("tres"); case 4: console.log("quatro (cai)"); break; default: console.log("def") }
+@@@ 07-map-set
+const m = new Map([["a", 1], ["b", { x: 2 }]]); m.set("c", [3]).set(1, "um")
+console.log(m, m.size, m.get("a"), m.has("z"), [...m.keys()], [...m.values()], [...m], Object.fromEntries(m))
+const s = new Set([3, 1, 3, "a", 1]); s.add({ o: 1 }); console.log(s, s.size, [...s], s.has(3), new Set("hello"))
+const wm = new WeakMap(); const k = {}; wm.set(k, 1); console.log(wm.get(k), wm.has({}), wm)
+for (const [k2, v] of m) console.log(k2, v)
+m.forEach((v, k2) => console.log(k2, "=>", v))
+console.log(new Map(), new Set(), new Map([[{ a: 1 }, new Set([1])]]), [new Map([[1, 2]])], { m: new Map([[1, 2]]), s: new Set([1]) })
+const cont = {}; for (const ch of "abracadabra") cont[ch] = (cont[ch] ?? 0) + 1; console.log(cont, Object.entries(cont).sort(([, a], [, b]) => b - a)[0])
+console.log(Symbol("a"), Symbol.for("b").toString(), [Symbol("x")], { [Symbol("k")]: 1 }, typeof Symbol.iterator)
+console.log(new Date(0).toISOString(), new Date(2024, 0, 15, 10, 30).getDay(), new Date("2024-03-10T12:00:00Z").getTime(), new Date(NaN).getTime(), typeof Date.now())
+console.log([new Date(0)], { d: new Date(86400000) }, new Date(0))
+console.log(new Error("boom").message, String(new TypeError("t")), Object.prototype.toString.call([]), Object.prototype.toString.call(null))
+console.log(/ab+c/gi, new RegExp("x", "g"), [/a/], "abc".match(/(?<l>b)/).groups.l, "a1b2".replace(/(\d)/g, "[$1]"), /^[\w.]+@\w+\.\w+$/.test("a.b@c.de"))
+console.log(Number.parseFloat("1.50"), (25).toString().padStart(4, "0"), [10, 9, 1].sort(), [10, 9, 1].sort((a, b) => a - b), Math.max(...[1, 5, 3]), Math.min.apply(null, [4, 2]))
+@@@ 08-entrada
+const nome = prompt("Nome?")
+const idade = Number(prompt("Idade?"))
+console.log(`Olá, ${nome}! Ano que vem: ${idade + 1}`)
+const nums = prompt("Números:").split(" ").map(Number)
+console.log(nums, nums.reduce((a, b) => a + b, 0), Math.max(...nums), (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(2))
+const linha = prompt()
+console.log([linha], linha.length, typeof linha)
+console.log(prompt("vazio?") === "", prompt("fim?"))
+--- entrada
+João da Silva
+29
+3 1 4 1 5 9 2 6
+ação çãõ  com espaços
+@@@ 09-async
+console.log("1 sincrono")
+setTimeout(() => console.log("5 timeout 0"), 0)
+setTimeout(() => console.log("9 timeout 900"), 900)
+setTimeout(() => console.log("8 timeout 500"), 500)
+Promise.resolve().then(() => console.log("3 microtask"))
+queueMicrotask(() => console.log("4 queueMicrotask"))
+;(async () => {
+  console.log("2 async inicio")
+  await null
+  console.log("4b depois do await")
+  const r = await new Promise(res => setTimeout(() => res("resolvido"), 50))
+  console.log("5b", r)
+  try { await Promise.reject(new Error("falhou")) } catch (e) { console.log("capturado", e.message) }
+  console.log(await Promise.all([1, Promise.resolve(2), new Promise(r => setTimeout(r, 20, 3))]))
+  console.log(await Promise.allSettled([Promise.resolve(1), Promise.reject("x")]))
+  console.log(await Promise.race([new Promise(r => setTimeout(r, 200, "lento")), new Promise(r => setTimeout(r, 100, "rapido"))]))
+  const id = setInterval(() => { console.log("tick"); if (++n === 3) clearInterval(id) }, 30); let n = 0
+})()
+console.log("2b fim do script")
+const p = Promise.resolve(42); console.log(p, Promise.reject(new Error("r")).catch(() => {}) instanceof Promise)
+@@@ 10-numeros-formatados
+const precos = [19.9, 5, 100.456, 0.1 + 0.2, 1 / 3, 2 / 3, 1e6, 1234567.891, 0.000123]
+for (const p of precos) console.log(String(p), p.toFixed(2), p.toPrecision(3), Math.round(p * 100) / 100, p.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }))
+console.log((1234.5).toLocaleString("pt-BR"), (0.256).toLocaleString("pt-BR", { style: "percent" }), (1e9).toLocaleString("en-US"), new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2 }).format(1234.5))
+console.log(0.1 * 3, 0.7 + 0.1, 0.57 * 100, 1.1 * 1.1, 4.35 * 100, 9.95.toFixed(1), 1.45.toFixed(1), 8.345.toFixed(2), 10.235.toFixed(2))
+console.log(100 / 3, 22 / 7, 1e21 + 1, 2 ** 0.5, Math.cbrt(27), Math.hypot(3, 4), Math.sign(-3), Math.trunc(-4.7), Math.log2(8), Math.fround(5.5), Math.atan2(1, 1))
+console.log(Number.MAX_VALUE, Number.MIN_VALUE, -Number.MAX_VALUE * 2, 5e-324, 1.7976931348623157e308, 4.9e-324, 0.1 + 0.7, 3 * 1.1)
+let soma = 0; for (let i = 0; i < 10; i++) soma += 0.1; console.log(soma, soma === 1, Math.abs(soma - 1) < Number.EPSILON)
+console.log(String(1e21), String(123e-20), (123.456).toString(), (-1.5).toString(2), (0.5).toString(2), (255).toString(36), 0xff, 0b11, 0o17, 1_000)
+@@@ 11-algoritmos
+const bolha = a => { a = [...a]; for (let i = 0; i < a.length; i++) for (let j = 0; j < a.length - 1 - i; j++) if (a[j] > a[j + 1]) [a[j], a[j + 1]] = [a[j + 1], a[j]]; return a }
+console.log(bolha([64, 34, 25, 12, 22, 11, 90]))
+const primos = []; for (let n = 2; primos.length < 15; n++) if (primos.every(p => n % p)) primos.push(n); console.log(primos)
+const hanoi = (n, a, b, c, out = []) => n ? (hanoi(n - 1, a, c, b, out), out.push(a + c), hanoi(n - 1, c, b, a, out), out) : out
+console.log(hanoi(4, "A", "B", "C").join(" "))
+let tri = ""; for (let l = 1; l <= 4; l++) tri += " ".repeat(4 - l) + "*".repeat(2 * l - 1) + "\n"; console.log(tri)
+console.log(Array.from({ length: 5 }, (_, i) => Array.from({ length: i + 1 }, (_, j) => j + 1).join(" ")).join("\n"))
+const freq = [..."o rato roeu a roupa"].filter(c => c !== " ").reduce((m, c) => (m[c] = (m[c] || 0) + 1, m), {}); console.log(freq)
+console.log([5, 3, 8].map((x, i, arr) => x / arr.length), [..."abc"].map(c => c.charCodeAt(0).toString(2).padStart(8, "0")))
+const mat = [[1, 2], [3, 4]]; console.log(mat.map(r => r.map(x => x * x)), mat[0].map((_, j) => mat.map(r => r[j])))
+let collatz = 27, passos = 0; while (collatz !== 1) { collatz = collatz % 2 ? 3 * collatz + 1 : collatz / 2; passos++ } console.log(passos)
+console.log([..."banana"].sort().join(""), [1, 2, 3, 4].findLast(x => x % 2), Object.groupBy ? "groupBy" : "sem", [3, 1, 2].toSorted ? "toSorted" : "sem")
+do { var feito = true } while (!feito); console.log(feito)
+@@@ 12-console-extras
+console.table([{ a: 1, b: 2 }, { a: 3, b: 4 }])
+console.table([[1, 2], [3, 4]])
+console.group("Grupo"); console.log("dentro"); console.group(); console.log("mais dentro", { a: 1 }); console.groupEnd(); console.groupEnd(); console.log("fora")
+console.info("info"); console.debug("debug")
+console.dir({ a: { b: { c: { d: 1 } } } }, { depth: 0 })
+console.assert(1 === 1, "nao aparece")
+console.count(); console.count(); console.count("x"); console.countReset(); console.count()
+console.log([1, 2, 3].map(String), process === undefined)
+@@@ 13-regex-datas
+const d = new Date(2024, 1, 29, 13, 45, 30)
+console.log(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.toISOString().slice(0, 10) !== "", d.toDateString(), d.toLocaleDateString("pt-BR"), d.toLocaleTimeString("pt-BR"))
+console.log(new Date(2024, 0, 31 + 1).getMonth(), (new Date(2024, 2, 1) - new Date(2024, 1, 1)) / 864e5, new Date("2024-01-15").getUTCDate(), new Date(2024, 11, 25).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }))
+console.log("2024-03-10".split("-").map(Number), /(\d{2})\/(\d{2})\/(\d{4})/.exec("10/03/2024").slice(1), "a  b   c".split(/\s+/), "CamelCaseString".replace(/([A-Z])/g, " $1").trim())
+console.log([..."a1b2c3".matchAll(/\d/g)].map(m => m[0] + "@" + m.index), "x".padStart(3).length, /a.c/s.test("a\nc"), /\bfoo\b/.test("a foo b"), "aBc".replace(/b/i, m => m.toUpperCase()))
+@@@ 14-erros-nao-capturados
+console.log("antes")
+function f() { return g() }
+function g() { return null.propriedade }
+f()
+console.log("depois nunca")
+@@@ 15-getters-setters-iter
+const o = { _v: 1, get v() { return this._v }, set v(x) { this._v = x * 2 }, [`dyn${1 + 1}`]: "d", ["ab"]() { return 1 } }
+o.v = 5; console.log(o.v, o, Object.getOwnPropertyDescriptor(o, "v") !== undefined)
+const it = { from: 1, to: 4, [Symbol.iterator]() { let c = this.from, t = this.to; return { next: () => c <= t ? { value: c++, done: false } : { value: undefined, done: true } } } }
+console.log([...it], Array.from(it), Math.max(...it)); for (const x of it) console.log(x)
+for (const k in { a: 1, b: 2, 3: 3, 1: 1 }) console.log(k)
+for (const k in [7, 8]) console.log(k, typeof k)
+for (const [i, c] of [..."ab"].entries()) console.log(i, c)
+const tag = (s, ...v) => s.raw.join("|") + v.join(","); console.log(tag`a${1}b${2}c\n`)
+console.log([1, 2, 3].includes(NaN), [NaN].includes(NaN), [NaN].indexOf(NaN), Object.is(-0, 0), null == undefined, null === undefined, "1" == 1, [] == false, "b" + "a" + +"a" + "a")
+console.log(typeof NaN, 0.1 * 3 === 0.3, [10, 1, 5].sort() + "", [1, 2, 3] + "", {} + "", `${{ toString: () => "ts" }}`, +[], +{}, [] + {})
+var x = 1; { var x = 2 } console.log(x); let y = 1; { let y = 2 } console.log(y)
+console.log(((a, b) => a + b).length, (function () {}).name === "", (() => {}).name, function nomeada() {}.name, parseInt.name)
+console.log(String(function soma(a, b) { return a + b }), (x => x * 2).toString(), String(class A { m() {} }))

@@ -5,6 +5,8 @@ import { ErroCS } from '../erros.js'
 import { Multicast } from '../operadores.js'
 
 const chr = (c) => new Chr(c.charCodeAt(0))
+/** ToUpper/ToLower do .NET trocam letra por letra (ß continua ß); o do JavaScript também troca uma por duas (ß → SS). */
+const caixaSimples = (s, f) => { let r = ''; for (const c of s) { const x = f(c); r += [...x].length === 1 ? x : c } return r }
 const letra = (v) => (v instanceof Chr ? String.fromCharCode(v.c) : String(v))
 const txtDe = (m, v) => (typeof v === 'string' ? v : v instanceof Chr ? String.fromCharCode(v.c) : m.aTexto(v))
 const chars = (a) => (a instanceof Arr ? a.itens.map(letra) : [letra(a)])
@@ -100,10 +102,10 @@ export const METODOS_STRING = {
     const t = txtDe(m, x)
     return ignorar ? s.toLowerCase().endsWith(t.toLowerCase()) : s.endsWith(t)
   },
-  ToUpper: (m, s) => s.toLocaleUpperCase('pt-BR'),
-  ToLower: (m, s) => s.toLocaleLowerCase('pt-BR'),
-  ToUpperInvariant: (m, s) => s.toUpperCase(),
-  ToLowerInvariant: (m, s) => s.toLowerCase(),
+  ToUpper: (m, s) => caixaSimples(s, (c) => c.toLocaleUpperCase('pt-BR')),
+  ToLower: (m, s) => caixaSimples(s, (c) => c.toLocaleLowerCase('pt-BR')),
+  ToUpperInvariant: (m, s) => caixaSimples(s, (c) => c.toUpperCase()),
+  ToLowerInvariant: (m, s) => caixaSimples(s, (c) => c.toLowerCase()),
   Trim(m, s, args) {
     if (!args.length) return s.trim()
     const c = emConjunto(argsComoLista(args).map(letra))
@@ -200,8 +202,17 @@ export const STRING = {
       return itens.map((x) => m.aTexto(x)).join('')
     },
     Format(m, [fmt, ...resto]) {
-      if (resto.length === 1 && resto[0] instanceof Arr && resto[0].tipoElem !== 'char') return m.formatar(fmt, resto[0].itens)
-      return m.formatar(fmt, resto)
+      // string.Format(IFormatProvider, formato, args): formata na cultura dada
+      const cultura = fmt && typeof fmt === 'object' && fmt.cultura && typeof fmt.cultura.decimal === 'string' ? fmt.cultura : null
+      if (cultura) [fmt, ...resto] = resto
+      const antiga = m.cultura
+      if (cultura) m.cultura = cultura
+      try {
+        if (resto.length === 1 && resto[0] instanceof Arr && resto[0].tipoElem !== 'char') return m.formatar(fmt, resto[0].itens)
+        return m.formatar(fmt, resto)
+      } finally {
+        m.cultura = antiga
+      }
     },
     Compare(m, [a, b, c]) {
       if (a === null) return b === null ? 0 : -1
@@ -209,7 +220,12 @@ export const STRING = {
       const ig = c === true || (c && c.def && comparacao(c).ignorar)
       return m.compararTextos(ig ? a.toLowerCase() : a, ig ? b.toLowerCase() : b)
     },
-    CompareOrdinal: (m, [a, b]) => (a < b ? -1 : a > b ? 1 : 0),
+    CompareOrdinal: (m, [a, b]) => { // (o .NET devolve a diferença entre os primeiros caracteres diferentes)
+      if (a === null || b === null) return a === b ? 0 : a === null ? -1 : 1
+      const n = Math.min(a.length, b.length)
+      for (let i = 0; i < n; i += 1) if (a.charCodeAt(i) !== b.charCodeAt(i)) return a.charCodeAt(i) - b.charCodeAt(i)
+      return a.length - b.length
+    },
     Equals: (m, [a, b, c]) => (a === null || b === null ? a === b : comparacao(c).ignorar ? a.toLowerCase() === b.toLowerCase() : a === b),
     Copy: (m, [s]) => s,
     Intern: (m, [s]) => s,

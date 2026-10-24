@@ -1,0 +1,320 @@
+@@@ 01-aritmetica
+for a, b in [(7, 2), (-7, 2), (7, -2), (-7, -2), (0, 5), (100, 7)]:
+    print(a, b, a // b, a % b, divmod(a, b), a / b)
+print(2 ** 10, 2 ** -1, (-2) ** 3, 10 ** 20, 7.5 // 2, -7.5 // 2, 7.5 % 2, -7.5 % 2)
+print(int(3.99), int(-3.99), round(2.5), round(3.5), round(-2.5), round(2.675, 2), round(1234.5678, -2))
+print(abs(-5), abs(-5.5), max(3, 9, 2), min([4, 1, 8]), sum([1, 2, 3.5]))
+print(5 & 3, 5 | 3, 5 ^ 3, ~5, 1 << 10, -17 >> 2)
+print(10 / 4, 10 / 5, 1 / 3, 2 / 3, 1e3, 1e-3, 1e16, 1e15, 123456789.123456789)
+print(0.1 + 0.2, 0.1 + 0.2 == 0.3, 1.1 * 3, 3 * 1.1)
+print(True + True, 7 // 2 * 2.0, 3 == 3.0, 'a' < 'b')
+print(float('inf'), -float('inf'), float('nan'), 1e308 * 10)
+@@@ 02-listas
+v = [5, 2, 9, 1, 7]
+v.append(3); v.insert(0, 100); v.extend([8, 8])
+print(v, len(v), v.count(8), v.index(9))
+v.sort(); print(v); v.sort(reverse=True); print(v)
+print(sorted(v)[:3], v[::-1], v[1:4], v[-2:], v[::2])
+w = [x * x for x in range(10) if x % 2 == 0]; print(w)
+v.remove(8); p = v.pop(); q = v.pop(0); print(p, q, v)
+m = [[1, 2, 3], [4, 5, 6]]
+print(m, [list(r) for r in zip(*m)], sum(sum(r) for r in m))
+a = [1, 2, 3]; b = a; b.append(4); c = a[:]; c.append(5); print(a, b, c, a is b, a == c)
+print(list(range(10, 0, -3)), list(map(lambda x: x + 1, [1, 2])), list(filter(None, [0, 1, '', 'a'])))
+print(list(enumerate(['a', 'b'], 1)), list(zip([1, 2, 3], 'ab')))
+print([1, 2] + [3], [0] * 4, 3 in v, [] == [], min(v), max(v))
+@@@ 03-strings
+s = "Olá, Mundo! Ação çãõ"
+print(s, len(s), s.upper(), s.lower(), s.title(), s.swapcase())
+print(s.split(), s.split(","), s.replace("o", "0"), s.find("Mundo"), s.find("x"), s.count("o"))
+print("  espaço  ".strip() + "|", "a,b,,c".split(","), "-".join(["x", "y", "z"]), "abc"[::-1])
+print(s[0], s[-1], s[2:5], "banana".index("n"), "banana".rfind("n"), "x".center(5, "*"), "5".zfill(3))
+print("abc" < "abd", "a" * 3, "abc".startswith("ab"), "abc".endswith("bc"), "ABC".isupper(), "12".isdigit(), "ab1".isalpha())
+print(ord("a"), chr(100), ord("ç"), "%d-%s-%.2f" % (5, "x", 3.14159), "{}-{}".format(1, "b"), "{0}{0}{1}".format("a", "b"))
+print(repr("aspas 'simples' \"duplas\""), repr('a\nb'), str(None), str(True), repr(1.0), str(1e20), str(1e-7))
+print("tab\there", 'a\\b', r'raw\n', """tri
+ple""")
+print("a b c".partition(" "), "abc".encode("utf-8"), "ç".encode("utf-8"), len("ç".encode("utf-8")))
+@@@ 04-formatacao
+x = 3.14159265358979
+print(f"{x}", f"{x:.2f}", f"{x:10.3f}|", f"{x:<10.1f}|", f"{x:^10.1f}|", f"{x:+.2e}", f"{x:g}", f"{x:%}")
+print(f"{42:5d}|{42:<5d}|{42:05d}|{42:x}|{42:X}|{42:o}|{42:b}|{42:#x}|{1234567:,}|{1234567.891:,.2f}|{255:08b}")
+print(f"{'abc':>6}|{'abc':<6}|{'abc':^6}|{'abc':*^7}|{'abc':.2}")
+print(f"{0.5:.0f} {1.5:.0f} {2.5:.0f} {0.125:.2f} {0.135:.2f} {2.675:.2f} {1.005:.2f}")
+print(f"{1e10:f} {1e-10:f} {123456789.0:e} {0.00001234:g} {1e100:g} {100000.0:g} {1234567.0:g}")
+print(f"{-5:+d} {5:+d} { 5: d} {True} {None} {[1, 'a']} {(1,)} {{literal}}")
+nome, n = "Ana", 3
+print(f"{nome=} {n*2=} {nome!r} {n:>{5}} {3.0} {2/3:.3}")
+print("%5.1f%%" % 45.678, "%-5s|" % "ab", "%05d" % 42, "%x" % 255, "%c" % 65, "%e" % 12345.678, "%g" % 0.0001)
+print(str(3.0), str(3.10), 1/3, 2/3, 10/3, 1e22, 1.5e-9, 100.0, 12345678901234567890.0)
+print(round(3.14159, 3), round(2.5), round(0.5), round(1.5), int("42"), float("3.5"), int(" 7 "), float("1e3"))
+@@@ 05-recursao
+import sys
+def fat(n): return 1 if n <= 1 else n * fat(n - 1)
+def fib(n, memo={}):
+    if n < 2: return n
+    if n not in memo: memo[n] = fib(n - 1) + fib(n - 2)
+    return memo[n]
+def hanoi(n, a, b, c, mov):
+    if n == 0: return
+    hanoi(n - 1, a, c, b, mov); mov.append((a, c)); hanoi(n - 1, c, b, a, mov)
+def mdc(a, b): return a if b == 0 else mdc(b, a % b)
+print(fat(5), fat(25), fat(100) % 10**9 + 7)
+print([fib(i) for i in range(15)], fib(90))
+m = []; hanoi(5, "A", "B", "C", m); print(len(m), m[:3])
+print(mdc(1071, 462), sys.getrecursionlimit() >= 1000)
+def perm(s):
+    if len(s) <= 1: return [s]
+    return [s[i] + p for i in range(len(s)) for p in perm(s[:i] + s[i+1:])]
+print(perm("abc"))
+def prof(n): return prof(n + 1) if n < 500 else n
+print(prof(0))
+@@@ 06-classes
+class Animal:
+    total = 0
+    def __init__(self, nome):
+        self.nome = nome; Animal.total += 1
+    def som(self): return "..."
+    def __str__(self): return f"{type(self).__name__}({self.nome})"
+    def __repr__(self): return f"<{self.nome}>"
+    def __eq__(self, o): return self.nome == o.nome
+    def __lt__(self, o): return self.nome < o.nome
+class Cao(Animal):
+    def som(self): return "Au"
+class Gato(Animal):
+    def __init__(self, nome, cor):
+        super().__init__(nome); self.cor = cor
+    def som(self): return "Miau"
+bichos = [Cao("Rex"), Gato("Tom", "preto"), Animal("Zed")]
+for b in bichos: print(b, b.som(), repr(b))
+print(Animal.total, sorted(bichos), bichos[0] == Cao("Rex"), isinstance(bichos[1], Animal), hasattr(bichos[1], "cor"))
+print(bichos)
+class Pt:
+    __slots__ = ("x", "y")
+    def __init__(self, x, y): self.x, self.y = x, y
+    def __add__(self, o): return Pt(self.x + o.x, self.y + o.y)
+    def __repr__(self): return f"Pt({self.x}, {self.y})"
+    @property
+    def norma(self): return (self.x ** 2 + self.y ** 2) ** 0.5
+    @staticmethod
+    def zero(): return Pt(0, 0)
+    @classmethod
+    def de(cls, t): return cls(*t)
+print(Pt(1, 2) + Pt(3, 4), Pt(3, 4).norma, Pt.zero(), Pt.de((5, 6)))
+class Pilha:
+    def __init__(self): self._d = []
+    def __len__(self): return len(self._d)
+    def __iter__(self): return iter(self._d)
+    def __getitem__(self, i): return self._d[i]
+    def push(self, x): self._d.append(x)
+p = Pilha(); [p.push(i) for i in range(3)]; print(len(p), list(p), p[1], bool(p))
+@@@ 07-excecoes
+def f(x):
+    try:
+        return 10 / x
+    except ZeroDivisionError as e:
+        print("zero:", e); return None
+    finally:
+        print("finally", x)
+print(f(2), f(0))
+for entrada in ["12", "abc", "", "3.5"]:
+    try:
+        print(int(entrada))
+    except ValueError as e:
+        print("ValueError:", e)
+try: [1, 2][5]
+except IndexError as e: print("IndexError:", e)
+try: {"a": 1}["b"]
+except KeyError as e: print("KeyError:", e, repr(e))
+try: None.x
+except AttributeError as e: print("AttributeError:", e)
+try: 1 + "a"
+except TypeError as e: print("TypeError:", e)
+try: undefined_var
+except NameError as e: print("NameError:", e)
+try: int("x")
+except (ValueError, TypeError) as e: print(type(e).__name__)
+class Meu(Exception):
+    def __init__(self, msg, cod): super().__init__(msg); self.cod = cod
+try: raise Meu("falhou", 7)
+except Meu as e: print(e, e.cod, e.args)
+try:
+    try: raise ValueError("a")
+    except ValueError as e: raise RuntimeError("b") from e
+except RuntimeError as e: print(e, repr(e.__cause__))
+def gen():
+    try: yield 1; yield 2
+    finally: print("gen fechado")
+for x in gen(): print(x); break
+assert 1 + 1 == 2
+try: assert 1 == 2, "msg"
+except AssertionError as e: print("assert", e)
+print("antes do erro")
+x = [1, 2, 3]
+print(x[10])
+print("nunca")
+@@@ 08-entrada
+n = int(input("n? "))
+soma = 0
+for i in range(n):
+    soma += int(input())
+print("soma", soma)
+a, b = map(float, input("dois: ").split())
+print(a + b, a * b, a / b)
+nome = input("Nome: ")
+print(f"Oi, {nome.strip().title()}! ({len(nome)})")
+print(input().upper())
+print(input(), input())
+--- entrada
+3
+10
+-20
+5
+1.5 4
+  joão da silva
+ação çãõ
+x
+y z
+@@@ 09-grandes
+print(2 ** 100, 2 ** 64 - 1, -2 ** 63, 10 ** 30 // 7, 10 ** 30 % 7, (10 ** 30) / 7)
+print(123456789 * 987654321, 99999999999 * 99999999999, int("9" * 30), float(10 ** 25), int(1e25))
+import math
+print(math.factorial(30), math.gcd(48, 18), math.sqrt(2), math.pi, math.e, math.floor(-2.5), math.ceil(-2.5), math.trunc(-2.5))
+print(math.sin(1), math.log(10), math.log10(1000), math.log2(8), math.pow(2, 0.5), math.hypot(3, 4), math.isqrt(99), math.comb(10, 3))
+print(sum(range(1, 101)), sum(i * i for i in range(1000)), bin(255), hex(255), oct(8), int("ff", 16), int("101", 2), 0b101, 0o17, 0xff)
+print(7 ** 0.5, 8 ** (1 / 3), (-8) ** (1 / 3), pow(2, 10, 1000), 1_000_000, 1e3 == 1000)
+print(sys_maxsize := 2 ** 63 - 1, float(2 ** 53) + 1, 2 ** 53 + 1)
+print(divmod(10 ** 20, 3), (-10) ** 21 // 3, abs(-10 ** 20))
+@@@ 10-dicts-sets
+d = {"b": 2, "a": 1}
+d["c"] = 3; d.update({"d": 4}); del d["a"]
+print(d, list(d), list(d.values()), list(d.items()), d.get("z"), d.get("z", 0), "b" in d, len(d))
+for k, v in sorted(d.items(), key=lambda kv: -kv[1]): print(k, v, end="; ")
+print()
+cont = {}
+for ch in "abracadabra": cont[ch] = cont.get(ch, 0) + 1
+print(cont, max(cont, key=cont.get))
+s = {3, 1, 2, 3}; t = {2, 3, 4}
+print(s, s | t, s & t, s - t, s ^ t, sorted(s), len(s), 1 in s)
+print({x: x * x for x in range(4)}, {x % 3 for x in range(10)}, dict(zip("ab", [1, 2])), dict.fromkeys("ab", 0))
+tp = (1, "a", 2.5); a, b, c = tp; print(tp, a, b, c, tp[1:], tp + (9,), (1,), ())
+print(d.pop("b"), d, d.setdefault("q", 9), d)
+from collections import Counter, defaultdict, deque
+print(Counter("mississippi").most_common(2), dict(defaultdict(int, {"a": 1})), deque([1, 2, 3], maxlen=2))
+print(frozenset([1, 2]), {1: "a", 1.0: "b", True: "c"}, {"x": [1, {"y": None}]})
+@@@ 11-funcoes
+def f(a, b=2, *args, c=3, **kw): return (a, b, args, c, kw)
+print(f(1), f(1, 5, 6, 7, c=9, z=1), f(*[1, 2], **{"c": 4}))
+quad = lambda x: x * x
+print(list(map(quad, range(5))), (lambda *a: sum(a))(1, 2, 3))
+def cont():
+    n = 0
+    def inc():
+        nonlocal n; n += 1; return n
+    return inc
+c = cont(); print(c(), c(), c())
+def gen(n):
+    for i in range(n): yield i * i
+print(list(gen(5)), sum(gen(4)), next(iter(gen(3))))
+g = (x for x in range(3)); print(next(g), next(g), list(g))
+def deco(fn):
+    def w(*a): print("chamando", fn.__name__); return fn(*a)
+    return w
+@deco
+def soma(a, b): return a + b
+print(soma(2, 3))
+print(sorted(["b", "A", "c"], key=str.lower), sorted([3, 1, 2], reverse=True), any([0, 1]), all([1, 0]), list(reversed([1, 2, 3])))
+x = 10
+def mostra():
+    x = 20
+    print(x)
+mostra(); print(x)
+print(type(1), type(1.0), type("a"), type([]), type(None), type(f), isinstance(1, int), isinstance(True, int))
+print((lambda: (yield))is not None, callable(f), id(1) == id(1))
+import functools
+print(functools.reduce(lambda a, b: a * b, range(1, 6)))
+@@@ 12-controle
+for i in range(1, 16):
+    if i % 15 == 0: print("FizzBuzz", end=" ")
+    elif i % 3 == 0: print("Fizz", end=" ")
+    elif i % 5 == 0: print("Buzz", end=" ")
+    else: print(i, end=" ")
+print()
+n, p = 27, 0
+while n != 1:
+    n = n // 2 if n % 2 == 0 else 3 * n + 1; p += 1
+print(p)
+for i in range(3):
+    for j in range(3):
+        if j == 2: break
+        if i == 1: continue
+        print(i, j, end="|")
+else:
+    print("for-else")
+print()
+k = 0
+while k < 3: k += 1
+else: print("while-else", k)
+primos = [x for x in range(2, 50) if all(x % d for d in range(2, int(x ** 0.5) + 1))]; print(primos)
+for l in range(1, 5): print(" " * (4 - l) + "*" * (2 * l - 1))
+x = 5
+r = "grande" if x > 3 else "pequeno"; print(r)
+match x:
+    case 1: print("um")
+    case 5 | 6: print("cinco ou seis")
+    case _: print("outro")
+print(1 < 2 < 3, 1 < 3 < 2, not 0, 0 or "x", "" and "y", None is None, [] or {})
+a, *b, c = [1, 2, 3, 4, 5]; print(a, b, c)
+a, b = 1, 2; a, b = b, a; print(a, b)
+print(*[1, 2, 3], sep="-", end="!\n")
+print("a", "b", sep="")
+import sys
+sys.stdout.write("sem newline"); sys.stdout.write("\n")
+@@@ 13-unicode
+s = "ação ñandú 日本語 😀 é"
+print(s, len(s), s.upper(), s[::-1], [c for c in "çã"], ord("😀"), chr(0x1F600), "é", "\N{GREEK SMALL LETTER ALPHA}")
+print("é" == "é", len("é"), "ß".upper(), "İ".lower() == "i̇", "straße".casefold())
+print(sorted("éaeb"), "é" > "z", "Ação".encode("utf-8"), bytes([0xc3, 0xa9]).decode("utf-8"))
+print(f"{'日本':>6}|{'é':<3}|", "tab\tx", "nl\\n")
+print("a​b", repr("a​b"), repr("é"), ascii("é"), repr("😀"))
+@@@ 14-algoritmos
+def bolha(v):
+    v = v[:]
+    for i in range(len(v)):
+        for j in range(len(v) - 1 - i):
+            if v[j] > v[j + 1]: v[j], v[j + 1] = v[j + 1], v[j]
+    return v
+def busca(v, x):
+    lo, hi = 0, len(v) - 1
+    while lo <= hi:
+        m = (lo + hi) // 2
+        if v[m] == x: return m
+        lo, hi = (m + 1, hi) if v[m] < x else (lo, m - 1)
+    return -1
+def base(n, b):
+    d = "0123456789ABCDEF"; r = ""
+    while n: r = d[n % b] + r; n //= b
+    return r or "0"
+print(bolha([64, 34, 25, 12, 22, 11, 90]), busca([1, 3, 5, 7], 5), base(255, 2), base(255, 16))
+pi = 0.0
+for i in range(100000): pi += 4 * (-1) ** i / (2 * i + 1)
+print(pi)
+media = sum([7.5, 8, 9.25]) / 3; print(media, f"{media:.2f}", round(media, 1))
+texto = "o rato roeu a roupa do rei de roma"
+print(sorted(set(texto.split()), key=lambda w: (-len(w), w)))
+print("".join(sorted(texto.replace(" ", "")))[:10], texto.count("r"), texto.split().__len__())
+mat = [[i * j for j in range(1, 4)] for i in range(1, 4)]
+for row in mat: print(" ".join(f"{x:3d}" for x in row))
+print(f"{sum(range(10)) / 10:.1f}", 17 % 5, -17 % 5, 17 % -5, -17 // 5)
+@@@ 15-misc
+import random, time, datetime, json, re
+random.seed(1); print(0 <= random.random() < 1, random.randint(1, 1) == 1, random.choice([7]) == 7)
+print(json.dumps({"a": [1, 2, {"b": None}], "c": "ç"}), json.dumps({"a": 1}, indent=2), json.loads('{"x": [1, 2.5, true]}'))
+print(re.findall(r"\d+", "a1b22c333"), re.sub(r"\s+", " ", "a   b \n c"), bool(re.match(r"^\w+@\w+\.com$", "ana@x.com")))
+print(datetime.date(2024, 2, 29).isoformat(), (datetime.date(2024, 3, 1) - datetime.date(2024, 2, 1)).days, datetime.date(2024, 1, 1).weekday())
+print(isinstance(time.time(), float), len(str(datetime.datetime.now())) >= 19)
+import itertools, string
+print(list(itertools.permutations([1, 2, 3], 2))[:4], list(itertools.combinations("abc", 2)), string.ascii_lowercase[:5], list(itertools.islice(itertools.count(5), 3)))
+import io; f = io.StringIO("linha1\nlinha2\n"); print(f.read().splitlines())
+print(bytes(3), bytearray(b"ab"), memoryview(b"ab")[0], int.from_bytes(b"\x01\x00", "little"))
+print(__name__)

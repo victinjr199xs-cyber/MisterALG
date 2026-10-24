@@ -1,0 +1,135 @@
+@@@ 12-menu-estoque
+using System;
+using System.Collections.Generic;
+using System.Linq;
+class Produto {
+    public int Id { get; set; }
+    public string Nome { get; set; }
+    public decimal Preco { get; set; }
+    public int Qtd { get; set; }
+    public override string ToString() => $"{Id,3} | {Nome,-12} | {Preco,10:C2} | {Qtd,4}";
+}
+class Estoque {
+    private readonly List<Produto> itens = new List<Produto>();
+    private int proximo = 1;
+    public Produto Adicionar(string nome, decimal preco, int qtd) { var p = new Produto { Id = proximo++, Nome = nome, Preco = preco, Qtd = qtd }; itens.Add(p); return p; }
+    public bool Remover(int id) => itens.RemoveAll(p => p.Id == id) > 0;
+    public decimal Total() => itens.Sum(p => p.Preco * p.Qtd);
+    public IEnumerable<Produto> Baixo(int limite) => itens.Where(p => p.Qtd < limite).OrderBy(p => p.Qtd);
+    public Produto this[int id] => itens.FirstOrDefault(p => p.Id == id);
+    public IEnumerable<Produto> Todos => itens;
+}
+class Program {
+    static void Main() {
+        var e = new Estoque();
+        e.Adicionar("Caneta", 1.5m, 100); e.Adicionar("Caderno", 12.9m, 5); e.Adicionar("Mochila", 149.9m, 2); e.Adicionar("Lápis", 0.8m, 300);
+        foreach (var p in e.Todos) Console.WriteLine(p);
+        Console.WriteLine($"Total: {e.Total():N2}");
+        Console.WriteLine(string.Join(", ", e.Baixo(10).Select(p => p.Nome)));
+        Console.WriteLine(e.Remover(2) + " " + e.Remover(99) + " " + (e[2] == null) + " " + e[3].Nome);
+        decimal media = e.Todos.Average(p => p.Preco); Console.WriteLine(Math.Round(media, 2) + " " + media.ToString("F3"));
+        Console.WriteLine(e.Todos.Max(p => p.Preco) + " " + e.Todos.OrderByDescending(p => p.Preco).First().Nome);
+        Console.Write("Opcao: "); string op = Console.ReadLine();
+        switch (op) { case "1": Console.WriteLine("listar"); break; case "2": Console.WriteLine("sair"); break; default: Console.WriteLine("invalida: " + op); break; }
+        Console.Write("Qtd: "); if (int.TryParse(Console.ReadLine(), out int q) && q > 0) Console.WriteLine("ok " + q); else Console.WriteLine("qtd invalida");
+        Console.Write("Preco: "); decimal pr; while (!decimal.TryParse(Console.ReadLine(), out pr)) Console.Write("de novo: "); Console.WriteLine($"{pr:F2}");
+    }
+}
+--- entrada
+7
+abc
+12,5x
+19,99
+@@@ 13-interfaces-polimorfismo
+using System;
+using System.Collections.Generic;
+using System.Linq;
+interface IForma { double Area(); double Perimetro(); string Nome { get; } }
+interface IDesenhavel { void Desenhar(); }
+abstract class Base : IForma, IDesenhavel, IComparable<Base> {
+    public abstract double Area();
+    public abstract double Perimetro();
+    public virtual string Nome => GetType().Name;
+    public void Desenhar() => Console.WriteLine($"[{Nome}] area={Area():F2} perim={Perimetro():F2}");
+    public int CompareTo(Base o) => Area().CompareTo(o.Area());
+    public override bool Equals(object o) => o is Base b && Math.Abs(b.Area() - Area()) < 1e-9;
+    public override int GetHashCode() => Area().GetHashCode();
+}
+class Quad : Base { double l; public Quad(double l) { this.l = l; } public override double Area() => l * l; public override double Perimetro() => 4 * l; }
+class Circ : Base { double r; public Circ(double r) { this.r = r; } public override double Area() => Math.PI * r * r; public override double Perimetro() => 2 * Math.PI * r; public override string Nome => "Circulo"; }
+class Tri : Base { double b, h; public Tri(double b, double h) { this.b = b; this.h = h; } public override double Area() => b * h / 2; public override double Perimetro() => b + h + Math.Sqrt(b * b + h * h); }
+class Program {
+    static void Main() {
+        var fs = new List<Base> { new Quad(3), new Circ(1.5), new Tri(3, 4), new Quad(2) };
+        foreach (var f in fs.OrderBy(x => x)) f.Desenhar();
+        fs.Sort(); Console.WriteLine(string.Join(" ", fs.Select(f => f.Nome)));
+        IForma maior = fs.Max(); Console.WriteLine(maior.Nome + " " + (fs[0].Equals(new Quad(2))) + " " + fs.Contains(new Quad(3)) + " " + fs.IndexOf(new Tri(3, 4)));
+        foreach (IDesenhavel d in fs.OfType<IDesenhavel>().Take(1)) d.Desenhar();
+        Console.WriteLine(fs.Sum(f => f.Area()).ToString("0.###") + " " + fs.Count(f => f is Quad) + " " + fs.All(f => f.Area() > 0));
+        object o = fs[0]; if (o is IForma forma && forma.Area() > 1) Console.WriteLine("forma " + forma.Nome);
+        Console.WriteLine(o.GetType() + " " + o.GetType().Name + " " + typeof(Base).IsAbstract + " " + (o as Circ == null));
+    }
+}
+@@@ 14-propriedades-estaticos-operadores
+using System;
+using System.Collections.Generic;
+class Fracao {
+    public int N { get; }
+    public int D { get; }
+    public Fracao(int n, int d) { if (d == 0) throw new ArgumentException("denominador zero"); int g = Mdc(Math.Abs(n), Math.Abs(d)); if (d < 0) { n = -n; d = -d; } N = n / g; D = d / g; }
+    static int Mdc(int a, int b) => b == 0 ? (a == 0 ? 1 : a) : Mdc(b, a % b);
+    public static Fracao operator +(Fracao a, Fracao b) => new Fracao(a.N * b.D + b.N * a.D, a.D * b.D);
+    public static Fracao operator *(Fracao a, Fracao b) => new Fracao(a.N * b.N, a.D * b.D);
+    public static Fracao operator -(Fracao a) => new Fracao(-a.N, a.D);
+    public static bool operator ==(Fracao a, Fracao b) => a.N == b.N && a.D == b.D;
+    public static bool operator !=(Fracao a, Fracao b) => !(a == b);
+    public static implicit operator double(Fracao f) => (double)f.N / f.D;
+    public static explicit operator Fracao(int i) => new Fracao(i, 1);
+    public override bool Equals(object o) => o is Fracao f && this == f;
+    public override int GetHashCode() => N * 31 + D;
+    public override string ToString() => D == 1 ? N.ToString() : $"{N}/{D}";
+}
+class Contador { public static int Total { get; private set; } public readonly int Id; public Contador() { Id = ++Total; } static Contador() { Console.WriteLine("static ctor"); } }
+class Temperatura {
+    double c; public double Celsius { get => c; set { if (value < -273.15) throw new ArgumentOutOfRangeException(nameof(value), "abaixo do zero absoluto"); c = value; } }
+    public double Fahrenheit { get => c * 9 / 5 + 32; set => c = (value - 32) * 5 / 9; }
+}
+class Program {
+    static void Main() {
+        var a = new Fracao(1, 2); var b = new Fracao(3, 4);
+        Console.WriteLine($"{a + b} {a * b} {-a} {a == new Fracao(2, 4)} {a != b} {(double)(a + b)} {(Fracao)3} {new Fracao(6, -8)}");
+        double d = a; Console.WriteLine(d + " " + (a + b).Equals(new Fracao(5, 4)));
+        try { new Fracao(1, 0); } catch (ArgumentException e) { Console.WriteLine(e.Message); }
+        var c1 = new Contador(); var c2 = new Contador(); Console.WriteLine(Contador.Total + " " + c1.Id + c2.Id);
+        var t = new Temperatura { Celsius = 100 }; Console.WriteLine(t.Fahrenheit); t.Fahrenheit = 32; Console.WriteLine(t.Celsius);
+        try { t.Celsius = -300; } catch (ArgumentOutOfRangeException e) { Console.WriteLine(e.ParamName + ": " + e.Message.Split('\n')[0]); }
+        var set = new HashSet<Fracao> { new Fracao(1, 2), new Fracao(2, 4), new Fracao(1, 3) }; Console.WriteLine(set.Count);
+        var dic = new Dictionary<Fracao, string> { [new Fracao(1, 2)] = "meio" }; Console.WriteLine(dic[new Fracao(3, 6)]);
+    }
+}
+@@@ 15-texto-processamento
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
+class Program {
+    static bool Palindromo(string s) { var t = new string(s.ToLower().Where(char.IsLetterOrDigit).ToArray()); return t == new string(t.Reverse().ToArray()); }
+    static string Cesar(string s, int k) { var sb = new StringBuilder(); foreach (char c in s) { if (char.IsUpper(c)) sb.Append((char)('A' + (c - 'A' + k + 26) % 26)); else if (char.IsLower(c)) sb.Append((char)('a' + (c - 'a' + k + 26) % 26)); else sb.Append(c); } return sb.ToString(); }
+    static void Main() {
+        Console.WriteLine(Palindromo("A man, a plan, a canal: Panama") + " " + Palindromo("abc"));
+        Console.WriteLine(Cesar("Hello, World!", 3) + " " + Cesar(Cesar("Hello, World!", 3), -3));
+        string texto = "the quick brown fox jumps over the lazy dog the end";
+        var freq = texto.Split(' ').GroupBy(w => w).Select(g => new { Palavra = g.Key, N = g.Count() }).OrderByDescending(x => x.N).ThenBy(x => x.Palavra).Take(3);
+        foreach (var f in freq) Console.WriteLine($"{f.Palavra,-6}{f.N,3}");
+        Console.WriteLine(string.Join("", texto.Where(char.IsLetter).GroupBy(c => c).OrderByDescending(g => g.Count()).ThenBy(g => g.Key).Take(3).Select(g => g.Key)));
+        Console.WriteLine(texto.Split(' ').Select(w => w.Length).Max() + " " + texto.Split(' ').First(w => w.Length == texto.Split(' ').Select(x => x.Length).Max()) + " " + texto.Count(c => "aeiou".Contains(c)));
+        Console.WriteLine(string.Concat(texto.Split(' ').Select(w => char.ToUpper(w[0]) + w.Substring(1) + " ")).TrimEnd());
+        var sb = new StringBuilder(); for (int i = 1; i <= 5; i++) sb.Append(i).Append(i < 5 ? "," : ""); Console.WriteLine(sb);
+        Console.WriteLine("Total: " + 5 + 3 + " " + (5 + 3) + " " + 5 + 'a' + " " + ('a' + 1) + " " + (char)('a' + 1) + " " + 1.5f + " " + 10 / 3 + " " + 10 % 3 + " " + 10.0 / 3);
+        Console.WriteLine(int.Parse("42") + int.Parse("-8") + " " + "5" + "5" + " " + (int)'5' + " " + ('5' - '0') + " " + Convert.ToInt32('5') + " " + char.GetNumericValue('5'));
+        Console.WriteLine("abc".CompareTo("abd") + " " + "b".CompareTo("a") + " " + string.Compare("apple", "Apple", true) + " " + string.Compare("apple", "Apple") + " " + "a".Equals("A") + " " + "ä".CompareTo("z") + " " + string.CompareOrdinal("ä", "z"));
+        string s = null; Console.WriteLine("[" + s + "]" + (s ?? "vazio") + s?.Length + (s == null) + string.IsNullOrEmpty(s));
+        Console.WriteLine("a\tb\\n\"q\"" + @"c:\dir\n" + "\u0041\x42" + '\'' + "\0".Length);
+        Console.WriteLine($"{"x",5}|{"x",-5}|{12.5,8:F2}|{-3,4}|{true,6}|{'c',3}|{DateTime.MinValue.Month:D2}");
+    }
+}

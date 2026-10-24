@@ -3,16 +3,21 @@
 // mensagens da barra de status, painéis). O que o aluno escreve e o que o programa imprime fica como está.
 
 const ATRIBUTOS = ['title', 'placeholder', 'aria-label', 'data-dica']
-const CONTEUDO_DO_ALUNO = '.cm-editor, #console-tela, #visualizacao, .previa-html, .previa-quadro, .assistente-msg, .inicio-link small, .grade td, .mo-valor, .mc-valor'
+const CONTEUDO_DO_ALUNO = '.cm-editor, #console-tela, #visualizacao, .previa-html, .previa-quadro, .assistente-msg, .inicio-link small, .grade td, .mo-valor, .mc-valor, .mb-tabela table, .mb-tabela header b'
 
 export function traduzirPagina(t) {
   if (t.idioma === 'pt') return
   document.documentElement.lang = t.idioma
+  document.documentElement.dir = t.idioma === 'ar' ? 'rtl' : 'ltr' // o código, o console e as tabelas continuam da esquerda para a direita (visualg.css)
   const traduzir = (texto) => {
     const limpo = texto.trim()
     if (limpo.length < 2 || !/\p{L}/u.test(limpo)) return texto
     const r = t.reconhecer(limpo)
-    return r == null ? texto : texto.replace(limpo, r)
+    if (r != null) return texto.replace(limpo, r)
+    // Dicas da barra de status: "MENSAGEM: " + a dica do item sob o mouse (já traduzida) ou outro texto livre.
+    const msg = /^MENSAGEM:\s+(.+)$/s.exec(limpo)
+    if (msg) return texto.replace(limpo, `${t('MENSAGEM:')} ${t.reconhecer(msg[1]) ?? msg[1]}`)
+    return texto
   }
   const visitar = (no) => {
     if (no.nodeType === Node.TEXT_NODE) {

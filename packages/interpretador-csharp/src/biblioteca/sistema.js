@@ -426,7 +426,16 @@ export class TipoCS {
 }
 const SIMPLES = { int: 'Int32', long: 'Int64', short: 'Int16', byte: 'Byte', sbyte: 'SByte', ushort: 'UInt16', uint: 'UInt32', ulong: 'UInt64', double: 'Double', float: 'Single', decimal: 'Decimal', bool: 'Boolean', char: 'Char', string: 'String', object: 'Object' }
 TipoCS.PROPS = {
-  Name: { get: (m, t) => { const x = semNulo(t.t); return SIMPLES[x] ?? m.buscarClasse(x)?.nome ?? x.replace(/<.*>$/, (g) => `\`${g.split(',').length}`) } },
+  Name: {
+    get: (m, t) => {
+      const nome = (x) => {
+        const arr = /(\[,*\])+$/.exec(x) // int[] → Int32[]
+        if (arr) return nome(x.slice(0, -arr[0].length)) + arr[0]
+        return SIMPLES[x] ?? m.buscarClasse(x)?.nome ?? x.replace(/<.*>$/, (g) => `\`${g.split(',').length}`)
+      }
+      return nome(semNulo(t.t))
+    },
+  },
   FullName: { get: (m, t) => t.completo(m) },
   Namespace: { get: (m, t) => m.buscarClasse(t.t)?.ns ?? (SIMPLES[t.t] ? 'System' : null) },
   IsClass: { get: (m, t) => { const d = m.buscarClasse(t.t); return d ? d.tipo === 'class' || d.tipo === 'record' : t.t === 'string' || t.t === 'object' } },

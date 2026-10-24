@@ -13,6 +13,9 @@ const CRIADO = Symbol('criado pelo MisterALG')
 /** Função que o passo a passo transforma em gerador. */
 function convertivel(no) {
   if (no.generator) return false // gerador do próprio aluno: roda como está
+  // (método de classe com chave calculada — [Symbol.toPrimitive]() — roda direto, sem passo a passo: o invólucro
+  // do runtime precisa do nome da chave, que só existe em tempo de execução)
+  if (no.type === 'ClassMethod' && no.computed) return false
   if (no.type === 'ClassMethod' || no.type === 'ObjectMethod') return no.kind === 'method'
   return ['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'].includes(no.type)
 }
@@ -124,12 +127,19 @@ function pluginDoPassoAPasso({ types: t, template }) {
     }
   }
 
-  function info(no, nome) {
-    return t.objectExpression([
+  function info(no, nome, path) {
+    // aridade e texto: o invólucro do runtime precisa parecer a função do aluno (f.length, String(f)).
+    let aridade = 0
+    for (const p of no.params ?? []) { if (p.type === 'AssignmentPattern' || p.type === 'RestElement') break; aridade += 1 }
+    const codigo = path?.hub?.getCode?.()
+    const campos = [
       t.objectProperty(t.identifier('nome'), t.stringLiteral(nome || '(anônima)')),
       t.objectProperty(t.identifier('linha'), t.numericLiteral(linhaDe(no))),
       t.objectProperty(t.identifier('assincrona'), t.booleanLiteral(!!no.async)),
-    ])
+      t.objectProperty(t.identifier('aridade'), t.numericLiteral(aridade)),
+    ]
+    if (codigo && no.start != null && no.end != null) campos.push(t.objectProperty(t.identifier('texto'), t.stringLiteral(codigo.slice(no.start, no.end))))
+    return t.objectExpression(campos)
   }
 
   function nomeDaFuncao(path) {
@@ -222,29 +232,37 @@ function pluginDoPassoAPasso({ types: t, template }) {
           if (path.isClassMethod()) {
             // Vira método gerador (o super continua valendo); depois da classe, __envolverMetodos põe o invólucro.
             const classe = path.parentPath.parentPath
-            ;(classe.node.__metodos ??= []).push({ chave: no.computed ? null : (no.key.name ?? no.key.value), estatico: !!no.static, info: info(no, nome) })
+            ;(classe.node.__metodos ??= []).push({ chave: no.computed ? null : (no.key.name ?? no.key.value), estatico: !!no.static, info: info(no, nome, path) })
             no.generator = true
             no.async = false
             no[CRIADO] = true
             return
           }
           if (path.isObjectMethod()) {
-            path.replaceWith(criado(t.objectProperty(no.key, criado(t.callExpression(t.identifier('__funcao'), [gerador, info(no, nome)])), no.computed)))
+            path.replaceWith(criado(t.objectProperty(no.key, criado(t.callExpression(t.identifier('__funcao'), [gerador, info(no, nome, path)])), no.computed)))
             return
           }
           if (path.isArrowFunctionExpression()) {
             const ligado = criado(t.callExpression(criado(t.memberExpression(gerador, t.identifier('bind'))), [criado(t.thisExpression())]))
-            path.replaceWith(criado(t.callExpression(t.identifier('__funcao'), [ligado, info(no, nome)])))
+            path.replaceWith(criado(t.callExpression(t.identifier('__funcao'), [ligado, info(no, nome, path)])))
             return
           }
           if (path.isFunctionExpression()) {
-            path.replaceWith(criado(t.callExpression(t.identifier('__funcao'), [gerador, info(no, nome)])))
+            const criada = criado(t.callExpression(t.identifier('__funcao'), [gerador, info(no, nome, path)]))
+            if (!no.id) { path.replaceWith(criada); return }
+            // (function f() { ...f()... }): o nome vale dentro da própria função, então ele vira uma constante
+            // que guarda o invólucro, numa função que cria e devolve o invólucro.
+            const corpoCria = criado(t.blockStatement([
+              criado(t.variableDeclaration('const', [criado(t.variableDeclarator(t.identifier(no.id.name), criada))])),
+              criado(t.returnStatement(t.identifier(no.id.name))),
+            ]))
+            path.replaceWith(criado(t.callExpression(criado(t.arrowFunctionExpression([], corpoCria)), [])))
             return
           }
           // Declaração: continua "içada" (dá para chamar antes da linha dela); o gerador é registrado no começo do bloco.
           const id = no.id
           const invólucro = criadoTudo(template.statement.ast`function ${t.identifier(id.name)}(...__argumentos) { return __sincrono(${t.identifier(id.name)}, this, __argumentos) }`)
-          const registro = criado(t.expressionStatement(criado(t.callExpression(t.identifier('__registrar'), [t.identifier(id.name), gerador, info(no, nome)]))))
+          const registro = criado(t.expressionStatement(criado(t.callExpression(t.identifier('__registrar'), [t.identifier(id.name), gerador, info(no, nome, path)]))))
           path.replaceWith(invólucro)
           const bloco = path.parentPath.node.type === 'ExportNamedDeclaration' ? path.parentPath.parentPath : path.parentPath
           const lista = bloco.node.body ?? bloco.node.consequent
@@ -261,11 +279,14 @@ function pluginDoPassoAPasso({ types: t, template }) {
             t.objectProperty(t.identifier('info'), m.info),
           ])))
           delete path.node.__metodos
+          const codigo = path.hub?.getCode?.()
+          const no = path.node
+          const texto = codigo && no.start != null && no.end != null ? [t.stringLiteral(codigo.slice(no.start, no.end))] : []
           if (path.isClassDeclaration()) {
-            path.insertAfter(criado(t.expressionStatement(criado(t.callExpression(t.identifier('__envolverMetodos'), [t.identifier(path.node.id.name), lista])))))
+            path.insertAfter(criado(t.expressionStatement(criado(t.callExpression(t.identifier('__envolverMetodos'), [t.identifier(path.node.id.name), lista, ...texto])))))
           } else {
             path.node[CRIADO] = true
-            path.replaceWith(criado(t.callExpression(t.identifier('__envolverMetodos'), [path.node, lista])))
+            path.replaceWith(criado(t.callExpression(t.identifier('__envolverMetodos'), [path.node, lista, ...texto])))
           }
         },
       },
