@@ -71,6 +71,16 @@ contextBridge.exposeInMainWorld('misteralg', {
     preludio: invocar('csharp:preludio'),
     aquecer: invocar('csharp:aquecer'),
   },
+  atualizacao: {
+    procurar: invocar('atualizacao:procurar'),
+    baixar: invocar('atualizacao:baixar'),
+    instalar: invocar('atualizacao:instalar'),
+    aoProgresso(fn) {
+      const ouvinte = (_e, p) => fn(p)
+      ipcRenderer.on('atualizacao:progresso', ouvinte)
+      return () => ipcRenderer.removeListener('atualizacao:progresso', ouvinte)
+    },
+  },
   sql: {
     comando: invocar('sql:comando'),
     aquecer: invocar('sql:aquecer'),

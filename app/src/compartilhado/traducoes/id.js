@@ -100,4 +100,5 @@ export default {
   440: 'Januari', 441: 'Februari', 442: 'Maret', 443: 'April', 444: 'Mei', 445: 'Juni', 446: 'Juli', 447: 'Agustus', 448: 'September', 449: 'Oktober', 450: 'November', 451: 'Desember',
   452: 'Min', 453: 'Sen', 454: 'Sel', 455: 'Rab', 456: 'Kam', 457: 'Jum', 458: 'Sab',
   115: 'Basis data dengan PostgreSQL', 116: 'Tabel berubah di setiap perintah, kunci dan baris baru disorot', 117: 'PostgreSQL sungguhan', 118: 'PESAN: Memulai PostgreSQL…',
+  460: "Pembaruan", 461: "MisterALG {0} tersedia.", 462: "Yang baru", 463: "Perbarui", 464: "Unduh", 465: "Mengunduh pembaruan… {0}%", 466: "Mulai ulang dan pasang", 467: "Siap memasang versi {0}.", 468: "Pembaruan gagal diunduh. Unduh dari situs.", 469: "Periksa &pembaruan…", 470: "Kamu sudah memakai versi terbaru ({0}).", 471: "Gagal memeriksa pembaruan (tidak ada internet?).", 472: "Periksa pembaruan saat dibuka", 473: "Nanti", 474: "PESAN: Memeriksa pembaruan…",
 }

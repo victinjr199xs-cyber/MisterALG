@@ -116,4 +116,5 @@ export default {
   440: 'Ocak', 441: 'Şubat', 442: 'Mart', 443: 'Nisan', 444: 'Mayıs', 445: 'Haziran', 446: 'Temmuz', 447: 'Ağustos', 448: 'Eylül', 449: 'Ekim', 450: 'Kasım',
   451: 'Aralık', 452: 'Paz', 453: 'Pzt', 454: 'Sal', 455: 'Çar', 456: 'Per', 457: 'Cum', 458: 'Cmt',
   115: 'PostgreSQL ile veritabanları', 116: 'Her komutta değişen tablolar; anahtarlar ve yeni satırlar vurgulu', 117: 'Gerçek PostgreSQL', 118: 'MESAJ: PostgreSQL başlatılıyor…',
+  460: "Güncelleme", 461: "MisterALG {0} kullanılabilir.", 462: "Yenilikler", 463: "Güncelle", 464: "İndir", 465: "Güncelleme indiriliyor… %{0}", 466: "Yeniden başlat ve kur", 467: "{0} sürümü kurulmaya hazır.", 468: "Güncelleme indirilemedi. Siteden indir.", 469: "&Güncellemeleri denetle…", 470: "Zaten en yeni sürüme sahipsin ({0}).", 471: "Güncellemeler denetlenemedi (internet yok mu?).", 472: "Açılışta güncellemeleri denetle", 473: "Sonra", 474: "MESAJ: Güncellemeler denetleniyor…",
 }

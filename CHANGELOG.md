@@ -3,6 +3,19 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.9.0] — 2026-10-24
+
+### Atualizações pelo próprio app
+
+- Ao abrir, o MisterALG pergunta ao GitHub se há versão nova e mostra uma faixa na tela inicial com
+  **Novidades** e **Atualizar**. Também dá para procurar em **Ajuda → Procurar atualizações…**.
+- **Windows (instalado)** e **Linux (AppImage)**: o app baixa a versão nova, mostra o progresso e
+  reinicia já atualizado. **Mac**, versão **portátil** e **.deb/.rpm**: o botão **Baixar** abre a
+  página da versão nova.
+- A procura pode ser desligada na tela inicial ("Procurar atualizações ao abrir"). Nada além do número
+  da versão é consultado.
+- Os pacotes passam a sair com o `latest.yml` que o atualizador usa. A primeira atualização pelo app
+  acontece da 1.9.0 para a próxima versão.
 ## [1.8.0] — 2026-10-24
 
 ### Nova linguagem: SQL
@@ -115,6 +128,7 @@ A versão que transforma o MisterALG de "VisuAlg para Mac e Linux" em um ambient
 
 - Botão de temas, cores do código configuráveis, exportar para Pascal, listas e dica do dia. (`f2bd11d`)
 
+[1.9.0]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.2...v1.8.0
 [1.7.2]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.0...v1.7.1

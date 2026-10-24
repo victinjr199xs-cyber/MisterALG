@@ -12,6 +12,8 @@
     { from: 'build/linguagens', to: 'linguagens' }],
   asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js', 'out/main/rodar-python.js', 'out/main/rodar-php.js', 'out/main/rodar-sql.js'],
   npmRebuild: false,
+  // Onde o app procura e baixa as versões novas (electron-updater). O CI só anexa os arquivos; quem publica a release é ele.
+  publish: [{ provider: 'github', owner: 'victinjr199xs-cyber', repo: 'MisterALG', releaseType: 'release' }],
   electronVersion: '44.8.0',
   fileAssociations: [
     { ext: 'alg', name: 'Algoritmo em Portugol', role: 'Editor', icon: 'build/icon.png', mimeType: 'text/x-portugol' },  ],

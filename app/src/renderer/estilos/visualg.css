@@ -978,3 +978,12 @@ body.modo-codigo ::-webkit-scrollbar-button { display: none; }
 .mb-alterada td { background: #2b2413; color: #fbbf24; }
 .mb-apagada td { background: #2a1414; color: #f87171; text-decoration: line-through; }
 .mb-vazia { padding: 8px 10px; }
+/* Faixa de atualização na tela inicial (renderer/atualizacao.js) */
+.inicio-faixa-atualizacao { border-color: #1f6b4f; background: #0f1f19; }
+.inicio-faixa-atualizacao .inicio-chip { background: #16a37f; }
+.inicio-botao-linha {
+  padding: 10px 12px; border: 1px solid var(--linha); background: none; color: var(--apagado); cursor: pointer;
+  font: 700 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+}
+.inicio-botao-linha:hover { color: var(--texto); border-color: #3a404c; }
+.inicio-botao-claro:disabled { opacity: .6; cursor: progress; }

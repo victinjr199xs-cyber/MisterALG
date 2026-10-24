@@ -119,4 +119,5 @@ export default {
   440: 'Januar', 441: 'Februar', 442: 'März', 443: 'April', 444: 'Mai', 445: 'Juni', 446: 'Juli', 447: 'August', 448: 'September', 449: 'Oktober',
   450: 'November', 451: 'Dezember', 452: 'So', 453: 'Mo', 454: 'Di', 455: 'Mi', 456: 'Do', 457: 'Fr', 458: 'Sa',
   115: 'Datenbanken mit PostgreSQL', 116: 'Die Tabellen ändern sich mit jedem Befehl, Schlüssel und neue Zeilen hervorgehoben', 117: 'Echtes PostgreSQL', 118: 'MELDUNG: PostgreSQL wird gestartet…',
+  460: "Update", 461: "MisterALG {0} ist verfügbar.", 462: "Neuigkeiten", 463: "Aktualisieren", 464: "Herunterladen", 465: "Update wird heruntergeladen… {0} %", 466: "Neu starten und installieren", 467: "Bereit, Version {0} zu installieren.", 468: "Das Update konnte nicht geladen werden. Lade es von der Website.", 469: "Nach &Updates suchen…", 470: "Du hast bereits die neueste Version ({0}).", 471: "Konnte nicht nach Updates suchen (kein Internet?).", 472: "Beim Start nach Updates suchen", 473: "Später", 474: "MELDUNG: Suche nach Updates…",
 }

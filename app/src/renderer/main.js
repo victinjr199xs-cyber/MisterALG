@@ -10,6 +10,7 @@ import { ICONES } from './icones.js'
 import { DICAS } from './dicas.js'
 import { tradutor } from '../compartilhado/idiomas.js'
 import { traduzirPagina } from './traduzir-pagina.js'
+import { procurarNaIDE } from './atualizacao.js'
 import { criarAssistente } from './assistente.js'
 import { gerarPascal } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
@@ -406,6 +407,10 @@ const comandos = {
   'ajuda-linguagem': () => abrirAjuda('linguagem'),
   'ajuda-referencia': () => abrirAjuda('referencia'),
   sobre: () => dialogos.sobre(VERSAO),
+  atualizacoes: () => procurarNaIDE(tradutor(prefs.idioma), {
+    podeDescartar: () => podeDescartar(' Encerrando o algoritmo e fechando o MisterALG '),
+    status: (texto) => status.mensagem(texto),
+  }),
   termos: () => dialogos.termos(TERMOS),
 }
 

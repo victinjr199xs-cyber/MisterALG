@@ -99,4 +99,5 @@ export default {
   440: 'Tháng Một', 441: 'Tháng Hai', 442: 'Tháng Ba', 443: 'Tháng Tư', 444: 'Tháng Năm', 445: 'Tháng Sáu', 446: 'Tháng Bảy', 447: 'Tháng Tám', 448: 'Tháng Chín', 449: 'Tháng Mười',
   450: 'Tháng Mười Một', 451: 'Tháng Mười Hai', 452: 'CN', 453: 'T2', 454: 'T3', 455: 'T4', 456: 'T5', 457: 'T6', 458: 'T7',
   115: 'Cơ sở dữ liệu với PostgreSQL', 116: 'Các bảng thay đổi sau mỗi lệnh, khóa và dòng mới được tô sáng', 117: 'PostgreSQL thật', 118: 'THÔNG BÁO: Đang khởi động PostgreSQL…',
+  460: "Cập nhật", 461: "Đã có MisterALG {0}.", 462: "Có gì mới", 463: "Cập nhật", 464: "Tải xuống", 465: "Đang tải bản cập nhật… {0}%", 466: "Khởi động lại và cài đặt", 467: "Sẵn sàng cài phiên bản {0}.", 468: "Không tải được bản cập nhật. Hãy tải từ trang web.", 469: "Kiểm tra &cập nhật…", 470: "Bạn đang dùng phiên bản mới nhất ({0}).", 471: "Không kiểm tra được cập nhật (không có internet?).", 472: "Kiểm tra cập nhật khi mở", 473: "Để sau", 474: "THÔNG BÁO: Đang kiểm tra cập nhật…",
 }

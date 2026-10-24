@@ -119,4 +119,5 @@ export default {
   440: 'Styczeń', 441: 'Luty', 442: 'Marzec', 443: 'Kwiecień', 444: 'Maj', 445: 'Czerwiec', 446: 'Lipiec', 447: 'Sierpień', 448: 'Wrzesień', 449: 'Październik',
   450: 'Listopad', 451: 'Grudzień', 452: 'Nd', 453: 'Pn', 454: 'Wt', 455: 'Śr', 456: 'Cz', 457: 'Pt', 458: 'So',
   115: 'Bazy danych z PostgreSQL', 116: 'Tabele zmieniają się po każdym poleceniu, z wyróżnionymi kluczami i nowymi wierszami', 117: 'Prawdziwy PostgreSQL', 118: 'KOMUNIKAT: Uruchamianie PostgreSQL…',
+  460: "Aktualizacja", 461: "MisterALG {0} jest dostępny.", 462: "Nowości", 463: "Aktualizuj", 464: "Pobierz", 465: "Pobieranie aktualizacji… {0}%", 466: "Uruchom ponownie i zainstaluj", 467: "Gotowe do instalacji wersji {0}.", 468: "Nie udało się pobrać aktualizacji. Pobierz ją ze strony.", 469: "Sprawdź &aktualizacje…", 470: "Masz już najnowszą wersję ({0}).", 471: "Nie udało się sprawdzić aktualizacji (brak internetu?).", 472: "Sprawdzaj aktualizacje przy starcie", 473: "Później", 474: "KOMUNIKAT: Sprawdzanie aktualizacji…",
 }

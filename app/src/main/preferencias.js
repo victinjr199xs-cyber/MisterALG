@@ -17,6 +17,7 @@ export const PADRAO = {
   coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
   mostrarDicas: true, // dica do dia ao abrir
   abertura: true, // animação de abertura (main/abertura.js)
+  procurarAtualizacoes: true, // ao abrir, pergunta ao GitHub se há versão nova (main/atualizacao.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
   // Assistente de IA (main/ia.js): desligado até o usuário ativar. As chaves ficam à parte, criptografadas.
   ia: { ativo: false, provedor: 'claude', modelos: {}, urls: {}, modo: 'dica' },

@@ -6,6 +6,7 @@ import { telaInicial } from './inicio.js'
 import { VERSAO } from '../compartilhado/versao.js'
 import { tradutor } from '../compartilhado/idiomas.js'
 import { traduzirPagina } from './traduzir-pagina.js'
+import { faixaDeAtualizacao } from './atualizacao.js'
 
 const api = window.misteralg
 const ehMac = api.plataforma === 'darwin'
@@ -25,13 +26,15 @@ if (recuperado?.texto) await irParaIDE({})
 
 for (;;) {
   const dica = (prefs.dicaAtual ?? 0) % DICAS.length
-  const r = await telaInicial({
+  const promessa = telaInicial({
     versao: VERSAO,
     recentes: prefs.mru,
     dica: tradutor(prefs.idioma)(DICAS[dica]),
     prefs,
     atalhos: { novo: ehMac ? '⌘N' : 'Ctrl+N', abrir: ehMac ? '⌘O' : 'Ctrl+A' },
   })
+  if (prefs.procurarAtualizacoes !== false) void faixaDeAtualizacao(tradutor(prefs.idioma))
+  const r = await promessa
   prefs = await api.prefs.gravar({ ...r.prefs, dicaAtual: (dica + 1) % DICAS.length })
   // A página inteira já foi traduzida para o idioma anterior: recarregar é o jeito simples de trocar.
   if (r.acao === 'idioma') { await api.prefs.gravar({ idioma: r.idioma }); location.reload(); break }

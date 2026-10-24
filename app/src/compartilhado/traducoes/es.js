@@ -120,4 +120,5 @@ export default {
   440: 'Enero', 441: 'Febrero', 442: 'Marzo', 443: 'Abril', 444: 'Mayo', 445: 'Junio', 446: 'Julio', 447: 'Agosto', 448: 'Septiembre', 449: 'Octubre',
   450: 'Noviembre', 451: 'Diciembre', 452: 'Dom', 453: 'Lun', 454: 'Mar', 455: 'Mié', 456: 'Jue', 457: 'Vie', 458: 'Sáb',
   115: 'Bases de datos con PostgreSQL', 116: 'Las tablas cambiando con cada comando, con las claves y las filas nuevas resaltadas', 117: 'PostgreSQL de verdad', 118: 'MENSAJE: Iniciando PostgreSQL…',
+  460: "Actualización", 461: "MisterALG {0} está disponible.", 462: "Novedades", 463: "Actualizar", 464: "Descargar", 465: "Descargando la actualización… {0}%", 466: "Reiniciar e instalar", 467: "Listo para instalar la versión {0}.", 468: "No se pudo descargar la actualización. Descárgala del sitio.", 469: "Buscar &actualizaciones…", 470: "Ya tienes la versión más reciente ({0}).", 471: "No se pudo buscar actualizaciones (¿sin internet?).", 472: "Buscar actualizaciones al abrir", 473: "Después", 474: "MENSAJE: Buscando actualizaciones…",
 }

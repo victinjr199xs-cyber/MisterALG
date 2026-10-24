@@ -42,7 +42,10 @@ jobs:
           - sistema: windows-latest
             comando: dist:win
             artefato: MisterALG-windows
-            arquivos: app/dist/*.exe
+            arquivos: |
+              app/dist/*.exe
+              app/dist/*.exe.blockmap
+              app/dist/latest.yml
           - sistema: ubuntu-24.04
             comando: dist:linux
             artefato: MisterALG-linux
@@ -51,6 +54,7 @@ jobs:
               app/dist/*.deb
               app/dist/*.rpm
               app/dist/*.tar.gz
+              app/dist/latest-linux.yml
     runs-on: ${{ matrix.sistema }}
     steps:
       - uses: actions/checkout@v4

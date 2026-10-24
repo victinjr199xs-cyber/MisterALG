@@ -119,4 +119,5 @@ export default {
   440: 'January', 441: 'February', 442: 'March', 443: 'April', 444: 'May', 445: 'June', 446: 'July', 447: 'August', 448: 'September', 449: 'October',
   450: 'November', 451: 'December', 452: 'Sun', 453: 'Mon', 454: 'Tue', 455: 'Wed', 456: 'Thu', 457: 'Fri', 458: 'Sat',
   115: 'Databases with PostgreSQL', 116: 'The tables changing with every statement, with keys and new rows highlighted', 117: 'Real PostgreSQL', 118: 'MESSAGE: Starting PostgreSQL…',
+  460: "Update", 461: "MisterALG {0} is available.", 462: "What's new", 463: "Update", 464: "Download", 465: "Downloading the update… {0}%", 466: "Restart and install", 467: "Ready to install version {0}.", 468: "Could not download the update. Download it from the website.", 469: "Check for &updates…", 470: "You already have the latest version ({0}).", 471: "Could not check for updates (no internet?).", 472: "Check for updates at startup", 473: "Later", 474: "MESSAGE: Checking for updates…",
 }

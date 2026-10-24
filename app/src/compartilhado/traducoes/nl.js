@@ -119,4 +119,5 @@ export default {
   440: 'Januari', 441: 'Februari', 442: 'Maart', 443: 'April', 444: 'Mei', 445: 'Juni', 446: 'Juli', 447: 'Augustus', 448: 'September', 449: 'Oktober',
   450: 'November', 451: 'December', 452: 'Zo', 453: 'Ma', 454: 'Di', 455: 'Wo', 456: 'Do', 457: 'Vr', 458: 'Za',
   115: 'Databases met PostgreSQL', 116: 'De tabellen veranderen bij elke opdracht, met sleutels en nieuwe rijen gemarkeerd', 117: 'Echte PostgreSQL', 118: 'BERICHT: PostgreSQL wordt gestart…',
+  460: "Update", 461: "MisterALG {0} is beschikbaar.", 462: "Wat is nieuw", 463: "Bijwerken", 464: "Downloaden", 465: "Update downloaden… {0}%", 466: "Herstarten en installeren", 467: "Klaar om versie {0} te installeren.", 468: "De update kon niet worden gedownload. Download hem van de website.", 469: "Zoeken naar &updates…", 470: "Je hebt al de nieuwste versie ({0}).", 471: "Kon niet zoeken naar updates (geen internet?).", 472: "Bij het starten naar updates zoeken", 473: "Later", 474: "BERICHT: Zoeken naar updates…",
 }

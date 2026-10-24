@@ -312,6 +312,7 @@ janelas do sistema. O **Portugol** continua em português — é a própria ling
 | macOS e Linux | — | ✅ |
 | Mesma linguagem, menus, atalhos e mensagens de erro | ✅ | ✅ |
 | Abre e salva os mesmos `.alg` (Windows-1252) | ✅ | ✅ |
+| Atualiza pelo próprio app | — | ✅ |
 | C#, JavaScript, TypeScript, Python, C, C++, PHP e SQL (PostgreSQL) | — | ✅ |
 | Objetos, referências e ponteiros desenhados | — | ✅ |
 | Interface em 18 idiomas | — | ✅ |
@@ -319,7 +320,8 @@ janelas do sistema. O **Portugol** continua em português — é a própria ling
 ## 🔒 Privacidade
 
 O MisterALG funciona **sem internet**. Não tem conta, anúncio, telemetria nem coleta de dados. Os
-programas ficam no seu computador. A única exceção é o **assistente de IA**, que vem desligado: quando
+programas ficam no seu computador. Ao abrir, ele só pergunta ao GitHub qual é a versão mais nova, para
+oferecer a **atualização pelo próprio app** (dá para desligar na tela inicial). A outra exceção é o **assistente de IA**, que vem desligado: quando
 você o ativa e faz uma pergunta, o código vai direto para o provedor que você escolheu (com o Ollama,
 nem isso — a IA roda no seu computador).
 

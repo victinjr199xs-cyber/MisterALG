@@ -9,6 +9,7 @@ import { carregarPagina, criarJanelaPrincipal } from './janelas.js'
 import * as programas from './programas.js'
 import { aquecerPHP, pararPHP } from './php.js'
 import { aquecerSQL, comandoSQL, pararSQL } from './sql.js'
+import { baixar as baixarAtualizacao, instalar as instalarAtualizacao, procurar as procurarAtualizacao } from './atualizacao.js'
 import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
 import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
 import { montarMenu } from './menu.js'
@@ -287,6 +288,19 @@ function registrarIpc() {
   })
   ipcMain.handle('sql:aquecer', () => aquecerSQL())
   ipcMain.handle('sql:parar', () => pararSQL())
+
+  // Atualizações (main/atualizacao.js): procurar no GitHub, baixar e instalar.
+  ipcMain.handle('atualizacao:procurar', () => procurarAtualizacao())
+  ipcMain.handle('atualizacao:baixar', (e) => baixarAtualizacao((p) => { if (!e.sender.isDestroyed()) e.sender.send('atualizacao:progresso', p) }))
+  ipcMain.handle('atualizacao:instalar', () => {
+    podeFechar = true // a IDE (ou a tela inicial) já confirmou: não há algoritmo por salvar
+    limparRecuperacao()
+    pararTudo()
+    programas.pararTudo()
+    pararPHP()
+    pararSQL()
+    instalarAtualizacao()
+  })
 
   ipcMain.handle('externo:abrir', (_e, url) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url)

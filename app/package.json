@@ -1,7 +1,7 @@
 {
   "name": "misteralg-app",
   "productName": "MisterALG",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "private": true,
   "description": "MisterALG — interpretador e IDE de Portugol inspirado no VisuAlg 3.0.7",
   "author": {
@@ -16,9 +16,9 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "start": "electron out/main/index.js",
-    "dist:mac": "electron-builder --mac --config electron-builder.json5",
-    "dist:win": "electron-builder --win --config electron-builder.json5",
-    "dist:linux": "electron-builder --linux --config electron-builder.json5"
+    "dist:mac": "electron-builder --mac --config electron-builder.json5 --publish never",
+    "dist:win": "electron-builder --win --config electron-builder.json5 --publish never",
+    "dist:linux": "electron-builder --linux --config electron-builder.json5 --publish never"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^1.1.0",
@@ -35,6 +35,7 @@
     "@misteralg/interpreter": "*",
     "@yowasp/clang": "^22.0.0-git20542-10",
     "codemirror": "^6",
+    "electron-updater": "^6.8.11",
     "electron-vite": "^3",
     "vite": "^6"
   }

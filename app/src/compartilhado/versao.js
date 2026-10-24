@@ -1,2 +1,2 @@
 // Versão mostrada na tela inicial e no "Sobre" (a mesma do package.json).
-export const VERSAO = '1.8.0'
+export const VERSAO = '1.9.0'

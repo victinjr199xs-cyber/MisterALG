@@ -119,4 +119,5 @@ export default {
   440: 'Gennaio', 441: 'Febbraio', 442: 'Marzo', 443: 'Aprile', 444: 'Maggio', 445: 'Giugno', 446: 'Luglio', 447: 'Agosto', 448: 'Settembre', 449: 'Ottobre',
   450: 'Novembre', 451: 'Dicembre', 452: 'Dom', 453: 'Lun', 454: 'Mar', 455: 'Mer', 456: 'Gio', 457: 'Ven', 458: 'Sab',
   115: 'Database con PostgreSQL', 116: 'Le tabelle che cambiano a ogni comando, con chiavi e righe nuove in evidenza', 117: 'PostgreSQL vero', 118: 'MESSAGGIO: Avvio di PostgreSQL…',
+  460: "Aggiornamento", 461: "MisterALG {0} è disponibile.", 462: "Novità", 463: "Aggiorna", 464: "Scarica", 465: "Download dell'aggiornamento… {0}%", 466: "Riavvia e installa", 467: "Pronto per installare la versione {0}.", 468: "Impossibile scaricare l'aggiornamento. Scaricalo dal sito.", 469: "Cerca &aggiornamenti…", 470: "Hai già la versione più recente ({0}).", 471: "Impossibile cercare aggiornamenti (niente internet?).", 472: "Cerca aggiornamenti all'avvio", 473: "Più tardi", 474: "MESSAGGIO: Ricerca di aggiornamenti…",
 }

@@ -150,6 +150,7 @@ export function montarMenu(janela, prefs, estado = {}) {
         item('&Referência da Linguagem', 'ajuda-referencia', 'Ctrl+Alt+H'),
         { type: 'separator' },
         item('&Dica do dia', 'dica'),
+        item('&Procurar atualizações…', 'atualizacoes'),
         item('&Termos de uso e privacidade', 'termos'),
         item('&Sobre os autores do Software', 'sobre', 'Ctrl+F1'),
       ],
