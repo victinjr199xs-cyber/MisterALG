@@ -94,6 +94,7 @@ export function criarRuntime(op = {}) {
   /** Função do aluno chamada por código da biblioteca (sort, addEventListener...): roda inteira, sem pausar. */
   function __sincrono(F, este, args) {
     const info = F[INFO]
+    if (info.geradora) return criarGeradorAssincrono(F, este, args)
     if (info.assincrona) {
       const { corrotina, promessa } = criarCorrotina(F, este, args)
       silencioso(continuarCorrotina(corrotina, undefined, false))
@@ -126,6 +127,7 @@ export function criarRuntime(op = {}) {
   function* __chamar(f, este, args, linha) {
     if (typeof f !== 'function') throw new TypeError(`${descreverCurto(f)} não é uma função`)
     if (f[GERADOR]) {
+      if (f[INFO].geradora) return criarGeradorAssincrono(f, este, args)
       if (f[INFO].assincrona) {
         const { corrotina, promessa } = criarCorrotina(f, este, args)
         yield* continuarCorrotina(corrotina, undefined, false) // até o primeiro await, como no JavaScript de verdade
@@ -168,7 +170,7 @@ export function criarRuntime(op = {}) {
         const ev = r.value
         if (ev?.tipo === 'aguardar') {
           // O await suspende a função: ela sai da pilha e volta como microtarefa quando a promessa terminar.
-          PromiseMister.resolve(ev.valor).reagir(`continuar ${c.info.nome}() depois do await`,
+          PromiseMister.resolve(ev.valor).reagir(`continuar ${c.info.nome}${c.info.programa ? '' : '()'} depois do await`,
             (v) => continuarCorrotina(c, v, false), (e) => continuarCorrotina(c, e, true))
           return
         }
@@ -183,6 +185,112 @@ export function criarRuntime(op = {}) {
   }
 
   const __aguardar = (valor) => ({ tipo: 'aguardar', valor })
+  const __ceder = (valor) => ({ tipo: 'ceder', valor })
+
+  // ---- async function* e for await -------------------------------------------------------
+
+  // O gerador assíncrono do aluno: cada next/return/throw entra numa fila e roda o corpo (um gerador) até o próximo yield.
+  class GeradorAssincrono {
+    [Symbol.asyncIterator]() { return this }
+    get [Symbol.toStringTag]() { return 'AsyncGenerator' }
+    next(v) { return silencioso(pedir(this, 'next', v)) }
+    return(v) { return silencioso(pedir(this, 'return', v)) }
+    throw(e) { return silencioso(pedir(this, 'throw', e)) }
+  }
+  const estadosGA = new WeakMap()
+
+  function criarGeradorAssincrono(F, este, args) {
+    const info = F[INFO]
+    const g = new GeradorAssincrono()
+    estadosGA.set(g, { g: F[GERADOR].apply(este, args), nome: info.nome, quadro: novoQuadro(info), fila: [], ocupado: false, terminou: false })
+    return g
+  }
+
+  function* pedir(g, modo, valor) {
+    const o = estadosGA.get(g)
+    if (!o) throw new TypeError('next/return/throw chamado num objeto que não é um gerador assíncrono')
+    let res
+    let rej
+    const promessa = new PromiseMister((a, b) => { res = a; rej = b })
+    o.fila.push({ modo, valor, res, rej })
+    yield* despachar(o)
+    return promessa
+  }
+
+  function* despachar(o) {
+    while (!o.ocupado && o.fila.length) {
+      const q = o.fila[0]
+      if (o.terminou) {
+        o.fila.shift()
+        if (q.modo === 'throw') q.rej(q.valor)
+        else q.res({ value: q.modo === 'return' ? q.valor : undefined, done: true })
+        continue
+      }
+      o.ocupado = true
+      yield* impulsionar(o, q.modo, q.valor)
+    }
+  }
+
+  function concluir(o, ok, valor, fim) {
+    const q = o.fila.shift()
+    o.ocupado = false
+    if (fim) o.terminou = true
+    ;(ok ? q.res : q.rej)(valor)
+  }
+
+  /** Roda o corpo até ele ceder um valor, terminar ou parar num await (aí a continuação volta como microtarefa). */
+  function* impulsionar(o, modo, valor) {
+    pilha.push(o.quadro)
+    try {
+      let r = o.g[modo](valor)
+      for (;;) {
+        if (r.done) return concluir(o, true, { value: r.value, done: true }, true)
+        const ev = r.value
+        if (ev?.tipo === 'aguardar') {
+          PromiseMister.resolve(ev.valor).reagir(`continuar ${o.nome}() depois do await`,
+            (v) => retomar(o, 'next', v), (e) => retomar(o, 'throw', e))
+          return undefined
+        }
+        if (ev?.tipo === 'ceder') return concluir(o, true, PromiseMister.resolve(ev.valor).then((x) => ({ value: x, done: false })))
+        r = o.g.next(yield ev)
+      }
+    } catch (e) {
+      if (e instanceof ErroJS) throw e
+      return concluir(o, false, e, true)
+    } finally {
+      pilha.pop()
+    }
+  }
+
+  function* retomar(o, modo, valor) {
+    yield* impulsionar(o, modo, valor)
+    yield* despachar(o)
+  }
+
+  function __abrirAssinc(iteravel) {
+    const assinc = iteravel?.[Symbol.asyncIterator]
+    if (typeof assinc === 'function') return { it: assinc.call(iteravel), assinc: true, fim: false }
+    const sinc = iteravel?.[Symbol.iterator]
+    if (typeof sinc === 'function') return { it: sinc.call(iteravel), assinc: false, fim: false }
+    throw new TypeError(`${descreverCurto(iteravel)} não é iterável (o for await precisa de um iterável, de um iterável assíncrono ou de uma lista)`)
+  }
+
+  function* __proximoAssinc(S, linha) {
+    S.fim = true // se next() falhar ou acabar, não há o que fechar
+    let r = yield* __chamarMetodo(S.it, 'next', [], linha)
+    if (S.assinc) r = yield __aguardar(r)
+    if (r === null || typeof r !== 'object') throw new TypeError(`o resultado de next() precisa ser um objeto, mas veio ${descreverCurto(r)}`)
+    if (r.done) return { done: true, value: r.value }
+    const value = S.assinc ? r.value : yield __aguardar(r.value) // numa lista de promessas, cada valor é esperado
+    S.fim = false
+    return { done: false, value }
+  }
+
+  function* __fecharAssinc(S, linha) {
+    if (typeof S.it.return !== 'function') return
+    const r = yield* __chamarMetodo(S.it, 'return', [], linha)
+    if (S.assinc) yield __aguardar(r)
+  }
 
   // ---- Promise -----------------------------------------------------------------------
 
@@ -434,6 +542,9 @@ export function criarRuntime(op = {}) {
   // prompt do aluno (não existe no Worker): o nosso, que pede a entrada no console.
   const promptDoAluno = function prompt() { throw new ErroJS('prompt() só funciona chamado direto do seu código', ultimaLinha) }
   ESPECIAIS.set(promptDoAluno, prompt)
+  for (const modo of ['next', 'return', 'throw']) {
+    ESPECIAIS.set(GeradorAssincrono.prototype[modo], function* (g, [v]) { return yield* pedir(g, modo, v) })
+  }
 
   const modulos = criarModulos({
     saida,
@@ -454,12 +565,10 @@ export function criarRuntime(op = {}) {
   }
 
   function* laco(programa) {
-    pilha.push(principal)
-    try {
-      yield* programa()
-    } finally {
-      pilha.pop()
-    }
+    // o programa é uma corrotina como as funções async: um await no topo o suspende e o laço segue com as filas
+    const c = { g: programa(), info: { nome: 'o programa principal', programa: true }, quadro: principal,
+      resolver: () => {}, rejeitar: (e) => { throw e } }
+    yield* continuarCorrotina(c, undefined, false)
     for (;;) {
       yield* esvaziarMicrotarefas()
       if (!prontas.length) {
@@ -499,7 +608,8 @@ export function criarRuntime(op = {}) {
     PromiseMister,
     // Nomes que o código instrumentado e o aluno enxergam.
     ambiente: {
-      __passo, __funcao, __registrar, __envolverMetodos, __sincrono, __chamar, __chamarMetodo, __aguardar,
+      __passo, __funcao, __registrar, __envolverMetodos, __sincrono, __chamar, __chamarMetodo, __aguardar, __ceder,
+      __abrirAssinc, __proximoAssinc, __fecharAssinc,
       console,
       Promise: PromiseMister,
       setTimeout: (f, ms, ...args) => agendar(f, ms, args, false),

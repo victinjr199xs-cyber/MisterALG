@@ -1,0 +1,106 @@
+@@@ 19-padroes-de-lista
+using System;
+using System.Collections.Generic;
+class P {
+    static string Descrever(int[] v) => v switch {
+        [] => "vazio",
+        [var unico] => "um: " + unico,
+        [1, 2, ..] => "comeca com 1,2",
+        [_, _] => "dois quaisquer",
+        [var primeiro, .., var ultimo] when primeiro == ultimo => "pontas iguais " + primeiro,
+        [var primeiro, .. var meio, var ultimo] => $"primeiro={primeiro} ultimo={ultimo} meio={meio.Length}",
+    };
+    static string Lista(List<int> l) => l switch {
+        [0, ..] => "zero na frente",
+        [.., 9] => "nove no fim",
+        [var a, var b, var c] => $"tres: {a + b + c}",
+        _ => "outra",
+    };
+    static void Main() {
+        int[] a = { 1, 2, 3, 4 };
+        Console.WriteLine(a is [1, 2, ..]);
+        Console.WriteLine(a is [1, 2]);
+        Console.WriteLine(a is [_, _, _, _]);
+        Console.WriteLine(a is [var f, .., var l] && f < l);
+        Console.WriteLine(a is [1, .. var resto] ? resto.Length + ":" + string.Join(",", resto) : "nao");
+        Console.WriteLine(a is [.., 4]);
+        Console.WriteLine(a is [.., > 5]);
+        Console.WriteLine(a is not [1, ..]);
+        foreach (var v in new[] { new int[0], new[] { 7 }, new[] { 1, 2, 3 }, new[] { 5, 6 }, new[] { 4, 0, 4 }, new[] { 3, 1, 2, 8 } })
+            Console.WriteLine(Descrever(v));
+        Console.WriteLine(Lista(new List<int> { 0, 5 }));
+        Console.WriteLine(Lista(new List<int> { 1, 9 }));
+        Console.WriteLine(Lista(new List<int> { 1, 2, 3 }));
+        Console.WriteLine(Lista(new List<int>()));
+        string s = "abc";
+        Console.WriteLine(s is ['a', ..]);
+        Console.WriteLine(s is [.., 'c']);
+        Console.WriteLine(s is [var x, var y, var z] ? "" + z + y + x : "?");
+        Console.WriteLine(s is ['a', .. var cauda] ? cauda : "-");
+        Console.WriteLine("" is []);
+        int[] nulo = null;
+        Console.WriteLine(nulo is [..]);
+        switch (a) {
+            case [1, _, ..]: Console.WriteLine("instrucao: comeca com 1"); break;
+            default: Console.WriteLine("instrucao: outra"); break;
+        }
+        string[] nomes = { "ana", "bia", "caio" };
+        if (nomes is [var p, _, var q]) Console.WriteLine(p + "&" + q);
+    }
+}
+@@@ 20-texto-utf8
+using System;
+using System.Text;
+class P {
+    static void Main() {
+        var b = "abc"u8;
+        Console.WriteLine(b.Length);
+        Console.WriteLine(b[0] + " " + b[2]);
+        foreach (var x in b) Console.Write(x + ";");
+        Console.WriteLine();
+        ReadOnlySpan<byte> s = "olá, mundo"u8;
+        Console.WriteLine(s.Length);
+        byte[] arr = "é€"u8.ToArray();
+        Console.WriteLine(arr.Length + " " + string.Join(",", arr));
+        Console.WriteLine(Encoding.UTF8.GetString(arr));
+        byte[] bs = Encoding.UTF8.GetBytes("ação");
+        Console.WriteLine(bs.Length + " " + string.Join("-", bs));
+        Console.WriteLine(Encoding.UTF8.GetString(bs, 0, 3));
+        Console.WriteLine(Encoding.UTF8.GetByteCount("ação"));
+        Console.WriteLine(Encoding.UTF8.GetString("xyz"u8.ToArray()));
+        int soma = 0;
+        for (int i = 0; i < b.Length; i++) soma += b[i];
+        Console.WriteLine(soma);
+    }
+}
+@@@ 21-deslocamento-em-interpolacao
+using System;
+class P {
+    static void Main() {
+        int a = -16; uint u = 0xF0000000; long b = -1;
+        Console.WriteLine($"a>>>2={a >>> 2} u>>>4={u >>> 4} b>>>60={b >>> 60}");
+        Console.WriteLine($"{(a >>> 28),5}|{a >>> 28,-5}|{u >>> 28:X}|{a >> 2}");
+        Console.WriteLine($"x{{{a >>> 30}}}y {"t" + (a >>> 31)}");
+        Console.WriteLine($@"verbatim {a >>> 29} fim");
+        var l = new System.Collections.Generic.List<System.Collections.Generic.List<int>>();
+        Console.WriteLine($"{l.Count + (a >>> 30)}");
+    }
+}
+@@@ 22-tudo-junto-csharp11
+using System;
+using System.Text;
+class P {
+    static void Main() {
+        int[] dados = { 200, 3, 4 };
+        var bytes = "Olá"u8;
+        int h = -256;
+        string msg = $"len={bytes.Length} h>>>24={h >>> 24}";
+        Console.WriteLine(msg);
+        Console.WriteLine(dados is [> 100, .. var cauda] ? $"cauda={cauda.Length} soma={cauda[0] + cauda[1]} sh={cauda[0] >>> 1}" : "nao");
+        Console.WriteLine(Encoding.UTF8.GetString(bytes.ToArray()));
+        string cru = """
+            ola "cru"
+            """;
+        Console.WriteLine(cru + (cru is [.., 'u'] ? "!" : "?") + (cru is ['o', ..] ? "!" : "?"));
+    }
+}

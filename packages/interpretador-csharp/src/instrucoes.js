@@ -495,7 +495,9 @@ export const instrucoes = {
     }
     const e = rotulo.f[rotulo.f.length - 1]
     const guarda = rotulo.f.find((x) => x.t === 'when_clause')
-    const padrao = e.t.endsWith('_pattern') ? e : null
+    // `case [1, _, ..]:` a gramática lê como expressão ([...] sem dono): cada argumento vira um subpadrão
+    const comoLista = (x) => ({ ...x, t: 'list_pattern', f: x.f[0].f.map((a) => { const s = a.f[a.f.length - 1]; return s.t === 'range_expression' && s.f.length === 1 ? { ...s, t: 'slice_pattern' } : s.t === 'declaration_expression' ? { ...s, t: 'var_pattern' } : s }) })
+    const padrao = e.t.endsWith('_pattern') ? e : e.t === 'element_binding_expression' ? comoLista(e) : null
     const ok = padrao ? yield* this.casarPadrao(padrao, valor, amb) : yield* this.casarConstante(e, valor, amb)
     if (!ok) return false
     return guarda ? (yield* this.aval(guarda.f[guarda.f.length - 1], amb)) === true : true

@@ -6,7 +6,8 @@ import { ErroCS } from './erros.js'
 import { binario } from './operadores.js'
 import { TipoRef } from './refs.js'
 import { nomeTipo } from './tipos.js'
-import { Objeto, Ref } from './valores.js'
+import { Arr, Chr, Objeto, Ref } from './valores.js'
+import { ListaCS } from './biblioteca/colecoes.js'
 
 const filho = (n, campo) => n.f?.find((x) => x.k === campo)
 
@@ -48,9 +49,10 @@ export const padroes = {
       case 'negated_pattern': return !(yield* this.casarPadrao(p.f[p.f.length - 1], v, amb))
       case 'parenthesized_pattern': return yield* this.casarPadrao(p.f[0], v, amb)
       case 'recursive_pattern': return yield* this.casarRecursivo(p, v, amb)
-      case 'list_pattern': throw new ErroCS('padrões de lista ([1, 2, ..]) ainda não são suportados', p.l)
+      case 'list_pattern': return yield* this.casarLista(p, v, amb)
       default:
         // Uma expressão solta onde se esperava um padrão (is null, is 5, is Cor.Verde).
+        if (p.t === 'identifier' && p.x === '_' && !amb.buscar('_')) return true // `_` num case [1, _, ..]:
         return yield* this.casarConstante(p, v, amb)
     }
   },
@@ -68,6 +70,29 @@ export const padroes = {
     if (alvo instanceof TipoRef) return this.ehTipo(v, alvo.nome)
     if (v === null || v === undefined) return alvo === null
     return binario(this, '==', v, alvo) === true
+  },
+
+  /** [1, 2, ..], [var a, .., var z], [1, .. var resto]: array, List<T> ou texto. O `..var r` chega como `var __sl_r` (preprocessar.js). */
+  *casarLista(p, v, amb) {
+    const ehTexto = typeof v === 'string'
+    const itens = ehTexto ? [...v].map((c) => new Chr(c.charCodeAt(0))) : v instanceof Arr && !v.dims ? v.itens : v instanceof ListaCS ? v.itens : null
+    if (!itens) return false
+    const subs = p.f.filter((x) => x.k !== 'name')
+    const nomeFatia = (s) => (s.t === 'var_pattern' && /^__sl_/.test(s.f[s.f.length - 1]?.x ?? '') ? s.f[s.f.length - 1].x.slice(5) : null)
+    const ixF = subs.findIndex((s) => s.t === 'slice_pattern' || nomeFatia(s) !== null)
+    if (ixF < 0 ? itens.length !== subs.length : itens.length < subs.length - 1) return false
+    for (let i = 0; i < subs.length; i += 1) {
+      if (i === ixF) continue
+      const pos = ixF >= 0 && i > ixF ? itens.length - (subs.length - i) : i
+      if (!(yield* this.casarPadrao(subs[i], itens[pos], amb))) return false
+    }
+    const nome = ixF >= 0 ? nomeFatia(subs[ixF]) : null
+    if (nome && nome !== '_') {
+      const [a, b] = [ixF, itens.length - (subs.length - 1 - ixF)]
+      const fatia = ehTexto ? v.slice(a, b) : v instanceof ListaCS ? new ListaCS(itens.slice(a, b), v.tipoElem) : new Arr(v.tipoElem, itens.slice(a, b))
+      amb.declarar(nome, new Ref(fatia, this.nomeDoTipoDe(fatia)))
+    }
+    return true
   },
 
   *casarRecursivo(p, v, amb) {

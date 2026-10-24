@@ -13,7 +13,7 @@ import { AgrupamentoCS, ENUMERABLE, LINQ, OrdenadaCS, SeqCS } from './linq.js'
 import { AleatorioCS, CONVERT, MATH, METODOS_NUMERO, RANDOM, tipoNumericoNativo } from './numeros.js'
 import { REGEX, REGEXOPTIONS, MatchCS, GrupoCS, ColecaoMatchesCS, RegexCS } from './regex.js'
 import {
-  BIGINTEGER, BigCS, CONSOLE, CULTUREINFO, CulturaCS, DIRECTORY, ENUM, ENVIRONMENT, EscritorCS, FILE, FluxoConsoleCS, GC, GUID, GuidCS,
+  BIGINTEGER, BigCS, CONSOLE, CULTUREINFO, CulturaCS, DIRECTORY, ENCODING, ENUM, ENVIRONMENT, EscritorCS, FILE, FluxoConsoleCS, GC, GUID, GuidCS,
   LeitorCS, PATH, STREAMREADER, STREAMWRITER, TASK, TUPLE, TarefaCS, THREAD, ThreadAtualCS, TeclaCS, TipoCS, esperar,
 } from './sistema.js'
 import { BOOL, CHAR, METODOS_BOOL, METODOS_CHAR, METODOS_STRING, PROPS_STRING, SbCS, STRING, STRINGBUILDER } from './texto.js'
@@ -96,6 +96,7 @@ export class Biblioteca {
     r(['Console'], CONSOLE)
     r(['Math', 'MathF'], MATH)
     r(['Convert'], CONVERT)
+    r(['Encoding'], ENCODING)
     r(['string', 'String'], STRING)
     r(['char', 'Char'], CHAR)
     r(['bool', 'Boolean'], BOOL)

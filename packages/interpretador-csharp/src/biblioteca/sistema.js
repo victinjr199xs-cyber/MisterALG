@@ -407,6 +407,26 @@ export const CULTUREINFO = {
   estatico: { GetCultureInfo: (m, [n]) => new CulturaCS(culturaPorNome(m, n)) },
 }
 
+// Encoding.UTF8 (só UTF-8): GetBytes, GetString, GetByteCount
+class CodificacaoCS {
+  nomeCS() { return 'UTF8Encoding' }
+
+  paraTexto() { return 'System.Text.UTF8Encoding' }
+}
+const bytesUtf8 = (m, s) => m.bib.novoArray('byte', [...new TextEncoder().encode(String(s))].map((b) => new Num('byte', b)))
+CodificacaoCS.METODOS = {
+  GetBytes: (m, e, [s]) => bytesUtf8(m, typeof s === 'string' ? s : s.itens.map((c) => String.fromCharCode(c.c)).join('')),
+  GetString: (m, e, [a, ini, n]) => new TextDecoder().decode(Uint8Array.from((ini === undefined ? a.itens : a.itens.slice(ini, ini + n)).map((x) => comoNumero(x)))),
+  GetByteCount: (m, e, [s]) => new TextEncoder().encode(typeof s === 'string' ? s : s.itens.map((c) => String.fromCharCode(c.c)).join('')).length,
+}
+CodificacaoCS.PROPS = { }
+export const ENCODING = {
+  nome: 'Encoding',
+  const: {},
+  props: { UTF8: { get: () => new CodificacaoCS() } },
+  estatico: {},
+}
+
 // typeof(X) e x.GetType()
 export class TipoCS {
   constructor(nome) { this.t = nome }

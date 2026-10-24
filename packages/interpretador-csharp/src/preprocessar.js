@@ -184,6 +184,7 @@ export function reescrever(f, { deslocamentos: reescreverDeslocamentos = true } 
   function codigo(i, buraco) {
     let prof = 0
     let genericos = 0
+    const colchetes = [] // cada [ aberto: é de padrão de lista?
     while (i < f.length) {
       const c = f[i]
       if (c === '/' && f[i + 1] === '/') {
@@ -216,6 +217,8 @@ export function reescrever(f, { deslocamentos: reescreverDeslocamentos = true } 
           let q = 0
           while (f[j + q] === '"') q += 1
           i = q >= 3 && !arroba ? cru(i, cifroes, j, q) : texto(i, j + 1, cifroes > 0, arroba)
+          // "abc"u8 (bytes UTF-8): vira "abc".__U8(), um método escondido do texto que devolve byte[]
+          if (cifroes === 0 && (f[i] === 'u' || f[i] === 'U') && f[i + 1] === '8' && !/\w/.test(f[i + 2] ?? '')) { emitir('.__U8()'); i += 2; mudou = true }
         } else {
           copiar(i, j) // @identificador
           i = j
@@ -234,6 +237,17 @@ export function reescrever(f, { deslocamentos: reescreverDeslocamentos = true } 
         genericos -= 3
         i += 3
         continue
+      }
+      // padrão de lista [1, .. var resto]: a gramática só aceita `..` sozinho, então vira `var __sl_resto` (o padroes.js reconhece)
+      if (c === '[') colchetes.push(/(?:\b(?:is|not|and|or|case)|[{,(:[])\s*$/.test(f.slice(Math.max(0, i - 12), i)))
+      else if (c === ']') colchetes.pop()
+      if (c === '.' && f[i + 1] === '.' && f[i - 1] !== '.' && f[i + 2] !== '.') {
+        const fatia = /^\.\.\s*var\s+([A-Za-z_]\w*)/.exec(f.slice(i, i + 80))
+        if (fatia) { emitir('var __sl_' + fatia[1]); i += fatia[0].length; mudou = true; continue }
+        // `..` sozinho entre `[`/`,` e `,`/`]` de um padrão de lista ([.., 9], [..]) a gramática lê como intervalo
+        if (colchetes[colchetes.length - 1] && /[[,]\s*$/.test(f.slice(Math.max(0, i - 20), i)) && /^\.\.\s*[,\]]/.test(f.slice(i, i + 20))) {
+          emitir('var __sl__'); i += 2; mudou = true; continue
+        }
       }
       if (reescreverDeslocamentos && c === '>' && f[i + 1] === '>' && f[i + 2] === '>') {
         desl.push(tam)

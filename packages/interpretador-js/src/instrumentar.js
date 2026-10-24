@@ -12,7 +12,8 @@ const CRIADO = Symbol('criado pelo MisterALG')
 
 /** Função que o passo a passo transforma em gerador. */
 function convertivel(no) {
-  if (no.generator) return false // gerador do próprio aluno: roda como está
+  // gerador do próprio aluno roda como está, menos async function* (o runtime faz o gerador assíncrono)
+  if (no.generator && !no.async) return false
   // (método de classe com chave calculada — [Symbol.toPrimitive]() — roda direto, sem passo a passo: o invólucro
   // do runtime precisa do nome da chave, que só existe em tempo de execução)
   if (no.type === 'ClassMethod' && no.computed) return false
@@ -60,13 +61,13 @@ export function instrumentar(fonte, { typescript = false } = {}) {
   try {
     if (typescript) {
       codigo = transform(codigo, {
-        filename: 'programa.ts', babelrc: false, configFile: false, sourceType: 'script',
+        filename: 'programa.ts', babelrc: false, configFile: false, sourceType: 'script', parserOpts: { allowAwaitOutsideFunction: true },
         retainLines: true, // as linhas do JS gerado continuam as do .ts
         plugins: [coletarTipos(tiposDeclarados), ['transform-typescript', { onlyRemoveTypeImports: true }]],
       }).code
     }
     const r = transform(codigo, {
-      filename: 'programa.js', babelrc: false, configFile: false, sourceType: 'script',
+      filename: 'programa.js', babelrc: false, configFile: false, sourceType: 'script', parserOpts: { allowAwaitOutsideFunction: true },
       plugins: [pluginDoPassoAPasso],
     })
     return { codigo: r.code, tiposDeclarados }
@@ -85,8 +86,8 @@ function traduzirErroDeSintaxe(e) {
     UnterminatedTemplate: 'template string (crase) sem fechamento',
     VarRedeclaration: 'nome declarado duas vezes',
     UnexpectedReservedWord: 'palavra reservada usada como nome',
-    AwaitNotInAsyncContext: 'await só funciona dentro de uma função async (no topo do programa ainda não)',
-    AwaitNotInAsyncFunction: 'await só funciona dentro de uma função async (no topo do programa ainda não)',
+    AwaitNotInAsyncContext: 'await só funciona dentro de uma função async ou no topo do programa',
+    AwaitNotInAsyncFunction: 'await só funciona dentro de uma função async ou no topo do programa',
     InvalidLhs: 'lado esquerdo inválido numa atribuição',
   }
   return TRADUCOES[m] ? `${TRADUCOES[m]} — ${original}` : original
@@ -154,6 +155,7 @@ function pluginDoPassoAPasso({ types: t, template }) {
       t.objectProperty(t.identifier('nome'), t.stringLiteral(nome || '(anônima)')),
       t.objectProperty(t.identifier('linha'), t.numericLiteral(linhaDe(no))),
       t.objectProperty(t.identifier('assincrona'), t.booleanLiteral(!!no.async)),
+      t.objectProperty(t.identifier('geradora'), t.booleanLiteral(!!no.generator)),
       t.objectProperty(t.identifier('aridade'), t.numericLiteral(aridade)),
     ]
     if (codigo && no.start != null && no.end != null) campos.push(t.objectProperty(t.identifier('texto'), t.stringLiteral(codigo.slice(no.start, no.end))))
@@ -169,6 +171,43 @@ function pluginDoPassoAPasso({ types: t, template }) {
     if ((pai.type === 'ObjectProperty' || pai.type === 'ClassProperty') && pai.key) return pai.key.name ?? pai.key.value
     if (pai.type === 'AssignmentExpression' && pai.left.type === 'MemberExpression') return pai.left.property.name ?? '(anônima)'
     return '(anônima)'
+  }
+
+  let contadorFor = 0
+  /**
+   * for await (E of X) { ... } vira
+   *   { const S = __abrirAssinc(X); try { for (;;) { const R = yield* __proximoAssinc(S, linha); if (R.done) break; E = R.value; ... } }
+   *     finally { if (!S.fim) yield* __fecharAssinc(S, linha) } }
+   * (o corpo do aluno é aproveitado e visitado depois, com o passo a passo de sempre; o for(;;) ganha a pausa a cada volta)
+   */
+  function forAwait(path) {
+    const no = path.node
+    const n = (contadorFor += 1)
+    const S = () => t.identifier(`__iter${n}`)
+    const R = () => t.identifier(`__r${n}`)
+    const linha = () => t.numericLiteral(linhaDe(no))
+    const chamar = (nome) => criado(t.yieldExpression(criado(t.callExpression(t.identifier(nome), [S(), linha()])), true))
+    const valor = t.memberExpression(R(), t.identifier('value'))
+    const esq = no.left
+    const atribuir = esq.type === 'VariableDeclaration'
+      ? t.variableDeclaration(esq.kind, [t.variableDeclarator(esq.declarations[0].id, valor)])
+      : t.expressionStatement(t.assignmentExpression('=', esq, valor))
+    const corpo = no.body.type === 'BlockStatement' ? no.body : t.blockStatement([no.body])
+    corpo.body.unshift(
+      criado(t.variableDeclaration('const', [criado(t.variableDeclarator(R(), chamar('__proximoAssinc')))])),
+      criado(t.ifStatement(t.memberExpression(R(), t.identifier('done')), criado(t.blockStatement([criado(t.breakStatement())])))),
+      criado(atribuir),
+    )
+    const laco = t.forStatement(null, null, null, corpo)
+    Object.assign(laco, { loc: no.loc, start: no.start, end: no.end })
+    const fechar = criado(t.ifStatement(t.unaryExpression('!', t.memberExpression(S(), t.identifier('fim'))),
+      criado(t.blockStatement([criado(t.expressionStatement(chamar('__fecharAssinc')))]))))
+    const bloco = t.blockStatement([
+      criado(t.variableDeclaration('const', [criado(t.variableDeclarator(S(), criado(t.callExpression(t.identifier('__abrirAssinc'), [no.right]))))])),
+      criado(t.tryStatement(criado(t.blockStatement([laco])), null, criado(t.blockStatement([fechar])))),
+    ])
+    Object.assign(bloco, { loc: no.loc, start: no.start, end: no.end })
+    path.replaceWith(bloco)
   }
 
   return {
@@ -195,8 +234,8 @@ function pluginDoPassoAPasso({ types: t, template }) {
       // (uma chave só: o Babel não junta duas chaves "A|B" que repetem um tipo; a segunda apaga a primeira)
       'IfStatement|ForStatement|ForInStatement|ForOfStatement|WhileStatement|DoWhileStatement': {
         enter(path) {
-          if (path.node.await) throw Object.assign(new SyntaxError('"for await" ainda não funciona no MisterALG: leia as linhas com rl.question ou rl.on("line", ...)'), { loc: path.node.loc.start })
           if (!contexto(path)) return
+          if (path.node.await) return forAwait(path)
           // Corpos de uma linha só viram blocos, para receber o passo a passo também.
           for (const chave of ['consequent', 'alternate', 'body']) {
             const filho = path.node[chave]
@@ -236,9 +275,16 @@ function pluginDoPassoAPasso({ types: t, template }) {
       },
       AwaitExpression: {
         exit(path) {
-          const ctx = contexto(path)
-          if (!ctx || ctx === 'programa') return
+          if (!contexto(path)) return
           path.replaceWith(criado(t.yieldExpression(criado(t.callExpression(t.identifier('__aguardar'), [path.node.argument])))))
+        },
+      },
+      YieldExpression: {
+        exit(path) {
+          const f = path.getFunctionParent()?.node
+          if (path.node[CRIADO] || !f?.async || !f.generator || !contexto(path)) return
+          if (path.node.delegate) throw Object.assign(new SyntaxError('"yield*" dentro de async function* ainda não funciona no MisterALG'), { loc: path.node.loc.start })
+          path.replaceWith(criado(t.yieldExpression(criado(t.callExpression(t.identifier('__ceder'), [path.node.argument ?? t.identifier('undefined')])))))
         },
       },
       'FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod|ClassMethod': {

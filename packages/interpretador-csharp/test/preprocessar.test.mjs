@@ -16,6 +16,19 @@ test('erro de escrita depois de um texto cru aponta a linha certa', async () => 
   assert.equal(r.erros[0].linha, 6)
 })
 
+test('padrão de lista e "abc"u8 não mudam as linhas: erro depois aponta a linha certa', async () => {
+  const r = await rodar(['using System;', 'class P {', '  static void Main() {', '    int[] a = { 1, 2, 3 };', '    var b = "abc"u8;', '    if (a is [.., var u] && a is [1, .. var m])', '      Console.WriteLine(u + m.Length + b.Length);', '    int z = 0;', '    Console.WriteLine(1 / z);', '  }', '}'].join('\n'))
+  assert.equal(r.status, 'erro')
+  assert.equal(r.sessao.linhaAtual, 9)
+  assert.equal(r.saida, '8\n')
+})
+
+test('erro de escrita depois de padrão de lista aponta a linha certa', async () => {
+  const r = await rodar(['class P {', '  static void Main() {', '    int[] a = { 1 };', '    var t = a is [.., var u];', '    int y = ;', '  }', '}'].join('\n'))
+  assert.equal(r.status, 'sintaxe')
+  assert.equal(r.erros[0].linha, 5)
+})
+
 test('>>> com genéricos fechando junto no mesmo comando', async () => {
   const r = await rodar('using System;\nusing System.Collections.Generic;\nclass P { static void Main() { var l = new List<List<List<int>>>(); int a = -8; Console.WriteLine(l.Count + " " + (a >>> 30)); } }')
   assert.equal(r.saida, '0 3\n')

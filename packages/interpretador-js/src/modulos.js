@@ -74,6 +74,24 @@ export function criarModulos({ saida, enfileirar, Promessa, especiais, falhar })
     }
   }
 
+  /** Iterador assíncrono (for await) sobre os eventos de um emissor: guarda o que chega antes do next() e termina no evento de fim. */
+  function iteradorAssincrono(emissor, evento, eventoFim, jaAcabou, aoSair) {
+    const guardados = []
+    const esperando = []
+    let fim = jaAcabou()
+    emissor.adicionar(evento, (v) => (esperando.length ? esperando.shift()({ value: v, done: false }) : guardados.push(v)), false)
+    emissor.adicionar(eventoFim, () => { fim = true; for (const r of esperando.splice(0)) r({ value: undefined, done: true }) }, false)
+    return {
+      next: () => new Promessa((resolver) => {
+        if (guardados.length) resolver({ value: guardados.shift(), done: false })
+        else if (fim) resolver({ value: undefined, done: true })
+        else esperando.push(resolver)
+      }),
+      return: () => { aoSair(); return Promessa.resolve({ value: undefined, done: true }) },
+      [Symbol.asyncIterator]() { return this },
+    }
+  }
+
   // ---- readline -----------------------------------------------------------------------
 
   function fechar(estado) {
@@ -107,6 +125,8 @@ export function criarModulos({ saida, enfileirar, Promessa, especiais, falhar })
       resume: () => rl,
       write: () => {},
     }
+    // (como no Node, sair do for await com break fecha a interface)
+    rl[Symbol.asyncIterator] = () => iteradorAssincrono(estado.emissor, 'line', 'close', () => !estado.aberta, () => fechar(estado))
     rl.addListener = rl.on
     rl.removeListener = rl.off
     interfaces.push(estado)
@@ -129,6 +149,7 @@ export function criarModulos({ saida, enfileirar, Promessa, especiais, falhar })
     resume() { stdinRetomado = true; return stdin },
     pause() { stdinRetomado = false; return stdin },
   }
+  stdin[Symbol.asyncIterator] = () => iteradorAssincrono(emissorStdin, 'data', 'end', () => fimEntrada, () => {})
   stdin.addListener = stdin.on
   stdin.removeListener = stdin.off
 

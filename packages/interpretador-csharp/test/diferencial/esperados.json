@@ -88,5 +88,25 @@
   "saida": "v=5 pi=3,14 [   5] sim \"Ana\" \n{x}=5 e ANA\nNome: Ana\n  Idade: 25\nTotal: 15,7\n{\n  \"nome\": \"Ana\",\n  \"x\": 5,\n  \"lista\": [5, 10]\n}\na {{b}} 5 {{Ana}}\ndesl=15 -1\nfim\n",
   "codigo": 0,
   "erro": null
+ },
+ "19-padroes-de-lista": {
+  "saida": "True\nFalse\nTrue\nTrue\n3:2,3,4\nTrue\nFalse\nFalse\nvazio\num: 7\ncomeca com 1,2\ndois quaisquer\npontas iguais 4\nprimeiro=3 ultimo=8 meio=2\nzero na frente\nnove no fim\ntres: 6\noutra\nTrue\nTrue\ncba\nbc\nTrue\nFalse\ninstrucao: comeca com 1\nana&caio\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "20-texto-utf8": {
+  "saida": "3\n97 99\n97;98;99;\n11\n5 195,169,226,130,172\né€\n6 97-195-167-195-163-111\naç\n6\nxyz\n294\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "21-deslocamento-em-interpolacao": {
+  "saida": "a>>>2=1073741820 u>>>4=251658240 b>>>60=15\n   15|15   |F|-4\nx{3}y t1\nverbatim 7 fim\n3\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "22-tudo-junto-csharp11": {
+  "saida": "len=4 h>>>24=255\ncauda=2 soma=7 sh=1\nOlá\nola \"cru\"?!\n",
+  "codigo": 0,
+  "erro": null
  }
 }

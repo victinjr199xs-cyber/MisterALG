@@ -130,25 +130,35 @@ export async function criarAnalisador({ moduloTreeSitter, wasmMotor, wasmLinguag
       arvore.delete()
     }
   }
+  // reescreve (preprocessar.js) e lê; as posições dos `>>>` devolvidos vão em `posicoes`
+  const lerReescrito = (novo) => {
+    const linhas = novo.fonte.split('\n')
+    const posicoes = new Set()
+    let ini = 0
+    let l = 0
+    for (const off of novo.deslocamentos) {
+      while (l + 1 < linhas.length && ini + linhas[l].length + 1 <= off) ini += linhas[l++].length + 1
+      posicoes.add(`${l + 1}:${off - ini}`)
+    }
+    return ler(novo.fonte, posicoes)
+  }
   return {
     analisar(fonte) {
+      // "abc"u8 a gramática lê sem reclamar (como um nome), então a reescrita vem antes da primeira leitura
+      if (/"[uU]8\b/.test(fonte)) {
+        const novo = reescrever(fonte)
+        const t = novo.mudou ? lerReescrito(novo) : null
+        if (t && !t.erros) return t
+      }
       const r = ler(fonte)
-      if (!r.erros || !/"""|>>>/.test(fonte)) return r
+      if (!r.erros || !/"""|>>>|\.\.\s*(var\b|[,\]])|"[uU]8\b/.test(fonte)) return r
       // A gramática é do C# 10: tenta de novo com o `>>>` e os textos """ do C# 11 reescritos (sem mudar as linhas).
       // Se o programa também usa `>>>` para fechar genéricos (List<List<List<int>>>), a segunda tentativa deixa o `>>>` quieto.
       let melhor = r
       for (const deslocamentos of [true, false]) {
         const novo = reescrever(fonte, { deslocamentos })
         if (!novo.mudou) continue
-        const linhas = novo.fonte.split('\n')
-        const posicoes = new Set()
-        let ini = 0
-        let l = 0
-        for (const off of novo.deslocamentos) {
-          while (l + 1 < linhas.length && ini + linhas[l].length + 1 <= off) ini += linhas[l++].length + 1
-          posicoes.add(`${l + 1}:${off - ini}`)
-        }
-        const t = ler(novo.fonte, posicoes)
+        const t = lerReescrito(novo)
         if (!t.erros) return t
         if (t.erros.length <= melhor.erros.length) melhor = t
         if (!novo.deslocamentos.length) break

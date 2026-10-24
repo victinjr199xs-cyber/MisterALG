@@ -1,6 +1,6 @@
 // Textos: string, char, StringBuilder e bool.
 
-import { Arr, Chr, Dbl, comoNumero } from '../valores.js'
+import { Arr, Chr, Dbl, Num, comoNumero } from '../valores.js'
 import { ErroCS } from '../erros.js'
 import { Multicast } from '../operadores.js'
 
@@ -102,6 +102,7 @@ export const METODOS_STRING = {
     const t = txtDe(m, x)
     return ignorar ? s.toLowerCase().endsWith(t.toLowerCase()) : s.endsWith(t)
   },
+  __U8: (m, s) => m.bib.novoArray('byte', [...new TextEncoder().encode(s)].map((b) => new Num('byte', b))), // "abc"u8 (preprocessar.js)
   ToUpper: (m, s) => caixaSimples(s, (c) => c.toLocaleUpperCase('pt-BR')),
   ToLower: (m, s) => caixaSimples(s, (c) => c.toLocaleLowerCase('pt-BR')),
   ToUpperInvariant: (m, s) => caixaSimples(s, (c) => c.toUpperCase()),

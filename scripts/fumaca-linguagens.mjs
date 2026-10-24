@@ -78,6 +78,26 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('JS: readline saída', (await console_()).includes('Nome? Bia') && (await console_()).includes('Oi Bia'), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
+  // JS: await no topo (readline/promises) e for await sobre o rl, encerrado com Esc
+  await novo('javascript', "const readline = require('readline/promises')\nconst rl = readline.createInterface({ input: process.stdin, output: process.stdout })\nconst nome = await rl.question('Nome? ')\nconsole.log('Oi ' + nome)\nconst linhas = []\nfor await (const l of rl) {\n  linhas.push(l)\n}\nconsole.log('linhas', linhas.join('+'))\n")
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('JS: await no topo pede a entrada', await ate(`!!document.querySelector('.console-entrada')`, 40), true)
+  await avaliar(`document.querySelector('.console-entrada').focus()`)
+  await digitar('Caio')
+  await tecla('Enter')
+  conferir('JS: for await pede as linhas', await ate(`(document.querySelector('#console-tela').textContent.includes('Oi Caio')) && !!document.querySelector('.console-entrada')`, 40), true)
+  for (const l of ['x', 'y']) {
+    await avaliar(`document.querySelector('.console-entrada').focus()`)
+    await digitar(l)
+    await tecla('Enter')
+    await esperar(300)
+  }
+  await avaliar(`document.querySelector('.console-entrada').focus()`)
+  await tecla('Escape')
+  conferir('JS: for await termina no Esc', await ate(`document.querySelector('#console-tela').textContent.includes('Process finished')`, 40), true)
+  conferir('JS: for await saída', (await console_()).includes('linhas x+y'), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
   await novo('javascript', 'console.log(typeof window, typeof document, typeof misteralg)\n')
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('JS: isolado da página', await ate(`document.querySelector('#console-tela').textContent.includes('undefined undefined undefined')`, 40), true)
@@ -179,6 +199,12 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   await novo('csharp', 'using System;\nclass P\n{\n    static void Main()\n    {\n        int a = -16;\n        string t = $"""\n            valor {a >>> 28}\n            """;\n        Console.WriteLine(t);\n    }\n}\n')
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('C# 11: >>> e texto cru', await ate(`document.querySelector('#console-tela').textContent.includes('valor 15')`), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
+  // C# 11: padrões de lista, "abc"u8 e >>> dentro de texto interpolado comum
+  await novo('csharp', 'using System;\nclass P\n{\n    static void Main()\n    {\n        int[] v = { 1, 2, 3, 4 };\n        var b = "abc"u8;\n        int a = -16;\n        if (v is [1, .. var resto])\n            Console.WriteLine($"lista {resto.Length} u8 {b.Length} shift {a >>> 28}");\n    }\n}\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('C# 11: lista, u8 e >>> em interpolação', await ate(`document.querySelector('#console-tela').textContent.includes('lista 3 u8 3 shift 15')`), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
   // ---- SQL: PostgreSQL (PGlite) num processo à parte; F8 pára antes de cada comando ------------
