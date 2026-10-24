@@ -3,6 +3,10 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.7.2] — 2026-10-23
+
+- Instalador de Linux: o teste dos temas no Ubuntu volta para o Portugol antes de conferir as cores (a fumaça da IDE terminava no C++, que tem a IDE escura própria).
+
 ## [1.7.1] — 2026-10-23
 
 Correções da auditoria da 1.7.0.
@@ -93,6 +97,7 @@ A versão que transforma o MisterALG de "VisuAlg para Mac e Linux" em um ambient
 
 - Botão de temas, cores do código configuráveis, exportar para Pascal, listas e dica do dia. (`f2bd11d`)
 
+[1.7.2]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/victinjr199xs-cyber/MisterALG/compare/b8f4fd7...v1.7.0
 [1.6.1]: https://github.com/victinjr199xs-cyber/MisterALG/releases/tag/v1.6.1

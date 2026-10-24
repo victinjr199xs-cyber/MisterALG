@@ -1,6 +1,6 @@
 {
   "name": "misteralg",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "private": true,
   "description": "MisterALG: interpretador, editor e depurador de Portugol para Windows, macOS e Linux, inspirado no VisuAlg",
   "license": "MIT",

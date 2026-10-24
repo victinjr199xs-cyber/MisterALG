@@ -77,6 +77,9 @@ export default async ({ avaliar, esperar, erros }) => {
   if (!(await avaliar('!!window.__misteralg'))) throw new Error('IDE não carregou')
 
   const M = 'window.__misteralg'
+  // Os temas valem para o Portugol (as outras linguagens têm a IDE escura própria); a fumaça da IDE roda antes e termina no C++.
+  await avaliar(`${M}.execucao.restaurar(); ${M}.doc.modificado = false`)
+  await avaliar(`${M}.comandos.novo('portugol')`)
   await avaliar(`${M}.editor.definirTexto(${JSON.stringify(PROGRAMA)})`)
   await esperar(300)
 
