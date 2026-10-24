@@ -165,13 +165,13 @@ function deslocar(op, a, b) {
   if (ta === 'long' || ta === 'ulong') {
     const c = BigInt(n & 63)
     const x = comoBig(a)
-    if (ta === 'long') return BigInt.asIntN(64, op === '<<' ? x << c : x >> c)
-    return new Num('ulong', BigInt.asUintN(64, op === '<<' ? x << c : x >> c))
+    if (ta === 'long') return BigInt.asIntN(64, op === '<<' ? x << c : op === '>>>' ? BigInt.asUintN(64, x) >> c : x >> c)
+    return new Num('ulong', BigInt.asUintN(64, op === '<<' ? x << c : x >> c)) // (>>> de ulong = >>)
   }
   const x = comoNumero(a)
   const c = n & 31
   if (ta === 'uint') return new Num('uint', op === '<<' ? (x << c) >>> 0 : x >>> c)
-  return op === '<<' ? x << c : x >> c
+  return op === '<<' ? x << c : op === '>>>' ? (x >>> c) | 0 : x >> c
 }
 
 /** Operadores binários que não dependem de curto-circuito. Devolve undefined se não souber (a máquina tenta operador do aluno). */
@@ -194,7 +194,7 @@ export function binario(m, op, a, b) {
       case '^': return a ^ b
       case '<<': return a << (b & 31)
       case '>>': return a >> (b & 31)
-      case '>>>': return a >>> (b & 31)
+      case '>>>': return (a >>> (b & 31)) | 0
       default:
     }
   }
@@ -241,7 +241,7 @@ export function binario(m, op, a, b) {
       if (ehNumero(a) && ehNumero(b)) return mascarar(a, b, op === '&' ? (x, y) => x & y : op === '|' ? (x, y) => x | y : (x, y) => x ^ y)
       return undefined
     case '<<': case '>>': case '>>>':
-      return ehNumero(a) && ehNumero(b) ? deslocar(op === '>>>' ? '>>' : op, a, b) : undefined
+      return ehNumero(a) && ehNumero(b) ? deslocar(op, a, b) : undefined
     default:
       return undefined
   }

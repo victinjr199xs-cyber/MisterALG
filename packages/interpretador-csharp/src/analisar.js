@@ -4,6 +4,7 @@
 // Cada nó da árvore: { t: tipo, l: linha (1...), c: coluna, k?: nome do campo no pai, x?: texto (folhas), f?: filhos }
 
 import { createRequire } from 'node:module'
+import { reescrever } from './preprocessar.js'
 
 // Pontuação que não ajuda o interpretador: a estrutura já diz onde cada coisa está.
 const PONTUACAO = new Set([';', ',', '(', ')', '{', '}', '[', ']', '.', ':', '=>', '::'])
@@ -12,7 +13,7 @@ const PONTUACAO = new Set([';', ',', '(', ')', '{', '}', '[', ']', '.', ':', '=>
 const COM_TEXTO = new Set(['string_literal', 'verbatim_string_literal', 'raw_string_literal', 'character_literal', 'interpolation_format_clause', 'interpolated_string_text', 'interpolated_verbatim_string_text'])
 
 /** Converte o nó em que o cursor está (e, por dentro, os filhos), deixando o cursor onde estava. */
-function converter(cursor) {
+function converter(cursor, desl) {
   const pos = cursor.startPosition
   const o = { t: cursor.nodeType, l: pos.row + 1, c: pos.column }
   const campo = cursor.currentFieldName()
@@ -23,6 +24,8 @@ function converter(cursor) {
   }
   if (!cursor.gotoFirstChild()) {
     o.x = cursor.nodeText
+    // o `>>` que o preprocessar.js escreveu no lugar de um `>>>` do aluno
+    if (desl && (o.t === '>>' || o.t === '>>=') && desl.has(`${o.l}:${o.c}`)) o.t = o.x = o.t === '>>' ? '>>>' : '>>>='
     return o
   }
   const filhos = []
@@ -33,7 +36,7 @@ function converter(cursor) {
       if (cursor.nodeType === ',') virgulas += 1
       continue
     }
-    filhos.push(converter(cursor))
+    filhos.push(converter(cursor, desl))
   } while (cursor.gotoNextSibling())
   cursor.gotoParent()
   o.f = filhos
@@ -112,21 +115,45 @@ export async function criarAnalisador({ moduloTreeSitter, wasmMotor, wasmLinguag
   const linguagem = await Parser.Language.load(gramatica)
   const parser = new Parser()
   parser.setLanguage(linguagem)
+  const ler = (fonte, desl) => {
+    const arvore = parser.parse(fonte)
+    const cursor = arvore.walk()
+    try {
+      if (arvore.rootNode.hasError()) {
+        const erros = []
+        coletarErros(cursor, fonte.split('\n'), erros)
+        return { erros: erros.length ? erros : [{ linha: 1, coluna: 0, mensagem: 'erro de escrita no programa' }] }
+      }
+      return { ast: corrigirAcessoCondicional(converter(cursor, desl)) }
+    } finally {
+      cursor.delete()
+      arvore.delete()
+    }
+  }
   return {
     analisar(fonte) {
-      const arvore = parser.parse(fonte)
-      const cursor = arvore.walk()
-      try {
-        if (arvore.rootNode.hasError()) {
-          const erros = []
-          coletarErros(cursor, fonte.split('\n'), erros)
-          return { erros: erros.length ? erros : [{ linha: 1, coluna: 0, mensagem: 'erro de escrita no programa' }] }
+      const r = ler(fonte)
+      if (!r.erros || !/"""|>>>/.test(fonte)) return r
+      // A gramática é do C# 10: tenta de novo com o `>>>` e os textos """ do C# 11 reescritos (sem mudar as linhas).
+      // Se o programa também usa `>>>` para fechar genéricos (List<List<List<int>>>), a segunda tentativa deixa o `>>>` quieto.
+      let melhor = r
+      for (const deslocamentos of [true, false]) {
+        const novo = reescrever(fonte, { deslocamentos })
+        if (!novo.mudou) continue
+        const linhas = novo.fonte.split('\n')
+        const posicoes = new Set()
+        let ini = 0
+        let l = 0
+        for (const off of novo.deslocamentos) {
+          while (l + 1 < linhas.length && ini + linhas[l].length + 1 <= off) ini += linhas[l++].length + 1
+          posicoes.add(`${l + 1}:${off - ini}`)
         }
-        return { ast: corrigirAcessoCondicional(converter(cursor)) }
-      } finally {
-        cursor.delete()
-        arvore.delete()
+        const t = ler(novo.fonte, posicoes)
+        if (!t.erros) return t
+        if (t.erros.length <= melhor.erros.length) melhor = t
+        if (!novo.deslocamentos.length) break
       }
+      return melhor
     },
   }
 }

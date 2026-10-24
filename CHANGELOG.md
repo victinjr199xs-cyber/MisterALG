@@ -3,6 +3,20 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.10.1] — 2026-10-24
+
+### Novidades
+
+- **JavaScript no estilo do Node**: `require('readline')` (`question`, `on('line')`, `readline/promises`),
+  `fs.readFileSync(0)` para ler toda a entrada, `process.stdin`, `util` e `assert`. Esc encerra a entrada.
+  Um módulo que não existe no MisterALG dá uma mensagem clara.
+- **C# 11**: deslocamento sem sinal `>>>` / `>>>=` e textos brutos `"""…"""` (também com `# Novidades do MisterALG
+
+O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
+[versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
+
+ e `$`).
+
 ## [1.10.0] — 2026-10-24
 
 ### Novidades

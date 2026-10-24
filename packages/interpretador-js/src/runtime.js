@@ -10,6 +10,7 @@
 
 import { GERADOR, INFO } from './simbolos.js'
 import { formatarArgumentos, inspecionar, tabela } from './inspecionar.js'
+import { criarModulos } from './modulos.js'
 
 export { GERADOR, INFO }
 const MAX_CHAMADAS = 700 // cada chamada usa vários quadros de gerador no JS; acima disso a pilha do próprio JS estoura
@@ -434,6 +435,15 @@ export function criarRuntime(op = {}) {
   const promptDoAluno = function prompt() { throw new ErroJS('prompt() só funciona chamado direto do seu código', ultimaLinha) }
   ESPECIAIS.set(promptDoAluno, prompt)
 
+  const modulos = criarModulos({
+    saida,
+    enfileirar: (f, args, descricao) => prontas.push({ f, args, descricao: `${descricao} (${nomeDaFuncao(f)})` }),
+    Promessa: PromiseMister,
+    especiais: ESPECIAIS,
+    falhar: (mensagem, explicacao) => Object.assign(new ErroJS(mensagem, ultimaLinha), { explicacao }),
+  })
+  processo.stdin = modulos.stdin
+
   // ---- o laço de eventos ----------------------------------------------------------------
 
   function* esvaziarMicrotarefas() {
@@ -453,7 +463,11 @@ export function criarRuntime(op = {}) {
     for (;;) {
       yield* esvaziarMicrotarefas()
       if (!prontas.length) {
-        if (!temporizadores.length) break
+        if (!temporizadores.length) {
+          if (!modulos.temDemanda()) break
+          modulos.despachar((yield { tipo: 'entrada' }) ?? null) // readline / process.stdin esperando uma linha
+          continue
+        }
         // O relógio pula para o próximo temporizador; os que vencem passam para a fila de tarefas.
         temporizadores.sort((a, b) => a.quando - b.quando || a.seq - b.seq)
         relogio = temporizadores[0].quando
@@ -495,6 +509,9 @@ export function criarRuntime(op = {}) {
       queueMicrotask: (f) => enfileirarMicro(`queueMicrotask(${nomeDaFuncao(f)})`, function* () { yield* __chamar(f, undefined, []) }),
       prompt: promptDoAluno,
       process: processo,
+      require: modulos.require,
+      module: modulos.module,
+      exports: modulos.exports,
       alert: (msg) => saida(`${String(msg)}\n`),
     },
   }

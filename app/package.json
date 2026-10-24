@@ -1,7 +1,7 @@
 {
   "name": "misteralg-app",
   "productName": "MisterALG",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "private": true,
   "description": "MisterALG — interpretador e IDE de Portugol inspirado no VisuAlg 3.0.7",
   "author": {

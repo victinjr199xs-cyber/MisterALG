@@ -1,0 +1,88 @@
+@@@ 16-deslocamento-sem-sinal
+using System;
+class P {
+    static void Main() {
+        int a = -16; long b = -16L; uint u = 0xF0000000; ulong ul = ulong.MaxValue;
+        Console.WriteLine(a >>> 2); Console.WriteLine(a >>> 0); Console.WriteLine(a >>> 33); Console.WriteLine(a >>> 31);
+        Console.WriteLine(b >>> 2); Console.WriteLine(b >>> 64); Console.WriteLine(b >>> 1);
+        Console.WriteLine(u >>> 4); Console.WriteLine(ul >>> 60); Console.WriteLine(u >> 4);
+        Console.WriteLine(a >> 2);
+        int c = a; c >>>= 28; long d = b; d >>>= 60; uint e = u; e >>>= 1;
+        Console.WriteLine(c + " " + d + " " + e);
+        sbyte sb = -8; short sh = -1;
+        Console.WriteLine(sb >>> 1); Console.WriteLine(sh >>> 16);
+        int mm = -1; int z = (mm >>> 1) + 1 >>> 1; Console.WriteLine(z);
+        Console.WriteLine(int.MinValue >>> 31);
+        Console.WriteLine(long.MinValue >>> 63);
+        var l = new System.Collections.Generic.List<System.Collections.Generic.List<int>>();
+        var m = new System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<System.Collections.Generic.List<int>>>();
+        Console.WriteLine(l.Count + m.Count + " " + (a >>> 28));
+        var x = 0b1010_0000_0000_0000_0000_0000_0000_0001 >>> 4; Console.WriteLine(x);
+    }
+}
+@@@ 17-texto-cru
+using System;
+class P {
+    const string Aviso = """cuidado: "perigo" """;
+    static string Json(int n) {
+        return """
+            {
+              "n": 1,
+              "ok": true
+            }
+            """;
+    }
+    static void Main() {
+        string s = """ola "mundo" """;
+        Console.WriteLine("[" + s + "]");
+        Console.WriteLine("[" + """  espacos preservados  """ + "]");
+        Console.WriteLine(Aviso);
+        string m = """
+            linha1
+              linha2 com recuo
+
+            depois de linha vazia
+            """;
+        Console.WriteLine(m);
+        Console.WriteLine(m.Length);
+        string q = """"
+            tem """ dentro
+            e "aspas"
+            """";
+        Console.WriteLine(q);
+        Console.WriteLine(Json(1));
+        Console.WriteLine("""
+          recuo do fechamento menor
+        """);
+        Console.WriteLine("""
+            \n nao e escape \t aqui {nem chaves}
+            """.Length);
+    }
+}
+@@@ 18-texto-cru-interpolado
+using System;
+class P {
+    static void Main() {
+        int x = 5; double pi = 3.14159; bool b = true; string nome = "Ana";
+        Console.WriteLine($"""v={x} pi={pi:F2} [{x,4}] {(b ? "sim" : "nao")} "{nome}" """);
+        Console.WriteLine($$"""{x}={{x}} e {{nome.ToUpper()}}""");
+        string t = $"""
+            Nome: {nome}
+              Idade: {x + 20}
+            Total: {pi * x:F1}
+            """;
+        Console.WriteLine(t);
+        string j = $$"""
+            {
+              "nome": "{{nome}}",
+              "x": {{x}},
+              "lista": [{{x}}, {{x * 2}}]
+            }
+            """;
+        Console.WriteLine(j);
+        Console.WriteLine($$$"""a {{b}} {{{x}}} {{{{{nome}}}}}""");
+        int neg = -64;
+        Console.WriteLine($"""desl={neg >>> 28} {neg >> 28}""");
+        Console.WriteLine("fim");
+    }
+}

@@ -67,6 +67,17 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('JS: saiu do estado de execução', await ate(`${M}.execucao.emExecucao() === false`, 20), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
+  // JS: readline do Node (require) pergunta, recebe a entrada e termina com rl.close()
+  await novo('javascript', "const readline = require('readline')\nconst rl = readline.createInterface({ input: process.stdin, output: process.stdout })\nrl.question('Nome? ', (n) => {\n  console.log('Oi ' + n)\n  rl.close()\n})\n")
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('JS: readline pede a entrada', await ate(`!!document.querySelector('.console-entrada')`, 40), true)
+  await avaliar(`document.querySelector('.console-entrada').focus()`)
+  await digitar('Bia')
+  await tecla('Enter')
+  conferir('JS: readline fim normal', await ate(`document.querySelector('#console-tela').textContent.includes('Process finished')`, 40), true)
+  conferir('JS: readline saída', (await console_()).includes('Nome? Bia') && (await console_()).includes('Oi Bia'), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
   await novo('javascript', 'console.log(typeof window, typeof document, typeof misteralg)\n')
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('JS: isolado da página', await ate(`document.querySelector('#console-tela').textContent.includes('undefined undefined undefined')`, 40), true)
@@ -162,6 +173,12 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   await novo('csharp', 'using System;\nclass P\n{\n    static void Main()\n    {\n        int[] v = { 3, 1, 2 };\n        Array.Sort(v);\n        Console.WriteLine(string.Join(",", v) + " " + 7.5);\n    }\n}\n')
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('C#: F9 roda (cultura pt-BR)', await ate(`document.querySelector('#console-tela').textContent.includes('1,2,3 7,5')`), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
+  // C# 11: >>> e texto cru (a gramática do tree-sitter é do C# 10; o analisar.js reescreve antes de ler)
+  await novo('csharp', 'using System;\nclass P\n{\n    static void Main()\n    {\n        int a = -16;\n        string t = $"""\n            valor {a >>> 28}\n            """;\n        Console.WriteLine(t);\n    }\n}\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('C# 11: >>> e texto cru', await ate(`document.querySelector('#console-tela').textContent.includes('valor 15')`), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
   // ---- SQL: PostgreSQL (PGlite) num processo à parte; F8 pára antes de cada comando ------------

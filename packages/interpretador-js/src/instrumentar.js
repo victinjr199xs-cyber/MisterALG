@@ -38,12 +38,28 @@ function contexto(path) {
 
 const linhaDe = (no) => no.loc?.start.line ?? 0
 
+// import ... from 'x' vira const ... = require('x') na mesma linha (o programa roda como script, sem módulos).
+const RE_IMPORT = /^([ \t]*)import\s+(type\s+)?(?:([\w$]+)\s*,?\s*)?(?:\*\s*as\s+([\w$]+)|\{([^}]*)\})?\s*from\s*(['"])([^'"\n]+)\6[ \t]*;?/gm
+
+function converterImports(fonte) {
+  return fonte.replace(RE_IMPORT, (m, recuo, tipo, padrao, todos, nomeados, _aspas, modulo) => {
+    const quebras = '\n'.repeat(m.split('\n').length - 1)
+    if (tipo) return quebras
+    const exigir = `require(${JSON.stringify(modulo)})`
+    const decl = []
+    if (padrao) decl.push(`const ${padrao} = ${exigir}`)
+    if (todos) decl.push(`const ${todos} = ${exigir}`)
+    if (nomeados !== undefined) decl.push(`const {${nomeados.replace(/([\w$]+)\s+as\s+([\w$]+)/g, '$1: $2')}} = ${exigir}`)
+    return `${recuo}${decl.join('; ')};${quebras}`
+  })
+}
+
 export function instrumentar(fonte, { typescript = false } = {}) {
-  let codigo = fonte
+  let codigo = converterImports(fonte)
   const tiposDeclarados = {} // TypeScript: nome → tipo escrito pelo aluno (o último, se o nome se repetir)
   try {
     if (typescript) {
-      codigo = transform(fonte, {
+      codigo = transform(codigo, {
         filename: 'programa.ts', babelrc: false, configFile: false, sourceType: 'script',
         retainLines: true, // as linhas do JS gerado continuam as do .ts
         plugins: [coletarTipos(tiposDeclarados), ['transform-typescript', { onlyRemoveTypeImports: true }]],
@@ -69,6 +85,8 @@ function traduzirErroDeSintaxe(e) {
     UnterminatedTemplate: 'template string (crase) sem fechamento',
     VarRedeclaration: 'nome declarado duas vezes',
     UnexpectedReservedWord: 'palavra reservada usada como nome',
+    AwaitNotInAsyncContext: 'await só funciona dentro de uma função async (no topo do programa ainda não)',
+    AwaitNotInAsyncFunction: 'await só funciona dentro de uma função async (no topo do programa ainda não)',
     InvalidLhs: 'lado esquerdo inválido numa atribuição',
   }
   return TRADUCOES[m] ? `${TRADUCOES[m]} — ${original}` : original
@@ -177,6 +195,7 @@ function pluginDoPassoAPasso({ types: t, template }) {
       // (uma chave só: o Babel não junta duas chaves "A|B" que repetem um tipo; a segunda apaga a primeira)
       'IfStatement|ForStatement|ForInStatement|ForOfStatement|WhileStatement|DoWhileStatement': {
         enter(path) {
+          if (path.node.await) throw Object.assign(new SyntaxError('"for await" ainda não funciona no MisterALG: leia as linhas com rl.question ou rl.on("line", ...)'), { loc: path.node.loc.start })
           if (!contexto(path)) return
           // Corpos de uma linha só viram blocos, para receber o passo a passo também.
           for (const chave of ['consequent', 'alternate', 'body']) {
