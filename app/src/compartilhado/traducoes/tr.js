@@ -115,4 +115,5 @@ export default {
   430: 'Program aç', 431: 'Program bloğunu kaydet', 432: 'Program bloğu ekle', 433: 'Pascal’a aktar',
   440: 'Ocak', 441: 'Şubat', 442: 'Mart', 443: 'Nisan', 444: 'Mayıs', 445: 'Haziran', 446: 'Temmuz', 447: 'Ağustos', 448: 'Eylül', 449: 'Ekim', 450: 'Kasım',
   451: 'Aralık', 452: 'Paz', 453: 'Pzt', 454: 'Sal', 455: 'Çar', 456: 'Per', 457: 'Cum', 458: 'Cmt',
+  115: 'PostgreSQL ile veritabanları', 116: 'Her komutta değişen tablolar; anahtarlar ve yeni satırlar vurgulu', 117: 'Gerçek PostgreSQL', 118: 'MESAJ: PostgreSQL başlatılıyor…',
 }

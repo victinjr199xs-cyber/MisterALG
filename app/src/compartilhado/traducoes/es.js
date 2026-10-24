@@ -119,4 +119,5 @@ export default {
   430: 'Abrir algoritmo', 431: 'Guardar bloque de algoritmo', 432: 'Insertar bloque de algoritmo', 433: 'Exportar a Pascal',
   440: 'Enero', 441: 'Febrero', 442: 'Marzo', 443: 'Abril', 444: 'Mayo', 445: 'Junio', 446: 'Julio', 447: 'Agosto', 448: 'Septiembre', 449: 'Octubre',
   450: 'Noviembre', 451: 'Diciembre', 452: 'Dom', 453: 'Lun', 454: 'Mar', 455: 'Mié', 456: 'Jue', 457: 'Vie', 458: 'Sáb',
+  115: 'Bases de datos con PostgreSQL', 116: 'Las tablas cambiando con cada comando, con las claves y las filas nuevas resaltadas', 117: 'PostgreSQL de verdad', 118: 'MENSAJE: Iniciando PostgreSQL…',
 }

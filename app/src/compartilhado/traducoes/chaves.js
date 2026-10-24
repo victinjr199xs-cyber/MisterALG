@@ -167,4 +167,5 @@ export default {
   // ---- meses e dias ----
   440: 'Janeiro', 441: 'Fevereiro', 442: 'Março', 443: 'Abril', 444: 'Maio', 445: 'Junho', 446: 'Julho', 447: 'Agosto', 448: 'Setembro',
   449: 'Outubro', 450: 'Novembro', 451: 'Dezembro', 452: 'Dom', 453: 'Seg', 454: 'Ter', 455: 'Qua', 456: 'Qui', 457: 'Sex', 458: 'Sáb',
+  115: 'Bancos de dados com PostgreSQL', 116: 'As tabelas mudando a cada comando, com as chaves e as linhas novas em destaque', 117: 'PostgreSQL de verdade', 118: 'MENSAGEM: Iniciando o PostgreSQL…',
 }

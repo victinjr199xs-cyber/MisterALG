@@ -4,14 +4,14 @@
 
 <p align="center">
   <b>Aprenda a programar vendo o código rodar.</b><br>
-  <sub>Portugol como no VisuAlg, e mais sete linguagens com passo a passo, memória e objetos na tela.</sub>
+  <sub>Portugol como no VisuAlg, e mais oito linguagens (incluindo SQL com PostgreSQL) com passo a passo, memória e objetos na tela.</sub>
 </p>
 
 <p align="center">
   <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases/latest"><img src="https://img.shields.io/github/v/release/victinjr199xs-cyber/MisterALG?label=vers%C3%A3o&color=8b5cf6&style=flat-square" alt="Versão"></a>
   <a href="https://github.com/victinjr199xs-cyber/MisterALG/releases"><img src="https://img.shields.io/github/downloads/victinjr199xs-cyber/MisterALG/total?label=downloads&color=2f6fde&style=flat-square" alt="Downloads"></a>
   <a href="https://github.com/victinjr199xs-cyber/MisterALG/actions/workflows/pacotes.yml"><img src="https://img.shields.io/github/actions/workflow/status/victinjr199xs-cyber/MisterALG/pacotes.yml?branch=main&label=build&style=flat-square" alt="Build"></a>
-  <img src="https://img.shields.io/badge/linguagens-8-16a37f?style=flat-square" alt="8 linguagens">
+  <img src="https://img.shields.io/badge/linguagens-9-16a37f?style=flat-square" alt="8 linguagens">
   <img src="https://img.shields.io/badge/idiomas-18-f2b705?style=flat-square" alt="18 idiomas">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/victinjr199xs-cyber/MisterALG?label=licen%C3%A7a&color=0ea5c6&style=flat-square" alt="Licença MIT"></a>
 </p>
@@ -71,16 +71,20 @@ Tudo roda **dentro do app**, sem instalar compilador nem interpretador.
 <td align="center"><img src="docs/imagens/linguagens/cpp.svg" width="64" alt=""><br><b>C++</b><br><sub>Biblioteca padrão completa (clang embutido)</sub></td>
 <td align="center"><img src="docs/imagens/linguagens/php.svg" width="64" alt=""><br><b>PHP</b><br><sub>A página gerada aparece ao vivo, ao lado do código</sub></td>
 </tr>
+<tr>
+<td align="center"><img src="docs/imagens/linguagens/sql.svg" width="64" alt=""><br><b>SQL</b><br><sub>PostgreSQL de verdade: as tabelas mudando a cada comando</sub></td>
+<td></td><td></td><td></td>
+</tr>
 </table>
 
-| | Portugol | C# | JavaScript / TypeScript | Python | C | C++ | PHP |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Executar (F9) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Passo a passo (F8) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅¹ | — |
-| Variáveis e pilha na tela | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — |
-| Objetos e setas | — | ✅ | ✅ | ✅ | ponteiros | ponteiros | página ao vivo |
-| Entrada pelo teclado | `leia` | `Console.ReadLine` | `prompt` | `input()` | `scanf` | `cin` | formulários |
-| Motor | próprio | próprio (tree-sitter) | Babel + próprio | Pyodide | clang (Wasm) | clang (Wasm) | php-wasm 8.3 |
+| | Portugol | C# | JavaScript / TypeScript | Python | C | C++ | PHP | SQL |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Executar (F9) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Passo a passo (F8) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅¹ | — | um comando por vez |
+| Variáveis e pilha na tela | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | tabelas e linhas |
+| Objetos e setas | — | ✅ | ✅ | ✅ | ponteiros | ponteiros | página ao vivo | chaves estrangeiras |
+| Entrada pelo teclado | `leia` | `Console.ReadLine` | `prompt` | `input()` | `scanf` | `cin` | formulários | — |
+| Motor | próprio | próprio (tree-sitter) | Babel + próprio | Pyodide | clang (Wasm) | clang (Wasm) | php-wasm 8.3 | PostgreSQL (PGlite) |
 
 <sub>¹ No passo a passo, C e C++ usam uma biblioteca própria, menor; o F9 usa o compilador completo.</sub>
 
@@ -135,6 +139,11 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 <p align="center">
   <img src="docs/imagens/passo-a-passo.gif" alt="Animação: passo a passo em Portugol ordenando um vetor, com a linha azul andando e as variáveis mudando" width="88%">
   <br><sub><b>Portugol no passo a passo (F8)</b>: a linha azul anda e as variáveis se atualizam, como no VisuAlg.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/imagens/novidades/sql-passo-a-passo.png" alt="SQL no passo a passo: as tabelas curso e aluno, com a linha alterada pelo UPDATE em amarelo" width="92%">
+  <br><sub><b>SQL no passo a passo (F8)</b>: cada comando roda no PostgreSQL de verdade; linhas novas em verde, alteradas em amarelo, apagadas riscadas, e o resultado no formato do <code>psql</code>.</sub>
 </p>
 
 <details>
@@ -303,7 +312,7 @@ janelas do sistema. O **Portugol** continua em português — é a própria ling
 | macOS e Linux | — | ✅ |
 | Mesma linguagem, menus, atalhos e mensagens de erro | ✅ | ✅ |
 | Abre e salva os mesmos `.alg` (Windows-1252) | ✅ | ✅ |
-| C#, JavaScript, TypeScript, Python, C, C++ e PHP | — | ✅ |
+| C#, JavaScript, TypeScript, Python, C, C++, PHP e SQL (PostgreSQL) | — | ✅ |
 | Objetos, referências e ponteiros desenhados | — | ✅ |
 | Interface em 18 idiomas | — | ✅ |
 
@@ -337,17 +346,17 @@ Feito com software livre: [Electron](https://www.electronjs.org/), [CodeMirror](
 [electron-vite](https://electron-vite.org/) e [electron-builder](https://www.electron.build/).
 As linguagens rodam com [Clang/LLVM](https://llvm.org/) em WebAssembly do projeto
 [YoWASP](https://yowasp.org/), [Pyodide](https://pyodide.org/), [php-wasm](https://github.com/WordPress/wordpress-playground),
-[tree-sitter](https://tree-sitter.github.io/) e [Babel](https://babeljs.io/). Os ícones das linguagens
+[tree-sitter](https://tree-sitter.github.io/), [Babel](https://babeljs.io/) e [PGlite](https://pglite.dev/) (PostgreSQL em WebAssembly). Os ícones das linguagens
 são desenhos próprios do MisterALG, não os logotipos oficiais.
 
 ## 🛠️ Para desenvolvedores
 
 ```bash
 npm install
-npm test          # todos os testes: Portugol, busca, app, idiomas, C, JS, Python, C# e compatibilidade
+npm test          # todos os testes: Portugol, busca, app, idiomas, C, JS, Python, C#, SQL e compatibilidade
 npm run dev       # abre a IDE com recarga automática
 npm run build     # compila para app/out/
-npm run dist:win  # instaladores (também dist:mac e dist:linux), já com Python, PHP e C# embutidos
+npm run dist:win  # instaladores (também dist:mac e dist:linux), já com Python, PHP, C# e PostgreSQL embutidos
 ```
 
 | Onde | O quê |
@@ -355,7 +364,7 @@ npm run dist:win  # instaladores (também dist:mac e dist:linux), já com Python
 | [`app/`](app/) | O app Electron: processo principal, tela inicial (`inicio.html`) e IDE (`index.html`) |
 | [`packages/interpreter`](packages/interpreter) | O interpretador de Portugol |
 | [`packages/interpretador-csharp`](packages/interpretador-csharp) | C#: tree-sitter + máquina em geradores, com testes contra o `csc` |
-| [`packages/interpretador-js`](packages/interpretador-js) · [`-python`](packages/interpretador-python) · [`-php`](packages/interpretador-php) · [`-c`](packages/interpretador-c) | As outras linguagens |
+| [`packages/interpretador-js`](packages/interpretador-js) · [`-python`](packages/interpretador-python) · [`-php`](packages/interpretador-php) · [`-c`](packages/interpretador-c) · [`-sql`](packages/interpretador-sql) | As outras linguagens |
 | [`app/src/compartilhado/traducoes`](app/src/compartilhado/traducoes) | Os textos da interface (`chaves.js`) e um arquivo por idioma |
 | [`scripts/`](scripts/) | Testes de fumaça no app real e preparação dos instaladores |
 

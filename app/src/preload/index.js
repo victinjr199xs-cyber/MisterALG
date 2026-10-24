@@ -71,6 +71,11 @@ contextBridge.exposeInMainWorld('misteralg', {
     preludio: invocar('csharp:preludio'),
     aquecer: invocar('csharp:aquecer'),
   },
+  sql: {
+    comando: invocar('sql:comando'),
+    aquecer: invocar('sql:aquecer'),
+    parar: invocar('sql:parar'),
+  },
   php: {
     aquecer: invocar('php:aquecer'),
     definir: invocar('php:definir'),

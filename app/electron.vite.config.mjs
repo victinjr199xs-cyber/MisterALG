@@ -17,6 +17,7 @@ export default defineConfig({
           'rodar-wasm': resolve('src/main/rodar-wasm.js'),
           'rodar-python': resolve('src/main/rodar-python.js'),
           'rodar-php': resolve('src/main/rodar-php.js'),
+          'rodar-sql': resolve('src/main/rodar-sql.js'),
         },
       },
     },

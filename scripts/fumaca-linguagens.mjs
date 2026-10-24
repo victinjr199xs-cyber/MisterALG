@@ -138,6 +138,21 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('C#: F9 roda (cultura pt-BR)', await ate(`document.querySelector('#console-tela').textContent.includes('1,2,3 7,5')`), true)
   await avaliar(`${M}.execucao.restaurar()`)
+
+  // ---- SQL: PostgreSQL (PGlite) num processo à parte; F8 pára antes de cada comando ------------
+  await novo('sql', "CREATE TABLE t (id SERIAL PRIMARY KEY, nome TEXT);\nINSERT INTO t (nome) VALUES ('Ana'), ('Bia');\nUPDATE t SET nome = 'Ana Maria' WHERE id = 1;\nSELECT nome FROM t ORDER BY id;\n")
+  await avaliar(`void ${M}.comandos.passo()`)
+  conferir('SQL: F8 pára antes do primeiro comando', await ate(`document.querySelector('#st-mensagem').textContent.includes('linha 1')`, 120), true)
+  for (const linha of [2, 3]) {
+    await avaliar(`void ${M}.comandos.passo()`)
+    conferir(`SQL: F8 chega na linha ${linha}`, await ate(`document.querySelector('#st-mensagem').textContent.includes('linha ${linha}')`, 60), true)
+  }
+  conferir('SQL: tabela na tela do banco, linhas novas em destaque', await ate(`document.querySelectorAll('.mb-tabela .mb-nova').length === 2`, 40), true)
+  await avaliar(`void ${M}.comandos.passo()`)
+  conferir('SQL: UPDATE marca a linha alterada', await ate(`document.querySelector('.mb-alterada')?.textContent.includes('Ana Maria') === true`, 40), true)
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('SQL: resultado no formato do psql', await ate(`/Ana Maria\\n Bia\\n\\(2 rows\\)/.test(document.querySelector('#console-tela').textContent)`, 60), true)
+  await avaliar(`${M}.execucao.restaurar()`)
   const proprios = erros.filter((e) => !/Autofill|DevTools/.test(e))
   conferir('sem erros no console da página', proprios, [])
 }

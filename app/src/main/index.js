@@ -8,6 +8,7 @@ import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
 import { carregarPagina, criarJanelaPrincipal } from './janelas.js'
 import * as programas from './programas.js'
 import { aquecerPHP, pararPHP } from './php.js'
+import { aquecerSQL, comandoSQL, pararSQL } from './sql.js'
 import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
 import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
 import { montarMenu } from './menu.js'
@@ -34,7 +35,7 @@ const FILTROS_ALG = [
   TODOS,
 ]
 const FILTROS_ABRIR = [
-  { name: 'Algoritmos e programas', extensions: ['alg', 'c', 'h', 'cpp', 'cc', 'cxx', 'hpp', 'cs', 'js', 'ts', 'py', 'php'] },
+  { name: 'Algoritmos e programas', extensions: ['alg', 'c', 'h', 'cpp', 'cc', 'cxx', 'hpp', 'cs', 'js', 'ts', 'py', 'php', 'sql'] },
   { name: 'Algoritmos (Portugol)', extensions: ['alg'] },
   { name: 'Programas em C', extensions: ['c', 'h'] },
   { name: 'Programas em C++', extensions: ['cpp', 'cc', 'cxx', 'hpp'] },
@@ -43,6 +44,7 @@ const FILTROS_ABRIR = [
   { name: 'Programas em TypeScript', extensions: ['ts'] },
   { name: 'Programas em Python', extensions: ['py'] },
   { name: 'Programas em PHP', extensions: ['php'] },
+  { name: 'Scripts SQL', extensions: ['sql'] },
   { name: 'Arquivos-texto', extensions: ['txt'] },
   TODOS,
 ]
@@ -55,6 +57,7 @@ const FILTROS_SALVAR = {
   ts: [{ name: 'Programas em TypeScript', extensions: ['ts'] }, TODOS],
   py: [{ name: 'Programas em Python', extensions: ['py'] }, TODOS],
   php: [{ name: 'Programas em PHP', extensions: ['php'] }, TODOS],
+  sql: [{ name: 'Scripts SQL', extensions: ['sql'] }, TODOS],
 }
 const FILTROS_BLOCO = [
   { name: 'Arquivos de inclusão', extensions: ['inc'] },
@@ -277,6 +280,14 @@ function registrarIpc() {
   ipcMain.handle('php:ultima', () => ultimaResposta())
   ipcMain.handle('php:aquecer', () => aquecerPHP())
 
+  // SQL (main/sql.js): o banco do PostgreSQL (PGlite) num processo à parte; a IDE manda um comando de cada vez.
+  ipcMain.handle('sql:comando', (_e, pedido) => {
+    if (!['reiniciar', 'executar', 'banco'].includes(pedido?.c) || (pedido.c === 'executar' && typeof pedido.sql !== 'string')) return { erro: { mensagem: 'Pedido inválido.' } }
+    return comandoSQL({ c: pedido.c, sql: pedido.sql })
+  })
+  ipcMain.handle('sql:aquecer', () => aquecerSQL())
+  ipcMain.handle('sql:parar', () => pararSQL())
+
   ipcMain.handle('externo:abrir', (_e, url) => {
     if (/^https:\/\//.test(url)) shell.openExternal(url)
   })
@@ -292,6 +303,7 @@ function registrarIpc() {
     if (pagina === 'inicio' || Object.keys(params ?? {}).length) limparRecuperacao()
     pararTudo()
     programas.pararTudo()
+    pararSQL()
     void irPara(pagina, params && typeof params === 'object' ? params : {}) // a página atual vai embora; não há resposta a esperar
   })
   ipcMain.handle('janela:fechar', () => {
@@ -366,4 +378,5 @@ app.on('will-quit', () => { // nenhum programa C/C++, Python ou PHP fica rodando
   pararTudo()
   programas.pararTudo()
   pararPHP()
+  pararSQL()
 })

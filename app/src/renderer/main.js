@@ -91,13 +91,14 @@ const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modif
 
 // ---- linguagens --------------------------------------------------------------------
 
-const EXTENSAO = { portugol: 'alg', c: 'c', cpp: 'cpp', csharp: 'cs', javascript: 'js', typescript: 'ts', python: 'py', php: 'php' }
+const EXTENSAO = { portugol: 'alg', c: 'c', cpp: 'cpp', csharp: 'cs', javascript: 'js', typescript: 'ts', python: 'py', php: 'php', sql: 'sql' }
 const linguagemDoCaminho = (caminho) => (
   /\.cs$/i.test(caminho) ? 'csharp' :
   /\.ts$/i.test(caminho) ? 'typescript' :
   /\.js$/i.test(caminho) ? 'javascript' :
   /\.py$/i.test(caminho) ? 'python' :
   /\.php$/i.test(caminho) ? 'php' :
+  /\.sql$/i.test(caminho) ? 'sql' :
   /\.(cpp|cc|cxx|hpp|hh)$/i.test(caminho) ? 'cpp' :
   /\.[ch]$/i.test(caminho) ? 'c' :
   'portugol'
@@ -110,6 +111,7 @@ const MODELOS_NOVO = {
   typescript: 'const msg: string = "Hello, World!"\nconsole.log(msg)\n',
   python: 'print("Hello, World!")\n',
   php: '<?php\necho "Hello, World!";\n',
+  sql: "-- F9 runs the whole script; F8 runs one statement at a time and shows the tables changing.\nSELECT 'Hello, World!' AS greeting;\n\nCREATE TABLE student (\n  id    SERIAL PRIMARY KEY,\n  name  TEXT NOT NULL,\n  grade NUMERIC(4, 1)\n);\n\nINSERT INTO student (name, grade) VALUES\n  ('Ana', 9.5),\n  ('Bruno', 7.0),\n  ('Carla', 8.2);\n\nSELECT name, grade FROM student WHERE grade >= 8 ORDER BY grade DESC;\n",
 }
 const esqueletoDe = (linguagem) => MODELOS_NOVO[linguagem] ?? esqueleto(prefs)
 let aleatorioLigado = false
@@ -185,6 +187,7 @@ function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 
   else if (linguagem === 'python') api.programa.aquecer('python')
   else if (linguagem === 'csharp') api.csharp.aquecer()
   else if (linguagem === 'php') api.php.aquecer()
+  else if (linguagem === 'sql') api.sql.aquecer()
   atualizarTitulo()
   editor.focar()
 }

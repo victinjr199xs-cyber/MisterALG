@@ -119,4 +119,5 @@ export default {
   430: 'Ouvrir un programme', 431: 'Enregistrer un bloc de programme', 432: 'Insérer un bloc de programme', 433: 'Exporter vers Pascal',
   440: 'Janvier', 441: 'Février', 442: 'Mars', 443: 'Avril', 444: 'Mai', 445: 'Juin', 446: 'Juillet', 447: 'Août', 448: 'Septembre', 449: 'Octobre',
   450: 'Novembre', 451: 'Décembre', 452: 'Dim', 453: 'Lun', 454: 'Mar', 455: 'Mer', 456: 'Jeu', 457: 'Ven', 458: 'Sam',
+  115: 'Bases de données avec PostgreSQL', 116: 'Les tables qui changent à chaque commande, avec les clés et les nouvelles lignes en évidence', 117: 'Un vrai PostgreSQL', 118: 'MESSAGE : Démarrage de PostgreSQL…',
 }

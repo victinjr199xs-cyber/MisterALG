@@ -8,9 +8,9 @@
   // C e C++: o clang em WebAssembly fica fora do asar, e o worker e o executor também
   // (worker_threads e o processo filho não leem de dentro do app.asar). Ver main/clang.js.
   extraResources: [{ from: '../node_modules/@yowasp/clang', to: 'clang', filter: ['package.json', 'gen/**'] },
-    // Python (Pyodide), PHP (php-wasm 8.3) e C# (tree-sitter): scripts/preparar-linguagens.mjs monta esta pasta.
+    // Python (Pyodide), PHP (php-wasm 8.3), C# (tree-sitter) e SQL (PGlite): scripts/preparar-linguagens.mjs monta esta pasta.
     { from: 'build/linguagens', to: 'linguagens' }],
-  asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js', 'out/main/rodar-python.js', 'out/main/rodar-php.js'],
+  asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js', 'out/main/rodar-python.js', 'out/main/rodar-php.js', 'out/main/rodar-sql.js'],
   npmRebuild: false,
   electronVersion: '44.8.0',
   fileAssociations: [

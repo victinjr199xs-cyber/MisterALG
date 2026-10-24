@@ -827,7 +827,7 @@ body.pagina-inicio { background: #0f1115; }
 
 /* Grade de linguagens: células com linhas finas, como uma tabela */
 .inicio-grade {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   border-top: 1px solid var(--linha); border-left: 1px solid var(--linha);
 }
 .inicio-linguagem {
@@ -905,6 +905,10 @@ body.modo-codigo {
   --selecao-texto: #2c3a5a; --mesma-palavra: #1f2633; --cursor: #a78bfa; --detalhe: #8b93a1;
   --sx-comentario: #6b7385; --sx-literal: #98c379; --sx-chave: #c678dd; --sx-especial: #61afef; --sx-tipo: #e5c07b; --sx-variavel: #e6e8eb;
   --mono: Consolas, 'Cascadia Mono', Menlo, monospace;
+  /* janelas (avisos, configurações) no mesmo escuro */
+  --dialogo-fundo: #13161c; --dialogo-moldura: #262a33; --dialogo-borda: #262a33; --campo-borda: #2a2f3a;
+  --titulo-inicio: #1c2029; --titulo-fim: #1c2029; --titulo-texto: #e6e8eb;
+  --acao-inicio: #262b36; --acao-fim: #1c2029; --aba: #1c2029; --aba-ativa: #13161c; --aviso: #f87171;
   color-scheme: dark;
 }
 body.modo-codigo .barra { padding: 6px 10px; background: #0f1115; border-bottom: 1px solid var(--borda); box-shadow: none; }
@@ -951,3 +955,26 @@ body.modo-codigo ::-webkit-scrollbar { width: 10px; height: 10px; }
 body.modo-codigo ::-webkit-scrollbar-track { background: transparent; }
 body.modo-codigo ::-webkit-scrollbar-thumb { background: #262a33; border-radius: 5px; border: 2px solid #0b0d11; }
 body.modo-codigo ::-webkit-scrollbar-button { display: none; }
+
+/* ---- SQL: a tela do banco de dados (memoria-banco.js) ---------------------------------------------- */
+.mb-banco { display: flex; flex-direction: column; gap: 14px; padding: 12px 14px; font: 12.5px/1.4 var(--mono, Consolas, monospace); }
+.mb-banco[hidden] { display: none; }
+.mb-vazio, .mb-vazia { margin: 0; color: #8b93a1; }
+.mb-tabela { border: 1px solid #262a33; background: #0b0d11; }
+.mb-tabela-nova { border-color: #16a37f; box-shadow: 0 0 0 1px #16a37f55; }
+.mb-tabela header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 7px 10px; border-bottom: 1px solid #262a33; background: #13161c; }
+.mb-tabela header b { color: #e6e8eb; font-size: 13px; }
+.mb-tabela header b::before { content: '▦ '; color: #b45309; }
+.mb-tabela header span { color: #8b93a1; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.mb-rolagem { overflow-x: auto; }
+.mb-tabela table { border-collapse: collapse; min-width: 100%; }
+.mb-tabela th, .mb-tabela td { padding: 4px 10px; border-bottom: 1px solid #1c2027; text-align: left; white-space: nowrap; }
+.mb-tabela th { color: #8b93a1; font-weight: 600; font-size: 11px; letter-spacing: .04em; }
+.mb-pk { font-size: 10px; }
+.mb-fk { color: #a78bfa; font-weight: 400; }
+.mb-tabela td { color: #e6e8eb; }
+.mb-nulo { color: #5c6370 !important; font-style: italic; }
+.mb-nova td { background: #0f2a20; color: #4ade80; }
+.mb-alterada td { background: #2b2413; color: #fbbf24; }
+.mb-apagada td { background: #2a1414; color: #f87171; text-decoration: line-through; }
+.mb-vazia { padding: 8px 10px; }

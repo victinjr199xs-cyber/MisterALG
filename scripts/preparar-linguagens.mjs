@@ -32,6 +32,10 @@ const levar = (nome) => {
 }
 levar('@php-wasm/node')
 
+// SQL: o PostgreSQL do PGlite (dist sem os .map e sem as extensões opcionais).
+cpSync(join(nm, '@electric-sql', 'pglite', 'dist'), join(destino, 'pglite', 'dist'), { recursive: true, filter: (f) => !/\.(map|d\.ts|d\.cts)$/.test(f) && !/\.tar\.gz$/.test(f) })
+copiar(join(nm, '@electric-sql', 'pglite', 'package.json'), join(destino, 'pglite', 'package.json'))
+
 // C#: o motor do tree-sitter e a gramática.
 const cs = join(destino, 'csharp')
 copiar(join(nm, 'web-tree-sitter', 'tree-sitter.js'), join(cs, 'web-tree-sitter', 'tree-sitter.js'))

@@ -98,4 +98,5 @@ export default {
   430: 'Mở chương trình', 431: 'Lưu khối chương trình', 432: 'Chèn khối chương trình', 433: 'Xuất sang Pascal',
   440: 'Tháng Một', 441: 'Tháng Hai', 442: 'Tháng Ba', 443: 'Tháng Tư', 444: 'Tháng Năm', 445: 'Tháng Sáu', 446: 'Tháng Bảy', 447: 'Tháng Tám', 448: 'Tháng Chín', 449: 'Tháng Mười',
   450: 'Tháng Mười Một', 451: 'Tháng Mười Hai', 452: 'CN', 453: 'T2', 454: 'T3', 455: 'T4', 456: 'T5', 457: 'T6', 458: 'T7',
+  115: 'Cơ sở dữ liệu với PostgreSQL', 116: 'Các bảng thay đổi sau mỗi lệnh, khóa và dòng mới được tô sáng', 117: 'PostgreSQL thật', 118: 'THÔNG BÁO: Đang khởi động PostgreSQL…',
 }

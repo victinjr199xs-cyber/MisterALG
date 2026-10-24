@@ -10,6 +10,8 @@ import { SessaoPython } from './python/sessao-python.js'
 import { criarPrevia } from './previa.js'
 import * as dialogos from './dialogos.js'
 import { criarMemoriaC } from './memoria-c.js'
+import { criarMemoriaBanco } from './memoria-banco.js'
+import { SessaoSQL } from './sql/sessao-sql.js'
 
 /** Itens do "Intervalo do timer" (cboInterval do VisuAlg) → milissegundos. */
 export const INTERVALOS = [
@@ -95,9 +97,10 @@ export function criarExecucao(op) {
     c: 'Memória do programa: pilha, heap e globais (setas = ponteiros)',
     objetos: 'Pilha de chamadas e objetos (setas = referências)',
   }
-  const LEGENDAS_EN = { c: 'Memory: stack, heap and globals', objetos: 'Call stack and objects' }
+  const LEGENDAS_EN = { c: 'Memory: stack, heap and globals', objetos: 'Call stack and objects', banco: 'Database' }
+  let memoriaBanco = null // SQL: as tabelas do banco no lugar da grade
 
-  /** qual: 'c', 'objetos' ou null (a grade de variáveis do Portugol). */
+  /** qual: 'c', 'objetos', 'banco' ou null (a grade de variáveis do Portugol). */
   function mostrarPainel(qual) {
     document.getElementById('variaveis').hidden = qual !== null
     const ingles = document.body.classList.contains('modo-codigo')
@@ -109,6 +112,13 @@ export function criarExecucao(op) {
       memoriaObjetos.container.hidden = false
     } else if (memoriaObjetos) {
       memoriaObjetos.container.hidden = true
+    }
+    if (qual === 'banco') {
+      memoriaBanco ??= criarMemoriaBanco(molduraVariaveis.querySelector('.grade-rolagem'))
+      memoriaBanco.limpar()
+      memoriaBanco.container.hidden = false
+    } else if (memoriaBanco) {
+      memoriaBanco.container.hidden = true
     }
   }
   const mostrarMemoriaC = (sim) => mostrarPainel(sim ? 'c' : null)
@@ -511,6 +521,36 @@ export function criarExecucao(op) {
     })
   }
 
+  /** SQL: um comando de cada vez no PostgreSQL (PGlite); a tela do banco mostra as tabelas mudando. */
+  function iniciarSQL(modo) {
+    tela.replaceChildren()
+    visualizacao.textContent = ''
+    abrirConsole()
+    editor.realcarErro(null)
+    editor.somenteLeitura(true)
+    op.aoMudarEstado(true)
+    mostrarPainel('banco')
+    status.estado(' Preparando ')
+    status.mensagem(' MENSAGEM: Iniciando o PostgreSQL…')
+    const CORES_SQL = { comando: '#8b93a1', erro: CORES.VERMELHO, info: CORES.AMARELO }
+    sessao = new SessaoSQL(editor.texto(), {
+      modo,
+      timerMs: op.configuracao().timerMs,
+      breakpoints: editor.breakpoints(),
+      onStart: () => status.estado(' Executando '),
+      onOutput: (texto, tipo) => {
+        corTexto = CORES_SQL[tipo] ?? CORES.BRANCO
+        escrever(texto)
+        corTexto = CORES.BRANCO
+      },
+      onStep: aoPassar,
+      onBanco: (tabelas) => memoriaBanco?.mostrar(tabelas),
+      onEnd: terminou,
+    })
+    if (modo === 'passo') sessao.passo()
+    else sessao.continuar()
+  }
+
   /** F8 (ou F9 com pontos de parada) no C: o clang gera a árvore e a SessaoC a executa linha a linha. */
   async function iniciarPassoC(modo, linguagem) {
     const fonte = editor.texto()
@@ -591,6 +631,7 @@ export function criarExecucao(op) {
     if (linguagem === 'python') return iniciarPython(modo)
     if (linguagem === 'csharp') return iniciarCSharp(modo)
     if (linguagem === 'php') return iniciarPHP()
+    if (linguagem === 'sql') return iniciarSQL(modo)
     if (linguagem !== 'portugol') {
       // F9 sem pontos de parada roda o programa compilado de verdade; F8, Shift+F9 ou pontos de parada usam o passo a passo.
       if (modo !== 'continuo' || editor.breakpoints().size) iniciarPassoC(modo, linguagem)

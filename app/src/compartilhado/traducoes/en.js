@@ -118,4 +118,5 @@ export default {
   430: 'Open program', 431: 'Save program block', 432: 'Insert program block', 433: 'Export to Pascal',
   440: 'January', 441: 'February', 442: 'March', 443: 'April', 444: 'May', 445: 'June', 446: 'July', 447: 'August', 448: 'September', 449: 'October',
   450: 'November', 451: 'December', 452: 'Sun', 453: 'Mon', 454: 'Tue', 455: 'Wed', 456: 'Thu', 457: 'Fri', 458: 'Sat',
+  115: 'Databases with PostgreSQL', 116: 'The tables changing with every statement, with keys and new rows highlighted', 117: 'Real PostgreSQL', 118: 'MESSAGE: Starting PostgreSQL…',
 }

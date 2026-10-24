@@ -21,6 +21,7 @@ import { javascript } from '@codemirror/lang-javascript'
 import { python } from '@codemirror/lang-python'
 import { csharp } from '@replit/codemirror-lang-csharp'
 import { php } from '@codemirror/lang-php'
+import { PostgreSQL, sql } from '@codemirror/lang-sql'
 import { highlightSelectionMatches } from '@codemirror/search'
 import { tags as t } from '@lezer/highlight'
 import { FUNCOES, PALAVRAS_CHAVE, normalizar } from '@misteralg/interpreter'
@@ -97,6 +98,7 @@ const EXTENSOES = {
   csharp: () => [csharp(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets(), indentUnit.of('    ')],
   python: () => [python(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets(), indentUnit.of('    ')],
   php: () => [php(), syntaxHighlighting(coresC), bracketMatching(), closeBrackets()],
+  sql: () => [sql({ dialect: PostgreSQL, upperCaseKeywords: true }), syntaxHighlighting(coresC), bracketMatching(), closeBrackets(), indentUnit.of('  ')],
 }
 
 // ---- pontos de parada (calha + linha vermelha) ---------------------------

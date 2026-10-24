@@ -3,6 +3,24 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.8.0] — 2026-10-24
+
+### Nova linguagem: SQL
+
+- **PostgreSQL de verdade** (PGlite, o PostgreSQL compilado para WebAssembly), dentro do app e sem
+  internet: o que funciona aqui funciona no PostgreSQL da faculdade.
+- **F9** roda o script inteiro e mostra cada resultado no formato do `psql` (`(2 rows)`, `INSERT 0 3`...).
+- **F8** roda **um comando por vez** e para antes de cada um. A tela **Database** mostra as tabelas com
+  as chaves primárias (🔑) e estrangeiras (→), e destaca as linhas **novas** (verde), **alteradas**
+  (amarelo) e **apagadas** (riscadas).
+- Erros com a linha certa e explicados em português (coluna ou tabela que não existe, `GROUP BY`,
+  chave repetida, chave estrangeira, `NOT NULL`...).
+- Cada execução começa com o banco vazio; uma consulta que não termina é interrompida em 20 segundos.
+- Cartão **SQL** na tela inicial, arquivos `.sql` e textos traduzidos nos 18 idiomas.
+
+### Melhorado
+
+- As janelas (avisos, configurações) ficam escuras na IDE das linguagens de programação.
 ## [1.7.2] — 2026-10-23
 
 - Instalador de Linux: o teste dos temas no Ubuntu volta para o Portugol antes de conferir as cores (a fumaça da IDE terminava no C++, que tem a IDE escura própria).
@@ -97,6 +115,7 @@ A versão que transforma o MisterALG de "VisuAlg para Mac e Linux" em um ambient
 
 - Botão de temas, cores do código configuráveis, exportar para Pascal, listas e dica do dia. (`f2bd11d`)
 
+[1.8.0]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.2...v1.8.0
 [1.7.2]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/victinjr199xs-cyber/MisterALG/compare/b8f4fd7...v1.7.0

@@ -15,6 +15,7 @@ export const LINGUAGENS = [
   { id: 'c', nome: 'C', ext: '.c', cor: '#4361ee', resumo: 'Memória, ponteiros e desempenho', visao: 'Biblioteca padrão completa (clang). Em breve: memória e ponteiros', selo: 'Memória e ponteiros' },
   { id: 'cpp', nome: 'C++', ext: '.cpp', cor: '#0ea5c6', resumo: 'C com classes e a STL', visao: 'Biblioteca padrão completa (clang). Em breve: objetos', selo: 'Compilador clang' },
   { id: 'php', nome: 'PHP', ext: '.php', cor: '#ec4899', resumo: 'Páginas web geradas no servidor', visao: 'A página gerada, ao vivo', selo: 'Página ao vivo' },
+  { id: 'sql', nome: 'SQL', ext: '.sql', cor: '#b45309', resumo: 'Bancos de dados com PostgreSQL', visao: 'As tabelas mudando a cada comando, com as chaves e as linhas novas em destaque', selo: 'PostgreSQL de verdade' },
 ]
 
 /**

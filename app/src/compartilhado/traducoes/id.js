@@ -99,4 +99,5 @@ export default {
   430: 'Buka program', 431: 'Simpan blok program', 432: 'Sisipkan blok program', 433: 'Ekspor ke Pascal',
   440: 'Januari', 441: 'Februari', 442: 'Maret', 443: 'April', 444: 'Mei', 445: 'Juni', 446: 'Juli', 447: 'Agustus', 448: 'September', 449: 'Oktober', 450: 'November', 451: 'Desember',
   452: 'Min', 453: 'Sen', 454: 'Sel', 455: 'Rab', 456: 'Kam', 457: 'Jum', 458: 'Sab',
+  115: 'Basis data dengan PostgreSQL', 116: 'Tabel berubah di setiap perintah, kunci dan baris baru disorot', 117: 'PostgreSQL sungguhan', 118: 'PESAN: Memulai PostgreSQL…',
 }

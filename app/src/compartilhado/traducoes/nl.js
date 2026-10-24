@@ -118,4 +118,5 @@ export default {
   430: 'Programma openen', 431: 'Programmablok opslaan', 432: 'Programmablok invoegen', 433: 'Exporteren naar Pascal',
   440: 'Januari', 441: 'Februari', 442: 'Maart', 443: 'April', 444: 'Mei', 445: 'Juni', 446: 'Juli', 447: 'Augustus', 448: 'September', 449: 'Oktober',
   450: 'November', 451: 'December', 452: 'Zo', 453: 'Ma', 454: 'Di', 455: 'Wo', 456: 'Do', 457: 'Vr', 458: 'Za',
+  115: 'Databases met PostgreSQL', 116: 'De tabellen veranderen bij elke opdracht, met sleutels en nieuwe rijen gemarkeerd', 117: 'Echte PostgreSQL', 118: 'BERICHT: PostgreSQL wordt gestart…',
 }

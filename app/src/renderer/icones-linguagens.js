@@ -68,6 +68,14 @@ export const ICONES_LINGUAGEM = {
     `<circle cx="32" cy="32" r="19.5" fill="${CREME}"/><circle cx="32" cy="32" r="14" fill="${DESTAQUE}"/>` +
     `<text x="32" y="37.4" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="900" fill="${TINTA}" stroke="none">C++</text>`),
 
+  // SQL: o cilindro do banco de dados, com uma tabela na frente.
+  sql: svg(
+    `<path d="M12 14 V44 C12 49.5 21 53 32 53 C43 53 52 49.5 52 44 V14" fill="${CREME}"/>` +
+    `<ellipse cx="32" cy="14" rx="20" ry="7" fill="#fff"/>` +
+    `<path d="M12 24 C12 29.5 21 33 32 33 C43 33 52 29.5 52 24 M12 34 C12 39.5 21 43 32 43 C43 43 52 39.5 52 34" fill="none"/>` +
+    `<rect x="30" y="35" width="26" height="22" rx="2.5" fill="#fff"/><path d="M30 42 H56 M30 49.5 H56 M39 42 V57 M47.5 42 V57" fill="none" stroke-width="1.6"/>` +
+    `<rect x="30" y="35" width="26" height="7" rx="2.5" fill="${DESTAQUE}"/>`),
+
   // PHP: o elefante (mascote clássico do PHP), de frente.
   php: svg(
     `<ellipse cx="16" cy="28" rx="11" ry="13.5" fill="${CREME}"/><ellipse cx="48" cy="28" rx="11" ry="13.5" fill="${CREME}"/>` +
