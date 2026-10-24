@@ -13,6 +13,23 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   de escola no SQL. Abrem como documento novo, sem mexer no original.
 - **SQL: setas das chaves estrangeiras** no painel do banco, ligando a coluna `REFERENCES` à tabela de origem.
 
+### Testado contra as ferramentas oficiais
+
+- Os motores de C/C++, Python, JavaScript, C# e SQL foram comparados com gcc, CPython, Node, .NET e psql
+  rodando os mesmos programas, e as diferenças foram corrigidas: `printf` (`%g`, arredondamento de `%f`),
+  vetores inicializados pela metade e `goto` no C; `console.log` igual ao do Node; datas, BigInteger, `?.`,
+  `nameof` e `Parse` com cultura no C#; saída do SQL idêntica à do psql (inclusive `RETURNING`).
+- Portugol: os 80 testes com os exemplos do VisuAlg 3.0.7 original passam; números grandes não mostram mais
+  "ruído" nas casas decimais e a recursão sem fim tem uma mensagem clara.
+
+### Interface e idiomas
+
+- Mensagens de erro de todas as linguagens e mais 160 textos da interface traduzidos para os 18 idiomas;
+  caixas de diálogo do sistema também traduzidas. Árabe da direita para a esquerda.
+- O seletor de idioma da tela inicial não deixa mais a tela em branco.
+- Desfazer (Ctrl+Z) funciona mesmo com o foco num botão da barra; contraste maior nos campos desativados.
+- "Não salvar" ao descartar apaga a recuperação; programas que não são .alg salvam com a quebra de linha do sistema.
+
 ### Correções
 
 - **Salvar mais seguro**: o arquivo é gravado primeiro numa cópia temporária, sincronizado no disco e só

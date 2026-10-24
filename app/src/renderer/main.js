@@ -88,6 +88,7 @@ menuTemas.addEventListener('keydown', (e) => {
   e.preventDefault()
   e.stopPropagation()
 })
+const editandoCampo = () => !!document.querySelector('dialog[open]') || !!document.activeElement?.matches('input, textarea')
 const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modificado: false, linguagem: 'portugol' }
 
 // ---- linguagens --------------------------------------------------------------------
@@ -361,8 +362,9 @@ const comandos = {
     prefs = await api.prefs.gravar({ idioma: id })
     api.janela.pagina({ pagina: 'ide', params: doc.caminho ? { abrir: doc.caminho } : { linguagem: doc.linguagem } })
   },
-  desfazer: () => (document.activeElement?.closest('.cm-editor') ? editor.desfazer() : document.execCommand('undo')),
-  refazer: () => (document.activeElement?.closest('.cm-editor') ? editor.refazer() : document.execCommand('redo')),
+  // Só campos de texto e diálogos usam o desfazer do navegador; botões da barra (que ficam com o foco) desfazem o editor.
+  desfazer: () => (editandoCampo() ? document.execCommand('undo') : editor.desfazer()),
+  refazer: () => (editandoCampo() ? document.execCommand('redo') : editor.refazer()),
   cortar: () => { editor.focar(); api.editar('cut') },
   copiar: () => { editor.focar(); api.editar('copy') },
   colar: () => { editor.focar(); api.editar('paste') },

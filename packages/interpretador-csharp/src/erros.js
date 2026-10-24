@@ -19,7 +19,7 @@ export class ExcecaoCS extends Error {
   }
 }
 
-const EXPLICACOES = {
+export const EXPLICACOES = {
   DivideByZeroException: 'Divisão inteira por zero. Confira o divisor antes de dividir (com double o resultado seria infinito, mas com int o C# lança esta exceção).',
   IndexOutOfRangeException: 'O índice está fora do array: os índices vão de 0 até Length - 1. Confira o índice usado e o tamanho do array.',
   ArgumentOutOfRangeException: 'O índice ou o valor está fora do intervalo permitido (por exemplo, list[i] com i maior ou igual a Count, ou Substring além do fim do texto).',

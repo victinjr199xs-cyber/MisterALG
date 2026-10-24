@@ -76,8 +76,7 @@ export function tradutor(idioma) {
   const d = dicionario(idioma)
   const t = (texto, ...args) => preencher(d?.exatos.get(texto) ?? texto, args)
   /** Traduz um texto que já veio preenchido ("Pausado na linha 5"); devolve null se não conhece. */
-  t.reconhecer = (texto) => {
-    if (!d) return null
+  const reconhecerInteiro = (texto) => {
     const exato = d.exatos.get(texto)
     if (exato) return exato
     for (const m of d.modelos) {
@@ -89,6 +88,17 @@ export function tradutor(idioma) {
       }
     }
     return null
+  }
+  t.reconhecer = (texto) => {
+    if (!d) return null
+    const r = reconhecerInteiro(texto)
+    if (r != null) return r
+    // "Aviso: a variável $x não existe", "TypeError: ...": um rótulo (texto conhecido ou nome de código) antes do ": ".
+    const p = /^([^:\n]{1,40}): (.+)$/s.exec(texto)
+    if (!p) return null
+    const resto = reconhecerInteiro(p[2])
+    const cabeca = d.exatos.get(p[1]) ?? (/^[\w.]+$/.test(p[1]) ? p[1] : null)
+    return resto != null && cabeca != null ? `${cabeca}: ${resto}` : null
   }
   t.idioma = d ? idioma : 'pt'
   return t

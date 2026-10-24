@@ -56,6 +56,27 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
   conferir('saída do console', await avaliar('document.querySelector("#console-tela").textContent'), ESPERADO)
   conferir('grade de variáveis', await avaliar(`[...document.querySelectorAll('#variaveis tbody tr td:nth-child(4)')].map(t => t.textContent).join(',')`), '6,30,"Linux"')
 
+  // Breakpoint dentro de um procedimento: pausa na linha marcada e a pilha mostra o procedimento.
+  await avaliar(`${M}.execucao.restaurar(); ${M}.editor.definirTexto('algoritmo "b"\\nvar\\n  s: inteiro\\nprocedimento soma(x: inteiro)\\ninicio\\n  s <- s + x\\nfimprocedimento\\ninicio\\n  soma(1)\\nfimalgoritmo\\n')`)
+  await avaliar(`${M}.editor.view.dispatch({ selection: { anchor: ${M}.editor.view.state.doc.line(6).from } }); void ${M}.comandos.breakpoint()`)
+  await avaliar(`void ${M}.comandos.executar()`)
+  for (let i = 0; i < 40 && !(await avaliar(`!!document.querySelector('.cm-linha-breakpoint.cm-linha-execucao')`)); i += 1) await esperar(250)
+  conferir('breakpoint: pausa na linha marcada', await avaliar(`!!document.querySelector('.cm-linha-breakpoint.cm-linha-execucao')`), true)
+  await avaliar(`void ${M}.comandos.pilha()`)
+  await esperar(300)
+  conferir('pilha de ativação mostra o procedimento', /soma/.test((await dialogoAberto(avaliar)).texto), true)
+  await fecharDialogos(avaliar, esperar)
+  await avaliar(`${M}.execucao.parar(); ${M}.comandos['limpar-breakpoints']()`)
+  await esperar(300)
+
+  // Desfazer pela barra de ferramentas (o botão fica com o foco) desfaz o editor.
+  await avaliar(`${M}.execucao.restaurar(); ${M}.editor.definirTexto('algoritmo "i"\\ninicio\\nescreval(1)\\nse verdadeiro entao\\nescreval(2)\\nfimse\\nfimalgoritmo\\n')`)
+  const antesRecuo = await avaliar(`${M}.editor.texto()`)
+  await avaliar(`void ${M}.comandos.indentar()`)
+  conferir('indentar muda o texto', (await avaliar(`${M}.editor.texto()`)) !== antesRecuo, true)
+  await avaliar(`document.querySelector('[data-id="desfazer"]').focus(); void ${M}.comandos.desfazer()`)
+  conferir('desfazer com o foco na barra', await avaliar(`${M}.editor.texto()`), antesRecuo)
+
   // Erro de execução: diálogo Aviso com a linha certa.
   await avaliar(`${M}.execucao.restaurar(); ${M}.editor.definirTexto('algoritmo "e"\\nvar\\n v: vetor[1..3] de inteiro\\ninicio\\n v[4] <- 1\\nfimalgoritmo\\n')`)
   await avaliar(`void ${M}.comandos.executar()`)

@@ -228,7 +228,8 @@ button, input, select { font: inherit; color: inherit; }
   gap: 3px;
   margin: 0 2px;
 }
-.campo-barra:has(:disabled) { color: var(--desabilitado); }
+/* Rótulo desabilitado: texto do tema esmaecido, mas ainda com contraste >= 4,5:1 em todos os temas. */
+.campo-barra:has(:disabled) { color: color-mix(in srgb, var(--texto) 78%, var(--fundo-janela)); }
 .campo-barra input, .campo-barra select {
   height: 22px;
   padding: 0 4px;
