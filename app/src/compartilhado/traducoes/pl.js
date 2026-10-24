@@ -10,7 +10,7 @@ export default {
   53: 'K&alendarz', 54: '&Język', 55: '&Pomoc', 56: '&Ekran MisterALG', 57: '&Język Portugol', 58: '&Dokumentacja języka', 59: '&Porada dnia',
   60: '&Warunki korzystania i prywatność', 61: '&O autorach', 62: 'Okno',
   70: 'Naucz się programować, patrząc, jak działa twój kod.', 71: 'W jakim języku chcesz programować?', 72: 'Zacznij', 73: 'Nowy program', 74: 'Otwórz…',
-  75: 'Ostatnie', 76: 'Otwierane pliki pojawią się tutaj.', 77: 'Porada dnia', 78: 'Pokazuj ten ekran przy starcie', 79: 'Animacja startowa', 80: 'Zamknij',
+  75: 'Ostatnie', 76: 'Otwierane pliki pojawią się tutaj.', 77: 'Porada dnia', 79: 'Animacja startowa', 80: 'Zamknij',
   81: 'Zamknij (Esc)', 82: 'wersja', 83: 'Język', 84: 'wkrótce', 85: 'Zmienne, stos wywołań i profil, jak w VisuAlg',
   86: 'Stos wywołań, obiekty i referencje (strzałki)', 87: 'Stos wywołań i kolejka zdarzeń', 88: 'Typ każdej wartości podczas działania',
   89: 'Obiekty i referencje połączone strzałkami', 90: 'Pełna biblioteka standardowa (clang). Pamięć i wskaźniki', 91: 'Pełna biblioteka standardowa (clang). Obiekty wkrótce',

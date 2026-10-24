@@ -18,7 +18,7 @@ export const LINGUAGENS = [
 ]
 
 /**
- * @param {{versao:string, recentes:string[], dica:string, prefs:{telaInicial:boolean, abertura:boolean, idioma?:string}, atalhos:{novo:string, abrir:string}}} opcoes
+ * @param {{versao:string, recentes:string[], dica:string, prefs:{abertura:boolean, idioma?:string}, atalhos:{novo:string, abrir:string}}} opcoes
  * @returns {Promise<{acao:'novo'|'abrir'|'recente'|'idioma', idioma?:string, linguagem?:string, caminho?:string, prefs:{abertura:boolean}}>}
  */
 export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {

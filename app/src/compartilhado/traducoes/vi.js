@@ -10,7 +10,7 @@ export default {
   55: '&Trợ giúp', 56: '&Màn hình MisterALG', 57: '&Ngôn ngữ Portugol', 58: '&Tham khảo ngôn ngữ', 59: '&Mẹo trong ngày', 60: '&Điều khoản sử dụng và quyền riêng tư',
   61: '&Về tác giả', 62: 'Cửa sổ',
   70: 'Học lập trình bằng cách xem mã của bạn chạy.', 71: 'Bạn muốn lập trình bằng ngôn ngữ nào?', 72: 'Bắt đầu', 73: 'Chương trình mới', 74: 'Mở…', 75: 'Gần đây',
-  76: 'Các tệp bạn mở sẽ hiện ở đây.', 77: 'Mẹo trong ngày', 78: 'Hiện màn hình này khi khởi động', 79: 'Hiệu ứng mở đầu', 80: 'Đóng', 81: 'Đóng (Esc)', 82: 'phiên bản',
+  76: 'Các tệp bạn mở sẽ hiện ở đây.', 77: 'Mẹo trong ngày', 79: 'Hiệu ứng mở đầu', 80: 'Đóng', 81: 'Đóng (Esc)', 82: 'phiên bản',
   83: 'Ngôn ngữ', 84: 'sắp có', 85: 'Biến, ngăn xếp lời gọi và hồ sơ chạy, như VisuAlg', 86: 'Ngăn xếp lời gọi, đối tượng và tham chiếu (mũi tên)',
   87: 'Ngăn xếp lời gọi và hàng đợi sự kiện', 88: 'Kiểu của mọi giá trị khi chạy', 89: 'Đối tượng và tham chiếu nối bằng mũi tên', 90: 'Thư viện chuẩn đầy đủ (clang). Bộ nhớ và con trỏ',
   91: 'Thư viện chuẩn đầy đủ (clang). Đối tượng sắp có', 92: 'Trang được tạo, trực tiếp', 93: 'Màn hình bắt đầu MisterALG', 94: 'Ngôn ngữ', 95: 'Tạo chương trình', 96: 'Trang chủ',

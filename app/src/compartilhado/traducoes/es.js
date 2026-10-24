@@ -10,7 +10,7 @@ export default {
   51: 'Configurar el asistente de IA…', 52: '&Calculadora', 53: 'C&alendario', 54: '&Idioma', 55: 'A&yuda', 56: 'La &pantalla de MisterALG',
   57: 'El &lenguaje Portugol', 58: '&Referencia del lenguaje', 59: '&Consejo del día', 60: '&Términos de uso y privacidad', 61: '&Acerca de los autores', 62: 'Ventana',
   70: 'Aprende a programar viendo el código ejecutarse.', 71: '¿En qué lenguaje quieres programar?', 72: 'Empezar', 73: 'Nuevo algoritmo', 74: 'Abrir…',
-  75: 'Recientes', 76: 'Los archivos que abras aparecen aquí.', 77: 'Consejo del día', 78: 'Mostrar esta pantalla al abrir', 79: 'Animación de apertura', 80: 'Cerrar',
+  75: 'Recientes', 76: 'Los archivos que abras aparecen aquí.', 77: 'Consejo del día', 79: 'Animación de apertura', 80: 'Cerrar',
   81: 'Cerrar (Esc)', 82: 'versión', 83: 'Idioma', 84: 'próximamente', 85: 'Variables, pila de llamadas y perfil, como en VisuAlg',
   86: 'Pila de llamadas, objetos y referencias (flechas)', 87: 'Pila de llamadas y cola de eventos', 88: 'El tipo de cada valor durante la ejecución',
   89: 'Objetos y referencias, unidos por flechas', 90: 'Biblioteca estándar completa (clang). Memoria y punteros', 91: 'Biblioteca estándar completa (clang). Objetos próximamente',

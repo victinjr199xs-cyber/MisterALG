@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron'
-import { writeFileSync } from 'node:fs'
+import { existsSync, statSync, writeFileSync } from 'node:fs'
 import { temaPorId } from '../compartilhado/temas.js'
 import { mostrarAbertura } from './abertura.js'
 import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
@@ -78,7 +78,6 @@ const atualizarMenu = () => (naInicio && process.platform !== 'darwin' ? Menu.se
 /** Troca a página da janela: a tela inicial sozinha ou a IDE. */
 const irPara = (pagina, params) => {
   naInicio = pagina === 'inicio'
-  if (naInicio) limparRecuperacao() // voltar ao início descarta o algoritmo (já confirmado na IDE)
   atualizarMenu()
   return carregarPagina(janela, pagina, params)
 }
@@ -288,6 +287,11 @@ function registrarIpc() {
   ipcMain.handle('janela:titulo', (_e, titulo) => janela?.setTitle(titulo))
   ipcMain.handle('janela:pagina', (_e, { pagina, params } = {}) => {
     if (pagina !== 'inicio' && pagina !== 'ide') return
+    // A IDE já perguntou se queria salvar: o algoritmo aberto e os programas rodando vão embora com a página.
+    // Exceção: a tela inicial manda para a IDE sem parâmetros justamente para ela oferecer a recuperação.
+    if (pagina === 'inicio' || Object.keys(params ?? {}).length) limparRecuperacao()
+    pararTudo()
+    programas.pararTudo()
     void irPara(pagina, params && typeof params === 'object' ? params : {}) // a página atual vai embora; não há resposta a esperar
   })
   ipcMain.handle('janela:fechar', () => {
@@ -302,6 +306,24 @@ function registrarIpc() {
   })
 }
 
+// Windows e Linux: o arquivo do duplo clique chega na linha de comando (no app instalado, logo depois do .exe).
+const arquivoDosArgumentos = (args) =>
+  args.slice(app.isPackaged ? 1 : 2).find((a) => !a.startsWith('-') && existsSync(a) && statSync(a).isFile()) ?? null
+
+// Uma janela só: abrir outro .alg com o app aberto manda o arquivo para ela em vez de abrir outra cópia.
+const unica = app.requestSingleInstanceLock()
+if (!unica) app.quit()
+else {
+  arquivoParaAbrir = arquivoDosArgumentos(process.argv)
+  app.on('second-instance', (_e, args) => {
+    const caminho = arquivoDosArgumentos(args)
+    if (!janela) return
+    if (janela.isMinimized()) janela.restore()
+    janela.focus()
+    if (caminho) janela.webContents.send('menu', 'abrir-recente', caminho)
+  })
+}
+
 // Arquivo .alg aberto pelo Finder (duplo-clique ou arrastar para o ícone).
 app.on('open-file', (evento, caminho) => {
   evento.preventDefault()
@@ -310,6 +332,7 @@ app.on('open-file', (evento, caminho) => {
 })
 
 app.whenReady().then(() => {
+  if (!unica) return // outra cópia já está aberta e recebeu o arquivo
   registrarIpc()
   iniciarPrevia((resposta) => janela?.webContents.send('php:resposta', resposta))
   // Testes e capturas (pasta de dados própria) abrem direto, sem a animação.

@@ -10,7 +10,7 @@ export default {
   53: 'C&alendar', 54: '&Language', 55: '&Help', 56: 'The MisterALG &screen', 57: 'The Portugol &language', 58: 'Language &reference',
   59: '&Tip of the day', 60: '&Terms of use and privacy', 61: '&About the authors', 62: 'Window',
   70: 'Learn to code by watching your code run.', 71: 'Which language do you want to code in?', 72: 'Start', 73: 'New program', 74: 'Open…',
-  75: 'Recent', 76: 'Files you open show up here.', 77: 'Tip of the day', 78: 'Show this screen at startup', 79: 'Opening animation', 80: 'Close',
+  75: 'Recent', 76: 'Files you open show up here.', 77: 'Tip of the day', 79: 'Opening animation', 80: 'Close',
   81: 'Close (Esc)', 82: 'version', 83: 'Language', 84: 'coming soon', 85: 'Variables, call stack and profile, like VisuAlg',
   86: 'Call stack, objects and references (arrows)', 87: 'Call stack and event queue', 88: 'The type of every value while it runs',
   89: 'Objects and references, linked by arrows', 90: 'Full standard library (clang). Memory and pointers view', 91: 'Full standard library (clang). Objects coming soon',

@@ -18,7 +18,6 @@ export const PADRAO = {
   mostrarDicas: true, // dica do dia ao abrir
   abertura: true, // animação de abertura (main/abertura.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
-  telaInicial: true, // tela inicial com a escolha da linguagem (renderer/inicio.js)
   // Assistente de IA (main/ia.js): desligado até o usuário ativar. As chaves ficam à parte, criptografadas.
   ia: { ativo: false, provedor: 'claude', modelos: {}, urls: {}, modo: 'dica' },
   dicaAtual: 0,

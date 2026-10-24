@@ -12,6 +12,8 @@ export { MaquinaCS } from './montar.js'
 export { ErroCS, ExcecaoCS } from './erros.js'
 
 const FATIA = 20000
+const FATIA_MS = 16 // linhas pesadas (laços curtos que fazem muito) também devolvem a vez para a tela
+const agora = () => globalThis.performance?.now() ?? Date.now()
 const imediato = globalThis.setImmediate ?? ((f) => setTimeout(f, 0))
 
 /** Converte o que deu errado (do programa ou do interpretador) em { mensagem, explicacao, linha }. */
@@ -115,6 +117,7 @@ export class SessaoCS {
       this.pendente = undefined
     }
     let nestaFatia = 0
+    const inicioFatia = agora()
     try {
       for (;;) {
         const r = temEnvio ? this.gen.next(envio) : this.gen.next()
@@ -138,7 +141,7 @@ export class SessaoCS {
             return undefined
           }
           nestaFatia += 1
-          if (nestaFatia >= FATIA && this.op.fatias !== false) {
+          if ((nestaFatia >= FATIA || (nestaFatia % 256 === 0 && agora() - inicioFatia > FATIA_MS)) && this.op.fatias !== false) {
             this.descarregar()
             this.rodando = false
             this.agendado = imediato(() => this.rodar())

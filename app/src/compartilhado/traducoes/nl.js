@@ -10,7 +10,7 @@ export default {
   54: '&Taal', 55: '&Help', 56: 'Het MisterALG-&scherm', 57: 'De taal &Portugol', 58: 'Taal&referentie', 59: '&Tip van de dag', 60: '&Gebruiksvoorwaarden en privacy',
   61: '&Over de makers', 62: 'Venster',
   70: 'Leer programmeren door je code te zien draaien.', 71: 'In welke taal wil je programmeren?', 72: 'Beginnen', 73: 'Nieuw programma', 74: 'Openen…',
-  75: 'Recent', 76: 'Bestanden die je opent verschijnen hier.', 77: 'Tip van de dag', 78: 'Dit scherm tonen bij het starten', 79: 'Openingsanimatie', 80: 'Sluiten',
+  75: 'Recent', 76: 'Bestanden die je opent verschijnen hier.', 77: 'Tip van de dag', 79: 'Openingsanimatie', 80: 'Sluiten',
   81: 'Sluiten (Esc)', 82: 'versie', 83: 'Taal', 84: 'binnenkort', 85: 'Variabelen, aanroepstapel en profiel, zoals in VisuAlg',
   86: 'Aanroepstapel, objecten en verwijzingen (pijlen)', 87: 'Aanroepstapel en gebeurteniswachtrij', 88: 'Het type van elke waarde tijdens het uitvoeren',
   89: 'Objecten en verwijzingen, verbonden met pijlen', 90: 'Volledige standaardbibliotheek (clang). Geheugen en pointers', 91: 'Volledige standaardbibliotheek (clang). Objecten binnenkort',

@@ -21,7 +21,7 @@ ls -l /opt/MisterALG/chrome-sandbox
 
 rodar() { # $1 = comando, $2 = porta, $3 = log
   xvfb-run -a --server-args="-screen 0 1366x860x24" bash -c "
-    $1 --remote-debugging-port=$2 > $3 2>&1 &
+    MISTERALG_DADOS=$(mktemp -d) $1 --remote-debugging-port=$2 > $3 2>&1 & # pasta própria: abre direto na IDE, como nos testes locais
     sleep 10
     node scripts/cdp.mjs $2 scripts/fumaca-ide.mjs && node scripts/cdp.mjs $2 scripts/fumaca-temas.mjs
     s=\$?

@@ -10,7 +10,7 @@ export default {
   53: 'C&alendario', 54: '&Lingua', 55: '&Aiuto', 56: 'La &schermata di MisterALG', 57: 'Il &linguaggio Portugol', 58: '&Riferimento del linguaggio', 59: '&Suggerimento del giorno',
   60: '&Termini d’uso e privacy', 61: '&Informazioni sugli autori', 62: 'Finestra',
   70: 'Impara a programmare guardando il codice in esecuzione.', 71: 'In quale linguaggio vuoi programmare?', 72: 'Inizia', 73: 'Nuovo programma', 74: 'Apri…',
-  75: 'Recenti', 76: 'I file che apri compaiono qui.', 77: 'Suggerimento del giorno', 78: 'Mostra questa schermata all’avvio', 79: 'Animazione di apertura', 80: 'Chiudi',
+  75: 'Recenti', 76: 'I file che apri compaiono qui.', 77: 'Suggerimento del giorno', 79: 'Animazione di apertura', 80: 'Chiudi',
   81: 'Chiudi (Esc)', 82: 'versione', 83: 'Lingua', 84: 'in arrivo', 85: 'Variabili, pila delle chiamate e profilo, come in VisuAlg',
   86: 'Pila delle chiamate, oggetti e riferimenti (frecce)', 87: 'Pila delle chiamate e coda degli eventi', 88: 'Il tipo di ogni valore durante l’esecuzione',
   89: 'Oggetti e riferimenti, collegati da frecce', 90: 'Libreria standard completa (clang). Memoria e puntatori', 91: 'Libreria standard completa (clang). Oggetti in arrivo',

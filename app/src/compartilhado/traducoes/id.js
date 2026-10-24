@@ -9,7 +9,7 @@ export default {
   47: '&Pengaturan', 48: '&Tema (warna)', 49: 'Sesuaikan warna kode…', 50: 'Asisten &AI', 51: 'Atur asisten AI…', 52: '&Kalkulator', 53: 'K&alender', 54: '&Bahasa',
   55: '&Bantuan', 56: '&Layar MisterALG', 57: '&Bahasa Portugol', 58: '&Referensi bahasa', 59: '&Tips hari ini', 60: '&Ketentuan penggunaan dan privasi', 61: '&Tentang pembuat', 62: 'Jendela',
   70: 'Belajar memprogram sambil melihat kodemu berjalan.', 71: 'Bahasa apa yang ingin kamu pakai?', 72: 'Mulai', 73: 'Program baru', 74: 'Buka…', 75: 'Terbaru',
-  76: 'Berkas yang kamu buka muncul di sini.', 77: 'Tips hari ini', 78: 'Tampilkan layar ini saat mulai', 79: 'Animasi pembuka', 80: 'Tutup', 81: 'Tutup (Esc)', 82: 'versi',
+  76: 'Berkas yang kamu buka muncul di sini.', 77: 'Tips hari ini', 79: 'Animasi pembuka', 80: 'Tutup', 81: 'Tutup (Esc)', 82: 'versi',
   83: 'Bahasa', 84: 'segera hadir', 85: 'Variabel, tumpukan panggilan, dan profil, seperti di VisuAlg', 86: 'Tumpukan panggilan, objek, dan referensi (panah)',
   87: 'Tumpukan panggilan dan antrean event', 88: 'Tipe setiap nilai saat berjalan', 89: 'Objek dan referensi yang dihubungkan panah', 90: 'Pustaka standar lengkap (clang). Memori dan pointer',
   91: 'Pustaka standar lengkap (clang). Objek segera hadir', 92: 'Halaman yang dihasilkan, langsung', 93: 'Layar awal MisterALG', 94: 'Bahasa', 95: 'Buat program', 96: 'Beranda',

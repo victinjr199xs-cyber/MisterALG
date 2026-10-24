@@ -10,7 +10,7 @@ export default {
   53: 'T&akvim', 54: '&Dil', 55: '&Yardım', 56: 'MisterALG &ekranı', 57: 'Portugol &dili', 58: 'Dil &başvurusu', 59: 'Günün &ipucu', 60: '&Kullanım şartları ve gizlilik',
   61: 'Yazarlar &hakkında', 62: 'Pencere',
   70: 'Kodunun çalışmasını izleyerek programlamayı öğren.', 71: 'Hangi dilde programlamak istiyorsun?', 72: 'Başla', 73: 'Yeni program', 74: 'Aç…',
-  75: 'Son kullanılanlar', 76: 'Açtığın dosyalar burada görünür.', 77: 'Günün ipucu', 78: 'Açılışta bu ekranı göster', 79: 'Açılış animasyonu', 80: 'Kapat',
+  75: 'Son kullanılanlar', 76: 'Açtığın dosyalar burada görünür.', 77: 'Günün ipucu', 79: 'Açılış animasyonu', 80: 'Kapat',
   81: 'Kapat (Esc)', 82: 'sürüm', 83: 'Dil', 84: 'yakında', 85: 'VisuAlg’deki gibi değişkenler, çağrı yığını ve profil',
   86: 'Çağrı yığını, nesneler ve referanslar (oklar)', 87: 'Çağrı yığını ve olay kuyruğu', 88: 'Çalışırken her değerin türü',
   89: 'Oklarla bağlı nesneler ve referanslar', 90: 'Tam standart kütüphane (clang). Bellek ve işaretçiler', 91: 'Tam standart kütüphane (clang). Nesneler yakında',

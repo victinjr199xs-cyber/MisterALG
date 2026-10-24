@@ -20,7 +20,7 @@ export default {
 
   // ---- tela inicial ----
   70: 'Aprenda a programar vendo o código rodar.', 71: 'Em qual linguagem você quer programar?', 72: 'Começar', 73: 'Novo algoritmo',
-  74: 'Abrir…', 75: 'Recentes', 76: 'Os algoritmos que você abrir aparecem aqui.', 77: 'Dica do dia', 78: 'Mostrar esta tela ao abrir',
+  74: 'Abrir…', 75: 'Recentes', 76: 'Os algoritmos que você abrir aparecem aqui.', 77: 'Dica do dia',
   79: 'Animação de abertura', 80: 'Fechar', 81: 'Fechar (Esc)', 82: 'versão', 83: 'Idioma', 84: 'em breve',
   85: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', 86: 'Pilha de chamadas, objetos e referências (setas)',
   87: 'Pilha de chamadas e fila de eventos', 88: 'O tipo de cada valor durante a execução', 89: 'Objetos e referências, ligados por setas',

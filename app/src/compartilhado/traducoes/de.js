@@ -10,7 +10,7 @@ export default {
   54: '&Sprache', 55: '&Hilfe', 56: 'Der MisterALG-&Bildschirm', 57: 'Die Sprache &Portugol', 58: 'Sprach&referenz', 59: '&Tipp des Tages',
   60: '&Nutzungsbedingungen und Datenschutz', 61: '&Über die Autoren', 62: 'Fenster',
   70: 'Programmieren lernen, indem du deinen Code laufen siehst.', 71: 'In welcher Sprache möchtest du programmieren?', 72: 'Loslegen', 73: 'Neues Programm', 74: 'Öffnen…',
-  75: 'Zuletzt verwendet', 76: 'Geöffnete Dateien erscheinen hier.', 77: 'Tipp des Tages', 78: 'Diesen Bildschirm beim Start zeigen', 79: 'Startanimation', 80: 'Schließen',
+  75: 'Zuletzt verwendet', 76: 'Geöffnete Dateien erscheinen hier.', 77: 'Tipp des Tages', 79: 'Startanimation', 80: 'Schließen',
   81: 'Schließen (Esc)', 82: 'Version', 83: 'Sprache', 84: 'bald verfügbar', 85: 'Variablen, Aufrufstapel und Profil, wie in VisuAlg',
   86: 'Aufrufstapel, Objekte und Referenzen (Pfeile)', 87: 'Aufrufstapel und Ereigniswarteschlange', 88: 'Der Typ jedes Werts während der Ausführung',
   89: 'Objekte und Referenzen, mit Pfeilen verbunden', 90: 'Vollständige Standardbibliothek (clang). Speicher und Zeiger', 91: 'Vollständige Standardbibliothek (clang). Objekte bald',

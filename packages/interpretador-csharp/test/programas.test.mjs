@@ -15,8 +15,8 @@ for (const arquivo of readdirSync(pasta).filter((f) => f.endsWith('.cs')).sort()
   if (!existsSync(pasta + esperado)) continue
   test(arquivo, async () => {
     const r = await rodar(readFileSync(pasta + arquivo, 'utf8'))
-    const a = r.saida.split('\n')
-    const b = readFileSync(pasta + esperado, 'utf8').split('\n')
+    const a = r.saida.split(/\r?\n/)
+    const b = readFileSync(pasta + esperado, 'utf8').split(/\r?\n/) // no Windows o git pode trazer os .txt com CRLF
     const diferencas = []
     for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
       if (a[i] !== b[i]) diferencas.push(`  linha ${i + 1}: obtido ${JSON.stringify(a[i])}  esperado ${JSON.stringify(b[i])}`)

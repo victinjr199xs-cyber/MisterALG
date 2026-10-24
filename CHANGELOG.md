@@ -3,6 +3,26 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.7.1] — 2026-10-23
+
+Correções da auditoria da 1.7.0.
+
+### Corrigido
+
+- **Instaladores de Windows e Linux** voltam a ser gerados: o teste do C# lia as saídas esperadas com
+  CRLF no Windows do GitHub, e o teste do Ubuntu esperava a IDE onde agora abre a tela inicial.
+- **Recuperar algoritmo** depois de o app fechar de repente voltou a funcionar (o arquivo de
+  recuperação era apagado ao abrir o app).
+- **Duplo clique num `.alg`** no Windows e no Linux abre o arquivo. Com o app já aberto, o arquivo vai
+  para a mesma janela (uma cópia só do app).
+- Trocar o idioma ou voltar para a tela inicial **encerra os programas em execução** e não mostra mais
+  o aviso falso de "não foi terminado corretamente".
+- Laços pesados em **C#** não travam mais a tela: a execução devolve a vez a cada 16 ms.
+
+### Removido
+
+- A opção "Mostrar esta tela ao abrir", que deixou de existir quando a tela inicial virou obrigatória.
+
 ## [1.7.0] — 2026-10-23
 
 A versão que transforma o MisterALG de "VisuAlg para Mac e Linux" em um ambiente para aprender
@@ -73,6 +93,7 @@ A versão que transforma o MisterALG de "VisuAlg para Mac e Linux" em um ambient
 
 - Botão de temas, cores do código configuráveis, exportar para Pascal, listas e dica do dia. (`f2bd11d`)
 
+[1.7.1]: https://github.com/victinjr199xs-cyber/MisterALG/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/victinjr199xs-cyber/MisterALG/compare/b8f4fd7...v1.7.0
 [1.6.1]: https://github.com/victinjr199xs-cyber/MisterALG/releases/tag/v1.6.1
 [1.6.0]: https://github.com/victinjr199xs-cyber/MisterALG/releases/tag/v1.6.0
