@@ -11,9 +11,10 @@ import { DictCS, ConjuntoCS, FilaCS, LigadaCS, ListaCS, NoCS, PilhaCS, Prioridad
 import { CronometroCS, DataCS, DATETIME, STOPWATCH, TIMESPAN, TempoCS } from './datas.js'
 import { AgrupamentoCS, ENUMERABLE, LINQ, OrdenadaCS, SeqCS } from './linq.js'
 import { AleatorioCS, CONVERT, MATH, METODOS_NUMERO, RANDOM, tipoNumericoNativo } from './numeros.js'
+import { METODOS_SPAN, PROPS_SPAN, SpanCS } from './span.js'
 import { REGEX, REGEXOPTIONS, MatchCS, GrupoCS, ColecaoMatchesCS, RegexCS } from './regex.js'
 import {
-  BIGINTEGER, BigCS, CONSOLE, CULTUREINFO, CulturaCS, DIRECTORY, ENCODING, ENUM, ENVIRONMENT, EscritorCS, FILE, FluxoConsoleCS, GC, GUID, GuidCS,
+  BIGINTEGER, BITCONVERTER, BigCS, CONSOLE, CULTUREINFO, CulturaCS, DIRECTORY, ENCODING, ENUM, ENVIRONMENT, EscritorCS, FILE, FluxoConsoleCS, GC, GUID, GuidCS,
   LeitorCS, PATH, STREAMREADER, STREAMWRITER, TASK, TUPLE, TarefaCS, THREAD, ThreadAtualCS, TeclaCS, TipoCS, esperar,
 } from './sistema.js'
 import { BOOL, CHAR, METODOS_BOOL, METODOS_CHAR, METODOS_STRING, PROPS_STRING, SbCS, STRING, STRINGBUILDER } from './texto.js'
@@ -97,6 +98,7 @@ export class Biblioteca {
     r(['Math', 'MathF'], MATH)
     r(['Convert'], CONVERT)
     r(['Encoding'], ENCODING)
+    r(['BitConverter'], BITCONVERTER)
     r(['string', 'String'], STRING)
     r(['char', 'Char'], CHAR)
     r(['bool', 'Boolean'], BOOL)
@@ -184,6 +186,7 @@ export class Biblioteca {
     if (typeof v === 'number' || typeof v === 'bigint' || v instanceof Dbl || v instanceof Flt || v instanceof Dec || v instanceof Num) return { metodos: METODOS_NUMERO }
     if (v instanceof Chr) return { metodos: METODOS_CHAR }
     if (typeof v === 'boolean') return { metodos: METODOS_BOOL }
+    if (v instanceof SpanCS) return { metodos: METODOS_SPAN, fn: PROPS_SPAN }
     if (v instanceof Arr) return { metodos: METODOS_ARRAY, fn: PROPS_ARRAY }
     if (v instanceof ValorEnum) return { metodos: METODOS_ENUM }
     if (v instanceof Tupla) return { metodos: METODOS_TUPLA }
@@ -310,7 +313,9 @@ export class Biblioteca {
       case 'Stopwatch': return v instanceof CronometroCS
       case 'Task': return v instanceof TarefaCS
       case 'BigInteger': return v instanceof BigCS
-      case 'Array': return v instanceof Arr
+      case 'Array': return v instanceof Arr && !(v instanceof SpanCS)
+      case 'Span': return v instanceof SpanCS && !v.ro
+      case 'ReadOnlySpan': return v instanceof SpanCS
       case 'Func': case 'Action': case 'Predicate': case 'Comparison': case 'Delegate': case 'EventHandler': return !!v?.ehFunc || v instanceof Multicast
       case 'Tuple': case 'ValueTuple': return v instanceof Tupla
       case 'ValueType': return ehNumero(v) || typeof v === 'boolean' || v instanceof ValorEnum || v instanceof Tupla
@@ -325,12 +330,20 @@ export class Biblioteca {
 
   combinaNativo(v, t) {
     const { nome } = partesGenericas(semNulo(t))
+    // array e texto convertem sozinhos para Span/ReadOnlySpan (o texto só para ReadOnlySpan)
+    if (nome === 'Span' || nome === 'ReadOnlySpan') return this.ehTipoNativo(v, nome) ? 4 : v instanceof Arr || (nome === 'ReadOnlySpan' && typeof v === 'string') ? 3 : -1
     const conhecidos = ['List', 'IList', 'ICollection', 'IEnumerable', 'Dictionary', 'IDictionary', 'HashSet', 'Queue', 'Stack', 'LinkedList', 'StringBuilder', 'DateTime', 'TimeSpan', 'Random', 'Guid', 'Task', 'BigInteger', 'Array', 'Func', 'Action', 'Predicate', 'Comparison', 'Delegate', 'Tuple', 'ValueTuple', 'ValueType', 'IComparable', 'IReadOnlyList', 'ISet', 'SortedSet', 'SortedDictionary', 'Regex', 'Type', 'CultureInfo', 'Stopwatch', 'EventHandler']
     if (!conhecidos.includes(nome)) return undefined
     return this.ehTipoNativo(v, nome) ? 4 : -1
   }
 
   coagirNativo(v, t) {
+    const { nome } = partesGenericas(t)
+    if ((nome === 'Span' || nome === 'ReadOnlySpan') && (v instanceof Arr || typeof v === 'string')) {
+      const ro = nome === 'ReadOnlySpan'
+      if (v instanceof SpanCS && v.ro === ro) return v
+      return typeof v === 'string' ? SpanCS.deTexto(v) : SpanCS.de(v, 0, v.itens.length, ro)
+    }
     if (t === 'BigInteger' && ehNumero(v)) return new BigCS(BigInt(Math.trunc(Number(tipoNumerico(v) === 'long' ? v : v instanceof Dbl || v instanceof Flt ? v.v : v instanceof Dec ? Number(v.u) / 10 ** v.s : v.v ?? v.c ?? v))))
     return undefined
   }
@@ -346,6 +359,8 @@ export class Biblioteca {
   novaTupla(itens, nomes = null) { return new Tupla(itens, nomes) }
 
   novoArray(tipo, itens) { return new Arr(tipo, itens) }
+
+  novoSpan(arr, ro = false) { return SpanCS.de(arr, 0, arr.itens.length, ro) }
 
   criarTarefa(v) { return new TarefaCS(v) }
 

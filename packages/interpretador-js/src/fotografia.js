@@ -6,6 +6,7 @@ import { GERADOR, INFO, nomeDaFuncao } from './runtime.js'
 
 const MAX_OBJETOS = 80
 const MAX_ITENS = 40
+const MAX_QUADROS = 300
 
 function tipoReal(v) {
   if (v === null) return 'null'
@@ -78,7 +79,9 @@ export function fotografar(rt, tiposDeclarados = {}) {
       .map(([nome, v]) => ({ nome, tipoDeclarado: tiposDeclarados[nome] ?? null, valor: descrever(v) }))
   }
 
-  const quadros = rt.pilha.map((q) => ({ nome: q.nome, linha: q.linha, variaveis: variaveis(q) }))
+  // (recursão funda: dezenas de milhares de quadros não cabem na tela nem no postMessage; ficam o de baixo e os de cima)
+  const visiveis = rt.pilha.length <= MAX_QUADROS ? rt.pilha : [rt.pilha[0], ...rt.pilha.slice(-(MAX_QUADROS - 1))]
+  const quadros = visiveis.map((q) => ({ nome: q.nome, linha: q.linha, variaveis: variaveis(q) }))
   // Depois do programa principal (callbacks de setTimeout, then...), as globais continuam valendo.
   if (rt.pilha[0] !== rt.principal) quadros.unshift({ nome: '(globais)', linha: rt.principal.linha, variaveis: variaveis(rt.principal), global: true })
   while (fila.length) objetos.push(expandir(fila.shift()))

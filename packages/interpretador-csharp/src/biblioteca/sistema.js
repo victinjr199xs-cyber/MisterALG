@@ -3,9 +3,9 @@
 import { CULTURAS } from '../formatar.js'
 import { Multicast } from '../operadores.js'
 import { Suspende } from '../refs.js'
-import { Arr, Chr, Dbl, Num, Objeto, Tupla, ValorEnum, comoNumero, converterNumero, ehNumero } from '../valores.js'
+import { Arr, Chr, Dbl, Flt, Num, Objeto, Tupla, ValorEnum, comoNumero, converterNumero, ehNumero } from '../valores.js'
 import { nomeCompleto, semNulo } from '../tipos.js'
-import { ExcecaoCS } from '../erros.js'
+import { ErroCS, ExcecaoCS } from '../erros.js'
 import { ListaCS } from './colecoes.js'
 import { SeqCS } from './linq.js'
 
@@ -158,6 +158,7 @@ export const CONSOLE = {
 
 export const ENVIRONMENT = {
   nome: 'Environment',
+  // "\n" de propósito: o console do MisterALG só usa "\n". No Windows o .NET dá "\r\n" (só muda se o programa comparar com "\r\n").
   const: { NewLine: '\n' },
   props: {
     ProcessorCount: { get: () => 4 },
@@ -407,24 +408,182 @@ export const CULTUREINFO = {
   estatico: { GetCultureInfo: (m, [n]) => new CulturaCS(culturaPorNome(m, n)) },
 }
 
-// Encoding.UTF8 (só UTF-8): GetBytes, GetString, GetByteCount
+// Encoding.UTF8/ASCII/Unicode (UTF-16LE)/BigEndianUnicode/UTF32/Latin1: GetBytes, GetString, GetByteCount, GetChars
+const pontos = (s) => [...String(s)].map((c) => c.codePointAt(0))
+const unidades = (s) => Array.from({ length: String(s).length }, (_, i) => String(s).charCodeAt(i)) // (um '?' por char de 16 bits, como o .NET)
+const FFFD = 0xfffd
+const ehSurrogato = (cp) => cp >= 0xd800 && cp <= 0xdfff
+const unidades16 = (s, be) => {
+  const r = []
+  const u = String(s)
+  for (let i = 0; i < u.length; i += 1) {
+    let c = u.charCodeAt(i)
+    if (c >= 0xd800 && c <= 0xdbff && u.charCodeAt(i + 1) >= 0xdc00 && u.charCodeAt(i + 1) <= 0xdfff) { r.push(...par16(c, be)); i += 1; c = u.charCodeAt(i) }
+    else if (ehSurrogato(c)) c = FFFD
+    r.push(...par16(c, be))
+  }
+  return r
+}
+const par16 = (c, be) => (be ? [c >> 8, c & 255] : [c & 255, c >> 8])
+const CODIFICACOES = {
+  utf8: {
+    classe: 'UTF8EncodingSealed', texto: 'System.Text.UTF8Encoding+UTF8EncodingSealed', web: 'utf-8', pagina: 65001, nome: 'Unicode (UTF-8)',
+    codificar: (s) => [...new TextEncoder().encode(String(s))],
+    decodificar: (b) => new TextDecoder('utf-8', { ignoreBOM: true }).decode(Uint8Array.from(b)),
+  },
+  ascii: {
+    classe: 'ASCIIEncodingSealed', texto: 'System.Text.ASCIIEncodingSealed', web: 'us-ascii', pagina: 20127, nome: 'US-ASCII',
+    codificar: (s) => unidades(s).map((c) => (c < 128 ? c : 63)),
+    decodificar: (b) => b.map((x) => (x < 128 ? String.fromCharCode(x) : '?')).join(''),
+  },
+  latin1: {
+    classe: 'Latin1EncodingSealed', texto: 'System.Text.Latin1Encoding+Latin1EncodingSealed', web: 'iso-8859-1', pagina: 28591, nome: 'Western European (ISO)',
+    codificar: (s) => unidades(s).map((c) => (c < 256 ? c : 63)),
+    decodificar: (b) => b.map((x) => String.fromCharCode(x)).join(''),
+  },
+  utf16: {
+    classe: 'UnicodeEncoding', texto: 'System.Text.UnicodeEncoding', web: 'utf-16', pagina: 1200, nome: 'Unicode',
+    codificar: (s) => unidades16(s, false),
+    decodificar: (b) => decodificar16(b, false),
+  },
+  utf16be: {
+    classe: 'UnicodeEncoding', texto: 'System.Text.UnicodeEncoding', web: 'utf-16BE', pagina: 1201, nome: 'Unicode (Big-Endian)',
+    codificar: (s) => unidades16(s, true),
+    decodificar: (b) => decodificar16(b, true),
+  },
+  utf32: {
+    classe: 'UTF32Encoding', texto: 'System.Text.UTF32Encoding', web: 'utf-32', pagina: 12000, nome: 'Unicode (UTF-32)',
+    codificar: (s) => pontos(s).flatMap((c) => { const v = ehSurrogato(c) ? FFFD : c; return [v & 255, (v >> 8) & 255, (v >> 16) & 255, 0] }),
+    decodificar(b) {
+      let r = ''
+      for (let i = 0; i + 4 <= b.length; i += 4) {
+        const c = (b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24)) >>> 0
+        r += c > 0x10ffff || ehSurrogato(c) ? '�' : String.fromCodePoint(c)
+      }
+      return b.length % 4 ? r + '�' : r
+    },
+  },
+}
+function decodificar16(b, be) {
+  let r = ''
+  for (let i = 0; i + 2 <= b.length; i += 2) r += String.fromCharCode(be ? (b[i] << 8) | b[i + 1] : (b[i + 1] << 8) | b[i])
+  r = r.replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '�')
+  return b.length % 2 ? r + '�' : r
+}
 class CodificacaoCS {
-  nomeCS() { return 'UTF8Encoding' }
+  constructor(c) { this.c = c }
 
-  paraTexto() { return 'System.Text.UTF8Encoding' }
+  nomeCS() { return this.c.classe }
+
+  paraTexto() { return this.c.texto }
 }
-const bytesUtf8 = (m, s) => m.bib.novoArray('byte', [...new TextEncoder().encode(String(s))].map((b) => new Num('byte', b)))
+const doTexto = (m, s, ini, n) => {
+  if (s === null || s === undefined) throw m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 'chars')")
+  const t = typeof s === 'string' ? s : s.itens.map((c) => String.fromCharCode(c.c)).join('')
+  return ini === undefined ? t : t.slice(ini, ini + n)
+}
+const bytesDe = (m, a, ini, n) => {
+  if (a === null || a === undefined) throw m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 'bytes')")
+  return (ini === undefined ? a.itens : a.itens.slice(ini, ini + n)).map((x) => comoNumero(x))
+}
+const paraArrayDeBytes = (m, lista) => m.bib.novoArray('byte', lista.map((b) => new Num('byte', b)))
 CodificacaoCS.METODOS = {
-  GetBytes: (m, e, [s]) => bytesUtf8(m, typeof s === 'string' ? s : s.itens.map((c) => String.fromCharCode(c.c)).join('')),
-  GetString: (m, e, [a, ini, n]) => new TextDecoder().decode(Uint8Array.from((ini === undefined ? a.itens : a.itens.slice(ini, ini + n)).map((x) => comoNumero(x)))),
-  GetByteCount: (m, e, [s]) => new TextEncoder().encode(typeof s === 'string' ? s : s.itens.map((c) => String.fromCharCode(c.c)).join('')).length,
+  GetBytes: (m, e, [s, i, n]) => paraArrayDeBytes(m, e.c.codificar(doTexto(m, s, typeof s === 'string' ? undefined : i, n))),
+  GetString: (m, e, [a, ini, n]) => e.c.decodificar(bytesDe(m, a, ini, n)),
+  GetByteCount: (m, e, [s, i, n]) => e.c.codificar(doTexto(m, s, typeof s === 'string' ? undefined : i, n)).length,
+  GetChars: (m, e, [a, ini, n]) => m.bib.novoArray('char', [...e.c.decodificar(bytesDe(m, a, ini, n))].map((c) => new Chr(c.charCodeAt(0)))),
+  GetCharCount: (m, e, [a, ini, n]) => e.c.decodificar(bytesDe(m, a, ini, n)).length,
 }
-CodificacaoCS.PROPS = { }
+CodificacaoCS.PROPS = {
+  WebName: { get: (m, e) => e.c.web },
+  CodePage: { get: (m, e) => e.c.pagina },
+  EncodingName: { get: (m, e) => e.c.nome },
+}
+const ENCODINGS = Object.fromEntries(Object.entries(CODIFICACOES).map(([k, c]) => [k, new CodificacaoCS(c)]))
+const POR_NOME = { 'utf-8': 'utf8', utf8: 'utf8', 'us-ascii': 'ascii', ascii: 'ascii', 'iso-8859-1': 'latin1', latin1: 'latin1', 'utf-16': 'utf16', utf16: 'utf16', unicode: 'utf16', unicodefffe: 'utf16be', 'utf-16be': 'utf16be', 'utf-32': 'utf32', utf32: 'utf32' }
 export const ENCODING = {
   nome: 'Encoding',
   const: {},
-  props: { UTF8: { get: () => new CodificacaoCS() } },
-  estatico: {},
+  props: {
+    UTF8: { get: () => ENCODINGS.utf8 },
+    ASCII: { get: () => ENCODINGS.ascii },
+    Latin1: { get: () => ENCODINGS.latin1 },
+    Unicode: { get: () => ENCODINGS.utf16 },
+    BigEndianUnicode: { get: () => ENCODINGS.utf16be },
+    UTF32: { get: () => ENCODINGS.utf32 },
+    Default: { get: () => ENCODINGS.utf8 },
+  },
+  estatico: {
+    GetEncoding(m, [n]) {
+      const e = typeof n === 'string' ? ENCODINGS[POR_NOME[n.toLowerCase()]] : Object.values(ENCODINGS).find((x) => x.c.pagina === n)
+      if (!e) throw m.excecao('ArgumentException', `${typeof n === 'string' ? `'${n}' is not a supported encoding name.` : `Encoding ${n} data could not be found.`}`)
+      return e
+    },
+  },
+}
+
+// BitConverter: bytes em little-endian, como no .NET (x86/x64)
+const TAMANHO = { byte: 1, sbyte: 1, short: 2, ushort: 2, int: 4, uint: 4, long: 8, ulong: 8, float: 4, double: 8, char: 2, bool: 1 }
+function visao(n) { return new DataView(new ArrayBuffer(n)) }
+function bytesDeValor(m, v) {
+  if (typeof v === 'boolean') return [v ? 1 : 0]
+  const k = typeof v === 'number' ? 'int' : typeof v === 'bigint' ? 'long' : v instanceof Dbl ? 'double' : v instanceof Chr ? 'char' : v instanceof Num ? v.k : v instanceof Flt ? 'float' : null
+  if (!k) throw new ErroCS(`BitConverter.GetBytes não aceita ${m.nomeDoTipoDe(v)}`, m.linhaAtual)
+  const d = visao(TAMANHO[k])
+  const n = v instanceof Dbl || v instanceof Num || v instanceof Chr || v instanceof Flt ? (v.v ?? v.c) : v
+  switch (k) {
+    case 'sbyte': d.setInt8(0, n); break
+    case 'byte': d.setUint8(0, n); break
+    case 'short': d.setInt16(0, n, true); break
+    case 'ushort': d.setUint16(0, n, true); break
+    case 'char': d.setUint16(0, n, true); break
+    case 'int': d.setInt32(0, n, true); break
+    case 'uint': d.setUint32(0, n, true); break
+    case 'long': d.setBigInt64(0, n, true); break
+    case 'ulong': d.setBigUint64(0, n, true); break
+    case 'float': d.setFloat32(0, n, true); break
+    default: d.setFloat64(0, n, true)
+  }
+  return [...new Uint8Array(d.buffer)]
+}
+function lerBytes(m, a, ini, tipo) {
+  if (a === null || a === undefined) throw m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 'value')")
+  const t = a.itens.length
+  const tam = TAMANHO[tipo]
+  if (ini < 0 || ini >= t) throw m.excecao('ArgumentOutOfRangeException', "Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'startIndex')")
+  if (ini > t - tam) throw m.excecao('ArgumentException', 'Destination array is not long enough to copy all the items in the collection. Check array index and length.')
+  const d = visao(tam)
+  for (let i = 0; i < tam; i += 1) d.setUint8(i, comoNumero(a.itens[ini + i]))
+  return d
+}
+const hex2 = (b) => b.toString(16).padStart(2, '0').toUpperCase()
+export const BITCONVERTER = {
+  nome: 'BitConverter',
+  const: { IsLittleEndian: true },
+  estatico: {
+    GetBytes: (m, [v]) => paraArrayDeBytes(m, bytesDeValor(m, v)),
+    ToInt32: (m, [a, i = 0]) => lerBytes(m, a, i, 'int').getInt32(0, true),
+    ToInt64: (m, [a, i = 0]) => lerBytes(m, a, i, 'long').getBigInt64(0, true),
+    ToInt16: (m, [a, i = 0]) => new Num('short', lerBytes(m, a, i, 'short').getInt16(0, true)),
+    ToUInt16: (m, [a, i = 0]) => new Num('ushort', lerBytes(m, a, i, 'ushort').getUint16(0, true)),
+    ToUInt32: (m, [a, i = 0]) => new Num('uint', lerBytes(m, a, i, 'uint').getUint32(0, true)),
+    ToUInt64: (m, [a, i = 0]) => new Num('ulong', lerBytes(m, a, i, 'ulong').getBigUint64(0, true)),
+    ToSingle: (m, [a, i = 0]) => new Flt(lerBytes(m, a, i, 'float').getFloat32(0, true)),
+    ToDouble: (m, [a, i = 0]) => new Dbl(lerBytes(m, a, i, 'double').getFloat64(0, true)),
+    ToBoolean: (m, [a, i = 0]) => lerBytes(m, a, i, 'bool').getUint8(0) !== 0,
+    ToChar: (m, [a, i = 0]) => new Chr(lerBytes(m, a, i, 'char').getUint16(0, true)),
+    DoubleToInt64Bits(m, [v]) { const d = visao(8); d.setFloat64(0, comoNumero(v)); return d.getBigInt64(0) },
+    Int64BitsToDouble(m, [v]) { const d = visao(8); d.setBigInt64(0, BigInt(v)); return new Dbl(d.getFloat64(0)) },
+    SingleToInt32Bits(m, [v]) { const d = visao(4); d.setFloat32(0, comoNumero(v)); return d.getInt32(0) },
+    Int32BitsToSingle(m, [v]) { const d = visao(4); d.setInt32(0, v); return new Flt(d.getFloat32(0)) },
+    ToString(m, [a, ini = 0, n]) {
+      if (a === null || a === undefined) throw m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 'value')")
+      if (ini < 0 || ini > a.itens.length || (ini === a.itens.length && a.itens.length > 0)) throw m.excecao('ArgumentOutOfRangeException', "Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'startIndex')")
+      const fim = n === undefined ? a.itens.length : ini + n
+      if (n !== undefined && (n < 0 || fim > a.itens.length)) throw m.excecao('ArgumentOutOfRangeException', 'Index and length must refer to a location within the string. (Parameter \'length\')')
+      return a.itens.slice(ini, fim).map((x) => hex2(comoNumero(x))).join('-')
+    },
+  },
 }
 
 // typeof(X) e x.GetType()

@@ -4,7 +4,8 @@ import { ErroCS, ExcecaoCS } from './erros.js'
 import { FuncGrupo, FuncMetodo, FuncNativa, Lambda } from './funcoes.js'
 import { Amb, IteradorUsuario, Quadro } from './maquina.js'
 import { Multicast, compararNumeros } from './operadores.js'
-import { Indice, Intervalo, NsRef, Suspende, TipoRef } from './refs.js'
+import { SpanCS } from './biblioteca/span.js'
+import { Indice, Intervalo, NovoPendente, NsRef, Suspende, TipoRef } from './refs.js'
 import { elementoDe, ehArray, nomeTipo, partesGenericas, semNulo } from './tipos.js'
 import { Arr, Chr, Objeto, Ref, RefCampo, RefElem, Tupla, ValorEnum, comoNumero, ehNumero, tipoNumerico } from './valores.js'
 
@@ -225,7 +226,7 @@ export const invocacao = {
   // ---- argumentos --------------------------------------------------------------------------------------------
 
   /** Os argumentos da chamada: { valores, nomeados } (ref/out viram Ref). */
-  *avalArgumentos(lista, amb) {
+  *avalArgumentos(lista, amb, aceitaPendente = false) {
     const valores = []
     const nomeados = new Map()
     for (const a of lista?.f ?? []) {
@@ -235,11 +236,34 @@ export const invocacao = {
       const expr = a.f[a.f.length - 1]
       let v
       if (modo === 'ref' || modo === 'out') v = yield* this.avalRefArg(expr, amb)
+      else if (aceitaPendente && expr.t === 'implicit_object_creation_expression') v = new NovoPendente(expr, amb) // Mostra(new("Ana", 3))
       else v = yield* this.aval(expr, amb)
       if (nc) nomeados.set(nc.f[0].x, v)
       else valores.push(v)
     }
     return { valores, nomeados }
+  },
+
+  /** Cria os `new()` pendentes com o tipo do parâmetro escolhido (ou, para a biblioteca, com o tipo dos itens da coleção). */
+  *resolverPendentes(args, tipoDe) {
+    const r = []
+    for (let i = 0; i < args.length; i += 1) {
+      const a = args[i]
+      r.push(a instanceof NovoPendente ? yield* this.avalComTipo(a.no, a.amb, tipoDe(i)) : a)
+    }
+    return r
+  },
+
+  *pendentesParaMetodo(md, args) {
+    return yield* this.resolverPendentes(args, (i) => {
+      const p = md.params[Math.min(i, md.params.length - 1)]
+      return p?.ehParams ? elementoDe(p.tipo) : p?.tipo
+    })
+  },
+
+  *pendentesNativos(args, alvo) {
+    if (!args.some((a) => a instanceof NovoPendente)) return args
+    return yield* this.resolverPendentes(args, (i) => (i === 0 ? alvo?.tipoK ?? alvo?.tipoElem : alvo?.tipoV ?? alvo?.tipoElem))
   },
 
   *avalRefArg(expr, amb) {
@@ -318,8 +342,8 @@ export const invocacao = {
   *chamarPorNome(nome, targs, lista, amb, n) {
     this.linhaAtual = n.l
     const ref = amb.buscar(nome)
-    const { valores, nomeados } = yield* this.avalArgumentos(lista, amb)
-    if (ref && (ref.v?.ehFunc || ref.v instanceof Multicast)) return yield* this.chamarFuncaoGen(ref.v, valores)
+    let { valores, nomeados } = yield* this.avalArgumentos(lista, amb, true)
+    if (ref && (ref.v?.ehFunc || ref.v instanceof Multicast)) return yield* this.chamarFuncaoGen(ref.v, yield* this.pendentesNativos(valores, null))
     const ctx = amb.ctx
     const candidatos = []
     let este = ctx.este
@@ -328,6 +352,7 @@ export const invocacao = {
       const ms = this.metodosDe(c, nome)
       for (const m of ms) if (!candidatos.includes(m)) candidatos.push(m)
     }
+    if (!candidatos.length) valores = yield* this.pendentesNativos(valores, null)
     if (candidatos.length) {
       const md = this.escolherSobrecarga(candidatos, valores, nomeados)
       if (!md) throw this.erroSobrecarga(nome, candidatos, valores, n)
@@ -394,12 +419,12 @@ export const invocacao = {
     if (alvo.t === 'base_expression') {
       const este = amb.ctx.este
       const base = amb.ctx.cls.base
-      const { valores, nomeados } = yield* this.avalArgumentos(lista, amb)
+      const { valores, nomeados } = yield* this.avalArgumentos(lista, amb, true)
       const ms = base ? this.metodosDe(base, nome) : []
       const md = ms.length ? this.escolherSobrecarga(ms, valores, nomeados) : null
       if (!md) {
         // base.ToString(), base.Equals(...) da classe Object
-        return yield* this.esperarNativo(this.bib.chamarObjeto(this, este, nome, valores, true))
+        return yield* this.esperarNativo(this.bib.chamarObjeto(this, este, nome, yield* this.pendentesNativos(valores, null), true))
       }
       return yield* this.chamarMetodo(md, este, this.reordenar(md, valores, nomeados), md.cls)
     }
@@ -439,7 +464,8 @@ export const invocacao = {
 
   /** valor.nome(args): despacha pelo tipo do valor. */
   *chamarEmValor(v, nome, targs, lista, amb, n) {
-    const { valores, nomeados } = yield* this.avalArgumentos(lista, amb)
+    let { valores, nomeados } = yield* this.avalArgumentos(lista, amb, true)
+    if (!(v instanceof Objeto) && !(v instanceof TipoRef && v.def)) valores = yield* this.pendentesNativos(valores, v)
     if (nome === 'GetValueOrDefault' && !(v instanceof Objeto)) return v ?? valores[0] ?? 0
     if (v === null || v === undefined) throw this.excecao('NullReferenceException', 'Object reference not set to an instance of an object.')
     if (v instanceof TipoRef) {
@@ -554,6 +580,7 @@ export const invocacao = {
     if (args.length === 1 && (args[0] instanceof Intervalo)) {
       const { inicio, tamanho } = args[0].em(arr.itens.length)
       if (inicio < 0 || tamanho < 0 || inicio + tamanho > arr.itens.length) throw this.excecao('ArgumentOutOfRangeException', 'Specified argument was out of the range of valid values.')
+      if (arr instanceof SpanCS) return SpanCS.de(arr, inicio, tamanho, arr.ro) // (span[1..3] continua sendo janela do mesmo array)
       return new Arr(arr.tipoElem, arr.itens.slice(inicio, inicio + tamanho))
     }
     const i = this.posicaoNoArray(arr, args)
@@ -688,8 +715,9 @@ export const invocacao = {
   *criarObjeto(tipoStr, tipoNo, argsNo, initNo, amb) {
     const { nome, args: targs } = partesGenericas(tipoStr)
     const targ = targs
-    const { valores, nomeados } = yield* this.avalArgumentos(argsNo, amb)
+    const { valores: valoresAv, nomeados } = yield* this.avalArgumentos(argsNo, amb, true)
     const def = this.buscarClasse(nome)
+    const valores = def ? valoresAv : yield* this.pendentesNativos(valoresAv, null)
     if (def) {
       if (def.tipo === 'delegate') return valores[0]
       const o = yield* this.instanciar(def, valores, nomeados)
@@ -747,7 +775,7 @@ export const invocacao = {
     if (!ctor) {
       if (def.recordParams) {
         const ps = def.recordParams
-        const pos = this.reordenar({ params: ps, nome: def.nome }, args, nomeados)
+        const pos = yield* this.pendentesParaMetodo({ params: ps }, this.reordenar({ params: ps, nome: def.nome }, args, nomeados))
         const proprios = def.base?.recordParams ? ps.slice(def.base.recordParams.length) : ps
         const doBase = def.base?.recordParams ? ps.slice(0, def.base.recordParams.length) : []
         if (def.base) yield* this.construir(o, def.base, doBase.length ? pos.slice(0, doBase.length) : [], null)
@@ -767,7 +795,7 @@ export const invocacao = {
     }
     const ctx = { este: o, cls: def, quadro: null, metodo: { ...ctor, tipoRetorno: 'void' } }
     const amb = new Amb(null, ctx)
-    yield* this.ligarParametros(ctor, amb, this.reordenar(ctor, args, nomeados))
+    yield* this.ligarParametros(ctor, amb, yield* this.pendentesParaMetodo(ctor, this.reordenar(ctor, args, nomeados)))
     const quadro = new Quadro(`${def.nome}.ctor`, amb, ctor.linha)
     ctx.quadro = quadro
     if (this.pilha.length >= 600) throw this.excecao('InsufficientExecutionStackException', 'Stack overflow (muitas chamadas uma dentro da outra — recursão infinita?)')

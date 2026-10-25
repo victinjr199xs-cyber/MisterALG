@@ -108,5 +108,45 @@
   "saida": "len=4 h>>>24=255\ncauda=2 soma=7 sh=1\nOlá\nola \"cru\"?!\n",
   "codigo": 0,
   "erro": null
+ },
+ "23-padroes-lista-subpadrao": {
+  "saida": "um e dois-tres\nsegundo=2\nvazio\nlongo 9 4\nsegundo=8\noutro\nTrue\nmeio=bb\na2\nTrue\nFalse\nTrue\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "24-u8-cru": {
+  "saida": "3\n97,98,99\n10\n2\n111 2\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "25-encoding-base64": {
+  "saida": "4F-6C-C3-A1-2C-20-4D-75-6E-64-6F-20-E2-82-AC | 15 | Olá, Mundo €\n4F-6C-3F-2C-20-4D-75-6E-64-6F-20-3F | 12 | Ol?, Mundo ?\n4F-00-6C-00-E1-00-2C-00-20-00-4D-00-75-00-6E-00-64-00-6F-00-20-00-AC-20 | 24 | Olá, Mundo €\n4F-00-00-00-6C-00-00-00-E1-00-00-00-2C-00-00-00-20-00-00-00-4D-00-00-00-75-00-00-00-6E-00-00-00-64-00-00-00-6F-00-00-00-20-00-00-00-AC-20-00-00 | 48 | Olá, Mundo €\n4F-6C-E1-2C-20-4D-75-6E-64-6F-20-3F | 12 | Olá, Mundo ?\n00-4F-00-6C-00-E1-00-2C-00-20-00-4D-00-75-00-6E-00-64-00-6F-00-20-20-AC | 24 | Olá, Mundo €\nHi?\nT2zDoSBNdW5kbw==\nOlá Mundo\n\n/w==\n01ABFF\n01-AB-FF\nfmt\nfmt64\nla\n3\nutf-8 us-ascii utf-16 12000 28591\nUTF8EncodingSealed UnicodeEncoding UTF32Encoding\n2 233\nTrue\nASCIIEncodingSealed Latin1EncodingSealed UnicodeEncoding\nSystem.Text.UTF8Encoding+UTF8EncodingSealed|System.Text.UnicodeEncoding\n2\n4 4 4 2\na😀b\nAgME 0203\n01-02-03-04\nThe input is not a valid hex string as it contains a non-hex character.\nThe input is not a valid hex string as its length is not a multiple of 2.\nThe input is not a valid Base-64 string as it contains a non-base 64 character, more than two padding characters, or an illegal character among the padding characters.\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "26-bitconverter": {
+  "saida": "True\n02-01-00-00\nFE-FF-FF-FF-FF-FF-FF-FF\nFD-FF\n00-00-00-00-00-00-F8-3F\n00-00-C0-3F\n01\n41-00\n00-28-6B-EE\n01-02-FF\n02-FF\n02\n256\n-65536\n-4294967040\n256\n65535\n4294967295\n1,5\n3,25\nTrue\nB\n4607182418800017408\n2\narg\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "27-span": {
+  "saida": "6 3\n3 2 2,3,4\n99\n1,99,3,8,10,12\n133\n102\n2 False\n-1,3 99\n10,12\n1,99\n4 00\n0,7,0,0\n5,5,5,5\n0\n3,8\nbcd3b\nbcef\nidx\nrng\nTrue True\n12,10,8,3,99,1\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "28-lacunas-diversas": {
+  "saida": "2 bia,bruno 0 3 True\na:ana/alex\nb:bia/bruno\nc:carla\nZé3\n0 0\n3 2\n-3 -2\n3 2\na\nb\nTrue\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "29-span-mais": {
+  "saida": "9 System.Span<Int32>[4]\n1,3,9,5\n1,100,9,5 2 9\n3 2\nworld|hello|11\n4 4F 6C C3 A1 4\n78 22 79\n01 00 FF\n3 6\n18\nzzzzzz\naBcd2\n2 -1 False True\n1,100,9,5,0,0\nDestination is too short. (Parameter 'destination')\nFalse True\n1,5,9,100\nTrue False\n115 100 3\n1\n",
+  "codigo": 0,
+  "erro": null
+ },
+ "30-new-alvo-tipado-argumento": {
+  "saida": "Um (0,0)\nUm (3,4)\nDois (1,2)!\nDoisL 0?\nNomeado 1(7,8)5\nNomeado 2(0,0)0\n(5,6) 2\n(9,9)\n(0,1)\n(1,1) (0,0)\n(2,3)\n(4,4)\n",
+  "codigo": 0,
+  "erro": null
  }
 }

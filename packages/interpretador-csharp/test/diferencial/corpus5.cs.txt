@@ -1,0 +1,282 @@
+@@@ 23-padroes-lista-subpadrao
+using System;
+using System.Collections.Generic;
+class P {
+    static string D(int[] v) => v switch {
+        [1, .. [2, 3]] => "um e dois-tres",
+        [.., { } ] when false => "x",
+        [.. var r] when r.Length == 0 => "vazio",
+        [var a, .. var r] when r.Length > 3 => $"longo {a} {r.Length}",
+        [_, .. [var m, ..]] => $"segundo={m}",
+        _ => "outro",
+    };
+    static void Main() {
+        Console.WriteLine(D(new[] { 1, 2, 3 }));
+        Console.WriteLine(D(new[] { 1, 2, 3, 4 }));
+        Console.WriteLine(D(new int[0]));
+        Console.WriteLine(D(new[] { 9, 8, 7, 6, 5 }));
+        Console.WriteLine(D(new[] { 9, 8 }));
+        Console.WriteLine(D(new[] { 9 }));
+        int[][] aa = { new[] { 1 }, new[] { 2, 3 } };
+        Console.WriteLine(aa is [_, { Length: 2 }]);
+        string[] ss = { "a", "bb", "c" };
+        Console.WriteLine(ss is [.., { Length: 2 } meio, _] ? "meio=" + meio : "nao");
+        Console.WriteLine(ss is [var p, .. { Length: 2 } cauda] ? p + cauda.Length : "n");
+        Console.WriteLine(new List<int> { 1, 2, 3 } is [1, .. [2, 3]]);
+        Console.WriteLine(new[] { 5, 6, 7 } is [5, .. [> 6, ..] resto]);
+        Console.WriteLine("hello" is [.. ['h', 'e', ..] ini, 'l', 'o']);
+    }
+}
+@@@ 24-u8-cru
+using System;
+class P {
+    static void Main() {
+        var b = """abc"""u8;
+        Console.WriteLine(b.Length);
+        Console.WriteLine(string.Join(",", b.ToArray()));
+        var c = """
+            linha1
+            "x"
+            """u8;
+        Console.WriteLine(c.Length);
+        Console.WriteLine("é"u8.Length);
+        ReadOnlySpan<byte> s = "oi"u8;
+        Console.WriteLine(s[0] + " " + s.Length);
+    }
+}
+@@@ 25-encoding-base64
+using System;
+using System.Text;
+class P {
+    static string H(byte[] b) => BitConverter.ToString(b);
+    static void Main() {
+        string t = "Olá, Mundo €";
+        foreach (var e in new Encoding[] { Encoding.UTF8, Encoding.ASCII, Encoding.Unicode, Encoding.UTF32, Encoding.Latin1, Encoding.BigEndianUnicode }) {
+            var b = e.GetBytes(t);
+            Console.WriteLine(H(b) + " | " + e.GetByteCount(t) + " | " + e.GetString(b));
+        }
+        Console.WriteLine(Encoding.ASCII.GetString(new byte[] { 72, 105, 200 }));
+        Console.WriteLine(Convert.ToBase64String(Encoding.UTF8.GetBytes("Olá Mundo")));
+        Console.WriteLine(Encoding.UTF8.GetString(Convert.FromBase64String("T2zDoSBNdW5kbw==")));
+        Console.WriteLine(Convert.ToBase64String(new byte[0]));
+        Console.WriteLine(Convert.ToBase64String(new byte[] { 255 }));
+        Console.WriteLine(Convert.ToHexString(new byte[] { 1, 171, 255 }));
+        Console.WriteLine(H(Convert.FromHexString("01abFF")));
+        try { Convert.FromHexString("0"); } catch (FormatException) { Console.WriteLine("fmt"); }
+        try { Convert.FromBase64String("@@@"); } catch (FormatException) { Console.WriteLine("fmt64"); }
+        Console.WriteLine(Encoding.UTF8.GetString(new byte[] { 79, 108, 97 }, 1, 2));
+        Console.WriteLine(Encoding.UTF8.GetBytes("abc".ToCharArray()).Length);
+        Console.WriteLine(Encoding.UTF8.WebName + " " + Encoding.ASCII.WebName + " " + Encoding.Unicode.WebName + " " + Encoding.UTF32.CodePage + " " + Encoding.Latin1.CodePage);
+        Console.WriteLine(Encoding.UTF8.GetType().Name + " " + Encoding.Unicode.GetType().Name + " " + Encoding.UTF32.GetType().Name);
+        Console.WriteLine(Encoding.GetEncoding("utf-16").GetBytes("A").Length + " " + Encoding.GetEncoding("iso-8859-1").GetBytes("é")[0]);
+        Console.WriteLine(Encoding.UTF8 == Encoding.UTF8);
+        Console.WriteLine(Encoding.ASCII.GetType().Name + " " + Encoding.Latin1.GetType().Name + " " + Encoding.BigEndianUnicode.GetType().Name);
+        Console.WriteLine(Encoding.UTF8.ToString() + "|" + Encoding.Unicode);
+        Console.WriteLine(Encoding.Unicode.GetString(new byte[] { 65, 0, 66 }).Length);
+        Console.WriteLine(Encoding.UTF32.GetBytes("😀").Length + " " + Encoding.Unicode.GetBytes("😀").Length + " " + Encoding.UTF8.GetBytes("😀").Length + " " + Encoding.ASCII.GetBytes("😀").Length);
+        Console.WriteLine(Encoding.UTF32.GetString(Encoding.UTF32.GetBytes("a😀b")));
+        Console.WriteLine(Convert.ToBase64String(new byte[] { 1, 2, 3, 4, 5 }, 1, 3) + " " + Convert.ToHexString(new byte[] { 1, 2, 3, 4 }, 1, 2));
+        Console.WriteLine(H(Convert.FromBase64String("AQID\nBA==")));
+        try { Convert.FromHexString("zz"); } catch (FormatException e) { Console.WriteLine(e.Message); }
+        try { Convert.FromHexString("abc"); } catch (FormatException e) { Console.WriteLine(e.Message); }
+        try { Convert.FromBase64String("abc"); } catch (FormatException e) { Console.WriteLine(e.Message); }
+    }
+}
+@@@ 26-bitconverter
+using System;
+class P {
+    static void Main() {
+        Console.WriteLine(BitConverter.IsLittleEndian);
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes(258)));
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes(-2L)));
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes((short)-3)));
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes(1.5)));
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes(1.5f)));
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes(true)));
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes('A')));
+        Console.WriteLine(BitConverter.ToString(BitConverter.GetBytes(4000000000u)));
+        Console.WriteLine(BitConverter.ToString(new byte[] { 1, 2, 255 }));
+        Console.WriteLine(BitConverter.ToString(new byte[] { 1, 2, 255 }, 1));
+        Console.WriteLine(BitConverter.ToString(new byte[] { 1, 2, 255 }, 1, 1));
+        byte[] b = { 0, 1, 0, 0, 255, 255, 255, 255, 0, 0, 192, 63, 1 };
+        Console.WriteLine(BitConverter.ToInt32(b, 0));
+        Console.WriteLine(BitConverter.ToInt32(b, 2));
+        Console.WriteLine(BitConverter.ToInt64(b, 0));
+        Console.WriteLine(BitConverter.ToInt16(b, 0));
+        Console.WriteLine(BitConverter.ToUInt16(b, 4));
+        Console.WriteLine(BitConverter.ToUInt32(b, 4));
+        Console.WriteLine(BitConverter.ToSingle(b, 8));
+        Console.WriteLine(BitConverter.ToDouble(BitConverter.GetBytes(3.25), 0));
+        Console.WriteLine(BitConverter.ToBoolean(b, 12));
+        Console.WriteLine(BitConverter.ToChar(new byte[] { 66, 0 }, 0));
+        Console.WriteLine(BitConverter.DoubleToInt64Bits(1.0));
+        Console.WriteLine(BitConverter.Int64BitsToDouble(4611686018427387904L));
+        try { BitConverter.ToInt32(b, 11); } catch (ArgumentException) { Console.WriteLine("arg"); }
+    }
+}
+@@@ 27-span
+using System;
+using System.Collections.Generic;
+using System.Linq;
+class P {
+    static int Soma(ReadOnlySpan<int> s) { int t = 0; foreach (var x in s) t += x; return t; }
+    static void Dobra(Span<int> s) { for (int i = 0; i < s.Length; i++) s[i] *= 2; }
+    static void Main() {
+        int[] a = { 1, 2, 3, 4, 5, 6 };
+        Span<int> s = a;
+        Console.WriteLine(s.Length + " " + s[2]);
+        Span<int> m = s.Slice(1, 3);
+        Console.WriteLine(m.Length + " " + m[0] + " " + string.Join(",", m.ToArray()));
+        m[0] = 99;
+        Console.WriteLine(a[1]);
+        Dobra(a.AsSpan(3));
+        Console.WriteLine(string.Join(",", a));
+        Console.WriteLine(Soma(a));
+        Console.WriteLine(Soma(a.AsSpan(1, 2)));
+        ReadOnlySpan<int> r = a;
+        Console.WriteLine(r.Slice(4).Length + " " + r.IsEmpty);
+        var c = a[1..3];
+        c[0] = -1;
+        Console.WriteLine(string.Join(",", c) + " " + a[1]);
+        Console.WriteLine(string.Join(",", a[^2..]));
+        Console.WriteLine(string.Join(",", a[..2]));
+        Span<int> z = stackalloc int[4];
+        Console.WriteLine(z.Length + " " + z[0] + z[3]);
+        z[1] = 7;
+        Console.WriteLine(string.Join(",", z.ToArray()));
+        z.Fill(5);
+        Console.WriteLine(string.Join(",", z.ToArray()));
+        z.Clear();
+        Console.WriteLine(z[1]);
+        Console.WriteLine(string.Join(",", ((ReadOnlySpan<int>)a).Slice(2, 2).ToArray()));
+        string str = "abcdef";
+        ReadOnlySpan<char> cs = str.AsSpan(1, 3);
+        Console.WriteLine(cs.ToString() + cs.Length + cs[0]);
+        Console.WriteLine(str[1..3] + str[^2..]);
+        try { var q = s[10]; } catch (IndexOutOfRangeException) { Console.WriteLine("idx"); }
+        try { s.Slice(5, 5); } catch (ArgumentOutOfRangeException) { Console.WriteLine("rng"); }
+        Console.WriteLine(s.Contains(3) + " " + s.SequenceEqual(a));
+        s.CopyTo(new int[6]);
+        a.AsSpan().Reverse();
+        Console.WriteLine(string.Join(",", a));
+    }
+}
+@@@ 28-lacunas-diversas
+using System;
+using System.Collections.Generic;
+using System.Linq;
+class Pessoa { public string Nome; public int Idade; public Pessoa(string n, int i) { Nome = n; Idade = i; } }
+class P {
+    static void Mostra(Pessoa p) => Console.WriteLine(p.Nome + p.Idade);
+    static void Dois(List<int> l, Dictionary<string, int> d) => Console.WriteLine(l.Count + " " + d.Count);
+    static void Main() {
+        var lk = new[] { "ana", "alex", "bia", "bruno", "carla" }.ToLookup(s => s[0]);
+        Console.WriteLine(lk['a'].Count() + " " + string.Join(",", lk['b']) + " " + lk['z'].Count() + " " + lk.Count + " " + lk.Contains('c'));
+        foreach (var g in lk) Console.WriteLine(g.Key + ":" + string.Join("/", g));
+        Mostra(new("Zé", 3));
+        Dois(new(), new());
+        var (q, r) = Math.DivRem(17, 5);
+        Console.WriteLine(q + " " + r);
+        var t = Math.DivRem(-17L, 5L);
+        Console.WriteLine(t.Quotient + " " + t.Remainder);
+        int rem;
+        Console.WriteLine(Math.DivRem(20, 6, out rem) + " " + rem);
+        // (Environment.NewLine é "\n" no MisterALG, porque o console dele só usa "\n"; no Windows seria "\r\n". O diferencial normaliza.)
+        Console.WriteLine("a" + Environment.NewLine + "b");
+        Console.WriteLine(Environment.NewLine.Length > 0);
+    }
+}
+@@@ 29-span-mais
+using System;
+using System.Collections.Generic;
+using System.Linq;
+class P {
+    static int Conta(ReadOnlySpan<char> s, char c) { int n = 0; foreach (char x in s) if (x == c) n++; return n; }
+    static int Max(Span<int> s) { int m = s[0]; for (int i = 1; i < s.Length; i++) if (s[i] > m) m = s[i]; return m; }
+    static void Troca(Span<int> s, int i, int j) { (s[i], s[j]) = (s[j], s[i]); }
+    static string Mostra(ReadOnlySpan<byte> b) => string.Join(" ", b.ToArray().Select(x => x.ToString("X2")));
+    static void Main() {
+        Span<int> s = new int[] { 5, 3, 9, 1 };
+        Console.WriteLine(Max(s) + " " + s.ToString());
+        Troca(s, 0, 3);
+        Console.WriteLine(string.Join(",", s.ToArray()));
+        Span<int> t = s[1..3];
+        t[0] = 100;
+        Console.WriteLine(string.Join(",", s.ToArray()) + " " + t.Length + " " + s.Slice(2)[0]);
+        Console.WriteLine(Conta("banana".AsSpan(), 'a') + " " + Conta("banana", 'n'));
+        ReadOnlySpan<char> r = "hello world".AsSpan();
+        Console.WriteLine(r.Slice(6).ToString() + "|" + r[..5].ToString() + "|" + r.Length);
+        var u = "Olá"u8;
+        Console.WriteLine(u.Length + " " + Mostra(u) + " " + u.ToArray().Length);
+        Console.WriteLine(Mostra("""x"y"""u8));
+        Span<byte> buf = stackalloc byte[3];
+        buf[0] = 1; buf[2] = 255;
+        Console.WriteLine(Mostra(buf));
+        Span<int> pil = stackalloc int[] { 4, 5, 6 };
+        Console.WriteLine(pil.Length + " " + pil[2]);
+        int total = 0;
+        for (int i = 0; i < pil.Length; i++) pil[i]++;
+        foreach (var x in pil) total += x;
+        Console.WriteLine(total);
+        Span<char> cs = stackalloc char[3];
+        cs.Fill('z');
+        Console.WriteLine(new string(cs.ToArray()) + cs.ToString());
+        string[] nomes = { "a", "b", "c", "d" };
+        Span<string> ns = nomes;
+        ns[1] = "B";
+        Console.WriteLine(string.Join("", nomes) + ns.Slice(1, 2).Length);
+        Console.WriteLine(s.IndexOf(9) + " " + s.IndexOf(1000) + " " + s.IsEmpty + " " + s.Slice(4).IsEmpty);
+        int[] copia = new int[6];
+        s.CopyTo(copia);
+        Console.WriteLine(string.Join(",", copia));
+        try { s.CopyTo(new int[2]); } catch (ArgumentException e) { Console.WriteLine(e.Message); }
+        Console.WriteLine(s.TryCopyTo(new int[1]) + " " + s.TryCopyTo(new int[4]));
+        s.Sort();
+        Console.WriteLine(string.Join(",", s.ToArray()));
+        Console.WriteLine(s.StartsWith(new int[] { 1 }) + " " + s.EndsWith(new int[] { 5, 100 }));
+        Console.WriteLine(s.ToArray().Sum() + " " + s.ToArray().Max() + " " + s.ToArray().Count(x => x > 4));
+        int[] g = s.ToArray();
+        g[0] = -1;
+        Console.WriteLine(s[0]);
+    }
+}
+@@@ 30-new-alvo-tipado-argumento
+using System;
+using System.Collections.Generic;
+class Ponto { public int X, Y; public Ponto() { } public Ponto(int x, int y) { X = x; Y = y; } public override string ToString() => $"({X},{Y})"; }
+class Caixa {
+    public Ponto Centro; public List<int> Itens;
+    public Caixa(Ponto c, List<int> itens = null) { Centro = c; Itens = itens ?? new(); }
+    public void Move(Ponto p) { Centro = p; }
+    public static Caixa Fab(Ponto p) => new Caixa(p);
+}
+class P {
+    static void Um(Ponto p) => Console.WriteLine("Um " + p);
+    static void Dois(Ponto p, string s) => Console.WriteLine("Dois " + p + s);
+    static void DoisL(List<int> l, string s) => Console.WriteLine("DoisL " + l.Count + s);
+    static void Tres(string s, params Ponto[] ps) => Console.WriteLine("Tres " + s + ps.Length);
+    static void Nomeado(int a, Ponto p = null, int b = 0) => Console.WriteLine("Nomeado " + a + p + b);
+    static void Main() {
+        Um(new());
+        Um(new(3, 4));
+        Dois(new(1, 2), "!");
+        DoisL(new(), "?");
+        Nomeado(1, b: 5, p: new(7, 8));
+        Nomeado(a: 2, p: new());
+        var c = new Caixa(new(5, 6), new() { 1, 2 });
+        Console.WriteLine(c.Centro + " " + c.Itens.Count);
+        c.Move(new(9, 9));
+        Console.WriteLine(c.Centro);
+        Console.WriteLine(Caixa.Fab(new(0, 1)).Centro);
+        var lista = new List<Ponto>();
+        lista.Add(new(1, 1));
+        lista.Add(new());
+        Console.WriteLine(string.Join(" ", lista));
+        var d = new Dictionary<string, Ponto>();
+        d.Add("k", new(2, 3));
+        Console.WriteLine(d["k"]);
+        var q = new Queue<Ponto>();
+        q.Enqueue(new(4, 4));
+        Console.WriteLine(q.Peek());
+    }
+}

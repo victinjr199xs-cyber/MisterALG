@@ -13,7 +13,7 @@ import { formatarArgumentos, inspecionar, tabela } from './inspecionar.js'
 import { criarModulos } from './modulos.js'
 
 export { GERADOR, INFO }
-const MAX_CHAMADAS = 700 // cada chamada usa vários quadros de gerador no JS; acima disso a pilha do próprio JS estoura
+const MAX_CHAMADAS = 12000 // como o Node (~10 mil chamadas simples); as chamadas ficam numa pilha explícita (Condutor), não na do JS
 
 export class ErroJS extends Error {
   constructor(mensagem, linha) {
@@ -77,19 +77,84 @@ export function criarRuntime(op = {}) {
     disfarcar(F, info)
   }
 
+  // Método de classe com chave calculada ([Symbol.asyncIterator]): a chave é guardada ao ser calculada, por etiqueta.
+  const chavesCalculadas = new Map()
+  function __chaveCalc(etiqueta, valor) {
+    const chave = typeof valor === 'symbol' ? valor : `${valor}`
+    chavesCalculadas.set(etiqueta, chave)
+    return chave
+  }
+
   function __envolverMetodos(Classe, metodos, texto) {
     for (const m of metodos) {
+      const chave = m.chave ?? chavesCalculadas.get(m.etiqueta)
       const alvo = m.estatico ? Classe : Classe.prototype
-      const gerador = alvo[m.chave]
+      const gerador = alvo[chave]
       const W = function (...args) { return __sincrono(W, this, args) }
       marcar(W, gerador, { ...m.info, nome: `${Classe.name}.${m.info.nome}` })
       disfarcar(W, m.info)
       Object.defineProperty(W, 'name', { value: m.info.nome })
-      Object.defineProperty(alvo, m.chave, { value: W, writable: true, configurable: true, enumerable: false })
+      Object.defineProperty(alvo, chave, { value: W, writable: true, configurable: true, enumerable: false })
     }
     if (texto !== undefined && !Object.hasOwn(Classe, 'toString')) Object.defineProperty(Classe, 'toString', { value: () => texto, writable: true, configurable: true })
     return Classe
   }
+
+  // Condutor: roda um gerador e, quando ele pede `yield { tipo: 'chamar', gen, quadro }` (uma chamada de função do aluno),
+  // empilha o gerador da função chamada numa pilha própria em vez de aninhar yield*. Assim a recursão não usa a pilha do JS
+  // (que estourava em ~700 chamadas) e cada passo custa o mesmo, qualquer que seja a profundidade.
+  class Condutor {
+    constructor(raiz) { this.frames = [{ gen: raiz, quadro: null }] }
+    [Symbol.iterator]() { return this }
+    next(v) { return this.rodar(false, v) }
+    throw(e) { return this.rodar(true, e) }
+    return(v) {
+      const fr = this.frames
+      while (fr.length > 1) {
+        const f = fr.pop()
+        pilha.pop()
+        try { f.gen.return() } catch { /* o finally da função fechada falhou: o return da base é o que vale */ }
+      }
+      return fr[0].gen.return(v)
+    }
+
+    rodar(erro, envio) {
+      const fr = this.frames
+      for (;;) {
+        const topo = fr[fr.length - 1]
+        let r
+        try {
+          r = erro ? topo.gen.throw(envio) : topo.gen.next(envio)
+        } catch (e) {
+          if (fr.length === 1) throw e
+          fr.pop()
+          pilha.pop()
+          envio = e
+          erro = true
+          continue
+        }
+        erro = false
+        if (r.done) {
+          if (fr.length === 1) return r
+          fr.pop()
+          pilha.pop()
+          envio = r.value
+          continue
+        }
+        const ev = r.value
+        if (ev?.tipo !== 'chamar') return r
+        envio = undefined
+        if (pilha.length >= MAX_CHAMADAS) {
+          envio = new ErroJS('chamadas demais uma dentro da outra (recursão infinita?)', ultimaLinha)
+          erro = true
+          continue
+        }
+        pilha.push(ev.quadro)
+        fr.push({ gen: ev.gen, quadro: ev.quadro })
+      }
+    }
+  }
+  const conduzir = (gen) => new Condutor(gen)
 
   /** Função do aluno chamada por código da biblioteca (sort, addEventListener...): roda inteira, sem pausar. */
   function __sincrono(F, este, args) {
@@ -104,6 +169,7 @@ export function criarRuntime(op = {}) {
   }
 
   function silencioso(gen) {
+    gen = conduzir(gen)
     let r = gen.next()
     while (!r.done) {
       if (r.value?.tipo === 'entrada') {
@@ -118,7 +184,7 @@ export function criarRuntime(op = {}) {
     if (pilha.length >= MAX_CHAMADAS) throw new ErroJS('chamadas demais uma dentro da outra (recursão infinita?)', ultimaLinha)
     pilha.push(novoQuadro(F[INFO]))
     try {
-      return yield* F[GERADOR].apply(este, args)
+      return yield* conduzir(F[GERADOR].apply(este, args))
     } finally {
       pilha.pop()
     }
@@ -133,7 +199,8 @@ export function criarRuntime(op = {}) {
         yield* continuarCorrotina(corrotina, undefined, false) // até o primeiro await, como no JavaScript de verdade
         return promessa
       }
-      return yield* chamarFuncaoDoAluno(f, este, args)
+      // quem conduz (Condutor) empilha o gerador da função: a recursão não aninha geradores
+      return yield { tipo: 'chamar', gen: f[GERADOR].apply(este, args), quadro: novoQuadro(f[INFO]) }
     }
     const especial = ESPECIAIS.get(f)
     if (especial) return yield* especial(este, args, linha)
@@ -154,7 +221,7 @@ export function criarRuntime(op = {}) {
     let rejeitar
     const promessa = new PromiseMister((res, rej) => { resolver = res; rejeitar = rej })
     const info = F[INFO]
-    return { corrotina: { g: F[GERADOR].apply(este, args), info, quadro: novoQuadro(info), resolver, rejeitar }, promessa }
+    return { corrotina: { g: conduzir(F[GERADOR].apply(este, args)), info, quadro: novoQuadro(info), resolver, rejeitar }, promessa }
   }
 
   function* continuarCorrotina(c, valor, comErro) {
@@ -170,6 +237,7 @@ export function criarRuntime(op = {}) {
         const ev = r.value
         if (ev?.tipo === 'aguardar') {
           // O await suspende a função: ela sai da pilha e volta como microtarefa quando a promessa terminar.
+          if (c.info.programa) c.linhaAguardando = ev.linha ?? ultimaLinha
           PromiseMister.resolve(ev.valor).reagir(`continuar ${c.info.nome}${c.info.programa ? '' : '()'} depois do await`,
             (v) => continuarCorrotina(c, v, false), (e) => continuarCorrotina(c, e, true))
           return
@@ -184,8 +252,50 @@ export function criarRuntime(op = {}) {
     }
   }
 
-  const __aguardar = (valor) => ({ tipo: 'aguardar', valor })
+  const __aguardar = (valor, linha) => ({ tipo: 'aguardar', valor, linha })
   const __ceder = (valor) => ({ tipo: 'ceder', valor })
+
+  // yield* dentro de async function*: repassa next/throw/return ao iterável (assíncrono, ou síncrono como o JS faz).
+  // (o valor que um iterável assíncrono cede não é esperado de novo: `bruto`)
+  let retornoPendente // o valor do return() que está fechando o gerador (o finally de __delegar repassa ao iterável)
+  function* __delegar(iteravel, linha) {
+    const S = __abrirAssinc(iteravel)
+    const it = S.it
+    const esperar = function* (r) { return S.assinc ? yield __aguardar(r, linha) : r }
+    let modo = 'next'
+    let v
+    let cedendo = false
+    let acabou = false
+    try {
+      for (;;) {
+        let r
+        if (modo === 'throw' && typeof it.throw !== 'function') {
+          cedendo = true // fecha o iterável como o return() faria
+          throw new TypeError('o iterável do yield* não tem o método throw')
+        }
+        r = yield* __chamarMetodo(it, modo, [v], linha)
+        r = yield* esperar(r)
+        if (r === null || typeof r !== 'object') { acabou = true; throw new TypeError(`o resultado de ${modo}() precisa ser um objeto, mas veio ${descreverCurto(r)}`) }
+        if (r.done) { acabou = true; return r.value }
+        cedendo = true
+        try {
+          v = yield { tipo: 'ceder', valor: r.value, bruto: S.assinc }
+          modo = 'next'
+        } catch (e) {
+          v = e
+          modo = 'throw'
+        }
+        cedendo = false
+      }
+    } catch (e) {
+      if (!cedendo) acabou = true // next/throw do iterável falhou: ele já terminou
+      throw e
+    } finally {
+      // shortcut: o return() do iterável de dentro roda sem pausas e sem esperar o resultado (um yield aqui perderia o valor do
+      // return de fora); se o finally dele tiver um await, ele termina depois do finally de fora. Melhorar se isso aparecer em aula.
+      if (!acabou && typeof it.return === 'function') silencioso(__chamarMetodo(it, 'return', [retornoPendente], linha))
+    }
+  }
 
   // ---- async function* e for await -------------------------------------------------------
 
@@ -202,7 +312,7 @@ export function criarRuntime(op = {}) {
   function criarGeradorAssincrono(F, este, args) {
     const info = F[INFO]
     const g = new GeradorAssincrono()
-    estadosGA.set(g, { g: F[GERADOR].apply(este, args), nome: info.nome, quadro: novoQuadro(info), fila: [], ocupado: false, terminou: false })
+    estadosGA.set(g, { g: conduzir(F[GERADOR].apply(este, args)), nome: info.nome, quadro: novoQuadro(info), fila: [], ocupado: false, terminou: false })
     return g
   }
 
@@ -242,6 +352,7 @@ export function criarRuntime(op = {}) {
   function* impulsionar(o, modo, valor) {
     pilha.push(o.quadro)
     try {
+      if (modo === 'return') retornoPendente = valor
       let r = o.g[modo](valor)
       for (;;) {
         if (r.done) return concluir(o, true, { value: r.value, done: true }, true)
@@ -251,6 +362,7 @@ export function criarRuntime(op = {}) {
             (v) => retomar(o, 'next', v), (e) => retomar(o, 'throw', e))
           return undefined
         }
+        if (ev?.bruto) return concluir(o, true, { value: ev.valor, done: false })
         if (ev?.tipo === 'ceder') return concluir(o, true, PromiseMister.resolve(ev.valor).then((x) => ({ value: x, done: false })))
         r = o.g.next(yield ev)
       }
@@ -278,10 +390,10 @@ export function criarRuntime(op = {}) {
   function* __proximoAssinc(S, linha) {
     S.fim = true // se next() falhar ou acabar, não há o que fechar
     let r = yield* __chamarMetodo(S.it, 'next', [], linha)
-    if (S.assinc) r = yield __aguardar(r)
+    if (S.assinc) r = yield __aguardar(r, linha)
     if (r === null || typeof r !== 'object') throw new TypeError(`o resultado de next() precisa ser um objeto, mas veio ${descreverCurto(r)}`)
     if (r.done) return { done: true, value: r.value }
-    const value = S.assinc ? r.value : yield __aguardar(r.value) // numa lista de promessas, cada valor é esperado
+    const value = S.assinc ? r.value : yield __aguardar(r.value, linha) // numa lista de promessas, cada valor é esperado
     S.fim = false
     return { done: false, value }
   }
@@ -510,6 +622,7 @@ export function criarRuntime(op = {}) {
   const ESPECIAIS = new Map([
     [Array.prototype.forEach, function* (arr, [cb, ctx]) { for (let i = 0; i < arr.length; i += 1) if (i in arr) yield* __chamar(cb, ctx, [arr[i], i, arr]) }],
     [Array.prototype.map, function* (arr, [cb, ctx]) { const r = new Array(arr.length); for (let i = 0; i < arr.length; i += 1) if (i in arr) r[i] = yield* __chamar(cb, ctx, [arr[i], i, arr]); return r }],
+    [Array.prototype.flatMap, function* (arr, [cb, ctx]) { const r = []; for (let i = 0; i < arr.length; i += 1) if (i in arr) { const x = yield* __chamar(cb, ctx, [arr[i], i, arr]); if (Array.isArray(x)) r.push(...x); else r.push(x) } return r }],
     [Array.prototype.filter, function* (arr, [cb, ctx]) { const r = []; for (let i = 0; i < arr.length; i += 1) if (i in arr && (yield* __chamar(cb, ctx, [arr[i], i, arr]))) r.push(arr[i]); return r }],
     [Array.prototype.find, function* (arr, [cb, ctx]) { for (let i = 0; i < arr.length; i += 1) if (yield* __chamar(cb, ctx, [arr[i], i, arr])) return arr[i]; return undefined }],
     [Array.prototype.findIndex, function* (arr, [cb, ctx]) { for (let i = 0; i < arr.length; i += 1) if (yield* __chamar(cb, ctx, [arr[i], i, arr])) return i; return -1 }],
@@ -564,10 +677,12 @@ export function criarRuntime(op = {}) {
     }
   }
 
-  function* laco(programa) {
+  const laco = (programa) => conduzir(lacoInterno(programa))
+
+  function* lacoInterno(programa) {
     // o programa é uma corrotina como as funções async: um await no topo o suspende e o laço segue com as filas
-    const c = { g: programa(), info: { nome: 'o programa principal', programa: true }, quadro: principal,
-      resolver: () => {}, rejeitar: (e) => { throw e } }
+    const c = { g: conduzir(programa()), info: { nome: 'o programa principal', programa: true }, quadro: principal,
+      resolver: () => { c.fim = true }, rejeitar: (e) => { throw e } }
     yield* continuarCorrotina(c, undefined, false)
     for (;;) {
       yield* esvaziarMicrotarefas()
@@ -592,6 +707,12 @@ export function criarRuntime(op = {}) {
       const [p] = rejeicoesSemCatch
       throw Object.assign(new ErroJS(`uma Promise foi rejeitada e ninguém tratou (falta .catch ou try/catch no await): ${descreverErro(p.valor)}`, ultimaLinha), { semCatch: true })
     }
+    // Sem nada mais a rodar e o programa ainda parado num await: a Promise nunca vai terminar (o Node sai com código 13).
+    if (!c.fim && c.linhaAguardando !== undefined) {
+      throw Object.assign(new ErroJS(`o programa terminou esperando uma Promise que nunca foi resolvida (await na linha ${c.linhaAguardando})`, c.linhaAguardando), {
+        explicacao: 'Um await no topo do programa ficou esperando uma Promise que nunca chama resolve nem reject, e não há mais nada para rodar (nenhum setTimeout pendente). O Node avisa "unsettled top-level await" e encerra. Confira se a Promise chama resolve() ou reject() em todos os caminhos.',
+      })
+    }
   }
 
   return {
@@ -608,7 +729,7 @@ export function criarRuntime(op = {}) {
     PromiseMister,
     // Nomes que o código instrumentado e o aluno enxergam.
     ambiente: {
-      __passo, __funcao, __registrar, __envolverMetodos, __sincrono, __chamar, __chamarMetodo, __aguardar, __ceder,
+      __passo, __funcao, __registrar, __envolverMetodos, __sincrono, __chamar, __chamarMetodo, __aguardar, __ceder, __delegar, __chaveCalc,
       __abrirAssinc, __proximoAssinc, __fecharAssinc,
       console,
       Promise: PromiseMister,

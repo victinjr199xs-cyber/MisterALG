@@ -14,9 +14,9 @@ const CRIADO = Symbol('criado pelo MisterALG')
 function convertivel(no) {
   // gerador do próprio aluno roda como está, menos async function* (o runtime faz o gerador assíncrono)
   if (no.generator && !no.async) return false
-  // (método de classe com chave calculada — [Symbol.toPrimitive]() — roda direto, sem passo a passo: o invólucro
-  // do runtime precisa do nome da chave, que só existe em tempo de execução)
-  if (no.type === 'ClassMethod' && no.computed) return false
+  // (método de classe com chave calculada — [Symbol.toPrimitive]() — roda direto, sem passo a passo, exceto async function*,
+  // como `async *[Symbol.asyncIterator]()`: a chave é guardada em tempo de execução por __chaveCalc)
+  if (no.type === 'ClassMethod' && no.computed && !(no.async && no.generator)) return false
   if (no.type === 'ClassMethod' || no.type === 'ObjectMethod') return no.kind === 'method'
   return ['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'].includes(no.type)
 }
@@ -29,6 +29,7 @@ function contexto(path) {
     if (['ClassProperty', 'ClassPrivateProperty', 'ClassAccessorProperty', 'StaticBlock'].includes(pai.node.type) && p.key === 'value') return null
     if (pai.isFunction()) {
       if (p.listKey === 'params') return null // valor padrão de parâmetro: yield não é permitido ali
+      if (p.key === 'key' && pai.node.computed) { p = pai; continue } // chave calculada: vale no contexto de fora da função
       return convertivel(pai.node) && !pai.node[CRIADO] ? pai : null
     }
     if (pai.isClassMethod() || pai.isClassPrivateMethod()) return null
@@ -165,6 +166,7 @@ function pluginDoPassoAPasso({ types: t, template }) {
   function nomeDaFuncao(path) {
     const no = path.node
     if (no.id?.name) return no.id.name
+    if (no.key && no.computed && no.key.type === 'MemberExpression' && no.key.object.name === 'Symbol') return `[${path.hub?.getCode?.()?.slice(no.key.start, no.key.end)}]`
     if (no.key) return no.key.name ?? no.key.value ?? '(método)'
     const pai = path.parent
     if (pai.type === 'VariableDeclarator' && pai.id.type === 'Identifier') return pai.id.name
@@ -192,14 +194,19 @@ function pluginDoPassoAPasso({ types: t, template }) {
     const atribuir = esq.type === 'VariableDeclaration'
       ? t.variableDeclaration(esq.kind, [t.variableDeclarator(esq.declarations[0].id, valor)])
       : t.expressionStatement(t.assignmentExpression('=', esq, valor))
-    const corpo = no.body.type === 'BlockStatement' ? no.body : t.blockStatement([no.body])
-    corpo.body.unshift(
+    // o corpo do aluno fica num bloco próprio: dentro dele dá para declarar o mesmo nome da variável do laço
+    const aluno = no.body.type === 'BlockStatement' ? no.body : t.blockStatement([no.body])
+    const corpo = criado(t.blockStatement([
       criado(t.variableDeclaration('const', [criado(t.variableDeclarator(R(), chamar('__proximoAssinc')))])),
       criado(t.ifStatement(t.memberExpression(R(), t.identifier('done')), criado(t.blockStatement([criado(t.breakStatement())])))),
       criado(atribuir),
-    )
-    const laco = t.forStatement(null, null, null, corpo)
+      aluno,
+    ]))
+    let laco = t.forStatement(null, null, null, corpo)
     Object.assign(laco, { loc: no.loc, start: no.start, end: no.end })
+    // rotulo: for await (...) — o rótulo passa para o for(;;), que é onde continue/break rotulo precisam chegar
+    const rotulado = path.parentPath.isLabeledStatement()
+    if (rotulado) laco = t.labeledStatement(path.parent.label, laco)
     const fechar = criado(t.ifStatement(t.unaryExpression('!', t.memberExpression(S(), t.identifier('fim'))),
       criado(t.blockStatement([criado(t.expressionStatement(chamar('__fecharAssinc')))]))))
     const bloco = t.blockStatement([
@@ -207,7 +214,7 @@ function pluginDoPassoAPasso({ types: t, template }) {
       criado(t.tryStatement(criado(t.blockStatement([laco])), null, criado(t.blockStatement([fechar])))),
     ])
     Object.assign(bloco, { loc: no.loc, start: no.start, end: no.end })
-    path.replaceWith(bloco)
+    ;(rotulado ? path.parentPath : path).replaceWith(bloco)
   }
 
   return {
@@ -276,14 +283,17 @@ function pluginDoPassoAPasso({ types: t, template }) {
       AwaitExpression: {
         exit(path) {
           if (!contexto(path)) return
-          path.replaceWith(criado(t.yieldExpression(criado(t.callExpression(t.identifier('__aguardar'), [path.node.argument])))))
+          path.replaceWith(criado(t.yieldExpression(criado(t.callExpression(t.identifier('__aguardar'), [path.node.argument, t.numericLiteral(linhaDe(path.node))])))))
         },
       },
       YieldExpression: {
         exit(path) {
           const f = path.getFunctionParent()?.node
           if (path.node[CRIADO] || !f?.async || !f.generator || !contexto(path)) return
-          if (path.node.delegate) throw Object.assign(new SyntaxError('"yield*" dentro de async function* ainda não funciona no MisterALG'), { loc: path.node.loc.start })
+          if (path.node.delegate) {
+            path.replaceWith(criado(t.yieldExpression(criado(t.callExpression(t.identifier('__delegar'), [path.node.argument, t.numericLiteral(linhaDe(path.node))])), true)))
+            return
+          }
           path.replaceWith(criado(t.yieldExpression(criado(t.callExpression(t.identifier('__ceder'), [path.node.argument ?? t.identifier('undefined')])))))
         },
       },
@@ -297,7 +307,12 @@ function pluginDoPassoAPasso({ types: t, template }) {
           if (path.isClassMethod()) {
             // Vira método gerador (o super continua valendo); depois da classe, __envolverMetodos põe o invólucro.
             const classe = path.parentPath.parentPath
-            ;(classe.node.__metodos ??= []).push({ chave: no.computed ? null : (no.key.name ?? no.key.value), estatico: !!no.static, info: info(no, nome, path) })
+            const entrada = { chave: no.computed ? null : (no.key.name ?? no.key.value), estatico: !!no.static, info: info(no, nome, path) }
+            if (no.computed) {
+              entrada.etiqueta = (contadorFor += 1)
+              no.key = criado(t.callExpression(t.identifier('__chaveCalc'), [t.numericLiteral(entrada.etiqueta), no.key]))
+            }
+            ;(classe.node.__metodos ??= []).push(entrada)
             no.generator = true
             no.async = false
             no[CRIADO] = true
@@ -338,8 +353,8 @@ function pluginDoPassoAPasso({ types: t, template }) {
         exit(path) {
           const metodos = path.node.__metodos
           if (!metodos?.length) return
-          const lista = t.arrayExpression(metodos.filter((m) => m.chave !== null).map((m) => t.objectExpression([
-            t.objectProperty(t.identifier('chave'), t.stringLiteral(String(m.chave))),
+          const lista = t.arrayExpression(metodos.map((m) => t.objectExpression([
+            m.chave === null ? t.objectProperty(t.identifier('etiqueta'), t.numericLiteral(m.etiqueta)) : t.objectProperty(t.identifier('chave'), t.stringLiteral(String(m.chave))),
             t.objectProperty(t.identifier('estatico'), t.booleanLiteral(m.estatico)),
             t.objectProperty(t.identifier('info'), m.info),
           ])))

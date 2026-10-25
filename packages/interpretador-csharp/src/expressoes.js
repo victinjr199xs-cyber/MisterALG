@@ -56,6 +56,10 @@ export const expressoes = {
         return yield* this.avalComTipo(c === true ? filho(n, 'consequence') : filho(n, 'alternative'), amb, tipo)
       }
       if (n.t === 'parenthesized_expression') return yield* this.avalComTipo(n.f[0], amb, tipo)
+      if (n.t === 'binary_expression' && filho(n, 'operator')?.x === '??') { // x = a ?? new();
+        const v = yield* this.aval(filho(n, 'left'), amb)
+        return v !== null && v !== undefined ? v : yield* this.avalComTipo(filho(n, 'right'), amb, tipo)
+      }
       if (n.t === 'switch_expression') return yield* this.avalSwitchExpressao(n, amb, tipo)
       if (n.t === 'lambda_expression' || n.t === 'anonymous_method_expression') {
         const f = yield* this.aval(n, amb)
@@ -103,7 +107,9 @@ export const expressoes = {
         throw new ErroCS('o new() sem o nome do tipo só funciona quando o tipo da variável está escrito (ex.: List<int> l = new();)', n.l)
       case 'array_creation_expression': return yield* this.avalNovoArray(n, amb)
       case 'implicit_array_creation_expression': return yield* this.avalArrayImplicito(n, amb)
-      case 'stackalloc_expression': throw new ErroCS('stackalloc ainda não é suportado', n.l)
+      // stackalloc int[n] (pilha) vira um Span<int> sobre um array novo, zerado
+      case 'stack_alloc_array_creation_expression': return this.bib.novoSpan(yield* this.avalNovoArray(n, amb))
+      case 'implicit_stack_alloc_array_creation_expression': return this.bib.novoSpan(yield* this.avalArrayImplicito(n, amb))
       case 'initializer_expression': return yield* this.criarArrayDeInicializador('object[]', n, amb)
       case 'collection_expression': return yield* this.criarDeColecao('List<object>', n, amb)
       case 'tuple_expression': return yield* this.avalTupla(n, amb)
@@ -462,7 +468,7 @@ export const expressoes = {
     if (t === 'string' && typeof v !== 'string') throw this.excecao('InvalidCastException', `Unable to cast object of type '${this.nomeDoTipoDe(v)}' to type 'System.String'.`)
     if (def && !this.ehTipo(v, t)) throw this.excecao('InvalidCastException', `Unable to cast object of type '${this.nomeDoTipoDe(v)}' to type '${def.nome}'.`)
     void n
-    return v
+    return this.bib.coagirNativo(v, t) ?? v // ((ReadOnlySpan<int>)arr)
   },
 
   conversaoDoAluno(v, tipoAlvo) {

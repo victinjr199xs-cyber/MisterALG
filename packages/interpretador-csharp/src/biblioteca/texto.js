@@ -2,6 +2,7 @@
 
 import { Arr, Chr, Dbl, Num, comoNumero } from '../valores.js'
 import { ErroCS } from '../erros.js'
+import { SpanCS, intervalo } from './span.js'
 import { Multicast } from '../operadores.js'
 
 const chr = (c) => new Chr(c.charCodeAt(0))
@@ -102,7 +103,8 @@ export const METODOS_STRING = {
     const t = txtDe(m, x)
     return ignorar ? s.toLowerCase().endsWith(t.toLowerCase()) : s.endsWith(t)
   },
-  __U8: (m, s) => m.bib.novoArray('byte', [...new TextEncoder().encode(s)].map((b) => new Num('byte', b))), // "abc"u8 (preprocessar.js)
+  __U8: (m, s) => m.bib.novoSpan(m.bib.novoArray('byte', [...new TextEncoder().encode(s)].map((b) => new Num('byte', b))), true), // "abc"u8 é ReadOnlySpan<byte> (preprocessar.js)
+  AsSpan: (m, s, [ini = 0, n]) => SpanCS.deTexto(s, ini, intervalo(m, s.length, ini, n)),
   ToUpper: (m, s) => caixaSimples(s, (c) => c.toLocaleUpperCase('pt-BR')),
   ToLower: (m, s) => caixaSimples(s, (c) => c.toLocaleLowerCase('pt-BR')),
   ToUpperInvariant: (m, s) => caixaSimples(s, (c) => c.toUpperCase()),

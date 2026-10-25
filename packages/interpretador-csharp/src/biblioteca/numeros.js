@@ -168,9 +168,17 @@ export const MATH = {
       return Math.sign(n)
     },
     Clamp: (m, [v, lo, hi]) => maxMin(maxMin(v, lo, true), hi, false),
-    DivRem: (m, [a, b]) => {
+    // DivRem(a, b) devolve (Quotient, Remainder); DivRem(a, b, out r) devolve o quociente. Tipo do resultado = tipo dos operandos.
+    DivRem: (m, [a, b, saida]) => {
       if (comoNumero(b) === 0) throw m.excecao('DivideByZeroException', 'Attempted to divide by zero.')
-      return m.bib.novaTupla([Math.trunc(comoNumero(a) / comoNumero(b)) | 0, comoNumero(a) % comoNumero(b) | 0])
+      const k = tipoNumerico(a)
+      const grande = k === 'long' || k === 'ulong'
+      const dar = (n) => (k === 'ulong' ? new Num('ulong', n) : k === 'uint' ? new Num('uint', n) : n)
+      const [x, y] = grande ? [BigInt(a.v ?? a), BigInt(b.v ?? b)] : [comoNumero(a), comoNumero(b)]
+      const q = grande ? x / y : Math.trunc(x / y)
+      const r = grande ? x % y : x % y
+      if (saida) { saida.v = dar(r); return dar(q) }
+      return m.bib.novaTupla([dar(q), dar(r)], ['Quotient', 'Remainder'])
     },
     IEEERemainder: (m, [a, b]) => comoDouble(num(a) - num(b) * Math.round(num(a) / num(b))),
     BigMul: (m, [a, b]) => BigInt(comoNumero(a)) * BigInt(comoNumero(b)),
@@ -267,6 +275,14 @@ function paraNumeroConvert(m, v, tipo, cultura = null) {
   throw m.excecao('InvalidCastException', `Invalid cast from '${m.nomeDoTipoDe(v)}' to '${NOME_DOTNET[tipo] ?? tipo}'.`)
 }
 
+/** Os bytes (como números) de um byte[]/Span, ou da fatia [ini, ini+n) dele. */
+function fatiaDeBytes(m, a, ini, n) {
+  if (a === null || a === undefined) throw m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 'inArray')")
+  if (typeof ini !== 'number') return a.itens.map((x) => comoNumero(x))
+  if (ini < 0 || n < 0 || ini + n > a.itens.length) throw m.excecao('ArgumentOutOfRangeException', 'Index was out of range. Must be non-negative and less than or equal to the size of the collection. (Parameter \'offset\')')
+  return a.itens.slice(ini, ini + n).map((x) => comoNumero(x))
+}
+
 export const CONVERT = {
   nome: 'Convert',
   estatico: {
@@ -295,9 +311,25 @@ export const CONVERT = {
       if (typeof base === 'number' && ehNumero(v)) return (typeof v === 'bigint' ? v : BigInt(comoNumero(v))).toString(base)
       return m.aTexto(v)
     },
-    ToBase64String: (m, [a]) => btoa(String.fromCharCode(...a.itens.map((x) => comoNumero(x)))),
-    FromBase64String: (m, [t]) => m.bib.novoArray('byte', [...atob(t)].map((c) => new Num('byte', c.charCodeAt(0)))),
-    ToHexString: (m, [a]) => a.itens.map((x) => comoNumero(x).toString(16).padStart(2, '0').toUpperCase()).join(''),
+    ToBase64String(m, [a, ini, n]) {
+      const bs = fatiaDeBytes(m, a, ini, n)
+      let bin = ''
+      for (let i = 0; i < bs.length; i += 8192) bin += String.fromCharCode(...bs.slice(i, i + 8192))
+      return btoa(bin)
+    },
+    FromBase64String(m, [t]) {
+      if (t === null || t === undefined) throw m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 's')")
+      const s = t.replace(/[ \t\r\n]/g, '')
+      if (s.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(s)) throw m.excecao('FormatException', 'The input is not a valid Base-64 string as it contains a non-base 64 character, more than two padding characters, or an illegal character among the padding characters.')
+      return m.bib.novoArray('byte', [...atob(s)].map((c) => new Num('byte', c.charCodeAt(0))))
+    },
+    ToHexString: (m, [a, ini, n]) => fatiaDeBytes(m, a, ini, n).map((x) => x.toString(16).padStart(2, '0').toUpperCase()).join(''),
+    FromHexString(m, [t]) {
+      if (t === null || t === undefined) throw m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 's')")
+      if (t.length % 2 !== 0) throw m.excecao('FormatException', 'The input is not a valid hex string as its length is not a multiple of 2.')
+      if (!/^[0-9a-fA-F]*$/.test(t)) throw m.excecao('FormatException', 'The input is not a valid hex string as it contains a non-hex character.')
+      return m.bib.novoArray('byte', (t.match(/../g) ?? []).map((h) => new Num('byte', parseInt(h, 16))))
+    },
     ToDateTime: (m, [v]) => m.bib.datas.converter(m, v),
   },
 }

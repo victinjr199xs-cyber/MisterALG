@@ -16,6 +16,11 @@ export class Suspende {
   constructor(gen) { this.gen = gen }
 }
 
+/** `new(...)` sem tipo passado como argumento: só se sabe o que criar depois de escolher a sobrecarga (invocacao.js resolverPendentes). */
+export class NovoPendente {
+  constructor(no, amb) { this.no = no; this.amb = amb }
+}
+
 export class NsRef {
   constructor(nome) { this.nome = nome }
 }

@@ -151,7 +151,7 @@ export async function criarAnalisador({ moduloTreeSitter, wasmMotor, wasmLinguag
         if (t && !t.erros) return t
       }
       const r = ler(fonte)
-      if (!r.erros || !/"""|>>>|\.\.\s*(var\b|[,\]])|"[uU]8\b/.test(fonte)) return r
+      if (!r.erros || !/"""|>>>|\.\.|"[uU]8\b/.test(fonte)) return r
       // A gramática é do C# 10: tenta de novo com o `>>>` e os textos """ do C# 11 reescritos (sem mudar as linhas).
       // Se o programa também usa `>>>` para fechar genéricos (List<List<List<int>>>), a segunda tentativa deixa o `>>>` quieto.
       let melhor = r

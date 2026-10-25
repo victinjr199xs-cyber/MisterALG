@@ -6,6 +6,7 @@
 
 import { ErroCS, ExcecaoCS } from './erros.js'
 import { Multicast, igualdade, igualValor } from './operadores.js'
+import { NovoPendente } from './refs.js'
 import { elementoDe, ehArray, nomeCompleto, nomeTipo, partesGenericas, semNulo, ehNumericoNome } from './tipos.js'
 import {
   Arr, Chr, Dbl, DivisaoPorZero, Dec, Flt, Num, Objeto, Ref, RefCampo, RefElem, Tupla, ValorEnum,
@@ -666,6 +667,7 @@ export class MaquinaCS {
   *chamarMetodo(md, este, args, clsContexto, extras = null) {
     if (this.pilha.length >= MAX_PILHA) throw this.excecao('InsufficientExecutionStackException', 'Stack overflow (muitas chamadas uma dentro da outra — recursão infinita?)')
     if (md.estatico && md.cls) yield* this.iniciarClasse(md.cls)
+    if (args.some((a) => a instanceof NovoPendente)) args = yield* this.pendentesParaMetodo(md, args)
     if (!md.corpo) {
       if (md.abstrato) throw new ErroCS(`o método ${md.nome} é abstrato e não tem corpo`, this.linhaAtual)
       return null
@@ -779,6 +781,11 @@ export class MaquinaCS {
   /** Pontua o quanto um valor combina com o tipo do parâmetro (-1 = não serve). */
   combina(v, tipo) {
     if (tipo === 'var' || tipo === 'object' || tipo === 'dynamic') return 1
+    if (v instanceof NovoPendente) { // new() sem tipo: serve a qualquer parâmetro que seja uma classe/tipo da biblioteca
+      const t = semNulo(tipo)
+      const nome = partesGenericas(t).nome
+      return /^[A-Z]$/.test(t) ? 1 : !ehNumericoNome(t) && !ehArray(t) && t !== 'string' && t !== 'bool' && (this.buscarClasse(nome) || this.bib?.tipo(nome)) ? 2 : -1
+    }
     const t = semNulo(tipo)
     if (v === null) return t === tipo && (ehNumericoNome(t) || t === 'bool' || t === 'char') ? -1 : 2
     if (this.ehTipo(v, t)) return 4
@@ -891,7 +898,7 @@ export class MaquinaCS {
     if (v instanceof ValorEnum) return this.textoEnum(v, formato)
     if (v instanceof Objeto) return this.textoObjeto(v, formato)
     if (v instanceof Tupla) return `(${v.itens.map((x) => this.aTexto(x)).join(', ')})`
-    if (v instanceof Arr) return nomeCompleto(`${v.tipoElem}[${v.dims ? ','.repeat(v.dims.length - 1) : ''}]`)
+    if (v instanceof Arr && !v.paraTexto) return nomeCompleto(`${v.tipoElem}[${v.dims ? ','.repeat(v.dims.length - 1) : ''}]`)
     if (v instanceof Multicast) return 'System.MulticastDelegate'
     if (v.paraTexto) return v.paraTexto(this, formato, cultura)
     if (v.ehFunc) return v.nomeTipo ?? 'System.Func'

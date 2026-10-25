@@ -239,14 +239,24 @@ export function reescrever(f, { deslocamentos: reescreverDeslocamentos = true } 
         continue
       }
       // padrão de lista [1, .. var resto]: a gramática só aceita `..` sozinho, então vira `var __sl_resto` (o padroes.js reconhece)
-      if (c === '[') colchetes.push(/(?:\b(?:is|not|and|or|case)|[{,(:[])\s*$/.test(f.slice(Math.max(0, i - 12), i)))
-      else if (c === ']') colchetes.pop()
+      if (c === '[') colchetes.push(/(?:\b(?:is|not|and|or|case)|[{,(:[]|\.\.)\s*$/.test(f.slice(Math.max(0, i - 12), i)))
+      else if (c === ']' && colchetes.pop()) {
+        // [2, 3] resto: a gramática não aceita nome depois de um padrão de lista, então vira `[2, 3] and var resto`
+        const d = /^\s*([A-Za-z_]\w*)/.exec(f.slice(i + 1, i + 80))
+        if (d && !/^(?:and|or|when|is|as|switch|with|not|in|into|on|equals|by|ascending|descending|select|where|orderby|group|join|let|from)$/.test(d[1])) {
+          emitir(']  and var ' + d[1]); i += 1 + d[0].length; mudou = true; continue
+        }
+      }
       if (c === '.' && f[i + 1] === '.' && f[i - 1] !== '.' && f[i + 2] !== '.') {
         const fatia = /^\.\.\s*var\s+([A-Za-z_]\w*)/.exec(f.slice(i, i + 80))
         if (fatia) { emitir('var __sl_' + fatia[1]); i += fatia[0].length; mudou = true; continue }
         // `..` sozinho entre `[`/`,` e `,`/`]` de um padrão de lista ([.., 9], [..]) a gramática lê como intervalo
         if (colchetes[colchetes.length - 1] && /[[,]\s*$/.test(f.slice(Math.max(0, i - 20), i)) && /^\.\.\s*[,\]]/.test(f.slice(i, i + 20))) {
           emitir('var __sl__'); i += 2; mudou = true; continue
+        }
+        // `.. [2, 3]`, `.. { Length: 2 } meio`: a fatia com subpadrão vira `__SL and <padrão>` (o padroes.js reconhece)
+        if (colchetes[colchetes.length - 1] && /[[,]\s*$/.test(f.slice(Math.max(0, i - 20), i))) {
+          emitir('__SL and '); i += 2; mudou = true; continue
         }
       }
       if (reescreverDeslocamentos && c === '>' && f[i + 1] === '>' && f[i + 2] === '>') {

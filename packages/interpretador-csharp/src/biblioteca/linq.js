@@ -61,6 +61,20 @@ export class AgrupamentoCS {
 AgrupamentoCS.METODOS = {}
 AgrupamentoCS.PROPS = { Key: { get: (m, g) => g.Key } }
 
+/** ToLookup(): como um dicionário de grupos; lookup[chave] devolve o grupo (vazio se a chave não existe). */
+export class LookupCS {
+  constructor(mapa) { this.mapa = mapa }
+
+  iterar() { return this.mapa.values() }
+
+  nomeCS() { return 'ILookup' }
+
+  paraTexto() { return 'System.Linq.Lookup' }
+}
+LookupCS.METODOS = { Contains: (m, l, [k]) => l.mapa.has(m.hashDe(k)) }
+LookupCS.PROPS = { Count: { get: (m, l) => l.mapa.size } }
+LookupCS.INDICE = { get: (m, l, [k]) => l.mapa.get(m.hashDe(k)) ?? new AgrupamentoCS(k, []) }
+
 const chamar = (m, f, args) => m.chamarFuncao(f, args)
 const todos = (m, fonte) => [...m.iterarSync(fonte)]
 const nenhum = (m) => m.excecao('InvalidOperationException', 'Sequence contains no elements')
@@ -392,7 +406,16 @@ export const LINQ = {
     const b = todos(m, outra)
     return a.length === b.length && a.every((x, i) => igualValor(m, x, b[i]))
   },
-  ToLookup: (m, fonte, [kf]) => LINQ.GroupBy(m, fonte, [kf]),
+  ToLookup(m, fonte, [kf, es]) {
+    const mapa = new Map()
+    for (const x of m.iterarSync(fonte)) {
+      const k = chamar(m, kf, [x])
+      const h = m.hashDe(k)
+      if (!mapa.has(h)) mapa.set(h, new AgrupamentoCS(k, []))
+      mapa.get(h).itens.push(es?.ehFunc ? chamar(m, es, [x]) : x)
+    }
+    return new LookupCS(mapa)
+  },
   AsEnumerable: (m, fonte) => fonte,
   AsQueryable: (m, fonte) => fonte,
   ForEach(m, fonte, [f]) { for (const x of m.iterarSync(fonte)) chamar(m, f, [x]); return null },

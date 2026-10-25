@@ -3,6 +3,7 @@
 import { Multicast, igualValor } from '../operadores.js'
 import { Arr, Objeto, Ref, Tupla, comoNumero } from '../valores.js'
 import { partesGenericas } from '../tipos.js'
+import { SpanCS, intervalo } from './span.js'
 
 const nulo = (m) => m.excecao('ArgumentNullException', "Value cannot be null. (Parameter 'source')")
 
@@ -819,6 +820,7 @@ export const METODOS_ARRAY = {
   },
   GetUpperBound: (m, a, [d]) => (a.dims ? a.dims[d] : a.itens.length) - 1,
   GetLowerBound: () => 0,
+  AsSpan: (m, a, [ini = 0, n]) => SpanCS.de(a, ini, intervalo(m, a.itens.length, ini, n)),
   Clone: (m, a) => new Arr(a.tipoElem, a.itens.slice(), a.dims ? a.dims.slice() : null),
   CopyTo(m, a, [dst, i = 0]) { a.itens.forEach((x, k) => { dst.itens[i + k] = x }); return null },
   GetValue: (m, a, args) => a.itens[m.posicaoNoArray(a, args)],

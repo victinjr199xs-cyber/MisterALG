@@ -79,7 +79,14 @@ export const padroes = {
     if (!itens) return false
     const subs = p.f.filter((x) => x.k !== 'name')
     const nomeFatia = (s) => (s.t === 'var_pattern' && /^__sl_/.test(s.f[s.f.length - 1]?.x ?? '') ? s.f[s.f.length - 1].x.slice(5) : null)
-    const ixF = subs.findIndex((s) => s.t === 'slice_pattern' || nomeFatia(s) !== null)
+    // `.. [2, 3]` / `.. { Length: 2 } meio` chega como `__SL and <padrão> and ...` (preprocessar.js): os padrões depois do __SL
+    const conjuntos = (s) => (s.t === 'and_pattern' ? [...conjuntos(filho(s, 'left') ?? s.f[0]), ...conjuntos(filho(s, 'right') ?? s.f[s.f.length - 1])] : [s])
+    const subFatia = (s) => {
+      if (s.t !== 'and_pattern') return null
+      const cs = conjuntos(s)
+      return cs[0].t === 'constant_pattern' && cs[0].f[0]?.x === '__SL' ? cs.slice(1) : null
+    }
+    const ixF = subs.findIndex((s) => s.t === 'slice_pattern' || nomeFatia(s) !== null || subFatia(s) !== null)
     if (ixF < 0 ? itens.length !== subs.length : itens.length < subs.length - 1) return false
     for (let i = 0; i < subs.length; i += 1) {
       if (i === ixF) continue
@@ -87,10 +94,12 @@ export const padroes = {
       if (!(yield* this.casarPadrao(subs[i], itens[pos], amb))) return false
     }
     const nome = ixF >= 0 ? nomeFatia(subs[ixF]) : null
-    if (nome && nome !== '_') {
+    const sub = ixF >= 0 ? subFatia(subs[ixF]) : null
+    if ((nome && nome !== '_') || sub) {
       const [a, b] = [ixF, itens.length - (subs.length - 1 - ixF)]
       const fatia = ehTexto ? v.slice(a, b) : v instanceof ListaCS ? new ListaCS(itens.slice(a, b), v.tipoElem) : new Arr(v.tipoElem, itens.slice(a, b))
-      amb.declarar(nome, new Ref(fatia, this.nomeDoTipoDe(fatia)))
+      if (nome && nome !== '_') amb.declarar(nome, new Ref(fatia, this.nomeDoTipoDe(fatia)))
+      for (const p2 of sub ?? []) if (!(yield* this.casarPadrao(p2, fatia, amb))) return false
     }
     return true
   },
