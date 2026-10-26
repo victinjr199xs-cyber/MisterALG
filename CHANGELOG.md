@@ -23,8 +23,18 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
   instalador, e os que o app gera ficam no disco (antes sumiam ao fechar o app). Medido num app recém-aberto:
   `<iostream>` + `<vector>` de 4,5 s para 1,4 s; `<bits/stdc++.h>` de 5,5 s para 2,0 s.
 
+- **Passo a passo do C/C++ mais rápido**: expressões simples calculadas sem gerador, o código da biblioteca
+  não sobe mais um evento de linha por comando, caches por chamada e heap com busca binária. Um programa com
+  2000 elementos em `vector`, `sort`, `map`, `set` e `unordered_map` roda em 1,9 s (antes, 7,2 s); C puro com
+  laços e ponteiros, na metade do tempo.
+- **F8 do C++ começa mais rápido**: os cabeçalhos vão sob medida para cada programa (só o que ele usa), e a
+  árvore do `map`/`set` e a tabela do `unordered_map` fazem a busca e o rebalanceamento em JavaScript, com as
+  mesmas regras da libstdc++ (o JSON do clang fica de 15% a 40% menor). A árvore do programa já é preparada em
+  segundo plano depois de um F9 e ao abrir o arquivo: o F8 nesse caso começa em menos de 0,2 s.
+
 ### Correções
 
+- C++ no passo a passo: membros `static` de mesmo nome em classes diferentes viravam uma variável só.
 - C++ no passo a passo: uma exceção que atravessava um bloco destruía os temporários da expressão depois de liberar
   a pilha (`stoi(...)` dentro de `try` dava "acesso à variável de uma função que já terminou").
 - Cópia de objetos de classes-template com construtor de cópia próprio dentro de um `vector` (antes copiava campo a

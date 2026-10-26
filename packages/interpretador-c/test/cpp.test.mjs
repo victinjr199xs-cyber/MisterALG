@@ -201,3 +201,17 @@ int main() {
   assert.match(r.erro.mensagem, /índice 3 fora do vector \(ele tem 3 elementos/)
   assert.equal(r.erro.linha, 4)
 })
+
+test('membros static de mesmo nome em classes diferentes são variáveis diferentes', async () => {
+  const r = await rodarCpp(`#include <iostream>
+using namespace std;
+struct A { static int n; static const int primeiro = 1; };
+struct B { static int n; static const int primeiro = 2; };
+int A::n = 10;
+int B::n = 20;
+extern int g;
+int g = 5;
+int main() { A::n++; cout << A::n << " " << B::n << " " << A::primeiro << B::primeiro << " " << g << endl; }`)
+  ok(r)
+  assert.equal(r.saida, '11 20 12 5\n')
+})

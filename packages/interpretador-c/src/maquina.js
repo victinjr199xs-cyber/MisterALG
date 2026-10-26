@@ -272,7 +272,11 @@ export class MaquinaC {
           }
           break
         case 'VarDecl':
-          if (!dentroDeFuncao || no.storageClass === 'static' || no.storageClass === 'extern') globaisParaIniciar.push(no)
+          if (!dentroDeFuncao || no.storageClass === 'static' || no.storageClass === 'extern') {
+            // membro static: a classe dele (o "int A::n = 0;" de fora da classe aponta para ela em parentDeclContextId)
+            no.classeDaVariavel = classe ?? this.chavePorId.get(no.parentDeclContextId) ?? null
+            globaisParaIniciar.push(no)
+          }
           break
         default:
       }
@@ -289,10 +293,10 @@ export class MaquinaC {
     // Globais (e static locais): uma vez só, já com o valor inicial.
     for (const d of globaisParaIniciar) {
       if (this.globais.has(d.id)) continue
-      const ja = [...this.globais.values()].find((g) => g.nome === d.name && !g.local && d.storageClass === 'extern')
+      const ja = [...this.globais.values()].find((g) => g.nome === d.name && !g.local && g.classe === d.classeDaVariavel && d.storageClass === 'extern')
       if (ja) { this.globais.set(d.id, ja); continue }
       const tipo = this.tipos.de(d.type)
-      const variavel = { nome: d.name, tipo, tipoTexto: d.type.qualType, endereco: 0, local: !!d.storageClass && d.storageClass === 'static' && this.estaEmFuncao(d) }
+      const variavel = { nome: d.name, classe: d.classeDaVariavel, tipo, tipoTexto: d.type.qualType, endereco: 0, local: !!d.storageClass && d.storageClass === 'static' && this.estaEmFuncao(d) }
       variavel.endereco = this.mem.alocarEstatico(tamanhoDe(tipo), alinhamentoDe(tipo), { nome: d.name, tipo })
       this.globais.set(d.id, variavel)
       // Um extern do cabeçalho (stdin...) ganha um valor diferente de zero, para não parecer NULL.
@@ -300,7 +304,8 @@ export class MaquinaC {
         if (tipo.k === 'ptr') this.mem.escrever(tipo, variavel.endereco, variavel.endereco)
         variavel.doCabecalho = true
       } else this.listaGlobais.push(variavel)
-      for (const outro of globaisParaIniciar) if (outro !== d && outro.name === d.name && !this.globais.has(outro.id) && !this.estaEmFuncao(outro)) this.globais.set(outro.id, variavel)
+      // (a mesma variável declarada de novo; membros static de mesmo nome em classes diferentes são variáveis diferentes)
+      for (const outro of globaisParaIniciar) if (outro !== d && outro.name === d.name && outro.classeDaVariavel === d.classeDaVariavel && !this.globais.has(outro.id) && !this.estaEmFuncao(outro)) this.globais.set(outro.id, variavel)
     }
     this.textoC = this.mem.alocarEstatico(2, 1, { nome: 'texto constante' })
     this.mem.gravarCadeia(this.textoC, 'C')
