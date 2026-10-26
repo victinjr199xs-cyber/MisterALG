@@ -489,7 +489,7 @@ export const METODOS_CPP = {
     const p = Number(yield* this.val(x.inner[0]))
     if (!p) return undefined
     const t = this.tipo(x.inner[0]).alvo
-    const bloco = this.mem.heap.find((b) => b.inicio === p)
+    const bloco = this.mem.blocoDoHeap(p)
     if (bloco && this.precisaDestruir(t)) {
       if (x.isArray || x.isArrayAsWritten) {
         const n = Math.floor(bloco.tamanho / Math.max(1, tamanhoDe(t)))

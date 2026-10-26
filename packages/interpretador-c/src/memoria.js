@@ -194,6 +194,12 @@ export class Memoria {
     return procurar(this.estaticos, endereco)
   }
 
+  /** O bloco do malloc que começa exatamente neste endereço (ou undefined). */
+  blocoDoHeap(endereco) {
+    const b = this.heap[posicao(this.heap, endereco)]
+    return b?.inicio === endereco ? b : undefined
+  }
+
   verificar(endereco, tamanho) {
     const b = this.bloco(endereco)
     if (b && endereco + tamanho <= b.fim) return b
