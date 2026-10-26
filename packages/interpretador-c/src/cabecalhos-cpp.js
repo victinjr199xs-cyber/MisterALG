@@ -43,17 +43,17 @@ const STRING = `#pragma once
 #include <__base>
 namespace std {
 class string {
-  char *__dados = nullptr;
-  size_t __tamanho = 0;
-  size_t __capacidade = 0;
+  char *__dados;
+  size_t __tamanho;
+  size_t __capacidade;
 public:
   static const size_t npos = (size_t)-1;
   string();
   string(const char *s);
   string(const string &s);
   string(size_t n, char c);
-  string(const string &s, size_t pos, size_t n = npos) { *this = s.substr(pos, n); } // @se substr string
-  template <class I, class = decltype(*I())> string(I a, I b) { for (; a != b; ++a) push_back(*a); }
+  string(const string &s, size_t pos, size_t n = npos) : __dados(), __tamanho(), __capacidade() { *this = s.substr(pos, n); } // @se substr
+  template <class I, class = decltype(*I())> string(I a, I b) : __dados(), __tamanho(), __capacidade() { for (; a != b; ++a) push_back(*a); } // @se begin end rbegin rend data c_str
   ~string();
   string &operator=(const string &s);
   string &operator=(const char *s);
@@ -177,15 +177,15 @@ public:
   istream &operator>>(string &s);
   istream &operator>>(char *s);
   istream &operator>>(unsigned long long &v);
-  istream &operator>>(short &v);
-  istream &operator>>(istream &(*manipulador)(istream &));
+  istream &operator>>(short &v); // @se short
+  istream &operator>>(istream &(*manipulador)(istream &)); // @se ws
   explicit operator bool() const;
   bool operator!() const;
   istream &ignore(streamsize n = 1, int ate = -1);
   int get();
-  istream &get(char &c);
-  int peek();
-  bool good() const;
+  istream &get(char &c); // @se get
+  int peek(); // @se peek
+  bool good() const; // @se good
   bool eof() const;
   bool fail() const;
   void clear();
@@ -227,9 +227,9 @@ const VECTOR = `#pragma once
 #include <__base>
 namespace std {
 template <class T> class vector {
-  T *__dados = nullptr;
-  size_t __tamanho = 0;
-  size_t __capacidade = 0;
+  T *__dados;
+  size_t __tamanho;
+  size_t __capacidade;
 public:
   typedef T *iterator; // @se iterator
   typedef const T *const_iterator; // @se const_iterator
@@ -241,15 +241,14 @@ public:
   vector(const vector &outro);
   ~vector() {
     if (false) {
-      __exigir_copia(__dados, 0);
+      new (__dados) T(*__dados);
       __exigir_padrao(__dados, 0);
-      __exigir_atribuicao(__dados, 0);
     }
     __destruir();
   }
   void __destruir();
   vector &operator=(const vector &outro);
-  template <class I, class = decltype(*I())> vector(I a, I b) { for (; a != b; ++a) push_back(*a); }
+  template <class I, class = decltype(*I())> vector(I a, I b) : __dados(), __tamanho(), __capacidade() { for (; a != b; ++a) push_back(*a); }
   template <class... A> void emplace_back(const A &...a) { push_back(T(a...)); } // @se emplace_back
   void push_back(const T &x);
   void pop_back(); // @se pop_back
@@ -354,7 +353,8 @@ export const CABECALHOS_CPP = {
 }
 
 // O que pode perder as funções e classes que o programa não usa (ver sob-medida.js).
-const PODAVEIS = ['__base', 'utility', 'algorithm', 'numeric', 'tuple', 'functional', 'memory', 'limits']
+const PODAVEIS = ['__base', 'utility', 'algorithm', 'numeric', 'tuple', 'functional', 'memory', 'limits',
+  '__arvore', 'map', 'set', '__hash', 'unordered_map', 'unordered_set', 'queue']
 
 // <bits/stdc++.h>: os cabeçalhos leves sempre; os outros, se algum dos nomes deles aparece no programa.
 const SEMPRE_NO_BITS = ['cstdio', 'cstdlib', 'cstring', 'cmath', 'cctype', 'ctime', 'climits', 'cstdint', 'cstddef',

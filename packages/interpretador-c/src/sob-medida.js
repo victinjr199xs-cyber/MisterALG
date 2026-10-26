@@ -17,6 +17,11 @@
 const IDENTIFICADOR = /[A-Za-z_]\w*/g
 const semComentarios = (texto) => texto.replace(/\/\/[^\n]*/g, '').replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
 const nomesEm = (texto) => semComentarios(texto).match(IDENTIFICADOR) ?? []
+// "  size_t find(const string &s) const;": o nome que uma linha declara (find) não é um uso dele.
+const DECLARACAO = /^(\s*(?:(?:const|static|virtual|explicit|inline|friend|unsigned|long)\s+)*[A-Za-z_][\w:]*(?:<[^()]*?>)?(?:\s*[*&]+\s*|\s+))([A-Za-z_]\w*)(\s*\()/gm
+const NAO_E_TIPO = /^\s*(return|throw|else|case|delete|new|goto|co_return|typedef|using)\b/
+/** Os nomes usados num trecho de cabeçalho, sem os nomes das funções que ele só declara. */
+const nomesUsadosEm = (texto) => nomesEm(semComentarios(texto).replace(DECLARACAO, (m, tipo, _nome, abre) => (NAO_E_TIPO.test(tipo) ? m : `${tipo} ${abre}`)))
 /** Os nomes usados soltos (não depois de "." ou "->"). */
 const nomesSoltosEm = (texto) => [...semComentarios(texto).matchAll(/(?<!(?:\.|->)\s*)\b[A-Za-z_]\w*/g)].map((m) => m[0])
 const MARCA = '\u0001' // lugar de um trecho marcado dentro do texto: MARCA + número + MARCA
@@ -129,7 +134,7 @@ export function cabecalhosSobMedida(fonte, cabecalhos, podaveis, paraBits) {
   const trechos = []
   const partes = []
   const montar = new Map() // cabeçalho → itens (cada um com texto que pode ter MARCAs)
-  const usar = (texto) => { for (const n of nomesEm(texto.replace(new RegExp(`${MARCA}\\d+${MARCA}`, 'g'), ' '))) usados.add(n) }
+  const usar = (texto) => { for (const n of nomesUsadosEm(texto.replace(new RegExp(`${MARCA}\\d+${MARCA}`, 'g'), ' '))) usados.add(n) }
   for (const nome of alcancados) {
     const original = resultado[nome]
     if (typeof original !== 'string') continue

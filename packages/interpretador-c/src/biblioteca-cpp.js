@@ -510,6 +510,155 @@ const sobreIntervalo = (acao) => function* nativo(m, { args }) {
   }
 }
 
+// ---- a árvore AVL de map/set (cabecalhos-stl.js: os nós são C++, o resto é aqui) --------
+
+/** Os campos de um __no_arvore<V>: ler/gravar ponteiros e a altura, e onde fica a chave. */
+function noDaArvore(m, tipoNo, primeiro = 0) {
+  const campos = layout(tipoNo).campos
+  const campo = (n) => campos.find((c) => c.nome === n)
+  const [valor, esq, dir, pai, altura] = ['valor', 'esq', 'dir', 'pai', 'altura'].map(campo)
+  const ler = (c) => (n) => (n ? Number(m.mem.ler(c.tipo, n + c.deslocamento)) : 0)
+  const gravar = (c) => (n, v) => m.mem.escrever(c.tipo, n + c.deslocamento, v)
+  const first = primeiro ? layout(valor.tipo).campos.find((c) => c.nome === 'first') : null
+  return {
+    esq: ler(esq), dir: ler(dir), pai: ler(pai), altura: ler(altura),
+    porEsq: gravar(esq), porDir: gravar(dir), porPai: gravar(pai), porAltura: gravar(altura),
+    tipoPonteiro: esq.tipo,
+    tipoChave: first ? first.tipo : valor.tipo,
+    chave: (n) => n + valor.deslocamento + (first ? first.deslocamento : 0),
+  }
+}
+
+function minimo(a, n) { while (n && a.esq(n)) n = a.esq(n); return n }
+function maximo(a, n) { while (n && a.dir(n)) n = a.dir(n); return n }
+function seguinte(a, n) {
+  if (a.dir(n)) return minimo(a, a.dir(n))
+  while (a.pai(n) && n === a.dir(a.pai(n))) n = a.pai(n)
+  return a.pai(n)
+}
+function antecessor(a, n) {
+  if (a.esq(n)) return maximo(a, a.esq(n))
+  while (a.pai(n) && n === a.esq(a.pai(n))) n = a.pai(n)
+  return a.pai(n)
+}
+
+/** Ligações e rebalanceamento (AVL) com a raiz guardada no endereço `raiz`. */
+function avl(m, a, raiz) {
+  const alt = (n) => (n ? a.altura(n) : 0)
+  const atualizar = (n) => a.porAltura(n, Math.max(alt(a.esq(n)), alt(a.dir(n))) + 1)
+  const trocarFilho = (pai, velho, novo) => {
+    if (!pai) m.mem.escrever(a.tipoPonteiro, raiz, novo)
+    else if (a.esq(pai) === velho) a.porEsq(pai, novo)
+    else a.porDir(pai, novo)
+    if (novo) a.porPai(novo, pai)
+  }
+  const girarEsq = (x) => {
+    const y = a.dir(x)
+    a.porDir(x, a.esq(y))
+    if (a.esq(y)) a.porPai(a.esq(y), x)
+    trocarFilho(a.pai(x), x, y)
+    a.porEsq(y, x)
+    a.porPai(x, y)
+    atualizar(x)
+    atualizar(y)
+    return y
+  }
+  const girarDir = (x) => {
+    const y = a.esq(x)
+    a.porEsq(x, a.dir(y))
+    if (a.dir(y)) a.porPai(a.dir(y), x)
+    trocarFilho(a.pai(x), x, y)
+    a.porDir(y, x)
+    a.porPai(x, y)
+    atualizar(x)
+    atualizar(y)
+    return y
+  }
+  const rebalancear = (n) => {
+    while (n) {
+      atualizar(n)
+      const f = alt(a.esq(n)) - alt(a.dir(n))
+      if (f > 1) {
+        if (alt(a.esq(a.esq(n))) < alt(a.dir(a.esq(n)))) girarEsq(a.esq(n))
+        n = girarDir(n)
+      } else if (f < -1) {
+        if (alt(a.dir(a.dir(n))) < alt(a.esq(a.dir(n)))) girarDir(a.dir(n))
+        n = girarEsq(n)
+      }
+      n = a.pai(n)
+    }
+  }
+  return { trocarFilho, rebalancear }
+}
+
+const tipoDoNo = (arg) => (arg.tipo.k === 'ref' ? arg.tipo.alvo : arg.tipo).alvo
+
+// ---- a tabela de dispersão de unordered_* (como a da libstdc++; os nós são C++) ---------
+
+/** Os campos de um __tabela (no endereço t) e dos nós dele. Os baldes apontam para o nó antes do primeiro do balde. */
+function tabelaHash(m, tArg, primeiro = 0) {
+  const t = Number(tArg.valor)
+  const campos = layout(tipoDoNo(tArg)).campos
+  const campo = (n) => campos.find((c) => c.nome === n)
+  const [baldes, numBaldes, prim, tamanho, aumento] = ['__baldes', '__num_baldes', '__primeiro', '__tamanho', '__proximo_aumento'].map(campo)
+  const tipoNo = prim.tipo.alvo
+  const camposNo = layout(tipoNo).campos
+  const [prox, codigo, valor] = ['prox', 'codigo', 'valor'].map((n) => camposNo.find((c) => c.nome === n))
+  const first = primeiro ? layout(valor.tipo).campos.find((c) => c.nome === 'first') : null
+  const ler = (c, base = t) => m.mem.ler(c.tipo, base + c.deslocamento)
+  const gravar = (c, v, base = t) => m.mem.escrever(c.tipo, base + c.deslocamento, v)
+  const h = {
+    antes: t + prim.deslocamento, // o "nó" cujo prox é o __primeiro
+    tipoPonteiro: prim.tipo,
+    baldes: () => Number(ler(baldes)),
+    num: () => BigInt(ler(numBaldes)),
+    tamanho: () => Number(ler(tamanho)),
+    prox: (n) => Number(m.mem.ler(prox.tipo, n + prox.deslocamento)),
+    porProx: (n, v) => m.mem.escrever(prox.tipo, n + prox.deslocamento, v),
+    codigo: (n) => BigInt(m.mem.ler(codigo.tipo, n + codigo.deslocamento)),
+    chave: (n) => n + valor.deslocamento + (first ? first.deslocamento : 0),
+    tipoChave: first ? first.tipo : valor.tipo,
+    balde: (c) => Number(BigInt(c) % h.num()),
+    noBalde: (b) => Number(m.mem.ler(prim.tipo, h.baldes() + b * 4)),
+    porBalde: (b, v) => m.mem.escrever(prim.tipo, h.baldes() + b * 4, v),
+    aumento: () => BigInt(ler(aumento)),
+    porAumento: (v) => gravar(aumento, v),
+    /** _M_rehash_aux: os nós passam para `n` baldes novos, na mesma ordem da libstdc++. */
+    redimensionar(n) {
+      const novos = m.mem.malloc(n * 4, false, { tipoElem: prim.tipo, novo: 'vetor' })
+      if (!novos) throw new ErroC('não há memória para a tabela crescer')
+      m.mem.preencher(novos, 0, n * 4)
+      const balde = (c) => Number(BigInt(c) % BigInt(n))
+      const novoBalde = (b) => Number(m.mem.ler(prim.tipo, novos + b * 4))
+      const porNovoBalde = (b, v) => m.mem.escrever(prim.tipo, novos + b * 4, v)
+      let p = h.prox(h.antes)
+      h.porProx(h.antes, 0)
+      let baldeDoPrimeiro = 0
+      while (p) {
+        const seguinte = h.prox(p)
+        const b = balde(h.codigo(p))
+        if (!novoBalde(b)) {
+          h.porProx(p, h.prox(h.antes))
+          h.porProx(h.antes, p)
+          porNovoBalde(b, h.antes)
+          if (h.prox(p)) porNovoBalde(baldeDoPrimeiro, p)
+          baldeDoPrimeiro = b
+        } else {
+          const antes = novoBalde(b)
+          h.porProx(p, h.prox(antes))
+          h.porProx(antes, p)
+        }
+        p = seguinte
+      }
+      if (h.baldes()) m.mem.free(h.baldes())
+      gravar(baldes, novos)
+      gravar(numBaldes, BigInt(n))
+    },
+  }
+  return h
+}
+
+
 // ---- stringstream ------------------------------------------------------------------
 
 function camposDoFluxo(m, objeto) {
@@ -855,6 +1004,145 @@ export const BIBLIOTECA_CPP = {
     } finally {
       m.mem.desempilharAte(marca)
     }
+  },
+
+  // ---- map e set (a árvore) ----
+  * __minimo_js(m, { args }) { return minimo(noDaArvore(m, tipoDoNo(args[0])), Number(args[0].valor)) },
+  * __maximo_js(m, { args }) { return maximo(noDaArvore(m, tipoDoNo(args[0])), Number(args[0].valor)) },
+  * __seguinte_js(m, { args }) { return seguinte(noDaArvore(m, tipoDoNo(args[0])), Number(args[0].valor)) },
+  * __antecessor_js(m, { args }) { return antecessor(noDaArvore(m, tipoDoNo(args[0])), Number(args[0].valor)) },
+  * __limite_js(m, { args }) { // lower_bound (superior = 0) ou upper_bound (1)
+    const [raiz, k, comp, primeiro, superior] = args
+    const a = noDaArvore(m, tipoDoNo(raiz), Number(primeiro.valor))
+    const menor = comparador(m, comp, a.tipoChave)
+    const chave = Number(k.valor)
+    let n = Number(raiz.valor)
+    let r = 0
+    while (n) {
+      const vaiEsq = Number(superior.valor) ? yield* menor(chave, a.chave(n)) : !(yield* menor(a.chave(n), chave))
+      if (vaiEsq) { r = n; n = a.esq(n) } else n = a.dir(n)
+    }
+    return r
+  },
+  * __ligar_js(m, { args }) { // o nó novo entra no lugar dele (iguais vão para a direita) e a árvore se rebalanceia
+    const [raizEnd, novoArg, comp, primeiro] = args
+    const novo = Number(novoArg.valor)
+    const a = noDaArvore(m, tipoDoNo(novoArg), Number(primeiro.valor))
+    const menor = comparador(m, comp, a.tipoChave)
+    const raiz = Number(raizEnd.valor)
+    let pai = 0
+    let n = Number(m.mem.ler(a.tipoPonteiro, raiz))
+    let esquerda = false
+    while (n) {
+      pai = n
+      esquerda = yield* menor(a.chave(novo), a.chave(n))
+      n = esquerda ? a.esq(n) : a.dir(n)
+    }
+    a.porPai(novo, pai)
+    if (!pai) m.mem.escrever(a.tipoPonteiro, raiz, novo)
+    else if (esquerda) a.porEsq(pai, novo)
+    else a.porDir(pai, novo)
+    avl(m, a, raiz).rebalancear(pai)
+  },
+  * __desligar_js(m, { args }) { // tira o nó da árvore (quem apaga é o delete do C++) e rebalanceia
+    const [raizEnd, noArg] = args
+    const z = Number(noArg.valor)
+    const a = noDaArvore(m, tipoDoNo(noArg))
+    const { trocarFilho, rebalancear } = avl(m, a, Number(raizEnd.valor))
+    let desde
+    if (!a.esq(z)) { desde = a.pai(z); trocarFilho(a.pai(z), z, a.dir(z)) }
+    else if (!a.dir(z)) { desde = a.pai(z); trocarFilho(a.pai(z), z, a.esq(z)) }
+    else {
+      const y = minimo(a, a.dir(z))
+      if (a.pai(y) !== z) {
+        desde = a.pai(y)
+        trocarFilho(a.pai(y), y, a.dir(y))
+        a.porDir(y, a.dir(z))
+        a.porPai(a.dir(y), y)
+      } else desde = y
+      trocarFilho(a.pai(z), z, y)
+      a.porEsq(y, a.esq(z))
+      a.porPai(a.esq(y), y)
+      a.porAltura(y, a.altura(z))
+    }
+    rebalancear(desde)
+  },
+
+  // ---- unordered_map e unordered_set (a tabela) ----
+  * __antes_de_js(m, { args }) { // o nó antes do primeiro igual a k no balde dele (ou nulo)
+    const [tArg, k, codigoArg, igualArg, primeiro] = args
+    const h = tabelaHash(m, tArg, Number(primeiro.valor))
+    if (!h.tamanho() || !h.baldes()) return 0
+    const codigo = BigInt(codigoArg.valor)
+    const b = h.balde(codigo)
+    let antes = h.noBalde(b)
+    if (!antes) return 0
+    const igual = comparador(m, igualArg, h.tipoChave)
+    for (let p = h.prox(antes); p && h.balde(h.codigo(p)) === b; antes = p, p = h.prox(p)) {
+      if (h.codigo(p) === codigo && (yield* igual(h.chave(p), Number(k.valor)))) return antes
+    }
+    return 0
+  },
+  * __crescer_js(m, { args }) { // _M_need_rehash (fator de carga máximo 1): a 1ª inserção já cria 13 baldes
+    const h = tabelaHash(m, args[0])
+    const n = BigInt(h.tamanho() + 1)
+    const aumento = h.aumento()
+    const num = h.num()
+    if (n > aumento) {
+      const minimo = n > (aumento ? 0n : 11n) ? n : 11n
+      if (minimo >= num) {
+        const pedido = minimo + 1n > num * 2n ? minimo + 1n : num * 2n
+        const novo = proximoPrimo(Number(pedido))
+        h.porAumento(BigInt(novo))
+        h.redimensionar(novo)
+        return
+      }
+      h.porAumento(num)
+    }
+    if (!h.baldes()) h.redimensionar(Number(num))
+  },
+  * __reservar_js(m, { args }) {
+    const h = tabelaHash(m, args[0])
+    const n = Number(args[1].valor)
+    if (BigInt(n) > h.num()) {
+      const novo = proximoPrimo(n)
+      h.porAumento(BigInt(novo))
+      h.redimensionar(novo)
+    }
+  },
+  * __limpar_baldes_js(m, { args }) {
+    const h = tabelaHash(m, args[0])
+    if (h.baldes()) m.mem.preencher(h.baldes(), 0, Number(h.num()) * 4)
+  },
+  * __ligar_hash_js(m, { args }) { // _M_insert_bucket_begin (ou logo depois de `antes`, no multi)
+    const h = tabelaHash(m, args[0])
+    const no = Number(args[1].valor)
+    const b = h.balde(h.codigo(no))
+    const antes = Number(args[2].valor) || h.noBalde(b)
+    if (antes) {
+      h.porProx(no, h.prox(antes))
+      h.porProx(antes, no)
+    } else {
+      h.porProx(no, h.prox(h.antes))
+      h.porProx(h.antes, no)
+      if (h.prox(no)) h.porBalde(h.balde(h.codigo(h.prox(no))), no)
+      h.porBalde(b, h.antes)
+    }
+  },
+  * __desligar_hash_js(m, { args }) { // _M_erase (quem apaga o nó é o delete do C++)
+    const h = tabelaHash(m, args[0])
+    const no = Number(args[1].valor)
+    const b = h.balde(h.codigo(no))
+    let antes = h.noBalde(b)
+    while (h.prox(antes) !== no) antes = h.prox(antes)
+    const prox = h.prox(no)
+    if (antes === h.noBalde(b)) {
+      if (!prox || h.balde(h.codigo(prox)) !== b) {
+        if (prox) h.porBalde(h.balde(h.codigo(prox)), antes)
+        h.porBalde(b, 0)
+      }
+    } else if (prox && h.balde(h.codigo(prox)) !== b) h.porBalde(h.balde(h.codigo(prox)), antes)
+    h.porProx(antes, prox)
   },
 
   // ---- unordered_map ----
