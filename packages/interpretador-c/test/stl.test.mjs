@@ -143,3 +143,40 @@ test('cabeçalhos sob medida: só o que o programa usa, e o resto continua compi
   assert.doesNotMatch(cabecalhosCppPara('#include <vector>\nint main() { std::vector<int> v; v.begin(); }\n').__base, /auto begin\(C &c\)/)
   assert.match(cabecalhosCppPara('#include <vector>\nint main() { std::vector<int> v; begin(v); }\n').__base, /auto begin\(C &c\)/)
 })
+
+test('set com lambda ou ponteiro de função como comparador (o operator= da lambda usa o this normal)', async () => {
+  const r = await rodarCpp(`#include <set>
+#include <iostream>
+using namespace std;
+bool maior(int a, int b) { return a > b; }
+int main() {
+    auto cmp = [](int a, int b) { return a % 7 < b % 7; };
+    set<int, decltype(cmp)> s(cmp);
+    for (int i = 0; i < 20; i++) s.insert(i);
+    set<int, bool (*)(int, int)> p(maior);
+    for (int i : {5, 1, 9}) p.insert(i);
+    for (int x : s) cout << x;
+    cout << ' ';
+    for (int x : p) cout << x;
+    cout << endl;
+}`)
+  ok(r)
+  assert.equal(r.saida, '0123456 951\n')
+})
+
+test('inserir num set desce a árvore uma vez só (o comparador do aluno não roda em dobro)', async () => {
+  const r = await rodarCpp(`#include <set>
+#include <iostream>
+using namespace std;
+int chamadas = 0;
+struct Conta { bool operator()(int a, int b) const { chamadas++; return a < b; } };
+int main() {
+    set<int, Conta> s;
+    for (int i = 0; i < 64; i++) s.insert(i);
+    int antes = chamadas;
+    s.insert(10);
+    cout << (chamadas - antes <= 8) << ' ' << s.size() << endl;
+}`)
+  ok(r)
+  assert.equal(r.saida, '1 64\n')
+})
