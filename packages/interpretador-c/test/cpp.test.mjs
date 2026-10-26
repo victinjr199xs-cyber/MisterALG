@@ -215,3 +215,21 @@ int main() { A::n++; cout << A::n << " " << B::n << " " << A::primeiro << B::pri
   ok(r)
   assert.equal(r.saida, '11 20 12 5\n')
 })
+
+test('C++17: na atribuição o lado direito é calculado antes do esquerdo (como no g++)', async () => {
+  const r = await rodarCpp(`#include <iostream>
+int x = 1;
+int g() { x = 10; return 2; }
+int main() {
+    int v[4] = {0, 0, 0, 0};
+    int i = 0;
+    v[i] = ++i;
+    std::cout << v[0] << v[1] << ' ';
+    i = 0;
+    v[i] += ++i;
+    x += g();
+    std::cout << v[0] << v[1] << ' ' << x << std::endl;
+}`)
+  ok(r)
+  assert.equal(r.saida, '01 02 12\n')
+})

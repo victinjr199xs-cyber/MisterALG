@@ -247,6 +247,7 @@ template <class V> __no_arvore<V> *__seguinte_js(__no_arvore<V> *n) { return n; 
 template <class V> __no_arvore<V> *__antecessor_js(__no_arvore<V> *n) { return n; }
 // primeiro: a chave é o first do valor (map); superior: upper_bound em vez de lower_bound
 template <class V, class K, class C> __no_arvore<V> *__limite_js(__no_arvore<V> *raiz, const K &k, const C &comp, int primeiro, int superior) { return raiz; }
+template <class V, class K, class C> __no_arvore<V> *__lugar_js(__no_arvore<V> **raiz, const K &k, const C &comp, int primeiro, int multi) { return nullptr; }
 template <class V, class C> void __ligar_js(__no_arvore<V> **raiz, __no_arvore<V> *novo, const C &comp, int primeiro) {}
 template <class V> void __desligar_js(__no_arvore<V> **raiz, __no_arvore<V> *no) {}
 template <class V> struct __it_arvore {
@@ -305,10 +306,8 @@ public:
   reverse_iterator<__it_arvore<V>> rend() const { return reverse_iterator<__it_arvore<V>>(begin()); } // @se rbegin rend
   pair<__it_arvore<V>, bool> __inserir(const V &v) {
     if (false) __comp(Chave::de(v), Chave::de(v));
-    if (!MULTI) {
-      __no_arvore<V> *ja = __achar(Chave::de(v));
-      if (ja) return pair<__it_arvore<V>, bool>(__it_arvore<V>(ja, &__raiz), false);
-    }
+    __no_arvore<V> *ja = __lugar_js(&__raiz, Chave::de(v), __comp, Chave::primeiro, MULTI);
+    if (ja) return pair<__it_arvore<V>, bool>(__it_arvore<V>(ja, &__raiz), false);
     __no_arvore<V> *novo = new __no_arvore<V>(v);
     __ligar_js(&__raiz, novo, __comp, Chave::primeiro);
     __tamanho++;

@@ -1024,20 +1024,50 @@ export const BIBLIOTECA_CPP = {
     }
     return r
   },
-  * __ligar_js(m, { args }) { // o nó novo entra no lugar dele (iguais vão para a direita) e a árvore se rebalanceia
+  // Uma descida só, como _M_get_insert_unique_pos/_M_get_insert_equal_pos da libstdc++ (o comparador do aluno
+  // roda as mesmas vezes): devolve o nó igual (sem multi) ou 0, e guarda o lugar para o __ligar_js.
+  * __lugar_js(m, { args }) {
+    const [raizArg, k, comp, primeiro, multi] = args
+    const raiz = Number(raizArg.valor)
+    const a = noDaArvore(m, raizArg.tipo.alvo.alvo, Number(primeiro.valor))
+    const menor = comparador(m, comp, a.tipoChave)
+    const chave = Number(k.valor)
+    let pai = 0
+    let n = Number(m.mem.ler(a.tipoPonteiro, raiz))
+    let esquerda = true
+    while (n) {
+      pai = n
+      esquerda = yield* menor(chave, a.chave(n))
+      n = esquerda ? a.esq(n) : a.dir(n)
+    }
+    m.lugarNaArvore = { raiz, pai, esquerda }
+    if (Number(multi.valor) || !pai) return 0
+    let j = pai
+    if (esquerda) {
+      if (j === minimo(a, Number(m.mem.ler(a.tipoPonteiro, raiz)))) return 0
+      j = antecessor(a, j)
+    }
+    if (yield* menor(a.chave(j), chave)) return 0
+    m.lugarNaArvore = null
+    return j
+  },
+  * __ligar_js(m, { args }) { // o nó novo entra no lugar achado pelo __lugar_js e a árvore se rebalanceia
     const [raizEnd, novoArg, comp, primeiro] = args
     const novo = Number(novoArg.valor)
     const a = noDaArvore(m, tipoDoNo(novoArg), Number(primeiro.valor))
-    const menor = comparador(m, comp, a.tipoChave)
     const raiz = Number(raizEnd.valor)
-    let pai = 0
-    let n = Number(m.mem.ler(a.tipoPonteiro, raiz))
-    let esquerda = false
-    while (n) {
-      pai = n
-      esquerda = yield* menor(a.chave(novo), a.chave(n))
-      n = esquerda ? a.esq(n) : a.dir(n)
+    let lugar = m.lugarNaArvore
+    m.lugarNaArvore = null
+    if (lugar?.raiz !== raiz) { // (sem __lugar_js antes: desce agora; iguais vão para a direita)
+      const menor = comparador(m, comp, a.tipoChave)
+      lugar = { pai: 0, esquerda: false }
+      for (let n = Number(m.mem.ler(a.tipoPonteiro, raiz)); n;) {
+        lugar.pai = n
+        lugar.esquerda = yield* menor(a.chave(novo), a.chave(n))
+        n = lugar.esquerda ? a.esq(n) : a.dir(n)
+      }
     }
+    const { pai, esquerda } = lugar
     a.porPai(novo, pai)
     if (!pai) m.mem.escrever(a.tipoPonteiro, raiz, novo)
     else if (esquerda) a.porEsq(pai, novo)

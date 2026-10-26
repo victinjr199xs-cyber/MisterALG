@@ -535,7 +535,8 @@ export class MaquinaC {
     this.pilha.push(quadro)
     this.quadro = quadro
     try {
-      const capturas = ctx.classe && this.registros.get(ctx.classe)?.capturas
+      // (só o operator() da lambda; o operator= e os construtores dela usam o this normal)
+      const capturas = ctx.classe && def.name === 'operator()' && this.registros.get(ctx.classe)?.capturas
       if (capturas && ctx.this !== undefined) {
         // Lambda: o que ela capturou aparece com o nome de fora (por cópia: o campo; por referência: o original).
         const campos = layout(this.tipoDaClasse(ctx.classe)).campos
@@ -1310,8 +1311,11 @@ export class MaquinaC {
           return this.valR(b)
         }
         if (op === '=') {
-          const e = this.endR(a)
+          // no C++17 o lado direito vem antes do endereço do esquerdo (v[i] = ++i); no C a ordem não é definida
+          let e
+          if (!this.cpp) e = this.endR(a)
           const v = this.valR(b)
+          if (this.cpp) e = this.endR(a)
           this.guardar(this.tipo(a), e, v)
           return v
         }
@@ -1320,8 +1324,8 @@ export class MaquinaC {
         return this.operar(op, va, vb, this.tipo(a), this.tipo(b), this.tipo(x))
       }
       case 'CompoundAssignOperator': {
-        const e = this.endR(x.inner[0])
-        return this.compor(x, e, this.valR(x.inner[1]))
+        const vb = this.valR(x.inner[1])
+        return this.compor(x, this.endR(x.inner[0]), vb)
       }
       case 'ConditionalOperator': return this.valR(this.verdade(this.valR(x.inner[0])) ? x.inner[1] : x.inner[2])
       case 'UnaryExprOrTypeTraitExpr': {
@@ -1404,8 +1408,10 @@ export class MaquinaC {
     }
     if (op === '=') {
       const ta = this.tipo(a)
-      const e = yield* this.end(a)
+      let e
+      if (!this.cpp) e = yield* this.end(a) // (a ordem: ver valR)
       const v = yield* this.val(b)
+      if (this.cpp) e = yield* this.end(a)
       this.guardar(ta, e, v)
       return v
     }
@@ -1469,8 +1475,8 @@ export class MaquinaC {
   }
 
   * atribuicaoComposta(x) {
-    const e = yield* this.end(x.inner[0])
-    return this.compor(x, e, yield* this.val(x.inner[1]))
+    const vb = yield* this.val(x.inner[1])
+    return this.compor(x, yield* this.end(x.inner[0]), vb)
   }
 
   // ---- chamadas -----------------------------------------------------------------
