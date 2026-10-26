@@ -3,6 +3,23 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.10.2] — 2026-10-24
+
+### Novidades
+
+- **JavaScript assíncrono**: `await` no topo do programa, `for await` (sobre `async function*`, listas de
+  promessas, iteráveis assíncronos escritos à mão, `rl` do `readline` e `process.stdin`). A ordem de
+  microtarefas e timers é a mesma do Node; sair do `for await` com `break` fecha a interface do `readline`.
+  O passo a passo e os pontos de parada funcionam dentro do `for await`.
+- **C# 11**: padrões de lista (`v is [1, .. var resto]`, `[.., 9]`), literais `"abc"u8` e `Encoding.UTF8`
+  (`GetBytes`, `GetString`, `GetByteCount`).
+- `>>>` também funciona dentro de texto interpolado comum no C#.
+
+### Testes
+
+- Testes novos do JavaScript assíncrono comparados com o Node, mais programas C# 11 no teste diferencial
+  contra o .NET e casos novos no teste de fumaça das linguagens.
+
 ## [1.10.1] — 2026-10-24
 
 ### Novidades
@@ -10,12 +27,7 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **JavaScript no estilo do Node**: `require('readline')` (`question`, `on('line')`, `readline/promises`),
   `fs.readFileSync(0)` para ler toda a entrada, `process.stdin`, `util` e `assert`. Esc encerra a entrada.
   Um módulo que não existe no MisterALG dá uma mensagem clara.
-- **C# 11**: deslocamento sem sinal `>>>` / `>>>=` e textos brutos `"""…"""` (também com `# Novidades do MisterALG
-
-O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
-[versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
-
- e `$`).
+- **C# 11**: deslocamento sem sinal `>>>` / `>>>=` e textos brutos `"""…"""` (também com `$` e `$$`).
 
 ## [1.10.0] — 2026-10-24
 
