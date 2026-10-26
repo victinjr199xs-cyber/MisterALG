@@ -544,10 +544,15 @@ export class MaquinaC {
         })
       } else if (ctx.this !== undefined) {
         // "this" aparece na tela de memória como um ponteiro para o objeto.
-        const tipoThis = ponteiro(this.tipoDaClasse(ctx.classe))
-        const e = this.mem.empilhar(4, 4, { nome: 'this', tipo: tipoThis })
-        this.mem.escrever(tipoThis, e, ctx.this)
-        quadro.variaveis.push({ id: 'this', nome: 'this', tipo: tipoThis, tipoTexto: `${ctx.classe.replace(/<.*$/, '')} *`, endereco: e, apelido: true })
+        this.ponteirosThis ??= new Map()
+        let pt = this.ponteirosThis.get(ctx.classe)
+        if (!pt) {
+          pt = { tipo: ponteiro(this.tipoDaClasse(ctx.classe)), texto: `${ctx.classe.replace(/<.*$/, '')} *` }
+          this.ponteirosThis.set(ctx.classe, pt)
+        }
+        const e = this.mem.empilhar(4, 4, { nome: 'this', tipo: pt.tipo })
+        this.mem.escrever(pt.tipo, e, ctx.this)
+        quadro.variaveis.push({ id: 'this', nome: 'this', tipo: pt.tipo, tipoTexto: pt.texto, endereco: e, apelido: true })
       }
       for (let i = 0; i < params.length; i += 1) {
         const p = params[i]
@@ -1225,26 +1230,7 @@ export class MaquinaC {
 
   valR(x) {
     switch (x.kind) {
-      case 'IntegerLiteral': {
-        const t = this.tipo(x)
-        return t.tamanho >= 8 ? this.normalizar(t, BigInt(x.value)) : Number(x.value)
-      }
-      case 'CharacterLiteral': return x.value
-      case 'FloatingLiteral': return Number(x.value)
-      case 'StringLiteral': return this.literal(x)
-      case 'CXXBoolLiteralExpr': return x.value ? 1 : 0
-      case 'CXXNullPtrLiteralExpr':
-      case 'CXXScalarValueInitExpr':
-      case 'ImplicitValueInitExpr': return 0
-      case 'CXXThisExpr': return this.quadro?.this ?? 0
-      case 'ParenExpr': return this.valR(x.inner[0])
-      case 'ConstantExpr':
-        if (x.value !== undefined) {
-          const t = this.tipo(x)
-          if (x.value === 'true' || x.value === 'false') return x.value === 'true' ? 1 : 0
-          return ehInteiro(t) ? this.normalizar(t, t.tamanho >= 8 ? BigInt(x.value) : Number(x.value)) : this.valR(x.inner[0])
-        }
-        return this.valR(x.inner[0])
+      // (os mais comuns primeiro: o switch compara um caso por vez)
       case 'ImplicitCastExpr':
       case 'CStyleCastExpr': {
         const sub = x.inner[0]
@@ -1266,6 +1252,26 @@ export class MaquinaC {
         if (r.kind === 'FunctionDecl' || r.kind === 'CXXMethodDecl') return this.enderecoDeFuncao(r.name)
         return this.enderecoDaVariavel(r)
       }
+      case 'IntegerLiteral': {
+        const t = this.tipo(x)
+        return t.tamanho >= 8 ? this.normalizar(t, BigInt(x.value)) : Number(x.value)
+      }
+      case 'CharacterLiteral': return x.value
+      case 'FloatingLiteral': return Number(x.value)
+      case 'StringLiteral': return this.literal(x)
+      case 'CXXBoolLiteralExpr': return x.value ? 1 : 0
+      case 'CXXNullPtrLiteralExpr':
+      case 'CXXScalarValueInitExpr':
+      case 'ImplicitValueInitExpr': return 0
+      case 'CXXThisExpr': return this.quadro?.this ?? 0
+      case 'ParenExpr': return this.valR(x.inner[0])
+      case 'ConstantExpr':
+        if (x.value !== undefined) {
+          const t = this.tipo(x)
+          if (x.value === 'true' || x.value === 'false') return x.value === 'true' ? 1 : 0
+          return ehInteiro(t) ? this.normalizar(t, t.tamanho >= 8 ? BigInt(x.value) : Number(x.value)) : this.valR(x.inner[0])
+        }
+        return this.valR(x.inner[0])
       case 'UnaryOperator': {
         const sub = x.inner[0]
         switch (x.opcode) {

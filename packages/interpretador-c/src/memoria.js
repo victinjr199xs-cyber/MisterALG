@@ -27,6 +27,18 @@ function procurar(lista, endereco) {
   return null
 }
 
+/** A posição do primeiro item com início >= endereco (lista ordenada por início). */
+function posicao(lista, endereco) {
+  let a = 0
+  let b = lista.length
+  while (a < b) {
+    const m = (a + b) >> 1
+    if (lista[m].inicio < endereco) a = m + 1
+    else b = m
+  }
+  return a
+}
+
 /** As últimas n entradas, com find/some da mais antiga para a mais nova, sem mover o vetor a cada uma. */
 class Anel {
   constructor(n) {
@@ -110,8 +122,7 @@ export class Memoria {
     if (fim > this.limitePilha) throw new ErroC('a pilha de chamadas estourou (recursão infinita?)', 0, EXPLICACOES.pilha)
     this.topoPilha = Math.max(fim, inicio + 1)
     this.sujar(inicio, fim)
-    const bloco = { inicio, tamanho, fim, regiao: 'pilha', vivo: true, ...info }
-    this.pilha.push(bloco)
+    this.pilha.push({ inicio, tamanho, fim, regiao: 'pilha', vivo: true, nome: info.nome, tipo: info.tipo })
     return inicio
   }
 
@@ -136,8 +147,7 @@ export class Memoria {
     if (livre.inicio === livre.fim) this.livres.splice(i, 1)
     this.blocosCriados += 1
     const bloco = { inicio, tamanho, fim: inicio + tamanho, ocupa, regiao: 'heap', vivo: true, numero: this.blocosCriados, ...info }
-    const pos = this.heap.findIndex((b) => b.inicio > inicio)
-    this.heap.splice(pos < 0 ? this.heap.length : pos, 0, bloco)
+    this.heap.splice(posicao(this.heap, inicio + 1), 0, bloco)
     if (zerar) {
       this.bytes.fill(0, inicio, bloco.fim)
       this.iniciado.fill(1, inicio, bloco.fim)
@@ -147,7 +157,8 @@ export class Memoria {
 
   free(endereco) {
     if (endereco === 0) return
-    const i = this.heap.findIndex((b) => b.inicio === endereco)
+    let i = posicao(this.heap, endereco)
+    if (this.heap[i]?.inicio !== endereco) i = -1
     if (i < 0) {
       if (this.liberados.some((b) => b.inicio === endereco)) throw new ErroC('free() chamado duas vezes para o mesmo bloco', 0, EXPLICACOES.free)
       throw new ErroC(`free() recebeu um endereço (${hex(endereco)}) que não veio do malloc`, 0, EXPLICACOES.free)
@@ -159,16 +170,20 @@ export class Memoria {
     this.devolver(bloco.inicio, bloco.inicio + bloco.ocupa)
   }
 
+  /** Devolve um trecho à lista de livres (ordenada), juntando com os vizinhos encostados. */
   devolver(inicio, fim) {
-    this.livres.push({ inicio, fim })
-    this.livres.sort((a, b) => a.inicio - b.inicio)
-    const juntos = []
-    for (const l of this.livres) {
-      const ultimo = juntos[juntos.length - 1]
-      if (ultimo && ultimo.fim === l.inicio) ultimo.fim = l.fim
-      else juntos.push({ ...l })
-    }
-    this.livres = juntos
+    const livres = this.livres
+    const i = posicao(livres, inicio)
+    const antes = livres[i - 1]
+    const depois = livres[i]
+    if (antes && antes.fim === inicio) {
+      antes.fim = fim
+      if (depois && depois.inicio === fim) {
+        antes.fim = depois.fim
+        livres.splice(i, 1)
+      }
+    } else if (depois && depois.inicio === fim) depois.inicio = inicio
+    else livres.splice(i, 0, { inicio, fim })
   }
 
   // ---- blocos e verificação -----------------------------------------------------------
