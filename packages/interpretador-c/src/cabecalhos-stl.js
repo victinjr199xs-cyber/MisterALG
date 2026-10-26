@@ -16,14 +16,10 @@ inline void *operator new(size_t, void *p) noexcept { return p; }
 namespace std {
 typedef int ptrdiff_t;
 // O vector é feito em JavaScript e copia os elementos com o construtor de cópia deles; mas o clang só escreve o
-// corpo de um construtor de um template se alguém o usa. Estas funções "usam" a cópia, o padrão e a atribuição
-// (quando existem), e o ~vector as chama num if (false): nada roda, mas os corpos passam a existir.
-template <class T> auto __exigir_copia(T *p, int) -> decltype(new (p) T(*p), void()) { new (p) T(*p); }
-template <class T> void __exigir_copia(T *, long) {}
+// corpo de um construtor de um template se alguém o usa. O ~vector "usa" a cópia e (quando existe) o construtor
+// padrão num if (false): nada roda, mas os corpos passam a existir.
 template <class T> auto __exigir_padrao(T *p, int) -> decltype(new (p) T(), void()) { new (p) T(); }
 template <class T> void __exigir_padrao(T *, long) {}
-template <class T> auto __exigir_atribuicao(T *p, int) -> decltype(*p = *p, void()) { *p = *p; }
-template <class T> void __exigir_atribuicao(T *, long) {}
 template <class T> T &move(T &x) { return x; }
 template <class T> T &forward(T &x) { return x; }
 template <class T> void swap(T &a, T &b) { T t = a; a = b; b = t; }
@@ -45,8 +41,8 @@ template <> struct greater<void> { template <class A, class B> bool operator()(c
 template <> struct equal_to<void> { template <class A, class B> bool operator()(const A &a, const B &b) const { return a == b; } };
 struct __igual { template <class A, class B> bool operator()(const A &a, const B &b) const { return a == b; } };
 // a chave de um elemento: o first num map, o próprio elemento num set
-struct __chave_do_par { template <class P> static const auto &de(const P &p) { return p.first; } };
-struct __chave_propria { template <class X> static const X &de(const X &x) { return x; } };
+struct __chave_do_par { enum { primeiro = 1 }; template <class P> static const auto &de(const P &p) { return p.first; } };
+struct __chave_propria { enum { primeiro = 0 }; template <class X> static const X &de(const X &x) { return x; } };
 
 template <class I> struct reverse_iterator {
   I __base;
@@ -243,18 +239,16 @@ template <class V> struct __no_arvore {
   int altura;
   __no_arvore(const V &v) : valor(v), esq(nullptr), dir(nullptr), pai(nullptr), altura(1) {}
 };
-template <class V> __no_arvore<V> *__minimo(__no_arvore<V> *n) { while (n && n->esq) n = n->esq; return n; }
-template <class V> __no_arvore<V> *__maximo(__no_arvore<V> *n) { while (n && n->dir) n = n->dir; return n; }
-template <class V> __no_arvore<V> *__seguinte(__no_arvore<V> *n) {
-  if (n->dir) return __minimo(n->dir);
-  while (n->pai && n == n->pai->dir) n = n->pai;
-  return n->pai;
-}
-template <class V> __no_arvore<V> *__antecessor(__no_arvore<V> *n) {
-  if (n->esq) return __maximo(n->esq);
-  while (n->pai && n == n->pai->esq) n = n->pai;
-  return n->pai;
-}
+// Andar, procurar, ligar e desligar os nós (com o rebalanceamento) é feito em JavaScript (biblioteca-cpp.js):
+// o JSON da árvore do clang fica bem menor, e o passo a passo, mais rápido. Os nós (new, cópia, delete) ficam aqui.
+template <class V> __no_arvore<V> *__minimo_js(__no_arvore<V> *n) { return n; }
+template <class V> __no_arvore<V> *__maximo_js(__no_arvore<V> *n) { return n; }
+template <class V> __no_arvore<V> *__seguinte_js(__no_arvore<V> *n) { return n; }
+template <class V> __no_arvore<V> *__antecessor_js(__no_arvore<V> *n) { return n; }
+// primeiro: a chave é o first do valor (map); superior: upper_bound em vez de lower_bound
+template <class V, class K, class C> __no_arvore<V> *__limite_js(__no_arvore<V> *raiz, const K &k, const C &comp, int primeiro, int superior) { return raiz; }
+template <class V, class C> void __ligar_js(__no_arvore<V> **raiz, __no_arvore<V> *novo, const C &comp, int primeiro) {}
+template <class V> void __desligar_js(__no_arvore<V> **raiz, __no_arvore<V> *no) {}
 template <class V> struct __it_arvore {
   __no_arvore<V> *__no;
   __no_arvore<V> *const *__raiz;
@@ -262,9 +256,9 @@ template <class V> struct __it_arvore {
   __it_arvore(__no_arvore<V> *n, __no_arvore<V> *const *r) : __no(n), __raiz(r) {}
   V &operator*() const { return __no->valor; }
   V *operator->() const { return &__no->valor; }
-  __it_arvore &operator++() { __no = __seguinte(__no); return *this; }
-  __it_arvore operator++(int) { __it_arvore t = *this; __no = __seguinte(__no); return t; }
-  __it_arvore &operator--() { __no = __no ? __antecessor(__no) : __maximo(*__raiz); return *this; }
+  __it_arvore &operator++() { __no = __seguinte_js(__no); return *this; }
+  __it_arvore operator++(int) { __it_arvore t = *this; __no = __seguinte_js(__no); return t; }
+  __it_arvore &operator--() { __no = __no ? __antecessor_js(__no) : __maximo_js(*__raiz); return *this; }
   __it_arvore operator--(int) { __it_arvore t = *this; --*this; return t; }
 };
 template <class V> bool operator==(const __it_arvore<V> &a, const __it_arvore<V> &b) { return a.__no == b.__no; }
@@ -305,121 +299,36 @@ public:
   size_t size() const { return __tamanho; }
   bool empty() const { return __tamanho == 0; }
   void clear() { __liberar(__raiz); __raiz = nullptr; __tamanho = 0; }
-  __it_arvore<V> begin() const { return __it_arvore<V>(__minimo(__raiz), &__raiz); }
+  __it_arvore<V> begin() const { return __it_arvore<V>(__minimo_js(__raiz), &__raiz); }
   __it_arvore<V> end() const { return __it_arvore<V>(nullptr, &__raiz); }
   reverse_iterator<__it_arvore<V>> rbegin() const { return reverse_iterator<__it_arvore<V>>(end()); } // @se rbegin rend
   reverse_iterator<__it_arvore<V>> rend() const { return reverse_iterator<__it_arvore<V>>(begin()); } // @se rbegin rend
-  static int __alt(__no_arvore<V> *n) { return n ? n->altura : 0; }
-  static void __atualizar(__no_arvore<V> *n) {
-    int a = __alt(n->esq), b = __alt(n->dir);
-    n->altura = (a > b ? a : b) + 1;
-  }
-  void __trocar_filho(__no_arvore<V> *pai, __no_arvore<V> *velho, __no_arvore<V> *novo) {
-    if (!pai) __raiz = novo;
-    else if (pai->esq == velho) pai->esq = novo;
-    else pai->dir = novo;
-    if (novo) novo->pai = pai;
-  }
-  __no_arvore<V> *__girar_esq(__no_arvore<V> *x) {
-    __no_arvore<V> *y = x->dir;
-    x->dir = y->esq;
-    if (y->esq) y->esq->pai = x;
-    __trocar_filho(x->pai, x, y);
-    y->esq = x;
-    x->pai = y;
-    __atualizar(x);
-    __atualizar(y);
-    return y;
-  }
-  __no_arvore<V> *__girar_dir(__no_arvore<V> *x) {
-    __no_arvore<V> *y = x->esq;
-    x->esq = y->dir;
-    if (y->dir) y->dir->pai = x;
-    __trocar_filho(x->pai, x, y);
-    y->dir = x;
-    x->pai = y;
-    __atualizar(x);
-    __atualizar(y);
-    return y;
-  }
-  void __rebalancear(__no_arvore<V> *n) {
-    while (n) {
-      __atualizar(n);
-      int f = __alt(n->esq) - __alt(n->dir);
-      if (f > 1) {
-        if (__alt(n->esq->esq) < __alt(n->esq->dir)) __girar_esq(n->esq);
-        n = __girar_dir(n);
-      } else if (f < -1) {
-        if (__alt(n->dir->dir) < __alt(n->dir->esq)) __girar_dir(n->dir);
-        n = __girar_esq(n);
-      }
-      n = n->pai;
-    }
-  }
   pair<__it_arvore<V>, bool> __inserir(const V &v) {
-    __no_arvore<V> *pai = nullptr;
-    __no_arvore<V> *n = __raiz;
-    bool esquerda = false;
-    while (n) {
-      pai = n;
-      if (__comp(Chave::de(v), Chave::de(n->valor))) { n = n->esq; esquerda = true; }
-      else if (!MULTI && !__comp(Chave::de(n->valor), Chave::de(v))) return pair<__it_arvore<V>, bool>(__it_arvore<V>(n, &__raiz), false);
-      else { n = n->dir; esquerda = false; }
+    if (false) __comp(Chave::de(v), Chave::de(v));
+    if (!MULTI) {
+      __no_arvore<V> *ja = __achar(Chave::de(v));
+      if (ja) return pair<__it_arvore<V>, bool>(__it_arvore<V>(ja, &__raiz), false);
     }
     __no_arvore<V> *novo = new __no_arvore<V>(v);
-    novo->pai = pai;
-    if (!pai) __raiz = novo;
-    else if (esquerda) pai->esq = novo;
-    else pai->dir = novo;
+    __ligar_js(&__raiz, novo, __comp, Chave::primeiro);
     __tamanho++;
-    __rebalancear(pai);
     return pair<__it_arvore<V>, bool>(__it_arvore<V>(novo, &__raiz), true);
   }
-  __no_arvore<V> *__limite_inferior(const K &k) const {
-    __no_arvore<V> *n = __raiz, *r = nullptr;
-    while (n) {
-      if (!__comp(Chave::de(n->valor), k)) { r = n; n = n->esq; }
-      else n = n->dir;
-    }
-    return r;
-  }
-  __no_arvore<V> *__limite_superior(const K &k) const {
-    __no_arvore<V> *n = __raiz, *r = nullptr;
-    while (n) {
-      if (__comp(k, Chave::de(n->valor))) { r = n; n = n->esq; }
-      else n = n->dir;
-    }
-    return r;
-  }
+  __no_arvore<V> *__limite_inferior(const K &k) const { if (false) __comp(k, k); return __limite_js(__raiz, k, __comp, Chave::primeiro, 0); }
+  __no_arvore<V> *__limite_superior(const K &k) const { if (false) __comp(k, k); return __limite_js(__raiz, k, __comp, Chave::primeiro, 1); }
   __no_arvore<V> *__achar(const K &k) const {
     __no_arvore<V> *n = __limite_inferior(k);
     return n && !__comp(k, Chave::de(n->valor)) ? n : nullptr;
   }
   void __apagar_no(__no_arvore<V> *z) {
-    __no_arvore<V> *desde;
-    if (!z->esq) { desde = z->pai; __trocar_filho(z->pai, z, z->dir); }
-    else if (!z->dir) { desde = z->pai; __trocar_filho(z->pai, z, z->esq); }
-    else {
-      __no_arvore<V> *y = __minimo(z->dir);
-      if (y->pai != z) {
-        desde = y->pai;
-        __trocar_filho(y->pai, y, y->dir);
-        y->dir = z->dir;
-        y->dir->pai = y;
-      } else desde = y;
-      __trocar_filho(z->pai, z, y);
-      y->esq = z->esq;
-      y->esq->pai = y;
-      y->altura = z->altura;
-    }
+    __desligar_js(&__raiz, z);
     delete z;
     __tamanho--;
-    __rebalancear(desde);
   }
   __it_arvore<V> find(const K &k) const { return __it_arvore<V>(__achar(k), &__raiz); }
   size_t count(const K &k) const {
     size_t n = 0;
-    for (__no_arvore<V> *p = __limite_inferior(k); p && !__comp(k, Chave::de(p->valor)); p = __seguinte(p)) n++;
+    for (__no_arvore<V> *p = __limite_inferior(k); p && !__comp(k, Chave::de(p->valor)); p = __seguinte_js(p)) n++;
     return n;
   }
   bool contains(const K &k) const { return __achar(k) != nullptr; }
@@ -427,7 +336,7 @@ public:
   __it_arvore<V> upper_bound(const K &k) const { return __it_arvore<V>(__limite_superior(k), &__raiz); }
   pair<__it_arvore<V>, __it_arvore<V>> equal_range(const K &k) const { return pair<__it_arvore<V>, __it_arvore<V>>(lower_bound(k), upper_bound(k)); }
   __it_arvore<V> erase(__it_arvore<V> it) {
-    __no_arvore<V> *prox = __seguinte(it.__no);
+    __no_arvore<V> *prox = __seguinte_js(it.__no);
     __apagar_no(it.__no);
     return __it_arvore<V>(prox, &__raiz);
   }
@@ -577,6 +486,14 @@ template <class V> struct __it_hash {
 template <class V> bool operator==(const __it_hash<V> &a, const __it_hash<V> &b) { return a.__no == b.__no; }
 template <class V> bool operator!=(const __it_hash<V> &a, const __it_hash<V> &b) { return a.__no != b.__no; }
 
+// Procurar no balde, crescer (rehash), ligar e desligar os nós é feito em JavaScript (biblioteca-cpp.js), com as
+// mesmas regras da libstdc++; os nós (new, delete) e a função de dispersão (__h) ficam aqui.
+template <class T, class K, class E> void *__antes_de_js(const T *t, const K &k, unsigned long long codigo, const E &igual, int primeiro) { return nullptr; }
+template <class T> void __crescer_js(T *t) {}
+template <class T> void __reservar_js(T *t, unsigned long long n) {}
+template <class T> void __limpar_baldes_js(T *t) {}
+template <class T, class N> void __ligar_hash_js(T *t, N *no, N *antes) {}
+template <class T, class N> void __desligar_hash_js(T *t, N *no) {}
 template <class K, class V, class Chave, class H, bool MULTI> class __tabela {
 public:
   __no_hash<V> **__baldes;   // cada balde aponta para o nó ANTES do primeiro dele (ou para __antes)
@@ -602,7 +519,6 @@ public:
     for (size_t j = n; j > 0; j--) __inserir(nos[j - 1]->valor);
     delete[] nos;
   }
-  __no_hash<V> *__antes() { return (__no_hash<V> *)&__primeiro; }
   size_t size() const { return __tamanho; }
   bool empty() const { return __tamanho == 0; }
   size_t bucket_count() const { return (size_t)__num_baldes; }
@@ -611,107 +527,36 @@ public:
     while (p) { __no_hash<V> *q = p->prox; delete p; p = q; }
     __primeiro = nullptr;
     __tamanho = 0;
-    if (__baldes) for (unsigned long long i = 0; i < __num_baldes; i++) __baldes[i] = nullptr;
+    __limpar_baldes_js(this);
   }
   __it_hash<V> begin() const { return __it_hash<V>(__primeiro); }
   __it_hash<V> end() const { return __it_hash<V>(nullptr); }
-  unsigned long long __balde(unsigned long long codigo) const { return codigo % __num_baldes; }
   // o nó antes do primeiro igual a k no balde dele (ou nulo)
   __no_hash<V> *__antes_de(const K &k, unsigned long long codigo) const {
-    if (!__tamanho || !__baldes) return nullptr;
-    unsigned long long b = __balde(codigo);
-    __no_hash<V> *antes = __baldes[b];
-    if (!antes) return nullptr;
-    for (__no_hash<V> *p = antes->prox; p && __balde(p->codigo) == b; antes = p, p = p->prox) {
-      if (p->codigo == codigo && Chave::de(p->valor) == k) return antes;
-    }
-    return nullptr;
+    equal_to<> igual;
+    if (false) igual(k, k);
+    return (__no_hash<V> *)__antes_de_js(this, k, codigo, igual, Chave::primeiro);
   }
   __no_hash<V> *__achar(const K &k) const {
     __no_hash<V> *antes = __antes_de(k, __h(k));
     return antes ? antes->prox : nullptr;
   }
-  void __redimensionar(unsigned long long n) {
-    __no_hash<V> **novos = new __no_hash<V> *[n];
-    for (unsigned long long i = 0; i < n; i++) novos[i] = nullptr;
-    __no_hash<V> *p = __primeiro;
-    __primeiro = nullptr;
-    unsigned long long balde_do_primeiro = 0;
-    while (p) {
-      __no_hash<V> *prox = p->prox;
-      unsigned long long b = p->codigo % n;
-      if (!novos[b]) {
-        p->prox = __primeiro;
-        __primeiro = p;
-        novos[b] = __antes();
-        if (p->prox) novos[balde_do_primeiro] = p;
-        balde_do_primeiro = b;
-      } else {
-        p->prox = novos[b]->prox;
-        novos[b]->prox = p;
-      }
-      p = prox;
-    }
-    delete[] __baldes;
-    __baldes = novos;
-    __num_baldes = n;
-  }
-  // _M_need_rehash da libstdc++ (fator de carga máximo 1): a 1ª inserção já cria 13 baldes
-  void __talvez_crescer() {
-    unsigned long long n = __tamanho + 1;
-    if (n > __proximo_aumento) {
-      unsigned long long minimo = n > (__proximo_aumento ? 0 : 11) ? n : 11;
-      if (minimo >= __num_baldes) {
-        unsigned long long pedido = minimo + 1 > __num_baldes * 2 ? minimo + 1 : __num_baldes * 2;
-        unsigned long long novo = __proximo_primo(pedido);
-        __proximo_aumento = novo;
-        __redimensionar(novo);
-        return;
-      }
-      __proximo_aumento = __num_baldes;
-    }
-    if (!__baldes) __redimensionar(__num_baldes);
-  }
   pair<__it_hash<V>, bool> __inserir(const V &v) {
+    unsigned long long codigo = __h(Chave::de(v));
     if (!MULTI) {
-      __no_hash<V> *ja = __achar(Chave::de(v));
-      if (ja) return pair<__it_hash<V>, bool>(__it_hash<V>(ja), false);
+      __no_hash<V> *ja = __antes_de(Chave::de(v), codigo);
+      if (ja) return pair<__it_hash<V>, bool>(__it_hash<V>(ja->prox), false);
     }
-    __talvez_crescer();
+    __crescer_js(this);
     __no_hash<V> *no = new __no_hash<V>(v);
-    no->codigo = __h(Chave::de(v));
-    unsigned long long b = __balde(no->codigo);
-    __no_hash<V> *antes = __baldes[b];
-    if (MULTI) {
-      // multi: logo antes do primeiro igual, se houver (como na libstdc++)
-      __no_hash<V> *igual = __antes_de(Chave::de(v), no->codigo);
-      if (igual) antes = igual;
-    }
-    if (antes) {
-      no->prox = antes->prox;
-      antes->prox = no;
-    } else {
-      no->prox = __primeiro;
-      __primeiro = no;
-      if (no->prox) __baldes[__balde(no->prox->codigo)] = no;
-      __baldes[b] = __antes();
-    }
+    no->codigo = codigo;
+    // multi: logo antes do primeiro igual, se houver (como na libstdc++)
+    __ligar_hash_js(this, no, MULTI ? __antes_de(Chave::de(v), codigo) : (__no_hash<V> *)nullptr);
     __tamanho++;
     return pair<__it_hash<V>, bool>(__it_hash<V>(no), true);
   }
   void __apagar_no(__no_hash<V> *no) {
-    unsigned long long b = __balde(no->codigo);
-    __no_hash<V> *antes = __baldes[b];
-    while (antes->prox != no) antes = antes->prox;
-    __no_hash<V> *prox = no->prox;
-    if (antes == __baldes[b]) {
-      // era o primeiro do balde
-      if (!prox || __balde(prox->codigo) != b) {
-        if (prox) __baldes[__balde(prox->codigo)] = antes;
-        __baldes[b] = nullptr;
-      }
-    } else if (prox && __balde(prox->codigo) != b) __baldes[__balde(prox->codigo)] = antes;
-    antes->prox = prox;
+    __desligar_hash_js(this, no);
     delete no;
     __tamanho--;
   }
@@ -732,7 +577,7 @@ public:
     __apagar_no(it.__no);
     return __it_hash<V>(prox);
   }
-  void reserve(size_t n) { if (n > __num_baldes) { __proximo_aumento = __proximo_primo(n); __redimensionar(__proximo_aumento); } }
+  void reserve(size_t n) { __reservar_js(this, n); }
 };
 }
 `
