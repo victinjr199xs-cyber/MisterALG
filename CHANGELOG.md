@@ -34,6 +34,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Correções
 
+- PHP: a atualização automática da página (700 ms depois de cada edição) disparava mesmo depois de fechar a
+  página ou de trocar de documento, e então reabria a página do PHP e escondia a tela do banco do SQL.
 - C++ no passo a passo: membros `static` de mesmo nome em classes diferentes viravam uma variável só.
 - C++ no passo a passo: uma exceção que atravessava um bloco destruía os temporários da expressão depois de liberar
   a pilha (`stoi(...)` dentro de `try` dava "acesso à variável de uma função que já terminou").
