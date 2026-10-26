@@ -30,10 +30,13 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **F8 do C++ começa mais rápido**: os cabeçalhos vão sob medida para cada programa (só o que ele usa), e a
   árvore do `map`/`set` e a tabela do `unordered_map` fazem a busca e o rebalanceamento em JavaScript, com as
   mesmas regras da libstdc++ (o JSON do clang fica de 15% a 40% menor). A árvore do programa já é preparada em
-  segundo plano depois de um F9 e ao abrir o arquivo: o F8 nesse caso começa em menos de 0,2 s.
+  segundo plano depois de um F9 e ao abrir o arquivo, num worker à parte (o F9 nunca espera por ela): o F8
+  nesse caso começa em menos de 0,2 s.
 
 ### Correções
 
+- C++ no passo a passo: `set`/`map` com uma lambda como comparador (`set<int, decltype(cmp)> s(cmp)`); a ordem de
+  `v[i] = ++i` agora é a do C++17 (o lado direito antes).
 - PHP: a atualização automática da página (700 ms depois de cada edição) disparava mesmo depois de fechar a
   página ou de trocar de documento, e então reabria a página do PHP e escondia a tela do banco do SQL.
 - C++ no passo a passo: membros `static` de mesmo nome em classes diferentes viravam uma variável só.

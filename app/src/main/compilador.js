@@ -261,7 +261,8 @@ async function arvore(fonte, linguagem) {
 }
 
 // Quase todo o tempo do F8 é o clang escrevendo a árvore; ela fica guardada pelo texto do programa e é feita
-// de antemão quando o F8 é provável: logo depois de um F9 que deu certo e ao abrir o arquivo (sem o aluno esperar).
+// de antemão quando o F8 é provável: logo depois de um F9 que deu certo e ao abrir o arquivo (sem o aluno
+// esperar). Isso roda no worker das árvores (clang.js), separado do que compila: o F9 não espera por ela.
 const arvoresProntas = new Map() // "linguagem\0fonte" → { ast, avisos }
 const MAX_ARVORES = 2
 const arvoreDeAntemao = (fonte, linguagem) => (linguagem === 'c' || linguagem === 'cpp') && fonte.trim() && !arvoresProntas.has(`${linguagem}\0${fonte}`)
@@ -294,13 +295,14 @@ parentPort.on('message', ({ id, tipo, linguagem, fonte }) => {
       // Carrega o clang (a 1ª chamada demora) e, no C++, já prepara o PCH dos #include do programa aberto.
       if (linguagem === 'cpp' && prefixoDeIncludes(fonte)) await gerarPch(prefixoDeIncludes(fonte))
       else await clang(['clang', '-c', 'a.c', '-o', 'a.o'], { 'a.c': 'int main(void) { return 0; }' })
-      parentPort.postMessage({ id })
+      return parentPort.postMessage({ id })
+    }
+    if (tipo === 'antecipar') { // (o worker das árvores, depois de um F9 e ao abrir o arquivo: clang.js)
       if (arvoreDeAntemao(fonte, linguagem)) await arvore(fonte, linguagem)
-      return
+      return parentPort.postMessage({ id })
     }
     const r = tipo === 'arvore' ? await arvore(fonte, linguagem) : await compilar(linguagem, fonte)
     parentPort.postMessage({ id, ...r })
-    if (tipo === 'compilar' && r.erros === undefined && arvoreDeAntemao(fonte, linguagem)) await arvore(fonte, linguagem)
     for (const prefixo of pendentes) await gerarPch(prefixo)
     pendentes.clear()
   }).catch((e) => parentPort.postMessage({ id, erros: `Erro no compilador: ${e.message}` }))

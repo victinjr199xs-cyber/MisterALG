@@ -28,43 +28,64 @@ const pastasPch = () => [
 
 // ---- compilação -------------------------------------------------------------------
 
-let trabalhador = null
+// Dois workers com o clang: um para o F9 (compilar) e outro para as árvores do F8. A árvore é feita de
+// antemão (depois de um F9 que deu certo e ao abrir o arquivo) e pode demorar; num worker à parte, o F9
+// nunca espera por ela. O das árvores fecha depois de um tempo parado, para não ocupar memória à toa.
+const OCIOSO_MS = 120_000
+const trabalhadores = { compilacao: null, arvores: null }
 let proximoPedido = 0
-const pedidos = new Map()
+const pedidos = new Map() // id → { responder, qual }
+const ociosos = {}
 
-function compilador() {
-  if (trabalhador) return trabalhador
-  trabalhador = new Worker(arquivoVizinho('./compilador.js'), { workerData: { clang: pathToFileURL(caminhoClang()).href, pastasPch: pastasPch() } })
-  trabalhador.on('message', ({ id, ...r }) => {
-    pedidos.get(id)?.(r)
+function trabalhador(qual) {
+  clearTimeout(ociosos[qual])
+  if (trabalhadores[qual]) return trabalhadores[qual]
+  const w = new Worker(arquivoVizinho('./compilador.js'), { workerData: { clang: pathToFileURL(caminhoClang()).href, pastasPch: pastasPch() } })
+  trabalhadores[qual] = w
+  w.on('message', ({ id, ...r }) => {
+    pedidos.get(id)?.responder(r)
     pedidos.delete(id)
+    if (qual === 'arvores' && ![...pedidos.values()].some((p) => p.qual === qual)) {
+      ociosos[qual] = setTimeout(() => { if (trabalhadores[qual] === w) { trabalhadores[qual] = null; w.terminate() } }, OCIOSO_MS)
+    }
   })
   const falhou = (motivo) => {
-    for (const responder of pedidos.values()) responder({ erros: `O compilador parou: ${motivo}` })
-    pedidos.clear()
-    trabalhador = null
+    if (trabalhadores[qual] !== w) return // (fechado por estar parado)
+    for (const [id, p] of pedidos) if (p.qual === qual) { p.responder({ erros: `O compilador parou: ${motivo}` }); pedidos.delete(id) }
+    trabalhadores[qual] = null
   }
-  trabalhador.on('error', (e) => falhou(e.message))
-  trabalhador.on('exit', (codigo) => { if (trabalhador) falhou(`código ${codigo}`) })
-  return trabalhador
+  w.on('error', (e) => falhou(e.message))
+  w.on('exit', (codigo) => falhou(`código ${codigo}`))
+  return w
 }
 
-function pedir(mensagem) {
+function pedir(mensagem, qual = 'compilacao') {
   return new Promise((responder) => {
     const id = ++proximoPedido
-    pedidos.set(id, responder)
-    compilador().postMessage({ id, ...mensagem })
+    pedidos.set(id, { responder, qual })
+    trabalhador(qual).postMessage({ id, ...mensagem })
   })
+}
+
+const antecipar = (linguagem, fonte) => {
+  if (linguagem === 'c' || linguagem === 'cpp') void pedir({ tipo: 'antecipar', linguagem, fonte }, 'arvores')
 }
 
 /** @returns {Promise<{wasm?: Uint8Array, avisos?: string, erros?: string}>} */
-export const compilar = (linguagem, fonte) => pedir({ tipo: 'compilar', linguagem, fonte })
+export async function compilar(linguagem, fonte) {
+  const r = await pedir({ tipo: 'compilar', linguagem, fonte })
+  if (r.erros === undefined) antecipar(linguagem, fonte) // depois de um F9 que deu certo, o F8 é provável
+  return r
+}
 
 /** Árvore do programa para o passo a passo (F8). @returns {Promise<{ast?: string, avisos?: string, erros?: string}>} */
-export const arvore = (fonte, linguagem) => pedir({ tipo: 'arvore', fonte, linguagem })
+export const arvore = (fonte, linguagem) => pedir({ tipo: 'arvore', fonte, linguagem }, 'arvores')
 
 /** Carrega o clang em segundo plano (e, no C++, o cabeçalho pré-compilado), para o F9 ser mais rápido. */
-export const aquecer = (linguagem, fonte) => void pedir({ tipo: 'aquecer', linguagem, fonte: String(fonte ?? '') })
+export function aquecer(linguagem, fonte) {
+  void pedir({ tipo: 'aquecer', linguagem, fonte: String(fonte ?? '') })
+  antecipar(linguagem, String(fonte ?? ''))
+}
 
 // ---- execução -----------------------------------------------------------------------
 
@@ -119,5 +140,5 @@ export function parar(id) {
 
 export function pararTudo() {
   for (const filho of execucoes.values()) filho.kill()
-  trabalhador?.terminate()
+  for (const w of Object.values(trabalhadores)) w?.terminate()
 }

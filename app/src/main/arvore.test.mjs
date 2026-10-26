@@ -1,5 +1,5 @@
-// A árvore do passo a passo (F8) feita de antemão: depois de um F9 que deu certo, o worker do compilador já
-// deixa pronta a árvore do mesmo programa, e o F8 não espera o clang de novo.
+// A árvore do passo a passo (F8) feita de antemão: depois de um F9 que deu certo (e ao abrir o arquivo), o
+// worker das árvores (clang.js) recebe "antecipar" e deixa pronta a árvore do programa; o F8 não espera o clang.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -12,7 +12,7 @@ import { Worker } from 'node:worker_threads'
 const clang = pathToFileURL(createRequire(import.meta.url).resolve('@yowasp/clang')).href
 const PROGRAMA = '#include <iostream>\nint main() { int x = 2; std::cout << x * 21 << std::endl; }\n'
 
-test('depois do F9, a árvore do F8 do mesmo programa já está pronta', { timeout: 300_000 }, async () => {
+test('a árvore antecipada sai pronta no F8', { timeout: 300_000 }, async () => {
   const pasta = mkdtempSync(join(tmpdir(), 'misteralg-arvore-'))
   const w = new Worker(new URL('./compilador.js', import.meta.url), { workerData: { clang, pastasPch: [pasta], pchGravavel: false } })
   let id = 0
@@ -23,9 +23,7 @@ test('depois do F9, a árvore do F8 do mesmo programa já está pronta', { timeo
     w.postMessage({ id: meu, ...msg })
   })
   try {
-    const r = await pedir({ tipo: 'compilar', linguagem: 'cpp', fonte: PROGRAMA })
-    assert.ok(r.wasm, r.erros)
-    await pedir({ tipo: 'arvore', linguagem: 'cpp', fonte: 'int main() {}\n' }) // (espera a fila: a árvore de antemão já foi feita)
+    await pedir({ tipo: 'antecipar', linguagem: 'cpp', fonte: PROGRAMA })
     const inicio = performance.now()
     const a = await pedir({ tipo: 'arvore', linguagem: 'cpp', fonte: PROGRAMA })
     const tempo = performance.now() - inicio
