@@ -54,9 +54,21 @@ export const METODOS_CPP = {
   /** Protótipo → definição (a que tem corpo), para funções livres e métodos definidos fora da classe. */
   definicaoDe(decl, classe) {
     if (!decl) return null
-    if (this.corpoDe(decl)) return decl
-    if (classe) return this.metodosPorAssinatura.get(`${classe}::${decl.name}|${decl.type.qualType}`) ?? null
-    return this.funcoesPorAssinatura.get(`${decl.name}|${decl.type.qualType}`) ?? null
+    const cache = (this.cacheDo(decl).__def ??= new Map())
+    let def = cache.get(classe)
+    if (def === undefined) {
+      if (this.corpoDe(decl)) def = decl
+      else if (classe) def = this.metodosPorAssinatura.get(`${classe}::${decl.name}|${decl.type.qualType}`) ?? null
+      else def = this.funcoesPorAssinatura.get(`${decl.name}|${decl.type.qualType}`) ?? null
+      cache.set(classe, def)
+    }
+    return def
+  },
+
+  /** O tipo (função) de uma declaração. */
+  tipoFnDe(decl) {
+    if (this.cacheDo(decl).__tf === undefined) decl.__tf = this.tipos.de(decl.type)
+    return decl.__tf
   },
 
   classeDinamica(endereco, classe) {
@@ -73,12 +85,19 @@ export const METODOS_CPP = {
 
   /** Método virtual: procura a versão mais "de baixo", a partir do tipo de verdade do objeto. */
   despachar(decl, classe, objeto) {
-    const semConst = (t) => t.replace(/\s*(const|noexcept|override)\s*$/g, '')
-    for (let c = this.classeDinamica(objeto, classe); c; c = this.baseDe(c)) {
-      const m = this.registros.get(c)?.metodos.find((x) => x.kind === decl.kind && x.name === decl.name && semConst(x.type.qualType) === semConst(decl.type.qualType))
-      if (m) return { decl: m, classe: c }
+    const dinamica = this.classeDinamica(objeto, classe)
+    const cache = (this.cacheDo(decl).__despacho ??= new Map())
+    let alvo = cache.get(dinamica)
+    if (!alvo) {
+      const semConst = (t) => t.replace(/\s*(const|noexcept|override)\s*$/g, '')
+      alvo = { decl, classe }
+      for (let c = dinamica; c; c = this.baseDe(c)) {
+        const m = this.registros.get(c)?.metodos.find((x) => x.kind === decl.kind && x.name === decl.name && semConst(x.type.qualType) === semConst(decl.type.qualType))
+        if (m) { alvo = { decl: m, classe: c }; break }
+      }
+      cache.set(dinamica, alvo)
     }
-    return { decl, classe }
+    return alvo
   },
 
   /** Deslocamento da base dentro da derivada (herança simples ou múltipla). */
@@ -97,17 +116,19 @@ export const METODOS_CPP = {
 
   * argumentos(decl, tipoFn, nos) {
     const params = tipoFn?.params ?? []
-    const parmDecls = (decl?.inner ?? []).filter((n) => n.kind === 'ParmVarDecl')
     const lista = []
     for (let i = 0; i < nos.length; i += 1) {
       let no = nos[i]
-      if (no.kind === 'CXXDefaultArgExpr') no = no.inner?.[0] ?? parmDecls[i]?.inner?.[parmDecls[i].inner.length - 1]
+      if (no.kind === 'CXXDefaultArgExpr') {
+        const parm = (decl?.inner ?? []).filter((n) => n.kind === 'ParmVarDecl')[i]
+        no = no.inner?.[0] ?? parm?.inner?.[parm.inner.length - 1]
+      }
       if (!no) throw new ErroC('valor padrão de parâmetro que o passo a passo não encontrou')
       const t = params[i]
       let valor
-      if (t?.k === 'ref') valor = yield* this.end(no)
+      if (t?.k === 'ref') valor = (no.__se ?? this.simplesEnd(no)) ? this.endR(no) : yield* this.end(no)
       else if (this.ehClasse(t)) valor = yield* this.temporario(no) // por valor: construído pelo chamador, o parâmetro só dá nome a ele
-      else valor = yield* this.val(no)
+      else valor = (no.__sv ?? this.simplesVal(no)) ? this.valR(no) : yield* this.val(no)
       lista.push({ valor, tipo: t ?? this.tipo(no), no })
     }
     return lista
@@ -115,10 +136,15 @@ export const METODOS_CPP = {
 
   /** Chama uma função ou método já escolhido (com corpo, implícito ou da biblioteca). */
   * invocar(decl, classe, objeto, args, destino, chamada) {
-    const tipoFn = this.tipos.de(decl.type)
+    const tipoFn = this.tipoFnDe(decl)
     if (this.ehClasse(tipoFn.ret) && destino === undefined) destino = this.rascunho(Math.max(1, tamanhoDe(tipoFn.ret)))
     const nome = decl.name
-    const nativa = BIBLIOTECA_CPP[classe ? `${semTemplate(classe)}::${nome}` : nome]
+    const nativas = (decl.__nativa ??= new Map()) // (o cacheDo de tipoFnDe já conferiu a máquina)
+    let nativa = nativas.get(classe)
+    if (nativa === undefined) {
+      nativa = BIBLIOTECA_CPP[classe ? `${semTemplate(classe)}::${nome}` : nome] ?? null
+      nativas.set(classe, nativa)
+    }
     // (uma função "..._js" da biblioteca é feita em JavaScript; o corpo vazio dela é só para o clang)
     const def = nativa && /_js$/.test(nome) ? null : this.definicaoDe(decl, classe)
     if (def) {
@@ -147,10 +173,10 @@ export const METODOS_CPP = {
       const base = membro.inner[0]
       const objeto = membro.isArrow ? yield* this.val(base) : yield* this.end(base)
       if (membro.isArrow && !objeto) throw new ErroC(`chamada de ${membro.name}() por um ponteiro NULL`)
-      let alvo = { decl: info.no, classe: info.classe }
-      if (info.no.virtual && !membro.qualifier) alvo = this.despachar(info.no, info.classe, objeto)
-      const args = yield* this.argumentos(alvo.decl, this.tipos.de(alvo.decl.type), resto)
-      return yield* this.invocar(alvo.decl, alvo.classe, objeto, args, destino, x)
+      const alvo = info.no.virtual && !membro.qualifier ? this.despachar(info.no, info.classe, objeto) : info
+      const decl = alvo.decl ?? alvo.no
+      const args = yield* this.argumentos(decl, this.tipoFnDe(decl), resto)
+      return yield* this.invocar(decl, alvo.classe, objeto, args, destino, x)
     }
     // Chamada por nome (função livre ou operador sobrecarregado).
     let c = callee
@@ -162,18 +188,18 @@ export const METODOS_CPP = {
       const nome = this.funcaoNoEndereco.get(Number(p))
       const def = nome && (this.funcoes.get(nome) ?? (BIBLIOTECA[nome] || BIBLIOTECA_CPP[nome] ? this.declaracaoPorNome(nome) : null))
       if (!def) throw new ErroC('chamada por um ponteiro de função inválido')
-      const args = yield* this.argumentos(def, this.tipos.de(def.type), resto)
+      const args = yield* this.argumentos(def, this.tipoFnDe(def), resto)
       return yield* this.invocar(def, null, undefined, args, destino, x)
     }
     const info = this.decls.get(ref.id) ?? { no: ref }
     if (x.kind === 'CXXOperatorCallExpr' && ref.kind === 'CXXMethodDecl') {
       const objeto = yield* this.end(resto[0])
-      let alvo = { decl: info.no, classe: info.classe }
-      if (info.no.virtual) alvo = this.despachar(info.no, info.classe, objeto)
-      const args = yield* this.argumentos(alvo.decl, this.tipos.de(alvo.decl.type), resto.slice(1))
-      return yield* this.invocar(alvo.decl, alvo.classe, objeto, args, destino, x)
+      const alvo = info.no.virtual ? this.despachar(info.no, info.classe, objeto) : info
+      const decl = alvo.decl ?? alvo.no
+      const args = yield* this.argumentos(decl, this.tipoFnDe(decl), resto.slice(1))
+      return yield* this.invocar(decl, alvo.classe, objeto, args, destino, x)
     }
-    const args = yield* this.argumentos(info.no, this.tipos.de(info.no.type), resto)
+    const args = yield* this.argumentos(info.no, this.tipoFnDe(info.no), resto)
     const linha = this.linhaAtual
     const r = yield* this.invocar(info.no, info.classe ?? null, undefined, args, destino, x)
     this.linhaAtual = linha
@@ -554,7 +580,7 @@ export const METODOS_CPP = {
       const decl = (c.inner ?? []).find((n) => n?.kind === 'VarDecl')
       if (decl && !this.capturaAceita(this.tipos.de(decl.type), excecao)) continue
       const corpoDoCatch = (c.inner ?? []).find((n) => n?.kind === 'CompoundStmt')
-      yield this.linha(c)
+      if (this.linha(c)) yield this.eventoLinha
       const marcaVariaveis = quadro.variaveis.length
       const marcaPilha = this.mem.topoPilha
       this.excecoesAtivas.push(excecao)
@@ -605,14 +631,14 @@ export const METODOS_CPP = {
     const marcaVariaveis = quadro.variaveis.length
     try {
       if (init?.kind) yield* this.exec(init)
-      yield this.linha(no)
+      if (this.linha(no)) yield this.eventoLinha
       for (const d of [intervalo, comeco, fim]) for (const v of d.inner) yield* this.declarar(v)
       for (;;) {
         if (!this.verdade(yield* this.val(cond))) break
         const marcaVolta = quadro.variaveis.length
         const pilhaVolta = this.mem.topoPilha
         for (const v of variavel.inner) yield* this.declarar(v)
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         const r = yield* this.exec(corpo)
         yield* this.destruirLocais(quadro, marcaVolta)
         for (const v of quadro.variaveis.splice(marcaVolta)) quadro.porId.delete(v.id)

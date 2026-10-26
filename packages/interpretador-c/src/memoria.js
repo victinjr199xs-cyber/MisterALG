@@ -27,6 +27,34 @@ function procurar(lista, endereco) {
   return null
 }
 
+/** As últimas n entradas, com find/some da mais antiga para a mais nova, sem mover o vetor a cada uma. */
+class Anel {
+  constructor(n) {
+    this.n = n
+    this.itens = []
+    this.inicio = 0
+  }
+
+  push(x) {
+    if (this.itens.length < this.n) this.itens.push(x)
+    else {
+      this.itens[this.inicio] = x
+      this.inicio = (this.inicio + 1) % this.n
+    }
+  }
+
+  find(f) {
+    const n = this.itens.length
+    for (let i = 0; i < n; i += 1) {
+      const x = this.itens[(this.inicio + i) % n]
+      if (f(x)) return x
+    }
+    return undefined
+  }
+
+  some(f) { return this.find(f) !== undefined }
+}
+
 export class Memoria {
   constructor() {
     this.bytes = new Uint8Array(TAMANHO)
@@ -36,7 +64,7 @@ export class Memoria {
     this.pilha = []
     this.heap = []
     this.liberados = [] // blocos do heap já devolvidos (para as mensagens e para a tela)
-    this.foraDeEscopo = [] // últimas variáveis locais que deixaram de existir
+    this.foraDeEscopo = new Anel(64) // últimas variáveis locais que deixaram de existir
     this.topoEstatico = INICIO_ESTATICO
     this.semente = 0x2545f491
     this.blocosCriados = 0
@@ -92,7 +120,6 @@ export class Memoria {
       const bloco = this.pilha.pop()
       bloco.vivo = false
       this.foraDeEscopo.push(bloco)
-      if (this.foraDeEscopo.length > 64) this.foraDeEscopo.shift()
     }
     this.topoPilha = marca
   }

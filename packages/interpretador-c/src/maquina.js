@@ -123,6 +123,11 @@ export class MaquinaC {
       no.__t = undefined
       no.__l = undefined
       no.__campo = undefined
+      no.__info = undefined // (funções)
+      no.__tf = undefined
+      no.__nativa = undefined
+      no.__def = undefined
+      no.__despacho = undefined
     }
     return no
   }
@@ -467,12 +472,33 @@ export class MaquinaC {
     }
   }
 
-  /** Evento de linha (o passo a passo pausa aqui); null dentro do código dos cabeçalhos, que roda sem pausar. */
+  /**
+   * Evento de linha (o passo a passo pausa aqui); null dentro do código dos cabeçalhos, que roda sem pausar.
+   * Quem chama só faz yield quando há evento: um yield de null subiria por todos os geradores da pilha à toa.
+   */
   linha(no) {
     if (this.quadro?.biblioteca) return null
     this.linhaAtual = this.linhaDe(no)
     if (this.quadro) this.quadro.linha = this.linhaAtual
-    return { tipo: 'linha', linha: this.linhaAtual }
+    // (o mesmo objeto a cada linha: quem recebe o evento lê na hora)
+    this.eventoLinha ??= { tipo: 'linha', linha: 0 }
+    this.eventoLinha.linha = this.linhaAtual
+    return this.eventoLinha
+  }
+
+  /** O que uma chamada precisa da função (parâmetros, corpo, tipo, nome por classe), calculado uma vez. */
+  infoDaFuncao(def) {
+    if (this.cacheDo(def).__info === undefined) {
+      const filhos = def.inner ?? []
+      def.__info = {
+        params: filhos.filter((n) => n.kind === 'ParmVarDecl'),
+        corpo: filhos.find((n) => n.kind === 'CompoundStmt'),
+        retorno: this.tipos.de(def.type).ret,
+        linha: this.linhaDe(def),
+        nomes: new Map(), // classe → "Classe::nome"
+      }
+    }
+    return def.__info
   }
 
   tipo(no) {
@@ -485,15 +511,21 @@ export class MaquinaC {
    */
   * chamarFuncao(def, valores, linhaDaChamada, ctx = {}) {
     if (this.pilha.length >= MAX_CHAMADAS) throw new ErroC('chamadas demais uma dentro da outra (recursão infinita?)', 0, EXPLICACOES.pilha)
-    const filhos = def.inner ?? []
-    const params = filhos.filter((n) => n.kind === 'ParmVarDecl')
-    const corpo = filhos.find((n) => n.kind === 'CompoundStmt')
+    const info = this.infoDaFuncao(def)
+    const { params, corpo } = info
     const marca = this.mem.topoPilha
     const anterior = this.quadro
-    const nome = ctx.classe ? `${ctx.classe.replace(/<.*$/, '')}::${def.name}` : def.name
+    let nome = def.name
+    if (ctx.classe) {
+      nome = info.nomes.get(ctx.classe)
+      if (nome === undefined) {
+        nome = `${ctx.classe.replace(/<.*$/, '')}::${def.name}`
+        info.nomes.set(ctx.classe, nome)
+      }
+    }
     const quadro = {
-      funcao: nome, linha: this.linhaDe(def), linhaDaChamada, variaveis: [], porId: new Map(),
-      this: ctx.this, destino: ctx.destino, retorno: this.tipos.de(def.type).ret, biblioteca: !!def.biblioteca,
+      funcao: nome, linha: info.linha, linhaDaChamada, variaveis: [], porId: new Map(),
+      this: ctx.this, destino: ctx.destino, retorno: info.retorno, biblioteca: !!def.biblioteca,
     }
     this.pilha.push(quadro)
     this.quadro = quadro
@@ -517,21 +549,22 @@ export class MaquinaC {
         this.mem.escrever(tipoThis, e, ctx.this)
         quadro.variaveis.push({ id: 'this', nome: 'this', tipo: tipoThis, tipoTexto: `${ctx.classe.replace(/<.*$/, '')} *`, endereco: e, apelido: true })
       }
-      params.forEach((p, i) => {
-        const t = this.tipos.de(p.type)
+      for (let i = 0; i < params.length; i += 1) {
+        const p = params[i]
+        const t = this.tipo(p)
         if (this.cpp && t.k === 'struct') {
           // Parâmetro por valor de classe: o chamador já construiu o objeto; aqui ele só ganha um nome.
           const v = { id: p.id, nome: p.name || `(parâmetro ${i + 1})`, tipo: t, tipoTexto: p.type.qualType, endereco: valores[i], apelido: true }
           quadro.variaveis.push(v)
           quadro.porId.set(p.id, v)
-          return
+          continue
         }
         const variavel = this.novaLocal(p, t)
         if (t.k === 'struct') this.mem.gravarBytes(variavel.endereco, valores[i])
         else if (valores[i] !== undefined) this.mem.escrever(t, variavel.endereco, valores[i])
         variavel.apelido = t.k === 'ref'
-      })
-      yield this.linha(def)
+      }
+      if (this.linha(def)) yield this.eventoLinha
       if (ctx.construtor) yield* this.iniciarObjeto(def, ctx.classe, ctx.this)
       const r = yield* this.bloco(corpo?.inner ?? [], true)
       if (ctx.destrutor) yield* this.destruirMembros(ctx.this, this.tipoDaClasse(ctx.classe))
@@ -589,7 +622,7 @@ export class MaquinaC {
         if (r) break
       }
       // C++: os objetos declarados neste bloco são destruídos ao sair dele (na ordem inversa).
-      if (this.cpp) yield* this.destruirLocais(quadro, marcaVariaveis)
+      if (this.cpp && quadro.variaveis.length > marcaVariaveis) yield* this.destruirLocais(quadro, marcaVariaveis)
       return r
     } catch (e) {
       // Uma exceção atravessando o bloco também destrói os objetos dele (o "desempilhamento" do C++).
@@ -601,7 +634,7 @@ export class MaquinaC {
       throw e
     } finally {
       if (!eDeFuncao) {
-        for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
+        if (quadro.variaveis.length > marcaVariaveis) for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
         this.mem.desempilharAte(marcaPilha)
       }
     }
@@ -614,19 +647,19 @@ export class MaquinaC {
       case 'CompoundStmt': return yield* this.bloco(no.inner ?? [])
       case 'NullStmt': return undefined
       case 'DeclStmt':
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         for (const d of no.inner ?? []) if ((d.kind === 'VarDecl' || d.kind === 'DecompositionDecl') && !this.globais.has(d.id)) yield* this.declarar(d)
         return undefined
       case 'IfStmt': {
         const [cond, entao, senao] = this.partesDoIf(no)
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         if (this.verdade(yield* this.val(cond))) return yield* this.exec(entao)
         return senao ? yield* this.exec(senao) : undefined
       }
       case 'WhileStmt': {
         const [cond, corpo] = no.inner
         for (;;) {
-          yield this.linha(no)
+          if (this.linha(no)) yield this.eventoLinha
           if (!this.verdade(yield* this.val(cond))) return undefined
           const r = yield* this.exec(corpo)
           if (r === FIM_DE_LACO) return undefined
@@ -639,16 +672,16 @@ export class MaquinaC {
           const r = yield* this.exec(corpo)
           if (r === FIM_DE_LACO) return undefined
           if (r && r !== PROXIMA_VOLTA) return r
-          yield this.linha(cond)
+          if (this.linha(cond)) yield this.eventoLinha
           if (!this.verdade(yield* this.val(cond))) return undefined
         }
       }
       case 'ForStmt': return yield* this.para(no)
       case 'SwitchStmt': return yield* this.escolha(no)
-      case 'BreakStmt': yield this.linha(no); return FIM_DE_LACO
-      case 'ContinueStmt': yield this.linha(no); return PROXIMA_VOLTA
+      case 'BreakStmt': if (this.linha(no)) yield this.eventoLinha; return FIM_DE_LACO
+      case 'ContinueStmt': if (this.linha(no)) yield this.eventoLinha; return PROXIMA_VOLTA
       case 'ReturnStmt': {
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         const expr = no.inner?.[0]
         if (!expr) return { tipo: 'return', valor: undefined }
         const ret = this.quadro.retorno
@@ -661,12 +694,13 @@ export class MaquinaC {
       case 'LabelStmt': return yield* this.exec(no.inner[0])
       case 'CaseStmt': return yield* this.exec(no.inner[no.inner.length - 1])
       case 'DefaultStmt': return yield* this.exec(no.inner[0])
-      case 'GotoStmt': yield this.linha(no); return { tipo: 'goto', alvo: no.targetLabelDeclId }
+      case 'GotoStmt': if (this.linha(no)) yield this.eventoLinha; return { tipo: 'goto', alvo: no.targetLabelDeclId }
       case 'CXXTryStmt': return yield* this.tentar(no)
       default:
-        if (!ehExpressao(no)) throw new ErroC(`o passo a passo ainda não sabe executar "${no.kind}"`)
-        yield this.linha(no)
-        yield* this.val(no)
+        if (!(no.__ex ??= ehExpressao(no))) throw new ErroC(`o passo a passo ainda não sabe executar "${no.kind}"`)
+        if (this.linha(no)) yield this.eventoLinha
+        if (no.__sv ?? this.simplesVal(no)) this.valR(no)
+        else yield* this.val(no)
         return undefined
     }
   }
@@ -688,7 +722,7 @@ export class MaquinaC {
       let r
       if (init?.kind) yield* this.exec(init)
       for (;;) {
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         if (cond?.kind && !this.verdade(yield* this.val(cond))) break
         r = yield* this.exec(corpo)
         if (r === FIM_DE_LACO) { r = undefined; break }
@@ -696,13 +730,13 @@ export class MaquinaC {
         r = undefined
         if (inc?.kind) yield* this.val(inc)
       }
-      if (this.cpp) yield* this.destruirLocais(quadro, marcaVariaveis)
+      if (this.cpp && quadro.variaveis.length > marcaVariaveis) yield* this.destruirLocais(quadro, marcaVariaveis)
       return r
     } catch (e) {
       if (e instanceof ExcecaoCpp) yield* this.destruirLocais(quadro, marcaVariaveis)
       throw e
     } finally {
-      for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
+      if (quadro.variaveis.length > marcaVariaveis) for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
       this.mem.desempilharAte(marcaPilha)
     }
   }
@@ -710,7 +744,7 @@ export class MaquinaC {
   * escolha(no) {
     const cond = no.inner[0]
     const corpo = no.inner[no.inner.length - 1]
-    yield this.linha(no)
+    if (this.linha(no)) yield this.eventoLinha
     const valor = yield* this.val(cond)
     const lista = corpo.kind === 'CompoundStmt' ? corpo.inner ?? [] : [corpo]
     const casa = (s) => {
