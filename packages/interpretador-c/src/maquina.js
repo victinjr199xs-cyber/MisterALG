@@ -113,10 +113,28 @@ export class MaquinaC {
     return a + 1
   }
 
+  /**
+   * Os caches guardados no próprio nó (tipo, linha, campo) valem para esta máquina: se o mesmo objeto da
+   * árvore passar por outra, eles são refeitos.
+   */
+  cacheDo(no) {
+    if (no.__m !== this) {
+      no.__m = this
+      no.__t = undefined
+      no.__l = undefined
+      no.__campo = undefined
+    }
+    return no
+  }
+
   linhaDe(no) {
-    const ini = no?.range?.begin ?? no?.loc
-    const off = ini?.offset ?? ini?.expansionLoc?.offset ?? ini?.spellingLoc?.offset
-    return off === undefined ? this.linhaAtual : this.linhaDoDeslocamento(off)
+    if (!no) return this.linhaAtual
+    if (this.cacheDo(no).__l === undefined) {
+      const ini = no.range?.begin ?? no.loc
+      const off = ini?.offset ?? ini?.expansionLoc?.offset ?? ini?.spellingLoc?.offset
+      no.__l = off === undefined ? null : this.linhaDoDeslocamento(off)
+    }
+    return no.__l ?? this.linhaAtual
   }
 
   /** Percorre a árvore inteira uma vez: tipos, enums, funções, literais e globais. */
@@ -457,7 +475,10 @@ export class MaquinaC {
     return { tipo: 'linha', linha: this.linhaAtual }
   }
 
-  tipo(no) { return this.tipos.de(no.type) }
+  tipo(no) {
+    if (this.cacheDo(no).__t === undefined) no.__t = this.tipos.de(no.type)
+    return no.__t
+  }
 
   /**
    * @param ctx C++: { this, classe, destino (onde construir a classe devolvida), construtor, destrutor }
@@ -846,6 +867,7 @@ export class MaquinaC {
   literal(no) { return this.literais.get(no.id) }
 
   * val(x) {
+    if (x.__sv ?? this.simplesVal(x)) return this.valR(x)
     switch (x.kind) {
       case 'IntegerLiteral': {
         const t = this.tipo(x)
@@ -944,6 +966,7 @@ export class MaquinaC {
   }
 
   * end(x) {
+    if (x.__se ?? this.simplesEnd(x)) return this.endR(x)
     switch (x.kind) {
       case 'DeclRefExpr': return this.enderecoDaVariavel(x.referencedDecl)
       case 'ParenExpr': return yield* this.end(x.inner[0])
@@ -960,33 +983,12 @@ export class MaquinaC {
         const [a, b] = x.inner
         const va = yield* this.val(a)
         const vb = yield* this.val(b)
-        const aEhPonteiro = this.tipo(a).k === 'ptr'
-        const base = aEhPonteiro ? va : vb
-        const indice = Number(aEhPonteiro ? vb : va)
-        const noBase = aEhPonteiro ? a : b
-        const tam = tamanhoDe(this.tipo(x))
-        // Vetor declarado com tamanho (v[10], m[3][4]): confere o índice pelo tamanho dele.
-        const sub = noBase.kind === 'ImplicitCastExpr' && noBase.castKind === 'ArrayToPointerDecay' ? noBase.inner[0] : null
-        const tipoVetor = sub && this.tipo(sub)
-        if (tipoVetor?.k === 'array' && tipoVetor.n !== null) {
-          const n = tipoVetor.n
-          if (indice < 0 || indice > n || (indice === n && !this.permitirFim)) {
-            throw new ErroC(`índice ${indice} fora dos limites do vetor ${this.nomeDaExpressao(sub) ?? ''} (ele tem ${n} elementos: posições 0 a ${n - 1})`.replace('vetor  (', 'vetor ('), 0, EXPLICACOES.vetor)
-          }
-        } else if (base === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(noBase) ?? 'ponteiro'}[${indice}] com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
-        return base + indice * tam
+        return this.enderecoNoVetor(x, va, vb)
       }
       case 'MemberExpr': {
         if (this.cpp && this.globais.has(x.referencedMemberDecl)) return this.globais.get(x.referencedMemberDecl).endereco // membro static
         const base = x.inner[0]
-        const e = x.isArrow ? yield* this.val(base) : yield* this.end(base)
-        if (x.isArrow && e === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(base) ?? 'ponteiro'}->${x.name} com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
-        const tipoBase = x.isArrow ? this.tipo(base).alvo : this.tipo(base)
-        const campos = layout(tipoBase).campos
-        const campo = campos.find((c) => c.id === x.referencedMemberDecl) ?? campos.find((c) => c.nome === x.name)
-        if (!campo) throw new ErroC(`campo ${x.name} desconhecido`)
-        // campo que é referência (int &r; numa classe): o endereço é o que ela guarda
-        return campo.tipo.k === 'ref' ? this.mem.ler(campo.tipo, e + campo.deslocamento) : e + campo.deslocamento
+        return this.enderecoDoCampo(x, x.isArrow ? yield* this.val(base) : yield* this.end(base))
       }
       case 'CompoundLiteralExpr': {
         const t = this.tipo(x)
@@ -1014,6 +1016,302 @@ export class MaquinaC {
     return e
   }
 
+  /** v[i] (ou i[v]): o endereço do elemento, conferindo o índice de um vetor de tamanho conhecido. */
+  enderecoNoVetor(x, va, vb) {
+    const [a, b] = x.inner
+    const aEhPonteiro = this.tipo(a).k === 'ptr'
+    const base = aEhPonteiro ? va : vb
+    const indice = Number(aEhPonteiro ? vb : va)
+    const noBase = aEhPonteiro ? a : b
+    const tam = tamanhoDe(this.tipo(x))
+    // Vetor declarado com tamanho (v[10], m[3][4]): confere o índice pelo tamanho dele.
+    const sub = noBase.kind === 'ImplicitCastExpr' && noBase.castKind === 'ArrayToPointerDecay' ? noBase.inner[0] : null
+    const tipoVetor = sub && this.tipo(sub)
+    if (tipoVetor?.k === 'array' && tipoVetor.n !== null) {
+      const n = tipoVetor.n
+      if (indice < 0 || indice > n || (indice === n && !this.permitirFim)) {
+        throw new ErroC(`índice ${indice} fora dos limites do vetor ${this.nomeDaExpressao(sub) ?? ''} (ele tem ${n} elementos: posições 0 a ${n - 1})`.replace('vetor  (', 'vetor ('), 0, EXPLICACOES.vetor)
+      }
+    } else if (base === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(noBase) ?? 'ponteiro'}[${indice}] com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
+    return base + indice * tam
+  }
+
+  /** a.campo / p->campo, com o endereço (ou o ponteiro) de a já calculado. */
+  enderecoDoCampo(x, e) {
+    const base = x.inner[0]
+    if (x.isArrow && e === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(base) ?? 'ponteiro'}->${x.name} com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
+    let campo = this.cacheDo(x).__campo
+    if (!campo) {
+      const tipoBase = x.isArrow ? this.tipo(base).alvo : this.tipo(base)
+      const campos = layout(tipoBase).campos
+      campo = campos.find((c) => c.id === x.referencedMemberDecl) ?? campos.find((c) => c.nome === x.name)
+      if (!campo) throw new ErroC(`campo ${x.name} desconhecido`)
+      x.__campo = campo
+    }
+    // campo que é referência (int &r; numa classe): o endereço é o que ela guarda
+    return campo.tipo.k === 'ref' ? this.mem.ler(campo.tipo, e + campo.deslocamento) : e + campo.deslocamento
+  }
+
+  /** ++ e -- no endereço e (devolve o valor de antes, se for pós-fixado). */
+  incrementar(x, e) {
+    const ts = this.tipo(x.inner[0])
+    const velho = this.mem.ler(ts, e)
+    const passo = x.opcode === '++' ? 1 : -1
+    let novo
+    if (ts.k === 'ptr') novo = (velho + passo * tamanhoDe(ts.alvo)) >>> 0
+    else if (ts.k === 'real') novo = this.converter(velho + passo, DOUBLE, ts)
+    else novo = this.normalizar(ts, typeof velho === 'bigint' ? velho + BigInt(passo) : velho + passo)
+    this.mem.escrever(ts, e, novo)
+    return x.isPostfix ? velho : novo
+  }
+
+  /** a += b (e os outros): grava no endereço e e devolve o resultado. */
+  compor(x, e, vb) {
+    const [a, b] = x.inner
+    const ta = this.tipo(a)
+    const atual = this.mem.ler(ta, e)
+    const op = x.opcode.slice(0, -1)
+    let resultado
+    if (ta.k === 'ptr') resultado = this.operar(op, atual, vb, ta, this.tipo(b), ta)
+    else {
+      const tl = this.tipos.de(x.computeLHSType)
+      const tr = this.tipos.de(x.computeResultType)
+      resultado = this.converter(this.operar(op, this.converter(atual, ta, tl), vb, tl, this.tipo(b), tr), tr, ta)
+    }
+    this.mem.escrever(ta, e, resultado)
+    return resultado
+  }
+
+  // ---- expressões simples, sem gerador -----------------------------------------------
+  // A maior parte das expressões (variáveis, contas, v[i], p->campo, x = y, i++) nunca pausa nem chama
+  // nada: são calculadas aqui, numa função comum, sem criar um gerador por nó. simplesVal/simplesEnd
+  // decidem isso uma vez por nó (guardado nele); valR/endR fazem exatamente o que val/end fariam.
+
+  simplesVal(x) {
+    let r = false
+    const naoClasse = () => !(this.cpp && this.tipo(x).k === 'struct')
+    switch (x.kind) {
+      case 'IntegerLiteral':
+      case 'CharacterLiteral':
+      case 'FloatingLiteral':
+      case 'StringLiteral':
+      case 'DeclRefExpr':
+      case 'UnaryExprOrTypeTraitExpr':
+      case 'ImplicitValueInitExpr':
+        r = true
+        break
+      case 'CXXBoolLiteralExpr':
+      case 'CXXNullPtrLiteralExpr':
+      case 'CXXThisExpr':
+      case 'CXXScalarValueInitExpr':
+        r = this.cpp
+        break
+      case 'ParenExpr':
+      case 'ConstantExpr':
+        r = this.simplesVal(x.inner[0])
+        break
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr':
+        switch (x.castKind) {
+          case 'LValueToRValue':
+          case 'ArrayToPointerDecay': r = this.simplesEnd(x.inner[0]) && naoClasse(); break
+          case 'ConstructorConversion':
+          case 'UserDefinedConversion':
+          case 'DerivedToBase':
+          case 'UncheckedDerivedToBase':
+          case 'BaseToDerived': r = false; break
+          default: r = this.simplesVal(x.inner[0]) && naoClasse()
+        }
+        break
+      case 'UnaryOperator':
+        switch (x.opcode) {
+          case '&':
+          case '++':
+          case '--': r = this.simplesEnd(x.inner[0]); break
+          case '*':
+          case '+':
+          case '-':
+          case '~':
+          case '!':
+          case '__extension__': r = this.simplesVal(x.inner[0]); break
+          default: r = false
+        }
+        break
+      case 'BinaryOperator':
+        r = x.opcode === '='
+          ? this.simplesEnd(x.inner[0]) && this.simplesVal(x.inner[1]) && !(this.cpp && this.tipo(x.inner[0]).k === 'struct')
+          : this.simplesVal(x.inner[0]) && this.simplesVal(x.inner[1])
+        break
+      case 'CompoundAssignOperator':
+        r = this.simplesEnd(x.inner[0]) && this.simplesVal(x.inner[1])
+        break
+      case 'ConditionalOperator':
+        r = x.inner.every((f) => this.simplesVal(f)) && naoClasse()
+        break
+      case 'ArraySubscriptExpr':
+      case 'MemberExpr':
+        r = this.simplesEnd(x)
+        break
+      default:
+    }
+    x.__sv = r
+    return r
+  }
+
+  simplesEnd(x) {
+    let r = false
+    switch (x.kind) {
+      case 'DeclRefExpr':
+      case 'StringLiteral':
+        r = true
+        break
+      case 'ParenExpr':
+      case 'ConstantExpr':
+        r = this.simplesEnd(x.inner[0])
+        break
+      case 'UnaryOperator':
+        r = x.opcode === '*' && this.simplesVal(x.inner[0])
+        break
+      case 'ArraySubscriptExpr':
+        r = this.simplesVal(x.inner[0]) && this.simplesVal(x.inner[1])
+        break
+      case 'MemberExpr':
+        r = x.isArrow ? this.simplesVal(x.inner[0]) : this.simplesEnd(x.inner[0])
+        break
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr':
+        if (x.castKind === 'DerivedToBase' || x.castKind === 'UncheckedDerivedToBase') r = false
+        else r = (x.castKind === 'NoOp' || x.castKind === 'LValueBitCast' || x.castKind === 'LValueToRValue' || x.valueCategory === 'lvalue') && this.simplesEnd(x.inner[0])
+        break
+      default:
+    }
+    x.__se = r
+    return r
+  }
+
+  valR(x) {
+    switch (x.kind) {
+      case 'IntegerLiteral': {
+        const t = this.tipo(x)
+        return t.tamanho >= 8 ? this.normalizar(t, BigInt(x.value)) : Number(x.value)
+      }
+      case 'CharacterLiteral': return x.value
+      case 'FloatingLiteral': return Number(x.value)
+      case 'StringLiteral': return this.literal(x)
+      case 'CXXBoolLiteralExpr': return x.value ? 1 : 0
+      case 'CXXNullPtrLiteralExpr':
+      case 'CXXScalarValueInitExpr':
+      case 'ImplicitValueInitExpr': return 0
+      case 'CXXThisExpr': return this.quadro?.this ?? 0
+      case 'ParenExpr': return this.valR(x.inner[0])
+      case 'ConstantExpr':
+        if (x.value !== undefined) {
+          const t = this.tipo(x)
+          if (x.value === 'true' || x.value === 'false') return x.value === 'true' ? 1 : 0
+          return ehInteiro(t) ? this.normalizar(t, t.tamanho >= 8 ? BigInt(x.value) : Number(x.value)) : this.valR(x.inner[0])
+        }
+        return this.valR(x.inner[0])
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr': {
+        const sub = x.inner[0]
+        switch (x.castKind) {
+          case 'LValueToRValue': return this.carregar(this.tipo(x), this.endR(sub))
+          case 'ArrayToPointerDecay': return this.endR(sub)
+          case 'FunctionToPointerDecay':
+          case 'BuiltinFnToFnPtr':
+          case 'NoOp':
+          case 'LValueBitCast': return this.valR(sub)
+          case 'NullToPointer': this.valR(sub); return 0
+          case 'ToVoid': this.valR(sub); return undefined
+          default: return this.converter(this.valR(sub), this.tipo(sub), this.tipo(x))
+        }
+      }
+      case 'DeclRefExpr': {
+        const r = x.referencedDecl
+        if (r.kind === 'EnumConstantDecl') return this.enums.get(r.id)
+        if (r.kind === 'FunctionDecl' || r.kind === 'CXXMethodDecl') return this.enderecoDeFuncao(r.name)
+        return this.enderecoDaVariavel(r)
+      }
+      case 'UnaryOperator': {
+        const sub = x.inner[0]
+        switch (x.opcode) {
+          case '&':
+            this.permitirFim = true
+            try {
+              return this.endR(sub)
+            } finally {
+              this.permitirFim = false
+            }
+          case '*': return this.endR(x)
+          case '+':
+          case '__extension__': return this.valR(sub)
+          case '-': {
+            const t = this.tipo(x)
+            const v = this.valR(sub)
+            return t.k === 'real' ? -v : this.normalizar(t, -v)
+          }
+          case '~': return this.normalizar(this.tipo(x), ~this.valR(sub))
+          case '!': return this.verdade(this.valR(sub)) ? 0 : 1
+          default: return this.incrementar(x, this.endR(sub)) // ++ e --
+        }
+      }
+      case 'BinaryOperator': {
+        const op = x.opcode
+        const [a, b] = x.inner
+        if (op === '&&') return this.verdade(this.valR(a)) && this.verdade(this.valR(b)) ? 1 : 0
+        if (op === '||') return this.verdade(this.valR(a)) || this.verdade(this.valR(b)) ? 1 : 0
+        if (op === ',') {
+          this.valR(a)
+          return this.valR(b)
+        }
+        if (op === '=') {
+          const e = this.endR(a)
+          const v = this.valR(b)
+          this.guardar(this.tipo(a), e, v)
+          return v
+        }
+        const va = this.valR(a)
+        const vb = this.valR(b)
+        return this.operar(op, va, vb, this.tipo(a), this.tipo(b), this.tipo(x))
+      }
+      case 'CompoundAssignOperator': {
+        const e = this.endR(x.inner[0])
+        return this.compor(x, e, this.valR(x.inner[1]))
+      }
+      case 'ConditionalOperator': return this.valR(this.verdade(this.valR(x.inner[0])) ? x.inner[1] : x.inner[2])
+      case 'UnaryExprOrTypeTraitExpr': {
+        const t = x.argType ? this.tipos.de(x.argType) : this.tipo(x.inner[0])
+        return x.name === 'alignof' || x.name === '_Alignof' ? alinhamentoDe(t) : tamanhoDe(t)
+      }
+      default: return this.endR(x) // ArraySubscriptExpr e MemberExpr
+    }
+  }
+
+  endR(x) {
+    switch (x.kind) {
+      case 'DeclRefExpr': return this.enderecoDaVariavel(x.referencedDecl)
+      case 'StringLiteral': return this.literal(x)
+      case 'ParenExpr':
+      case 'ConstantExpr':
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr': return this.endR(x.inner[0])
+      case 'UnaryOperator': {
+        const p = this.valR(x.inner[0])
+        if (p === 0) throw new ErroC(`uso de *${this.nomeDaExpressao(x.inner[0]) ?? 'ponteiro'} com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
+        return p
+      }
+      case 'ArraySubscriptExpr': {
+        const va = this.valR(x.inner[0])
+        return this.enderecoNoVetor(x, va, this.valR(x.inner[1]))
+      }
+      default: { // MemberExpr
+        if (this.cpp && this.globais.has(x.referencedMemberDecl)) return this.globais.get(x.referencedMemberDecl).endereco
+        const base = x.inner[0]
+        return this.enderecoDoCampo(x, x.isArrow ? this.valR(base) : this.endR(base))
+      }
+    }
+  }
+
   // ---- operadores -----------------------------------------------------------------
 
   * unario(x) {
@@ -1038,18 +1336,7 @@ export class MaquinaC {
       case '~': return this.normalizar(t, ~(yield* this.val(sub)))
       case '!': return this.verdade(yield* this.val(sub)) ? 0 : 1
       case '++':
-      case '--': {
-        const ts = this.tipo(sub)
-        const e = yield* this.end(sub)
-        const velho = this.mem.ler(ts, e)
-        const passo = op === '++' ? 1 : -1
-        let novo
-        if (ts.k === 'ptr') novo = (velho + passo * tamanhoDe(ts.alvo)) >>> 0
-        else if (ts.k === 'real') novo = this.converter(velho + passo, DOUBLE, ts)
-        else novo = this.normalizar(ts, typeof velho === 'bigint' ? velho + BigInt(passo) : velho + passo)
-        this.mem.escrever(ts, e, novo)
-        return x.isPostfix ? velho : novo
-      }
+      case '--': return this.incrementar(x, yield* this.end(sub))
       case '__extension__': return yield* this.val(sub)
       default: throw new ErroC(`operador ${op} ainda não funciona no passo a passo`)
     }
@@ -1137,21 +1424,8 @@ export class MaquinaC {
   }
 
   * atribuicaoComposta(x) {
-    const [a, b] = x.inner
-    const ta = this.tipo(a)
-    const e = yield* this.end(a)
-    const atual = this.mem.ler(ta, e)
-    const vb = yield* this.val(b)
-    const op = x.opcode.slice(0, -1)
-    let resultado
-    if (ta.k === 'ptr') resultado = this.operar(op, atual, vb, ta, this.tipo(b), ta)
-    else {
-      const tl = this.tipos.de(x.computeLHSType)
-      const tr = this.tipos.de(x.computeResultType)
-      resultado = this.converter(this.operar(op, this.converter(atual, ta, tl), vb, tl, this.tipo(b), tr), tr, ta)
-    }
-    this.mem.escrever(ta, e, resultado)
-    return resultado
+    const e = yield* this.end(x.inner[0])
+    return this.compor(x, e, yield* this.val(x.inner[1]))
   }
 
   // ---- chamadas -----------------------------------------------------------------
