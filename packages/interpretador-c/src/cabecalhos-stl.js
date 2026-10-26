@@ -315,7 +315,7 @@ public:
     return pair<__it_arvore<V>, bool>(__it_arvore<V>(novo, &__raiz), true);
   }
   __no_arvore<V> *__limite_inferior(const K &k) const { if (false) __comp(k, k); return __limite_js(__raiz, k, __comp, Chave::primeiro, 0); }
-  __no_arvore<V> *__limite_superior(const K &k) const { if (false) __comp(k, k); return __limite_js(__raiz, k, __comp, Chave::primeiro, 1); }
+  __no_arvore<V> *__limite_superior(const K &k) const { if (false) __comp(k, k); return __limite_js(__raiz, k, __comp, Chave::primeiro, 1); } // @se upper_bound equal_range
   __no_arvore<V> *__achar(const K &k) const {
     __no_arvore<V> *n = __limite_inferior(k);
     return n && !__comp(k, Chave::de(n->valor)) ? n : nullptr;
@@ -331,10 +331,10 @@ public:
     for (__no_arvore<V> *p = __limite_inferior(k); p && !__comp(k, Chave::de(p->valor)); p = __seguinte_js(p)) n++;
     return n;
   }
-  bool contains(const K &k) const { return __achar(k) != nullptr; }
-  __it_arvore<V> lower_bound(const K &k) const { return __it_arvore<V>(__limite_inferior(k), &__raiz); }
-  __it_arvore<V> upper_bound(const K &k) const { return __it_arvore<V>(__limite_superior(k), &__raiz); }
-  pair<__it_arvore<V>, __it_arvore<V>> equal_range(const K &k) const { return pair<__it_arvore<V>, __it_arvore<V>>(lower_bound(k), upper_bound(k)); }
+  bool contains(const K &k) const { return __achar(k) != nullptr; } // @se contains
+  __it_arvore<V> lower_bound(const K &k) const { return __it_arvore<V>(__limite_inferior(k), &__raiz); } // @se lower_bound equal_range
+  __it_arvore<V> upper_bound(const K &k) const { return __it_arvore<V>(__limite_superior(k), &__raiz); } // @se upper_bound equal_range
+  pair<__it_arvore<V>, __it_arvore<V>> equal_range(const K &k) const { return pair<__it_arvore<V>, __it_arvore<V>>(lower_bound(k), upper_bound(k)); } // @se equal_range
   __it_arvore<V> erase(__it_arvore<V> it) {
     __no_arvore<V> *prox = __seguinte_js(it.__no);
     __apagar_no(it.__no);
@@ -838,7 +838,11 @@ public:
   deque(const deque &o) : __dados(nullptr), __inicio(0), __tamanho(0), __capacidade(0) { for (size_t i = 0; i < o.__tamanho; i++) push_back(o[i]); }
   ~deque() { delete[] __dados; }
   deque &operator=(const deque &o) {
-    if (this != &o) { clear(); for (size_t i = 0; i < o.__tamanho; i++) push_back(o[i]); }
+    if (this != &o) {
+      __tamanho = 0;
+      __inicio = 0;
+      for (size_t i = 0; i < o.__tamanho; i++) push_back(o[i]);
+    }
     return *this;
   }
   void __crescer() {
@@ -851,10 +855,12 @@ public:
     __inicio = 0;
   }
   T &operator[](size_t i) const { return __dados[(__inicio + i) % __capacidade]; }
+  // @se at
   T &at(size_t i) const {
     if (i >= __tamanho) throw out_of_range("deque::at");
     return (*this)[i];
   }
+  // @fim
   size_t size() const { return __tamanho; }
   bool empty() const { return __tamanho == 0; }
   T &front() const { return (*this)[0]; }
@@ -864,39 +870,47 @@ public:
     __dados[(__inicio + __tamanho) % __capacidade] = v;
     __tamanho++;
   }
+  // @se push_front emplace_front
   void push_front(const T &v) {
     if (__tamanho == __capacidade) __crescer();
     __inicio = (__inicio + __capacidade - 1) % __capacidade;
     __dados[__inicio] = v;
     __tamanho++;
   }
-  template <class... A> void emplace_back(const A &...a) { push_back(T(a...)); }
-  template <class... A> void emplace_front(const A &...a) { push_front(T(a...)); }
-  void pop_back() { __dados[(__inicio + __tamanho - 1) % __capacidade] = T(); __tamanho--; }
+  // @fim
+  template <class... A> void emplace_back(const A &...a) { push_back(T(a...)); } // @se emplace_back
+  template <class... A> void emplace_front(const A &...a) { push_front(T(a...)); } // @se emplace_front
+  void pop_back() { __dados[(__inicio + __tamanho - 1) % __capacidade] = T(); __tamanho--; } // @se pop_back
   void pop_front() {
     __dados[__inicio] = T();
     __inicio = (__inicio + 1) % __capacidade;
     __tamanho--;
   }
-  void clear() { while (__tamanho) pop_back(); }
+  void clear() { while (__tamanho) pop_back(); } // @se clear
   __it_deque<T> begin() const { return __it_deque<T>((deque *)this, 0); }
   __it_deque<T> end() const { return __it_deque<T>((deque *)this, (long)__tamanho); }
   reverse_iterator rbegin() const { return reverse_iterator(end()); } // @se rbegin rend
   reverse_iterator rend() const { return reverse_iterator(begin()); } // @se rbegin rend
+  // @se resize
   void resize(size_t n, const T &v = T()) {
     while (__tamanho > n) pop_back();
     while (__tamanho < n) push_back(v);
   }
+  // @fim
+  // @se erase
   __it_deque<T> erase(__it_deque<T> pos) {
     for (size_t i = pos.__i; i + 1 < __tamanho; i++) (*this)[i] = (*this)[i + 1];
     pop_back();
     return pos;
   }
+  // @fim
+  // @se insert
   __it_deque<T> insert(__it_deque<T> pos, const T &v) {
     push_back(v);
     for (size_t i = __tamanho - 1; i > (size_t)pos.__i; i--) swap((*this)[i], (*this)[i - 1]);
     return pos;
   }
+  // @fim
 };
 }
 `

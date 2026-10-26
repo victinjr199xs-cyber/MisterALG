@@ -244,10 +244,27 @@ async function compilar(linguagem, fonte) {
  * se o clang reclamar, confere de novo com os cabeçalhos inteiros antes de dar o erro.
  */
 async function arvore(fonte, linguagem) {
-  if (linguagem !== 'cpp') return arvoreCom(ARGUMENTOS_AST_C, { 'programa.c': fonte, mini: CABECALHOS_C })
-  const r = await arvoreCom(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: cabecalhosCppPara(fonte) })
-  return r.erros === undefined ? r : arvoreCom(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: CABECALHOS_CPP })
+  const chave = `${linguagem}\0${fonte}`
+  const pronta = arvoresProntas.get(chave)
+  if (pronta) return pronta
+  let r
+  if (linguagem !== 'cpp') r = await arvoreCom(ARGUMENTOS_AST_C, { 'programa.c': fonte, mini: CABECALHOS_C })
+  else {
+    r = await arvoreCom(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: cabecalhosCppPara(fonte) })
+    if (r.erros !== undefined) r = await arvoreCom(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: CABECALHOS_CPP })
+  }
+  if (r.erros === undefined) {
+    arvoresProntas.set(chave, r)
+    while (arvoresProntas.size > MAX_ARVORES) arvoresProntas.delete(arvoresProntas.keys().next().value)
+  }
+  return r
 }
+
+// Quase todo o tempo do F8 é o clang escrevendo a árvore; ela fica guardada pelo texto do programa e é feita
+// de antemão quando o F8 é provável: logo depois de um F9 que deu certo e ao abrir o arquivo (sem o aluno esperar).
+const arvoresProntas = new Map() // "linguagem\0fonte" → { ast, avisos }
+const MAX_ARVORES = 2
+const arvoreDeAntemao = (fonte, linguagem) => (linguagem === 'c' || linguagem === 'cpp') && fonte.trim() && !arvoresProntas.has(`${linguagem}\0${fonte}`)
 
 async function arvoreCom(argumentos, arquivos) {
   const d1 = new TextDecoder()
@@ -277,10 +294,13 @@ parentPort.on('message', ({ id, tipo, linguagem, fonte }) => {
       // Carrega o clang (a 1ª chamada demora) e, no C++, já prepara o PCH dos #include do programa aberto.
       if (linguagem === 'cpp' && prefixoDeIncludes(fonte)) await gerarPch(prefixoDeIncludes(fonte))
       else await clang(['clang', '-c', 'a.c', '-o', 'a.o'], { 'a.c': 'int main(void) { return 0; }' })
-      return parentPort.postMessage({ id })
+      parentPort.postMessage({ id })
+      if (arvoreDeAntemao(fonte, linguagem)) await arvore(fonte, linguagem)
+      return
     }
     const r = tipo === 'arvore' ? await arvore(fonte, linguagem) : await compilar(linguagem, fonte)
     parentPort.postMessage({ id, ...r })
+    if (tipo === 'compilar' && r.erros === undefined && arvoreDeAntemao(fonte, linguagem)) await arvore(fonte, linguagem)
     for (const prefixo of pendentes) await gerarPch(prefixo)
     pendentes.clear()
   }).catch((e) => parentPort.postMessage({ id, erros: `Erro no compilador: ${e.message}` }))
