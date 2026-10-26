@@ -1,0 +1,535 @@
+@@@ stl01-lambdas-sort
+#include <iostream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+struct Aluno { string nome; double nota; };
+int main() {
+    vector<int> v = {5, 3, 9, 1, 7, 2};
+    sort(v.begin(), v.end(), [](int a, int b) { return a > b; });
+    for (int x : v) cout << x << ' ';
+    cout << endl;
+    auto it = find_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; });
+    if (it != v.end()) cout << "primeiro par: " << *it << endl;
+    int soma = 0;
+    for_each(v.begin(), v.end(), [&soma](int x) { soma += x; });
+    cout << "soma " << soma << endl;
+    int limite = 4;
+    cout << "maiores que " << limite << ": " << count_if(v.begin(), v.end(), [limite](int x) { return x > limite; }) << endl;
+    vector<Aluno> turma = {{"Ana", 8.5}, {"Bruno", 6.0}, {"Carla", 9.5}, {"Davi", 7.0}};
+    sort(turma.begin(), turma.end(), [](const Aluno &a, const Aluno &b) { return a.nota > b.nota; });
+    for (const auto &a : turma) cout << a.nome << " " << a.nota << endl;
+    auto quadrado = [](int x) { return x * x; };
+    cout << quadrado(7) << endl;
+    return 0;
+}
+@@@ stl02-map-palavras
+#include <iostream>
+#include <map>
+#include <string>
+using namespace std;
+int main() {
+    map<string, int> freq;
+    string p;
+    while (cin >> p) freq[p]++;
+    for (auto &par : freq) cout << par.first << ": " << par.second << endl;
+    cout << "distintas: " << freq.size() << endl;
+    if (freq.count("gato")) cout << "gato aparece " << freq["gato"] << " vezes" << endl;
+    if (freq.find("zebra") == freq.end()) cout << "zebra nao aparece" << endl;
+    freq.erase("o");
+    cout << "depois do erase: " << freq.size() << endl;
+    return 0;
+}
+--- entrada
+o gato e o rato
+o gato comeu o queijo
+@@@ stl03-set-unordered
+#include <iostream>
+#include <set>
+#include <unordered_set>
+#include <unordered_map>
+using namespace std;
+int main() {
+    set<int> s = {5, 1, 9, 3, 5, 1};
+    s.insert(4);
+    s.insert(9);
+    for (int x : s) cout << x << ' ';
+    cout << "| tamanho " << s.size() << endl;
+    s.erase(3);
+    cout << "tem 3? " << s.count(3) << " tem 4? " << s.count(4) << endl;
+    cout << "menor " << *s.begin() << " maior " << *s.rbegin() << endl;
+    auto lb = s.lower_bound(6);
+    cout << "lower_bound(6) = " << *lb << endl;
+    unordered_set<string> vistos;
+    string nomes[] = {"ana", "bia", "ana", "caio", "bia"};
+    int repetidos = 0;
+    for (const string &n : nomes) {
+        if (vistos.count(n)) repetidos++;
+        else vistos.insert(n);
+    }
+    cout << "repetidos " << repetidos << " distintos " << vistos.size() << endl;
+    unordered_map<int, int> quadrados;
+    for (int i = 1; i <= 10; i++) quadrados[i] = i * i;
+    cout << quadrados[7] << ' ' << quadrados.size() << ' ' << quadrados.count(11) << endl;
+    multiset<int> ms = {3, 1, 3, 2, 3};
+    cout << "tres aparece " << ms.count(3) << " vezes; ";
+    for (int x : ms) cout << x;
+    cout << endl;
+    return 0;
+}
+@@@ stl04-dijkstra
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+using namespace std;
+int main() {
+    int n = 5;
+    vector<vector<pair<int, int>>> adj(n);
+    auto aresta = [&](int a, int b, int w) { adj[a].push_back({b, w}); adj[b].push_back({a, w}); };
+    aresta(0, 1, 4); aresta(0, 2, 1); aresta(2, 1, 2); aresta(1, 3, 1); aresta(2, 3, 5); aresta(3, 4, 3);
+    vector<int> dist(n, INT_MAX);
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    dist[0] = 0;
+    pq.push({0, 0});
+    while (!pq.empty()) {
+        auto [d, u] = pq.top();
+        pq.pop();
+        if (d > dist[u]) continue;
+        for (auto &[v, w] : adj[u]) {
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.push({dist[v], v});
+            }
+        }
+    }
+    for (int i = 0; i < n; i++) cout << "dist[" << i << "] = " << dist[i] << endl;
+    priority_queue<int> maxima;
+    for (int x : {3, 8, 1, 9, 4}) maxima.push(x);
+    while (!maxima.empty()) { cout << maxima.top() << ' '; maxima.pop(); }
+    cout << endl;
+    return 0;
+}
+@@@ stl05-pilha-fila
+#include <iostream>
+#include <stack>
+#include <queue>
+#include <deque>
+#include <list>
+#include <array>
+#include <string>
+using namespace std;
+bool balanceado(const string &s) {
+    stack<char> p;
+    for (char c : s) {
+        if (c == '(' || c == '[') p.push(c);
+        else if (c == ')' || c == ']') {
+            if (p.empty()) return false;
+            char t = p.top(); p.pop();
+            if ((c == ')' && t != '(') || (c == ']' && t != '[')) return false;
+        }
+    }
+    return p.empty();
+}
+int main() {
+    cout << balanceado("([()])") << balanceado("([)]") << balanceado("((") << endl;
+    queue<int> f;
+    for (int i = 1; i <= 4; i++) f.push(i * 10);
+    cout << "frente " << f.front() << " fim " << f.back() << " tamanho " << f.size() << endl;
+    while (!f.empty()) { cout << f.front() << ' '; f.pop(); }
+    cout << endl;
+    deque<int> d;
+    d.push_back(2); d.push_front(1); d.push_back(3); d.push_front(0);
+    for (size_t i = 0; i < d.size(); i++) cout << d[i];
+    d.pop_front(); d.pop_back();
+    cout << " -> " << d.front() << d.back() << endl;
+    list<string> l = {"b", "c"};
+    l.push_front("a");
+    l.push_back("d");
+    l.remove("c");
+    for (auto &s : l) cout << s;
+    cout << " " << l.size() << endl;
+    array<int, 5> a = {9, 8, 7, 6, 5};
+    int s = 0;
+    for (int x : a) s += x;
+    cout << "array " << a.size() << " " << a[2] << " soma " << s << endl;
+    return 0;
+}
+@@@ stl06-stringstream
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+using namespace std;
+int main() {
+    string linha = "10 20 30 40";
+    stringstream ss(linha);
+    int x, soma = 0;
+    while (ss >> x) soma += x;
+    cout << "soma " << soma << endl;
+    string csv = "ana,bia,caio";
+    stringstream partes(csv);
+    string item;
+    vector<string> nomes;
+    while (getline(partes, item, ',')) nomes.push_back(item);
+    for (auto &n : nomes) cout << "[" << n << "]";
+    cout << endl;
+    ostringstream out;
+    out << "x=" << 3 << " y=" << 2.5;
+    string r = out.str();
+    cout << r << " (" << r.size() << " letras)" << endl;
+    istringstream in("42 3.5 palavra");
+    int i; double d; string w;
+    in >> i >> d >> w;
+    cout << i + 1 << " " << d * 2 << " " << w << endl;
+    return 0;
+}
+@@@ stl07-iomanip
+#include <iostream>
+#include <iomanip>
+#include <string>
+using namespace std;
+int main() {
+    string nomes[] = {"Arroz", "Feijao", "Cafe"};
+    double precos[] = {22.9, 8.456, 15.0};
+    cout << left << setw(10) << "Produto" << right << setw(8) << "Preco" << endl;
+    cout << fixed << setprecision(2);
+    for (int i = 0; i < 3; i++) cout << left << setw(10) << nomes[i] << right << setw(8) << precos[i] << endl;
+    cout << setfill('0') << setw(5) << 42 << setfill(' ') << endl;
+    cout << scientific << setprecision(3) << 12345.678 << endl;
+    cout << defaultfloat << setprecision(6) << 1.0 / 3 << endl;
+    cout << boolalpha << true << " " << (1 > 2) << noboolalpha << " " << true << endl;
+    cout << hex << 255 << " " << dec << 255 << endl;
+    return 0;
+}
+@@@ stl08-ponteiros-inteligentes
+#include <iostream>
+#include <memory>
+#include <vector>
+#include <string>
+using namespace std;
+class Animal {
+public:
+    virtual ~Animal() { cout << "~Animal" << endl; }
+    virtual string som() const = 0;
+};
+class Gato : public Animal {
+public:
+    ~Gato() { cout << "~Gato" << endl; }
+    string som() const override { return "miau"; }
+};
+class Cao : public Animal {
+public:
+    string som() const override { return "au"; }
+};
+int main() {
+    unique_ptr<int> p = make_unique<int>(10);
+    *p += 5;
+    cout << *p << endl;
+    vector<unique_ptr<Animal>> bichos;
+    bichos.push_back(make_unique<Gato>());
+    bichos.push_back(make_unique<Cao>());
+    for (auto &b : bichos) cout << b->som() << endl;
+    shared_ptr<string> a = make_shared<string>("compartilhado");
+    {
+        shared_ptr<string> b = a;
+        cout << *b << " " << a.use_count() << endl;
+    }
+    cout << a.use_count() << endl;
+    unique_ptr<Animal> u(new Gato());
+    u.reset();
+    cout << (u == nullptr) << endl;
+    cout << "fim" << endl;
+    return 0;
+}
+@@@ stl09-pair-tuple-function
+#include <iostream>
+#include <utility>
+#include <tuple>
+#include <functional>
+#include <vector>
+#include <string>
+using namespace std;
+pair<int, int> divisao(int a, int b) { return make_pair(a / b, a % b); }
+tuple<string, int, double> pessoa() { return make_tuple("Lia", 20, 1.65); }
+int aplicar(function<int(int)> f, int x) { return f(x); }
+int dobro(int x) { return 2 * x; }
+int main() {
+    pair<int, int> q = divisao(17, 5);
+    cout << q.first << " " << q.second << endl;
+    auto [quoc, resto] = divisao(23, 4);
+    cout << quoc << " " << resto << endl;
+    auto t = pessoa();
+    cout << get<0>(t) << " " << get<1>(t) << " " << get<2>(t) << endl;
+    string nome; int idade; double altura;
+    tie(nome, idade, altura) = pessoa();
+    cout << nome << idade << endl;
+    function<int(int)> f = dobro;
+    cout << aplicar(f, 21) << " " << aplicar([](int x) { return x + 1; }, 41) << endl;
+    vector<function<int(int, int)>> ops = {
+        [](int a, int b) { return a + b; },
+        [](int a, int b) { return a * b; },
+    };
+    for (auto &op : ops) cout << op(6, 7) << ' ';
+    cout << endl;
+    pair<string, int> p1 = {"b", 1}, p2 = {"a", 2};
+    cout << (p1 < p2) << (p2 < p1) << endl;
+    return 0;
+}
+@@@ stl10-algoritmos
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+using namespace std;
+int main() {
+    vector<int> v = {4, 2, 8, 6, 2, 9, 1};
+    cout << "soma " << accumulate(v.begin(), v.end(), 0) << endl;
+    cout << "max " << *max_element(v.begin(), v.end()) << " min " << *min_element(v.begin(), v.end()) << endl;
+    sort(v.begin(), v.end());
+    for (int x : v) cout << x << ' ';
+    cout << endl;
+    cout << "tem 6? " << binary_search(v.begin(), v.end(), 6) << endl;
+    auto pos = lower_bound(v.begin(), v.end(), 5) - v.begin();
+    cout << "lower_bound(5) em " << pos << endl;
+    v.erase(unique(v.begin(), v.end()), v.end());
+    for (int x : v) cout << x << ' ';
+    cout << endl;
+    reverse(v.begin(), v.end());
+    for (int x : v) cout << x << ' ';
+    cout << endl;
+    vector<int> w(5);
+    iota(w.begin(), w.end(), 1);
+    vector<int> quad(w.size());
+    transform(w.begin(), w.end(), quad.begin(), [](int x) { return x * x; });
+    for (int x : quad) cout << x << ' ';
+    cout << endl;
+    cout << "contagem de 2: " << count(w.begin(), w.end(), 2) << endl;
+    cout << max(3, 7) << min(3, 7) << " " << max({4, 9, 2}) << endl;
+    int a = 1, b = 2;
+    swap(a, b);
+    cout << a << b << endl;
+    vector<int> p = {1, 2, 3};
+    do {
+        for (int x : p) cout << x;
+        cout << ' ';
+    } while (next_permutation(p.begin(), p.end()));
+    cout << endl;
+    cout << __gcd(12, 18) << " " << gcd(20, 8) << endl;
+    return 0;
+}
+@@@ stl11-string-metodos
+#include <iostream>
+#include <string>
+#include <algorithm>
+#include <cctype>
+using namespace std;
+int main() {
+    string s = "Programacao em C++";
+    cout << s.size() << " " << s.substr(0, 11) << " " << s.find("em") << endl;
+    string m = s;
+    transform(m.begin(), m.end(), m.begin(), ::toupper);
+    cout << m << endl;
+    string inv(s.rbegin(), s.rend());
+    cout << inv << endl;
+    string pal = "arara";
+    cout << (pal == string(pal.rbegin(), pal.rend()) ? "palindromo" : "nao") << endl;
+    string r = s;
+    r.replace(0, 11, "Codigo");
+    cout << r << endl;
+    cout << s.rfind('a') << " " << (s.find("xyz") == string::npos) << endl;
+    int vogais = 0;
+    for (char c : s) if (string("aeiouAEIOU").find(c) != string::npos) vogais++;
+    cout << "vogais " << vogais << endl;
+    cout << to_string(42) + "!" << " " << stoi("123") + 1 << " " << stod("2.5") * 2 << endl;
+    string a = "abc";
+    a.insert(1, "XY");
+    a += 'z';
+    cout << a << " " << a.back() << " " << a.front() << endl;
+    sort(a.begin(), a.end());
+    cout << a << endl;
+    return 0;
+}
+@@@ stl12-getline-laco
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+int main() {
+    int n;
+    cin >> n;
+    cin.ignore();
+    vector<string> linhas;
+    for (int i = 0; i < n; i++) {
+        string l;
+        getline(cin, l);
+        linhas.push_back(l);
+    }
+    for (int i = n - 1; i >= 0; i--) cout << i + 1 << ": " << linhas[i] << endl;
+    string resto;
+    int contagem = 0;
+    while (getline(cin, resto)) contagem++;
+    cout << "sobraram " << contagem << endl;
+    return 0;
+}
+--- entrada
+3
+primeira linha
+segunda com espacos
+terceira
+x
+y
+@@@ stl13-classe-vector
+#include <iostream>
+#include <vector>
+#include <string>
+using namespace std;
+class Conta {
+    string titular;
+    double saldo;
+public:
+    Conta(string t, double s) : titular(t), saldo(s) {}
+    void depositar(double v) { saldo += v; }
+    bool sacar(double v) {
+        if (v > saldo) return false;
+        saldo -= v;
+        return true;
+    }
+    double getSaldo() const { return saldo; }
+    string getTitular() const { return titular; }
+};
+int main() {
+    vector<Conta> contas;
+    contas.emplace_back("Ana", 100);
+    contas.push_back(Conta("Beto", 50));
+    contas[0].depositar(25);
+    cout << contas[1].sacar(80) << contas[1].sacar(30) << endl;
+    double total = 0;
+    for (const Conta &c : contas) {
+        cout << c.getTitular() << ": " << c.getSaldo() << endl;
+        total += c.getSaldo();
+    }
+    cout << "total " << total << endl;
+    vector<vector<int>> m(3, vector<int>(3, 0));
+    for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) m[i][j] = i * 3 + j;
+    for (auto &linha : m) {
+        for (int x : linha) cout << x << ' ';
+        cout << endl;
+    }
+    return 0;
+}
+@@@ stl14-iteradores-map
+#include <iostream>
+#include <map>
+#include <string>
+using namespace std;
+int main() {
+    map<int, string> m;
+    m[3] = "tres";
+    m[1] = "um";
+    m.insert({2, "dois"});
+    m.insert(make_pair(5, "cinco"));
+    for (map<int, string>::iterator it = m.begin(); it != m.end(); ++it) cout << it->first << "=" << it->second << " ";
+    cout << endl;
+    for (auto it = m.rbegin(); it != m.rend(); ++it) cout << it->first;
+    cout << endl;
+    auto it = m.find(2);
+    if (it != m.end()) it->second = "DOIS";
+    cout << m[2] << " " << m.at(5) << endl;
+    auto ub = m.upper_bound(2);
+    cout << "depois do 2: " << ub->first << endl;
+    m.erase(m.begin());
+    cout << "primeiro agora: " << m.begin()->first << " tamanho " << m.size() << endl;
+    map<string, map<string, int>> notas;
+    notas["ana"]["mat"] = 9;
+    notas["ana"]["port"] = 7;
+    notas["bia"]["mat"] = 6;
+    for (auto &[aluno, disc] : notas) {
+        cout << aluno << ":";
+        for (auto &[d, n] : disc) cout << " " << d << "=" << n;
+        cout << endl;
+    }
+    return 0;
+}
+@@@ stl15-excecoes-limites
+#include <iostream>
+#include <stdexcept>
+#include <limits>
+#include <vector>
+#include <string>
+using namespace std;
+double dividir(double a, double b) {
+    if (b == 0) throw runtime_error("divisao por zero");
+    return a / b;
+}
+int main() {
+    cout << numeric_limits<int>::max() << " " << numeric_limits<int>::min() << endl;
+    cout << numeric_limits<long long>::max() << endl;
+    try {
+        cout << dividir(10, 4) << endl;
+        cout << dividir(1, 0) << endl;
+    } catch (const runtime_error &e) {
+        cout << "erro: " << e.what() << endl;
+    }
+    vector<int> v(3);
+    try {
+        v.at(5) = 1;
+    } catch (const out_of_range &e) {
+        cout << "fora do vetor" << endl;
+    }
+    try {
+        int n = stoi("abc");
+        cout << n << endl;
+    } catch (const invalid_argument &e) {
+        cout << "nao e numero" << endl;
+    }
+    try {
+        throw logic_error("logica");
+    } catch (const exception &e) {
+        cout << "exception: " << e.what() << endl;
+    }
+    int x;
+    cin >> x;
+    while (cin.fail()) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin >> x;
+    }
+    cout << "lido " << x << endl;
+    return 0;
+}
+--- entrada
+abc
+42
+@@@ stl16-lambda-captura
+#include <iostream>
+#include <vector>
+#include <functional>
+#include <algorithm>
+using namespace std;
+int main() {
+    int contador = 0;
+    auto incrementa = [&contador]() { contador++; };
+    incrementa(); incrementa(); incrementa();
+    cout << contador << endl;
+    int base = 10;
+    auto soma = [base](int x) { return base + x; };
+    base = 100;
+    cout << soma(5) << endl;
+    auto conta = [n = 0]() mutable { return ++n; };
+    cout << conta() << conta() << conta() << endl;
+    auto maior = [](auto a, auto b) { return a > b ? a : b; };
+    cout << maior(3, 9) << " " << maior(2.5, 1.5) << " " << maior(string("abc"), string("abd")) << endl;
+    function<int(int)> fat = [&](int n) { return n <= 1 ? 1 : n * fat(n - 1); };
+    cout << fat(6) << endl;
+    vector<int> v = {1, 2, 3, 4, 5, 6};
+    int fator = 3;
+    for_each(v.begin(), v.end(), [&](int &x) { x *= fator; });
+    for (int x : v) cout << x << ' ';
+    cout << endl;
+    auto pares = count_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; });
+    cout << pares << endl;
+    auto somador = [](int a) { return [a](int b) { return a + b; }; };
+    cout << somador(4)(5) << endl;
+    return 0;
+}

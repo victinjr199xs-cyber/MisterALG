@@ -17,7 +17,7 @@
     "dev": "npm run dev -w misteralg-app",
     "build": "npm run build -w misteralg-app",
     "test": "npm run test:codificacao && npm run test:interpreter && npm run test:busca && npm run test:app && npm run test:interpretador-c && npm run test:compat && npm run test:interpretador-js && npm run test:interpretador-python && npm run test:interpretador-csharp && npm run test:interpretador-sql",
-    "test:app": "node --test app/src/compartilhado/ia.test.mjs app/src/compartilhado/idiomas.test.mjs app/src/compartilhado/versoes.test.mjs app/src/main/compilador.test.mjs app/src/main/arquivos.test.mjs",
+    "test:app": "node --test app/src/compartilhado/ia.test.mjs app/src/compartilhado/idiomas.test.mjs app/src/compartilhado/versoes.test.mjs app/src/main/compilador.test.mjs app/src/main/pch.test.mjs app/src/main/arquivos.test.mjs",
     "test:interpretador-c": "npm run test -w @misteralg/interpretador-c",
     "test:interpretador-js": "npm run test -w @misteralg/interpretador-js",
     "test:interpretador-python": "npm run test -w @misteralg/interpretador-python",
@@ -28,9 +28,9 @@
     "test:busca": "npm run test -w @misteralg/editor-busca",
     "test:compat": "node --test testes-compat/p0.test.mjs testes-compat/exemplos.test.mjs",
     "test:compat:full": "node --test \"testes-compat/*.test.mjs\"",
-    "dist:mac": "npm run build && node scripts/preparar-linguagens.mjs && npm run dist:mac -w misteralg-app",
-    "dist:win": "npm run build && node scripts/preparar-linguagens.mjs && npm run dist:win -w misteralg-app",
-    "dist:linux": "npm run build && node scripts/preparar-linguagens.mjs && npm run dist:linux -w misteralg-app"
+    "dist:mac": "npm run build && node scripts/preparar-linguagens.mjs && node scripts/gerar-pch.mjs && npm run dist:mac -w misteralg-app",
+    "dist:win": "npm run build && node scripts/preparar-linguagens.mjs && node scripts/gerar-pch.mjs && npm run dist:win -w misteralg-app",
+    "dist:linux": "npm run build && node scripts/preparar-linguagens.mjs && node scripts/gerar-pch.mjs && npm run dist:linux -w misteralg-app"
   },
   "devDependencies": {
     "electron": "^44.0.0",

@@ -3,6 +3,38 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [Não lançado]
+
+### Novidades
+
+- **C++ no passo a passo (F8) com lambdas e a STL**: lambdas (captura por valor, por referência, `[n = 0]`, `this`,
+  `auto` nos parâmetros, `mutable`), `map`, `set`, `multimap`, `multiset`, `unordered_map`, `unordered_set`, `list`,
+  `deque`, `queue`, `priority_queue`, `stack`, `array`, `pair`, `tuple`, `tie`, `function`, `unique_ptr`,
+  `shared_ptr`, `stringstream`, `numeric_limits`, `<numeric>` e quase todo o `<algorithm>`, além de `auto [a, b]`,
+  `if constexpr` e `<bits/stdc++.h>`. A biblioteca é C++ de verdade, executada como o código do aluno (sem pausar
+  nas linhas dela): o `map` aparece na memória como a árvore que é, a `list` com os nós ligados, o `shared_ptr` com
+  o contador. Na tela de memória cada contêiner mostra também o conteúdo (`{"ana": 3, "bia": 1}`), e os tipos
+  internos aparecem com nomes legíveis (`nó<...>`, `lambda da linha 12`).
+- Saída igual à do g++ inclusive onde o C++ deixa a ordem livre: `sort` e `priority_queue` usam os algoritmos da
+  libstdc++ (empates na mesma ordem) e o `unordered_map` usa a mesma dispersão e os mesmos tamanhos de tabela
+  (percorre na mesma ordem). Manipuladores novos: `left`, `right`, `scientific`, `boolalpha`, `hex`, `showpos`...
+- **`<bits/stdc++.h>` também no F9.**
+- **Primeiro F9 do C++ mais rápido**: os cabeçalhos pré-compilados de `<iostream>` e `<bits/stdc++.h>` já vêm no
+  instalador, e os que o app gera ficam no disco (antes sumiam ao fechar o app). Medido num app recém-aberto:
+  `<iostream>` + `<vector>` de 4,5 s para 1,4 s; `<bits/stdc++.h>` de 5,5 s para 2,0 s.
+
+### Correções
+
+- C++ no passo a passo: uma exceção que atravessava um bloco destruía os temporários da expressão depois de liberar
+  a pilha (`stoi(...)` dentro de `try` dava "acesso à variável de uma função que já terminou").
+- Cópia de objetos de classes-template com construtor de cópia próprio dentro de um `vector` (antes copiava campo a
+  campo); campos que são referência; especializações com argumentos padrão (`map<string, int>`).
+
+### Testes
+
+- 22 programas novos com a STL comparados com o g++ (`corpus-stl*.cpp.txt`) e testes de vazamento de memória,
+  da tela de memória e do passo a passo dentro de lambdas. O teste diferencial agora roda também no Linux.
+
 ## [1.10.2] — 2026-10-24
 
 ### Novidades

@@ -20,6 +20,12 @@ const arquivoVizinho = (nome) => fileURLToPath(new URL(nome, import.meta.url)).r
 const caminhoClang = () =>
   app.isPackaged ? join(process.resourcesPath, 'clang', 'gen', 'bundle.js') : createRequire(import.meta.url).resolve('@yowasp/clang')
 
+// Os cabeçalhos pré-compilados do C++: os do instalador (scripts/gerar-pch.mjs) e os que o app grava.
+const pastasPch = () => [
+  app.isPackaged ? join(process.resourcesPath, 'pch') : fileURLToPath(new URL('../../build/pch', import.meta.url)),
+  join(app.getPath('userData'), 'pch'),
+]
+
 // ---- compilação -------------------------------------------------------------------
 
 let trabalhador = null
@@ -28,7 +34,7 @@ const pedidos = new Map()
 
 function compilador() {
   if (trabalhador) return trabalhador
-  trabalhador = new Worker(arquivoVizinho('./compilador.js'), { workerData: { clang: pathToFileURL(caminhoClang()).href } })
+  trabalhador = new Worker(arquivoVizinho('./compilador.js'), { workerData: { clang: pathToFileURL(caminhoClang()).href, pastasPch: pastasPch() } })
   trabalhador.on('message', ({ id, ...r }) => {
     pedidos.get(id)?.(r)
     pedidos.delete(id)

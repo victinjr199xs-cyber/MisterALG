@@ -2,9 +2,13 @@
 // compilação e outra: a primeira demora uns segundos, as seguintes bem menos.
 // Roda fora do Electron (worker_threads): não importa nada de 'electron'.
 
+import { createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parentPort, workerData } from 'node:worker_threads'
 import { ARGUMENTOS_AST_C, CABECALHOS_C } from '@misteralg/interpretador-c/cabecalhos'
-import { ARGUMENTOS_AST_CPP, CABECALHOS_CPP } from '@misteralg/interpretador-c/cabecalhos-cpp'
+import { ARGUMENTOS_AST_CPP, CABECALHOS_CPP, cabecalhosCppPara } from '@misteralg/interpretador-c/cabecalhos-cpp'
 import { LIB_EXCECOES } from './excecoes-wasm.js'
 
 const LIB_EXCECOES_BYTES = Uint8Array.from(Buffer.from(LIB_EXCECOES, 'base64'))
@@ -79,6 +83,13 @@ const INCLUIR = {
   'windows.h': CABECALHO('#define CP_UTF8 65001\nvoid Sleep(unsigned long ms);\nint SetConsoleOutputCP(unsigned int cp);\nint SetConsoleCP(unsigned int cp);'),
   // stdlib.h do WASI não declara system(); este cabeçalho entra em todo programa (-include).
   'misteralg.h': CABECALHO('int system(const char *comando);'),
+  // <bits/stdc++.h> é do g++ (muito usado em maratona); o libc++ não tem, então este inclui a biblioteca toda
+  bits: {
+    'stdc++.h': `#pragma once\n${['cassert', 'cctype', 'cfloat', 'climits', 'cmath', 'cstdio', 'cstdlib', 'cstring', 'ctime', 'cstdint',
+      'algorithm', 'array', 'bitset', 'chrono', 'complex', 'deque', 'exception', 'fstream', 'functional', 'iomanip', 'iostream',
+      'iterator', 'limits', 'list', 'map', 'memory', 'numeric', 'optional', 'queue', 'random', 'set', 'sstream', 'stack', 'stdexcept',
+      'string', 'string_view', 'tuple', 'unordered_map', 'unordered_set', 'utility', 'variant', 'vector'].map((c) => `#include <${c}>`).join('\n')}\n`,
+  },
 }
 
 const FLAGS_CPP = ['-std=c++20', '-fwasm-exceptions', '-O1', '-fno-color-diagnostics', '-I', 'misteralg']
@@ -102,9 +113,71 @@ async function clang(args, arquivos) {
 // Quase todo o tempo de compilar C++ vai nos cabeçalhos (<iostream>...). O PCH dos #include
 // do começo do programa deixa as compilações seguintes ~5x mais rápidas. Vale só para
 // exatamente os mesmos #include, no começo do arquivo, então o programa compila igual.
-// shortcut: guardado só na memória (some ao fechar o app, ~17 MB cada); gravar em disco se o 1º F9 incomodar.
-const pchs = new Map() // prefixo de #include → { pch, cabecalho }
+// Os PCH ficam no disco: os do instalador (resources/pch, de scripts/gerar-pch.mjs: <iostream> e
+// <bits/stdc++.h>) e os que o app gera, na pasta de dados (o próximo F9 com esses #include, mesmo
+// depois de fechar o app, já não espera). Na memória ficam só os últimos usados (~17 MB cada).
+const pchs = new Map() // prefixo de #include → { pch (bytes, ou null se ainda só no disco), cabecalho, caminho }
 const MAX_PCHS = 3
+const MAX_PCHS_NO_DISCO = 8
+// [pastas só de leitura..., a pasta onde o app grava (a última)]
+const PASTAS_PCH = workerData.pastasPch ?? []
+const PASTA_GRAVAVEL = workerData.pchGravavel === false ? null : PASTAS_PCH[PASTAS_PCH.length - 1]
+// Um PCH só serve para o mesmo clang, as mesmas opções e os mesmos cabeçalhos do MisterALG: tudo entra no nome do arquivo.
+const VERSAO_PCH = createHash('sha1').update(readFileSync(fileURLToPath(workerData.clang))).update(JSON.stringify([FLAGS_CPP, INCLUIR])).digest('hex')
+const nomeDoPch = (prefixo) => createHash('sha1').update(`${VERSAO_PCH}\n${prefixo}`).digest('hex').slice(0, 24)
+
+/** Os PCH já gravados (o prefixo de #include fica num .txt do lado; o nome confere a versão). */
+function lerPchsDoDisco() {
+  for (const pasta of PASTAS_PCH) {
+    let arquivos = []
+    try { arquivos = readdirSync(pasta) } catch { continue }
+    for (const txt of arquivos.filter((a) => a.endsWith('.txt'))) {
+      try {
+        const prefixo = readFileSync(join(pasta, txt), 'utf8')
+        const nome = txt.slice(0, -4)
+        if (nome !== nomeDoPch(prefixo) || !existsSync(join(pasta, `${nome}.pch`)) || pchs.has(prefixo)) continue
+        pchs.set(prefixo, { pch: null, cabecalho: `#include "misteralg.h"\n${prefixo}\n`, caminho: join(pasta, `${nome}.pch`) })
+      } catch { /* arquivo pela metade: fica para trás */ }
+    }
+  }
+}
+lerPchsDoDisco()
+
+function gravarPch(prefixo, pch) {
+  if (!PASTA_GRAVAVEL) return null
+  try {
+    mkdirSync(PASTA_GRAVAVEL, { recursive: true })
+    const nome = nomeDoPch(prefixo)
+    const caminho = join(PASTA_GRAVAVEL, `${nome}.pch`)
+    writeFileSync(`${caminho}.tmp`, pch)
+    renameSync(`${caminho}.tmp`, caminho)
+    writeFileSync(join(PASTA_GRAVAVEL, `${nome}.txt`), prefixo)
+    // os mais antigos (pela data do último uso) saem
+    const antigos = readdirSync(PASTA_GRAVAVEL).filter((a) => a.endsWith('.pch'))
+      .map((a) => ({ a, t: statSync(join(PASTA_GRAVAVEL, a)).mtimeMs })).sort((x, y) => y.t - x.t).slice(MAX_PCHS_NO_DISCO)
+    for (const { a } of antigos) for (const ext of ['.pch', '.txt']) { try { unlinkSync(join(PASTA_GRAVAVEL, a.replace(/\.pch$/, ext))) } catch { /* já foi */ } }
+    return caminho
+  } catch {
+    return null // sem disco (pasta só de leitura, cheia...): fica só na memória
+  }
+}
+
+/** Os bytes do PCH (lidos do disco se preciso); só os MAX_PCHS últimos ficam na memória. */
+function bytesDoPch(prefixo) {
+  const p = pchs.get(prefixo)
+  if (!p.pch) {
+    try { p.pch = readFileSync(p.caminho) } catch { pchs.delete(prefixo); return null }
+  }
+  if (p.caminho) { try { utimesSync(p.caminho, new Date(), new Date()) } catch { /* só leitura */ } }
+  pchs.delete(prefixo) // vai para o fim (o mais recente)
+  pchs.set(prefixo, p)
+  const naMemoria = [...pchs.entries()].filter(([, x]) => x.pch)
+  for (const [k, x] of naMemoria.slice(0, Math.max(0, naMemoria.length - MAX_PCHS))) {
+    if (x.caminho) x.pch = null // continua no disco
+    else pchs.delete(k)
+  }
+  return p.pch
+}
 
 /** Os "#include <...>" do começo do programa (antes de qualquer outra coisa que não seja comentário). */
 export function prefixoDeIncludes(fonte) {
@@ -121,12 +194,14 @@ export function prefixoDeIncludes(fonte) {
 }
 
 async function gerarPch(prefixo) {
-  if (!prefixo || pchs.has(prefixo)) return
+  if (!prefixo || pchs.has(prefixo)) return null
   const cabecalho = `#include "misteralg.h"\n${prefixo}\n`
   const r = await clang(['clang++', ...FLAGS_CPP, '-x', 'c++-header', 'pre.hpp', '-o', 'pre.hpp.pch'], { 'pre.hpp': cabecalho, misteralg: INCLUIR })
-  if (r.erros !== undefined) return // um #include que não existe: o F9 mostra o erro normalmente
-  pchs.set(prefixo, { pch: r.saidas['pre.hpp.pch'], cabecalho })
-  while (pchs.size > MAX_PCHS) pchs.delete(pchs.keys().next().value)
+  if (r.erros !== undefined) return null // um #include que não existe: o F9 mostra o erro normalmente
+  const pch = r.saidas['pre.hpp.pch']
+  pchs.set(prefixo, { pch, cabecalho, caminho: gravarPch(prefixo, pch) })
+  bytesDoPch(prefixo) // (tira da memória os mais antigos)
+  return pchs.get(prefixo).caminho
 }
 
 async function compilar(linguagem, fonte) {
@@ -144,13 +219,17 @@ async function compilar(linguagem, fonte) {
   // Serve o PCH cujos #include são o começo dos do programa (o PCH de <iostream> serve para <iostream> + <vector>).
   const chave = [...pchs.keys()].filter((k) => prefixo === k || prefixo.startsWith(`${k}\n`)).sort((a, b) => b.length - a.length)[0]
   const pre = chave && pchs.get(chave)
-  if (pre) {
+  const bytes = pre && bytesDoPch(chave)
+  if (bytes) {
     const r = await clang(['clang++', ...FLAGS_CPP, '-include-pch', 'pre.hpp.pch', ...entradas, 'libexcecoes.a'],
-      { ...arquivos, 'pre.hpp.pch': pre.pch, 'pre.hpp': pre.cabecalho })
-    if (r.erros !== undefined && /precompiled|\.pch/i.test(r.erros)) pchs.delete(chave) // PCH que não serviu: compila do jeito normal
+      { ...arquivos, 'pre.hpp.pch': bytes, 'pre.hpp': pre.cabecalho })
+    if (r.erros !== undefined && /precompiled|\.pch/i.test(r.erros)) { // PCH que não serviu: compila do jeito normal
+      pchs.delete(chave)
+      if (pre.caminho?.startsWith(PASTA_GRAVAVEL ?? '\0')) { try { unlinkSync(pre.caminho) } catch { /* já foi */ } }
+    }
     else {
       if (chave !== prefixo && r.erros === undefined) pendentes.add(prefixo) // na próxima, o PCH com todos os #include
-      return r.erros !== undefined ? r : { wasm: r.saidas['programa.wasm'], avisos: r.mensagens } // erro do programa: igual sem o PCH
+      return r.erros !== undefined ? r : { wasm: r.saidas['programa.wasm'], avisos: r.mensagens, comPch: true } // erro do programa: igual sem o PCH
     }
   }
   const r = await clang(['clang++', ...FLAGS_CPP, '-include', 'misteralg.h', ...entradas, 'libexcecoes.a'], arquivos)
@@ -159,16 +238,24 @@ async function compilar(linguagem, fonte) {
   return { wasm: r.saidas['programa.wasm'], avisos: r.mensagens }
 }
 
-/** Passo a passo (F8): só a árvore do programa, analisada com os cabeçalhos mínimos do interpretador. */
+/**
+ * Passo a passo (F8): só a árvore do programa, analisada com os cabeçalhos mínimos do interpretador. No C++
+ * eles vêm sob medida (sem o que o programa não usa: o JSON da árvore fica bem menor e sai mais rápido);
+ * se o clang reclamar, confere de novo com os cabeçalhos inteiros antes de dar o erro.
+ */
 async function arvore(fonte, linguagem) {
+  if (linguagem !== 'cpp') return arvoreCom(ARGUMENTOS_AST_C, { 'programa.c': fonte, mini: CABECALHOS_C })
+  const r = await arvoreCom(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: cabecalhosCppPara(fonte) })
+  return r.erros === undefined ? r : arvoreCom(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: CABECALHOS_CPP })
+}
+
+async function arvoreCom(argumentos, arquivos) {
   const d1 = new TextDecoder()
   const d2 = new TextDecoder()
   let json = ''
   let mensagens = ''
-  const cpp = linguagem === 'cpp'
   try {
-    const arquivos = cpp ? { 'programa.cpp': fonte, mini: CABECALHOS_CPP } : { 'programa.c': fonte, mini: CABECALHOS_C }
-    await runClang(cpp ? ARGUMENTOS_AST_CPP : ARGUMENTOS_AST_C, arquivos, {
+    await runClang(argumentos, arquivos, {
       stdout: (b) => { if (b) json += d1.decode(b, { stream: true }) },
       stderr: (b) => { if (b) mensagens += d2.decode(b, { stream: true }) },
       fetchProgress: () => {},
@@ -185,6 +272,7 @@ let fila = Promise.resolve()
 const pendentes = new Set()
 parentPort.on('message', ({ id, tipo, linguagem, fonte }) => {
   fila = fila.then(async () => {
+    if (tipo === 'pch') return parentPort.postMessage({ id, caminho: await gerarPch(fonte) }) // scripts/gerar-pch.mjs
     if (tipo === 'aquecer') {
       // Carrega o clang (a 1ª chamada demora) e, no C++, já prepara o PCH dos #include do programa aberto.
       if (linguagem === 'cpp' && prefixoDeIncludes(fonte)) await gerarPch(prefixoDeIncludes(fonte))

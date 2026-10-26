@@ -117,12 +117,13 @@ export const METODOS_CPP = {
   * invocar(decl, classe, objeto, args, destino, chamada) {
     const tipoFn = this.tipos.de(decl.type)
     if (this.ehClasse(tipoFn.ret) && destino === undefined) destino = this.rascunho(Math.max(1, tamanhoDe(tipoFn.ret)))
-    const def = this.definicaoDe(decl, classe)
+    const nome = decl.name
+    const nativa = BIBLIOTECA_CPP[classe ? `${semTemplate(classe)}::${nome}` : nome]
+    // (uma função "..._js" da biblioteca é feita em JavaScript; o corpo vazio dela é só para o clang)
+    const def = nativa && /_js$/.test(nome) ? null : this.definicaoDe(decl, classe)
     if (def) {
       return yield* this.chamarFuncao(def, args.map((a) => a.valor), this.linhaAtual, { this: objeto, destino, classe, args })
     }
-    const nome = decl.name
-    const nativa = BIBLIOTECA_CPP[classe ? `${semTemplate(classe)}::${nome}` : nome]
     if (nativa) {
       const r = yield* nativa(this, { objeto, args, destino, decl, classe, tipoFn, chamada })
       return r === undefined && destino !== undefined ? destino : r
@@ -156,10 +157,10 @@ export const METODOS_CPP = {
     while (c && (c.kind === 'ImplicitCastExpr' || c.kind === 'ParenExpr')) c = c.inner[0]
     const ref = c?.kind === 'DeclRefExpr' ? c.referencedDecl : null
     if (!ref || !/FunctionDecl|CXXMethodDecl|CXXConversionDecl/.test(ref.kind)) {
-      // ponteiro de função
+      // ponteiro de função (também para uma função da biblioteca: transform(..., ::toupper))
       const p = yield* this.val(callee)
       const nome = this.funcaoNoEndereco.get(Number(p))
-      const def = nome && this.funcoes.get(nome)
+      const def = nome && (this.funcoes.get(nome) ?? (BIBLIOTECA[nome] || BIBLIOTECA_CPP[nome] ? this.declaracaoPorNome(nome) : null))
       if (!def) throw new ErroC('chamada por um ponteiro de função inválido')
       const args = yield* this.argumentos(def, this.tipos.de(def.type), resto)
       return yield* this.invocar(def, null, undefined, args, destino, x)
@@ -177,6 +178,27 @@ export const METODOS_CPP = {
     const r = yield* this.invocar(info.no, info.classe ?? null, undefined, args, destino, x)
     this.linhaAtual = linha
     return r
+  },
+
+  /** A declaração de uma função livre pelo nome (para ponteiros de função da biblioteca). */
+  declaracaoPorNome(nome) {
+    this.funcoesPorNome ??= new Map()
+    if (!this.funcoesPorNome.has(nome)) {
+      let achada = null
+      for (const { no } of this.decls.values()) if (no.kind === 'FunctionDecl' && no.name === nome) { achada = no; break }
+      this.funcoesPorNome.set(nome, achada)
+    }
+    return this.funcoesPorNome.get(nome)
+  },
+
+  /** O construtor de cópia (X(const X &)) ou o operator= de cópia de uma classe, se ela tiver. */
+  metodoDeCopia(t, nome) {
+    return this.registroDe(t)?.metodos.find((m) => {
+      if (nome ? m.name !== nome : m.kind !== 'CXXConstructorDecl') return false
+      if (/&&/.test(m.type.qualType)) return false // de movimento
+      const params = this.tipos.de(m.type).params ?? []
+      return params.length === 1 && params[0].k === 'ref' && params[0].alvo === t
+    }) ?? null
   },
 
   // ---- construção, cópia e destruição ---------------------------------------------
@@ -213,6 +235,7 @@ export const METODOS_CPP = {
       case 'InitListExpr':
         yield* this.inicializar(destino, this.tipo(x), x)
         return destino
+      case 'LambdaExpr': return yield* this.construirLambda(destino, x)
       case 'CXXStdInitializerListExpr': {
         // initializer_list: um vetor temporário com os valores + { início, tamanho }.
         let lista = x.inner[0]
@@ -231,6 +254,20 @@ export const METODOS_CPP = {
     // Um objeto que já existe (lvalue): cópia.
     const origem = yield* this.end(x)
     yield* this.copiarObjeto(destino, origem, this.tipo(x))
+    return destino
+  },
+
+  /** O objeto de uma lambda: um campo por captura (o valor copiado, ou o endereço se for por referência). */
+  * construirLambda(destino, x) {
+    const t = this.tipo(x)
+    const campos = layout(t).campos
+    const inits = x.inner.slice(1, -1)
+    for (let i = 0; i < inits.length; i += 1) {
+      const c = campos[i]
+      const e = destino + c.deslocamento
+      if (c.tipo.k === 'ref') this.mem.escrever(c.tipo, e, yield* this.end(inits[i]))
+      else yield* this.inicializar(e, c.tipo, inits[i])
+    }
     return destino
   },
 
@@ -319,11 +356,12 @@ export const METODOS_CPP = {
       this.mem.escrever(INT, raiz, this.indiceDaClasse(classe))
     }
     for (const c of campos.filter((x) => !x.base && !x.oculto)) {
-      const init = inits.find((i) => i.anyInit?.name === c.nome)
+      const decl = r.campos.find((x) => x.nome === c.nome)?.decl
+      // pelo id (os campos de uma lambda não têm nome no clang)
+      const init = inits.find((i) => (decl && i.anyInit?.id === decl.id) || (i.anyInit?.name && i.anyInit.name === c.nome))
       const destino = objeto + c.deslocamento
       let expr = init?.inner?.[0]
       if (!expr || expr.kind === 'CXXDefaultInitExpr') {
-        const decl = r.campos.find((x) => x.nome === c.nome)?.decl
         expr = decl?.hasInClassInitializer ? decl.inner?.[decl.inner.length - 1] : null
       }
       if (expr) yield* this.inicializar(destino, c.tipo, expr)
@@ -340,7 +378,7 @@ export const METODOS_CPP = {
     }
     if (!this.ehClasse(t)) return this.mem.copiar(destino, origem, tamanhoDe(t))
     const r = this.registroDe(t)
-    const copia = r?.metodos.find((m) => m.kind === 'CXXConstructorDecl' && m.type.qualType === `void (const ${t.rotulo} &)`)
+    const copia = this.metodoDeCopia(t)
     const def = copia && this.definicaoDe(copia, t.rotulo)
     if (def) return yield* this.chamarFuncao(def, [origem], this.linhaAtual, { this: destino, classe: t.rotulo, construtor: true })
     const nativa = BIBLIOTECA_CPP[`${semTemplate(t.rotulo)}::${semTemplate(t.rotulo)}`]
@@ -356,8 +394,7 @@ export const METODOS_CPP = {
   * atribuirObjeto(destino, origem, t) {
     if (destino === origem) return
     if (!this.ehClasse(t)) return this.mem.copiar(destino, origem, tamanhoDe(t))
-    const r = this.registroDe(t)
-    const op = r?.metodos.find((m) => m.name === 'operator=' && m.type.qualType.startsWith(`${t.rotulo} &(const ${t.rotulo} &`))
+    const op = this.metodoDeCopia(t, 'operator=')
     const def = op && this.definicaoDe(op, t.rotulo)
     if (def) return yield* this.chamarFuncao(def, [origem], this.linhaAtual, { this: destino, classe: t.rotulo })
     const nativa = BIBLIOTECA_CPP[`${semTemplate(t.rotulo)}::operator=`]
@@ -631,7 +668,7 @@ export const METODOS_CPP = {
         return yield* this.chamadaCpp(x)
       case 'CXXNewExpr': return yield* this.novo(x)
       case 'CXXDeleteExpr': return yield* this.apagar(x)
-      case 'LambdaExpr': throw new ErroC('funções lambda ainda não funcionam no passo a passo (rode com F9)')
+      case 'LambdaExpr': return yield* this.temporario(x)
       case 'CXXThrowExpr': return yield* this.lancar(x)
       case 'CXXTypeidExpr': throw new ErroC('typeid ainda não funciona no passo a passo')
       default: throw new ErroC(`o passo a passo ainda não sabe calcular "${x.kind}"`)
