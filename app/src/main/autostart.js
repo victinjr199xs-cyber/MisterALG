@@ -1,7 +1,9 @@
 // O que dá para conferir sem o Electron: o caminho e o texto do autostart do Linux (main/sistema.js).
 
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { posix } from 'node:path' // o .desktop só existe no Linux
+
+const { join } = posix
 
 /** O argumento que marca a abertura junto com o computador (main/index.js o ignora ao procurar arquivos). */
 export const ARG_AO_LIGAR = '--ao-ligar'
