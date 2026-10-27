@@ -17,7 +17,7 @@
     "dev": "npm run dev -w misteralg-app",
     "build": "npm run build -w misteralg-app",
     "test": "npm run test:codificacao && npm run test:interpreter && npm run test:busca && npm run test:app && npm run test:interpretador-c && npm run test:compat && npm run test:interpretador-js && npm run test:interpretador-python && npm run test:interpretador-csharp && npm run test:interpretador-sql",
-    "test:app": "node --test app/src/compartilhado/ia.test.mjs app/src/compartilhado/idiomas.test.mjs app/src/compartilhado/versoes.test.mjs app/src/main/compilador.test.mjs app/src/main/pch.test.mjs app/src/main/arvore.test.mjs app/src/main/arquivos.test.mjs",
+    "test:app": "node --test app/src/compartilhado/ia.test.mjs app/src/compartilhado/idiomas.test.mjs app/src/compartilhado/versoes.test.mjs app/src/main/compilador.test.mjs app/src/main/pch.test.mjs app/src/main/arvore.test.mjs app/src/main/arquivos.test.mjs app/src/main/autostart.test.mjs",
     "test:interpretador-c": "npm run test -w @misteralg/interpretador-c",
     "test:interpretador-js": "npm run test -w @misteralg/interpretador-js",
     "test:interpretador-python": "npm run test -w @misteralg/interpretador-python",

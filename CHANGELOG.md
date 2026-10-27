@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Novidades
 
+- **Abrir quando o computador ligar**: opção na tela inicial e em Configurações > Sistema (desligada de fábrica).
+  No Windows e no Mac fica nos itens de início do sistema; no Linux, em `~/.config/autostart`. Na versão portátil
+  do Windows e no AppImage vale o arquivo que o aluno baixou. Desinstalar tira o MisterALG do início do Windows.
+- **Fechar ou deixar em segundo plano**: o X da janela pergunta se é para fechar o MisterALG ou deixá-lo em segundo
+  plano, com um ícone perto do relógio (clique para voltar; o menu dele tem Abrir e Sair). "Não perguntar de novo"
+  guarda a escolha, que dá para mudar em Configurações > Sistema. Abrir o MisterALG de novo também traz a janela.
 - **C++ no passo a passo (F8) com lambdas e a STL**: lambdas (captura por valor, por referência, `[n = 0]`, `this`,
   `auto` nos parâmetros, `mutable`), `map`, `set`, `multimap`, `multiset`, `unordered_map`, `unordered_set`, `list`,
   `deque`, `queue`, `priority_queue`, `stack`, `array`, `pair`, `tuple`, `tie`, `function`, `unique_ptr`,
