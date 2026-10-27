@@ -998,3 +998,58 @@ body.modo-codigo ::-webkit-scrollbar-button { display: none; }
 :root[dir="rtl"] .inicio-nome, :root[dir="rtl"] .inicio-ext, :root[dir="rtl"] .inicio-numero, :root[dir="rtl"] kbd,
 :root[dir="rtl"] .inicio-link small, :root[dir="rtl"] .amostra-tema { unicode-bidi: isolate; direction: ltr; }
 :root[dir="rtl"] .inicio-link:hover { padding-left: 0; padding-right: 10px; }
+
+/* ---- tutorial (renderer/tutorial.js) ------------------------------------------------------
+   Um recorte em volta da parte da tela da vez (a sombra escurece o resto) e o balão ao lado.
+   A sobreposição deixa os cliques passarem: a IDE continua funcionando por baixo dela. */
+.tutorial { position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+.tutorial-recorte {
+  position: fixed;
+  border-radius: 6px;
+  outline: 3px solid var(--destaque);
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.45);
+  transition: left 0.2s, top 0.2s, width 0.2s, height 0.2s;
+}
+.tutorial.leve .tutorial-recorte { box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.12); }
+.tutorial.sem-alvo .tutorial-recorte { left: 50% !important; top: 50% !important; width: 0 !important; height: 0 !important; outline: none; }
+.tutorial-balao {
+  position: fixed;
+  width: min(340px, calc(100vw - 24px));
+  pointer-events: auto;
+  border: 1px solid var(--dialogo-moldura);
+  border-radius: 8px;
+  background: var(--dialogo-fundo);
+  color: var(--texto);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.4);
+  font: 13px var(--fonte-ui);
+  transition: left 0.2s, top 0.2s;
+}
+.tutorial-balao:focus { outline: none; }
+.tutorial-balao.esperando { border-color: var(--destaque); box-shadow: 0 0 0 2px var(--destaque), 0 12px 40px rgb(0 0 0 / 0.4); }
+.tutorial-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(var(--titulo-inicio), var(--titulo-fim));
+  color: var(--titulo-texto);
+}
+.tutorial-cabecalho b { flex: 1; }
+.tutorial-contador { font-size: 11px; opacity: 0.85; white-space: nowrap; }
+.tutorial-sair { border: 0; background: none; color: inherit; font-size: 16px; line-height: 1; padding: 0 4px; cursor: pointer; }
+.tutorial-sair:focus-visible { outline: 2px dotted currentColor; }
+.tutorial-texto { margin: 0; padding: 12px 14px 8px; line-height: 1.45; user-select: text; }
+.tutorial-acoes { display: flex; justify-content: flex-end; gap: 8px; padding: 4px 14px 12px; }
+.tutorial-acoes button.acao {
+  min-width: 84px;
+  padding: 4px 12px;
+  border: 1px solid var(--dialogo-moldura);
+  border-radius: 3px;
+  background: linear-gradient(var(--acao-inicio), var(--acao-fim));
+  color: var(--texto);
+}
+.tutorial-acoes button.acao.principal { box-shadow: 0 0 0 1px var(--texto); font-weight: 700; }
+.tutorial-acoes button.acao:focus-visible { outline: 2px dotted var(--texto); outline-offset: 1px; }
+:root[dir="rtl"] .tutorial-cabecalho { padding: 6px 12px 6px 8px; }
+@media (prefers-reduced-motion: reduce) { .tutorial-recorte, .tutorial-balao { transition: none; } }

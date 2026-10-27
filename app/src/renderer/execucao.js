@@ -86,6 +86,14 @@ export function criarExecucao(op) {
 
   const emExecucao = () => (!!sessao && !sessao.terminado) || (!!processo && !processo.terminado)
 
+  // Quem acompanha a execução de fora (o tutorial): 'inicio', 'pausa' { linha }, 'fim' { estado } e 'pagina' (PHP).
+  const ouvintes = new Set()
+  const avisar = (tipo, dados = {}) => { for (const f of ouvintes) f(tipo, dados) }
+  const comecou = () => {
+    op.aoMudarEstado(true)
+    avisar('inicio')
+  }
+
   // Passo a passo do C: a tela de memória toma o lugar da grade de variáveis.
   const memoriaC = criarMemoriaC(document.querySelector('.moldura-variaveis .grade-rolagem'))
   const molduraVariaveis = document.querySelector('.moldura-variaveis')
@@ -241,6 +249,7 @@ export function criarExecucao(op) {
     status.estado()
     status.mensagem(TEXTOS.rodapeConsole)
     op.aoMudarEstado(false)
+    avisar('fim', { estado: estadoFinal })
     if (estadoFinal === 'erro' && erro) {
       editor.realcarErro(erro.linha)
       op.aoErro?.(erro)
@@ -261,7 +270,7 @@ export function criarExecucao(op) {
     editor.somenteLeitura(true)
     status.estado(' Executando ')
     status.mensagem(` MENSAGEM: ${TEXTOS.inicio}`)
-    op.aoMudarEstado(true)
+    comecou()
 
     sessao = executar(fonte, {
       modo,
@@ -276,6 +285,7 @@ export function criarExecucao(op) {
         editor.realcarExecucao(linha)
         if (sessao?.estado === 'pausado') {
           status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
+          avisar('pausa', { linha })
         }
       },
       onVariables: mostrarVariaveis,
@@ -344,7 +354,7 @@ export function criarExecucao(op) {
     abrirConsole()
     editor.realcarErro(null)
     editor.somenteLeitura(true)
-    op.aoMudarEstado(true)
+    comecou()
     status.estado(' Compilando ')
     status.mensagem(` MENSAGEM: Compilando com o clang…${modo === 'continuo' ? '' : ' (o passo a passo do C/C++ ainda vai chegar; o programa roda direto)'}`)
     corTexto = CORES.AMARELO
@@ -382,13 +392,16 @@ export function criarExecucao(op) {
     abrirConsole()
     editor.realcarErro(null)
     editor.somenteLeitura(true)
-    op.aoMudarEstado(true)
+    comecou()
     mostrarPainel('objetos')
   }
 
   const aoPassar = ({ linha }) => {
     editor.realcarExecucao(linha)
-    if (sessao?.estado === 'pausado') status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
+    if (sessao?.estado === 'pausado') {
+      status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
+      avisar('pausa', { linha })
+    }
   }
 
   /** O JavaScript roda aqui mesmo, instrumentado (packages/interpretador-js): cada linha é um ponto de pausa. */
@@ -495,7 +508,10 @@ export function criarExecucao(op) {
     status.estado(' PHP ')
     const { url } = await api.php.definir({ fonte: editor.texto(), nome, diretorio })
     // (o aluno trocou de documento ou fechou a página enquanto o PHP gerava: não reabre)
-    if (pedido === pedidosPHP) previa.mostrar(url)
+    if (pedido === pedidosPHP) {
+      previa.mostrar(url)
+      avisar('pagina')
+    }
   }
 
   /** Chamado a cada edição: se a página está aberta, ela acompanha o que se escreve. */
@@ -538,7 +554,7 @@ export function criarExecucao(op) {
     abrirConsole()
     editor.realcarErro(null)
     editor.somenteLeitura(true)
-    op.aoMudarEstado(true)
+    comecou()
     mostrarPainel('banco')
     status.estado(' Preparando ')
     status.mensagem(' MENSAGEM: Iniciando o PostgreSQL…')
@@ -571,7 +587,7 @@ export function criarExecucao(op) {
     abrirConsole()
     editor.realcarErro(null)
     editor.somenteLeitura(true)
-    op.aoMudarEstado(true)
+    comecou()
     status.estado(' Preparando ')
     status.mensagem(' MENSAGEM: Analisando o programa para o passo a passo…')
     const cancelado = () => processo !== pedido || pedido.terminado
@@ -608,7 +624,10 @@ export function criarExecucao(op) {
       onOutput: escrever,
       onStep: ({ linha }) => {
         editor.realcarExecucao(linha)
-        if (sessao?.estado === 'pausado') status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
+        if (sessao?.estado === 'pausado') {
+      status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
+      avisar('pausa', { linha })
+    }
       },
       onMemory: (maq) => memoriaC.mostrar(maq),
       onWaitInput: () => pedirEntrada(),
@@ -675,6 +694,11 @@ export function criarExecucao(op) {
   return {
     iniciar,
     parar,
+    /** Acompanha a execução (o tutorial); devolve a função que para de acompanhar. */
+    aoEvento(fn) {
+      ouvintes.add(fn)
+      return () => ouvintes.delete(fn)
+    },
     emExecucao,
     fecharConsole,
     /** Esc: fecha o console depois que o programa termina. */

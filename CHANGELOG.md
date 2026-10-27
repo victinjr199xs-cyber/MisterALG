@@ -7,6 +7,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Novidades
 
+- **Tutorial**: na primeira vez que a IDE abre, o MisterALG oferece um passeio guiado (também em Ajuda > Tutorial
+  do MisterALG). Balões destacam o editor, o F9, o F8, o F5, a tela de memória, o console, o assistente e a ajuda,
+  com o texto de cada linguagem. Depois o tutorial guia o primeiro programa: escreve um exemplo, espera o aluno
+  apertar F9, digitar o nome no console e seguir com F8 até o fim (no PHP, a página ao vivo; no SQL, um comando
+  por vez). Esc fecha a qualquer momento, e a IDE continua funcionando por baixo.
 - **Abrir quando o computador ligar**: opção na tela inicial e em Configurações > Sistema (desligada de fábrica).
   No Windows e no Mac fica nos itens de início do sistema; no Linux, em `~/.config/autostart`. Na versão portátil
   do Windows e no AppImage vale o arquivo que o aluno baixou. Desinstalar tira o MisterALG do início do Windows.
