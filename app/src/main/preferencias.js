@@ -16,6 +16,7 @@ export const PADRAO = {
   tema: 'classico', // ids em ../compartilhado/temas.js
   coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
   mostrarDicas: true, // dica do dia ao abrir
+  tutorialVisto: false, // o tutorial já foi oferecido (renderer/tutorial.js); quem atualiza o app também recebe a oferta uma vez
   abertura: true, // animação de abertura (main/abertura.js)
   procurarAtualizacoes: true, // ao abrir, pergunta ao GitHub se há versão nova (main/atualizacao.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
