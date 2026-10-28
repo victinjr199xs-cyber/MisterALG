@@ -369,9 +369,9 @@ body.barra-lateral .botao.avatar { margin: 2px 0 0; flex-shrink: 0; }
 .barra-mais:focus { outline: none; }
 .barra-mais-lista { display: flex; flex-wrap: wrap; gap: 2px; }
 .barra-mais .separador { display: none; }
-body.barra-lateral .barra-mais .campo-barra { flex: 1 0 100%; display: flex; flex-direction: row; align-items: center; gap: 6px; margin: 4px 0; font-size: 13px; }
-body.barra-lateral .barra-mais .campo-barra label { flex: 0 0 104px; }
-body.barra-lateral .barra-mais .campo-barra input, body.barra-lateral .barra-mais .campo-barra select { flex: 1; width: auto; min-width: 0; height: 24px; padding: 0 4px; font-size: 13px; }
+body.barra-compacta .barra-mais .campo-barra { flex: 1 0 100%; display: flex; flex-direction: row; align-items: center; gap: 6px; margin: 4px 0; font-size: 13px; }
+body.barra-compacta .barra-mais .campo-barra label { flex: 0 0 104px; }
+body.barra-compacta .barra-mais .campo-barra input, body.barra-compacta .barra-mais .campo-barra select { flex: 1; width: auto; min-width: 0; height: 24px; padding: 0 4px; font-size: 13px; }
 .so-painel { display: none; }
 .barra-mais .so-painel { display: block; }
 

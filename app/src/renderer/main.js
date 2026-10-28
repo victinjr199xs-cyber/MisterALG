@@ -498,8 +498,12 @@ disposicao = criarDisposicao({
 function aplicarBarra(p = prefs) {
   disposicao.aplicar(p.disposicao)
   // Na disposição moderna o trilho de linguagens ocupa a lateral: a barra fica sempre no topo (compacta).
-  const lateral = p.posicaoBarra === 'lateral' && p.disposicao !== 'moderna'
+  const moderna = p.disposicao === 'moderna'
+  const lateral = p.posicaoBarra === 'lateral' && !moderna
+  // Compacta = só os botões principais na barra e o resto no painel "⋯" (lateral: ao lado; moderna: logo abaixo do botão, no topo).
+  const compacta = lateral || moderna
   document.body.classList.toggle('barra-lateral', lateral)
+  document.body.classList.toggle('barra-compacta', compacta)
   document.documentElement.dataset.tamIcone = TAMANHOS_ICONE.includes(p.tamanhoIcones) ? p.tamanhoIcones : 'medio'
   const barra = $('#barra')
   barra.setAttribute('aria-orientation', lateral ? 'vertical' : 'horizontal')
@@ -507,7 +511,7 @@ function aplicarBarra(p = prefs) {
   let ver = itensVisiveis(ocultos)
   // Lateral: só os principais ficam na coluna (separadores calculados entre eles); o resto vai para o painel "⋯".
   const fixo = principaisLateral()
-  if (lateral) {
+  if (compacta) {
     const sub = itensVisiveis(ocultos, BARRA.filter((_, i) => fixo[i]))
     let k = 0
     ver = ver.map((v, i) => (fixo[i] ? sub[k++] : v))
@@ -519,22 +523,36 @@ function aplicarBarra(p = prefs) {
     .sort((a, b) => Number(a.dataset.item) - Number(b.dataset.item))
     .forEach((e) => {
       const i = Number(e.dataset.item)
-      ;(lateral && !fixo[i] ? painel : lista).append(e)
+      ;(compacta && !fixo[i] ? painel : lista).append(e)
       e.hidden = !ver[i]
     })
-  $('[data-id="mais"]').hidden = !lateral
+  $('[data-id="mais"]').hidden = !compacta
 }
 
 /** Painel flutuante "⋯" da barra lateral: abre ao lado da coluna, foco dentro, Esc/clique fora/ação fecham. */
 function abrirMais(foco = true) {
   const painel = $('#barra-mais')
   const botao = $('[data-id="mais"]')
-  if (!document.body.classList.contains('barra-lateral') || !painel.hidden) return
+  if (!document.body.classList.contains('barra-compacta') || !painel.hidden) return
   painel.hidden = false
   const r = botao.getBoundingClientRect()
-  painel.style.insetInlineStart = `${$('#barra').getBoundingClientRect().width}px`
-  painel.style.bottom = `${Math.max(4, innerHeight - r.bottom)}px`
-  painel.style.maxHeight = `${Math.max(120, r.bottom - 8)}px`
+  if (document.body.classList.contains('barra-lateral')) {
+    painel.style.top = ''
+    painel.style.left = ''
+    painel.style.insetInlineStart = `${$('#barra').getBoundingClientRect().width}px`
+    painel.style.bottom = `${Math.max(4, innerHeight - r.bottom)}px`
+    painel.style.maxHeight = `${Math.max(120, r.bottom - 8)}px`
+  } else {
+    // Barra no topo (disposição moderna): o painel abre para baixo, alinhado ao botão e sem sair da janela.
+    const rtl = document.documentElement.dir === 'rtl'
+    painel.style.bottom = ''
+    painel.style.top = `${r.bottom + 4}px`
+    const larg = painel.offsetWidth
+    const x = rtl ? Math.max(4, Math.min(r.right - larg, innerWidth - larg - 4)) : Math.max(4, Math.min(r.left, innerWidth - larg - 4))
+    painel.style.insetInlineStart = 'auto'
+    painel.style.left = `${x}px`
+    painel.style.maxHeight = `${Math.max(120, innerHeight - r.bottom - 12)}px`
+  }
   botao.setAttribute('aria-expanded', 'true')
   if (foco) painel.focus({ preventScroll: true })
 }

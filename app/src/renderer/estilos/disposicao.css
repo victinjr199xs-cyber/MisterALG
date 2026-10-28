@@ -13,7 +13,7 @@
 :root[data-disposicao="moderna"] body .trilho { display: flex; grid-column: 1; grid-row: 1 / 3; }
 :root[data-disposicao="moderna"] body .barra {
   grid-column: 2; grid-row: 1;
-  padding: 4px 14px; gap: 2px;
+  padding: 4px 14px; gap: 2px; flex-wrap: nowrap; align-items: center; min-inline-size: 0;
   border-bottom: 1px solid var(--borda); box-shadow: none;
   background: var(--moldura-editor);
 }
