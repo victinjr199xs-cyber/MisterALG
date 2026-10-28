@@ -3,6 +3,18 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [Não lançado]
+
+### Novidades
+
+- **Ícones novos** na barra de ferramentas: traço simples, que acompanha as cores de cada tema (claro ou escuro).
+- **Barra na lateral**: em Configurações > Barra você escolhe se a barra fica no topo (como sempre foi) ou numa coluna
+  ao lado, e vê o resultado na hora. Também dá para mudar o tamanho dos ícones e esconder os botões que você não usa
+  (os essenciais, como Executar e Passo a passo, ficam sempre). Tem o botão "Restaurar barra padrão".
+- **Conta**: em Configurações > Conta você coloca seu nome e uma foto (PNG, JPG ou WEBP de até 5 MB). A foto fica só
+  no seu computador. Sem foto, aparecem as iniciais do nome. O avatar aparece na barra e na tela inicial.
+- O tutorial pula o passo de um botão que você escondeu.
+
 ## [1.11.0] — 2026-10-28
 
 ### Novidades
