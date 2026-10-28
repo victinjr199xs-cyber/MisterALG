@@ -21,6 +21,8 @@ export const PADRAO = {
   abertura: true, // animação de abertura (main/abertura.js)
   procurarAtualizacoes: true, // ao abrir, pergunta ao GitHub se há versão nova (main/atualizacao.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
+  disposicao: 'classica', // 'classica' (molduras do VisuAlg) ou 'moderna' (trilho de linguagens, painéis; renderer/disposicao.js)
+  alturaPainel: 0, // altura do painel inferior (Terminal/Problemas) na disposição moderna; 0 = automática
   posicaoBarra: 'topo', // barra de ferramentas: 'topo' (clássico) ou 'lateral' (compartilhado/barra.js)
   tamanhoIcones: 'medio', // 'pequeno', 'medio' ou 'grande'
   botoesOcultos: [], // data-id dos botões tirados da barra (os essenciais nunca saem)

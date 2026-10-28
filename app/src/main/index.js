@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, shell } from 'electron'
 import { existsSync, readFileSync, rmSync, statSync } from 'node:fs'
-import { extname, join } from 'node:path'
+import { basename, extname, join } from 'node:path'
 import { temaPorId } from '../compartilhado/temas.js'
 import { FOTO_EXTENSOES, FOTO_LADO, FOTO_LADO_MAX, recorteQuadrado, validarFoto } from '../compartilhado/conta.js'
 import { mostrarAbertura } from './abertura.js'
@@ -14,7 +14,7 @@ import { aquecerSQL, comandoSQL, pararSQL } from './sql.js'
 import { baixar as baixarAtualizacao, instalar as instalarAtualizacao, procurar as procurarAtualizacao } from './atualizacao.js'
 import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
 import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
-import { montarMenu } from './menu.js'
+import { listarExemplos, montarMenu } from './menu.js'
 import { abreAoLigar, definirAbrirAoLigar, esconderBandeja, mostrarBandeja } from './sistema.js'
 import { tradutor } from '../compartilhado/idiomas.js'
 import {
@@ -208,6 +208,13 @@ function registrarIpc() {
     } catch {
       return { erro: true } // a conta anterior continua como estava
     }
+  })
+  // Exemplos para a lista da disposição moderna: o renderer só recebe nomes e pede o texto por (grupo, arquivo), nunca por caminho.
+  ipcMain.handle('exemplos:listar', () => listarExemplos().map(({ id, nome, arquivos }) => ({ id, nome, arquivos: arquivos.map((c) => basename(c)) })))
+  ipcMain.handle('exemplos:ler', async (_e, { grupo, arquivo }) => {
+    const g = listarExemplos().find((x) => x.id === grupo)
+    const caminho = g?.arquivos.find((c) => basename(c) === arquivo)
+    return caminho ? { nome: arquivo, texto: (await lerArquivo(caminho)).texto } : null
   })
   ipcMain.handle('menu:estado', (_e, estado) => {
     estadoMenu = { ...estadoMenu, ...estado }

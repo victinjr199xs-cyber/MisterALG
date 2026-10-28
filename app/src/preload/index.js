@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('misteralg', {
     gravarBloco: invocar('bloco:gravar'),
     inserirBloco: invocar('bloco:inserir'),
   },
+  exemplos: { listar: invocar('exemplos:listar'), ler: invocar('exemplos:ler') },
   dados: {
     ler: (nome, pasta) => ipcRenderer.sendSync('dados:ler', { nome, pasta }),
     anexar: (nome, pasta, linha) => ipcRenderer.sendSync('dados:anexar', { nome, pasta, linha }),

@@ -7,7 +7,7 @@
 // Ctrl+U, F3 e F4.
 
 import { app, Menu } from 'electron'
-import { readdirSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { lerArquivo } from './arquivos.js'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
@@ -25,17 +25,29 @@ const ATALHO = ehMac
 // Portugol; cada subpasta é uma linguagem. O renderer abre como documento novo, sem caminho (não sobrescreve o exemplo).
 const NOMES_EXEMPLOS = { portugol: 'Portugol', c: 'C', cpp: 'C++', csharp: 'C#', javascript: 'JavaScript', typescript: 'TypeScript', python: 'Python', php: 'PHP', sql: 'SQL' }
 
-function menuExemplos(enviar) {
-  const raiz = app.isPackaged ? join(process.resourcesPath, 'exemplos') : join(app.getAppPath(), '..', 'exemplos')
+export function pastaExemplos() {
+  if (app.isPackaged) return join(process.resourcesPath, 'exemplos')
+  // `electron .` (appPath = app/) ou `electron out/main/index.js` (appPath = app/out/main)
+  const candidatos = [join(app.getAppPath(), '..', 'exemplos'), join(app.getAppPath(), '..', '..', '..', 'exemplos')]
+  return candidatos.find((c) => existsSync(c)) ?? candidatos[0]
+}
+
+/** [{ id, nome, arquivos: [caminho] }] por linguagem; o menu e a lista da disposição moderna usam a mesma fonte. */
+export function listarExemplos() {
+  const raiz = pastaExemplos()
   const listar = (pasta) => { try { return readdirSync(pasta, { withFileTypes: true }) } catch { return [] } }
-  const abrir = (caminho) => async () => enviar('exemplo', { nome: basename(caminho), texto: (await lerArquivo(caminho)).texto })()
   const grupos = { portugol: listar(raiz).filter((e) => e.isFile() && e.name.endsWith('.alg')).map((e) => join(raiz, e.name)) }
   for (const pasta of listar(raiz).filter((e) => e.isDirectory())) {
     grupos[pasta.name] = listar(join(raiz, pasta.name)).filter((e) => e.isFile()).map((e) => join(raiz, pasta.name, e.name))
   }
   return Object.entries(grupos)
     .filter(([, arquivos]) => arquivos.length)
-    .map(([id, arquivos]) => ({ label: NOMES_EXEMPLOS[id] ?? id, submenu: arquivos.map((c) => ({ label: basename(c), click: abrir(c) })) }))
+    .map(([id, arquivos]) => ({ id, nome: NOMES_EXEMPLOS[id] ?? id, arquivos }))
+}
+
+function menuExemplos(enviar) {
+  const abrir = (caminho) => async () => enviar('exemplo', { nome: basename(caminho), texto: (await lerArquivo(caminho)).texto })()
+  return listarExemplos().map(({ nome, arquivos }) => ({ label: nome, submenu: arquivos.map((c) => ({ label: basename(c), click: abrir(c) })) }))
 }
 
 export function montarMenu(janela, prefs, estado = {}) {
