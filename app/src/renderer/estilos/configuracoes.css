@@ -176,6 +176,8 @@ dialog.janela.config[open]::backdrop { animation: cfg-fade 150ms ease-out; }
 .config .cfg-ajuda { padding: 20px 18px; overflow-y: auto; border-block-start: 2px solid var(--destaque); }
 .config .cfg-ajuda-nome { margin: 0 0 10px; font: 700 13px var(--fonte-ui); letter-spacing: 0.14em; text-transform: uppercase; overflow-wrap: anywhere; }
 .config .cfg-ajuda-texto { margin: 0; color: var(--detalhe); font-size: 13px; line-height: 1.6; }
+.config .cfg-ajuda-padrao { margin: 10px 0 0; color: var(--cfg-suave); font-size: 12px; }
+.config .cfg-ajuda-padrao:empty { display: none; }
 
 /* rodapé: versão à esquerda, botões à direita, sobre o véu escuro */
 .config .janela-acoes { grid-column: 1 / -1; align-items: center; padding: 0; gap: 10px; }

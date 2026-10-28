@@ -143,19 +143,21 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   tab.addEventListener('input', () => { tabValor.textContent = tab.value })
   // Linhas do menu: rótulo à esquerda, controle à direita; o painel de ajuda mostra data-nome / data-desc.
   let seqCfg = 0
-  const linha = (rotulo, controle, desc, extra) => {
+  const linha = (rotulo, controle, desc, extra, padrao) => {
     if (!controle.id) controle.id = `cfg-c${++seqCfg}`
     const l = el('div', { className: 'cfg-linha' }, el('label', { htmlFor: controle.id, textContent: rotulo }), el('div', { className: 'cfg-ctl' }, controle, extra))
     if (desc) l.dataset.desc = desc
+    if (padrao) l.dataset.padrao = padrao
     return l
   }
   const interruptor = (caixa) => {
     caixa.classList.add('cfg-toggle')
     return el('span', { className: 'cfg-sw' }, caixa, el('span', { className: 'cfg-estado' }, el('span', { className: 'on', textContent: 'Ligado' }), el('span', { className: 'off', textContent: 'Desligado' })))
   }
-  const linhaToggle = (caixa, texto, desc) => {
+  const linhaToggle = (caixa, texto, desc, padrao) => {
     const l = el('label', { className: 'cfg-linha cfg-linha-toggle' }, el('span', { className: 'cfg-rotulo', textContent: texto }), interruptor(caixa))
     if (desc) l.dataset.desc = desc
+    if (padrao) l.dataset.padrao = padrao
     return l
   }
   const grupo = (texto) => el('h3', { className: 'cfg-grupo', textContent: texto })
@@ -255,17 +257,16 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   )
 
   const abaEditor = el('div', { className: 'aba-conteudo' },
-    linha('Tema (cores da tela):', tema),
-    linha('Disposição da tela:', disposicao, 'Moderna: trilho de linguagens à esquerda, lista de arquivos, memória à direita e painel com abas embaixo. A barra de ferramentas fica sempre no topo.'),
-    linha('Fonte:', fonte),
-    linha('Tamanho:', tamanho),
-    linha('Largura da Tabulação (colunas):', tab, null, tabValor),
+    linha('Tema (cores da tela):', tema, 'Escolhe as cores de toda a janela e do código; dá para trocar a qualquer hora.', null, 'Híbrido claro'),
+    linha('Disposição da tela:', disposicao, 'Clássica imita o VisuAlg; a moderna traz linguagens à esquerda, memória à direita e painel embaixo.', null, 'Moderna'),
+    linha('Fonte:', fonte, 'Letra usada no editor de código; as de largura fixa deixam o texto alinhado.', null, 'a do sistema'),
+    linha('Tamanho:', tamanho, 'Tamanho da letra do editor, em pontos.', null, '13'),
+    linha('Largura da Tabulação (colunas):', tab, 'Quantos espaços a tecla Tab usa para recuar o código.', tabValor, '3'),
   )
-  const notaPessoal = 'Esses dados entram no cabeçalho do "Novo" algoritmo e na abreviatura "#".'
   const abaPessoal = el('div', { className: 'aba-conteudo', hidden: true },
-    linha('Disciplina:', disciplina, notaPessoal),
-    linha('Professor(a):', professor, notaPessoal),
-    linha('Entidade (escola/faculdade):', entidade, notaPessoal),
+    linha('Disciplina:', disciplina, 'Nome da matéria; entra no cabeçalho dos algoritmos novos e na abreviatura "#".'),
+    linha('Professor(a):', professor, 'Seu professor; aparece no cabeçalho dos algoritmos novos e na abreviatura "#".'),
+    linha('Entidade (escola/faculdade):', entidade, 'Sua escola ou faculdade; aparece no cabeçalho dos algoritmos novos e em "#".'),
   )
   // ---- aba Sistema: abrir junto com o computador e o que o X da janela faz ----
   const aoLigar = el('input', { type: 'checkbox', id: 'cfg-ao-ligar', checked: prefs.abrirAoLigar === true })
@@ -275,8 +276,8 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     ['fechar', 'Fechar o MisterALG'],
   ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.aoFechar ?? 'perguntar') })))
   const abaSistema = el('div', { className: 'aba-conteudo', hidden: true },
-    linhaToggle(aoLigar, 'Abrir quando o computador ligar'),
-    linha('Ao fechar a janela:', aoFechar, 'Em segundo plano, a janela some mas o MisterALG continua aberto, com um ícone perto do relógio. Clique nele para voltar.'),
+    linhaToggle(aoLigar, 'Abrir quando o computador ligar', 'O MisterALG já abre sozinho quando você liga o computador.', 'Desligado'),
+    linha('Ao fechar a janela:', aoFechar, 'Em segundo plano, a janela some mas o programa segue aberto perto do relógio; clique no ícone para voltar.', null, 'Perguntar'),
   )
   // ---- aba Barra: posição, tamanho dos ícones e quais botões aparecem (prévia ao vivo; Cancelar desfaz) ----
   const selecao = (opcoes, atual) => el('select', {}, ...opcoes.map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === atual })))
@@ -307,11 +308,11 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   const listaBotoes = el('div', { className: 'lista-botoes-barra' },
     ...caixasBotoes.map((caixa) => {
       const dica = BARRA.find((i) => i[0] === caixa.dataset.botao)
-      return linhaToggle(caixa, dicaPorPlataforma(dica[2], window.misteralg?.plataforma === 'darwin'))
+      return linhaToggle(caixa, dicaPorPlataforma(dica[2], window.misteralg?.plataforma === 'darwin'), ESSENCIAIS.has(caixa.dataset.botao) ? 'Botão essencial: sempre fica na barra.' : 'Mostra ou esconde este botão na barra de ferramentas.', 'Visível')
     }))
   const abaBarra = el('div', { className: 'aba-conteudo', hidden: true },
-    linha('Posição da barra de ferramentas:', posicao),
-    linha('Tamanho dos ícones:', tamIcones),
+    linha('Posição da barra de ferramentas:', posicao, 'Deixa a barra no topo, como no VisuAlg, ou numa coluna de ícones ao lado.', null, 'Topo'),
+    linha('Tamanho dos ícones:', tamIcones, 'Aumenta ou diminui os botões da barra de ferramentas.', null, 'Médio'),
     grupo('Botões visíveis na barra:'), listaBotoes,
     el('div', { className: 'linha-botoes' }, restaurarBarra),
   )
@@ -344,7 +345,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   nomeConta.addEventListener('input', redesenharFoto)
   redesenharFoto()
   const abaConta = el('div', { className: 'aba-conteudo', hidden: true },
-    linha('Seu nome:', nomeConta),
+    linha('Seu nome:', nomeConta, 'Nome mostrado no seu perfil; sem foto, aparece a inicial dele.'),
     el('div', { className: 'linha-botoes conta-linha' }, fotoPrevia, escolher, remover),
     erroFoto,
     el('p', { className: 'nota', textContent: 'A foto fica só neste computador.' }),
@@ -378,8 +379,10 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     const rotulo = l?.querySelector('label, .cfg-rotulo')?.textContent.replace(/\s*[:：]\s*$/, '') ?? ''
     ajudaNome.textContent = rotulo
     ajudaTexto.textContent = l ? (l.dataset.desc ?? '') : 'Passe o mouse ou use o teclado sobre uma opção para ver os detalhes.'
+    ajudaPadrao.textContent = l?.dataset.padrao ? `Padrão: ${l.dataset.padrao}` : ''
   }
-  const ajuda = el('aside', { className: 'cfg-ajuda' }, ajudaNome, ajudaTexto)
+  const ajudaPadrao = el('p', { className: 'cfg-ajuda-padrao' })
+  const ajuda = el('aside', { className: 'cfg-ajuda' }, ajudaNome, ajudaTexto, ajudaPadrao)
   const nav = el('div', { className: 'abas' }, ...botoesAba)
   nav.setAttribute('role', 'tablist')
   nav.setAttribute('aria-orientation', 'vertical')
