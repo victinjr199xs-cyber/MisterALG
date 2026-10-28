@@ -1,0 +1,73 @@
+/* Painel de memória (tabela #variaveis) nos temas novos. O tema classico não é tocado. */
+:root[data-tema="noite"] #variaveis,
+:root[data-tema="papel"] #variaveis,
+:root[data-tema="hibrido-claro"] #variaveis,
+:root[data-tema="hibrido-escuro"] #variaveis {
+  border-collapse: separate;
+  border-spacing: 0 4px;
+  padding: 0 6px;
+  font-family: var(--fonte-ui);
+}
+:root[data-tema="noite"] #variaveis th,
+:root[data-tema="papel"] #variaveis th,
+:root[data-tema="hibrido-claro"] #variaveis th,
+:root[data-tema="hibrido-escuro"] #variaveis th {
+  background: transparent;
+  border: 0;
+  color: var(--detalhe);
+  font: 600 10.5px/22px var(--fonte-ui);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+:root[data-tema="noite"] #variaveis td,
+:root[data-tema="papel"] #variaveis td,
+:root[data-tema="hibrido-claro"] #variaveis td,
+:root[data-tema="hibrido-escuro"] #variaveis td {
+  background: var(--fundo-campo);
+  border: 0;
+  border-top: 1px solid var(--linha-grade);
+  border-bottom: 1px solid var(--linha-grade);
+  padding: 4px 8px;
+  font-family: var(--fonte-ui);
+}
+:root[data-tema="noite"] #variaveis td:first-child,
+:root[data-tema="papel"] #variaveis td:first-child,
+:root[data-tema="hibrido-claro"] #variaveis td:first-child,
+:root[data-tema="hibrido-escuro"] #variaveis td:first-child {
+  border-left: 1px solid var(--linha-grade);
+  border-radius: var(--raio) 0 0 var(--raio);
+  color: var(--detalhe);
+}
+:root[data-tema="noite"] #variaveis td:last-child,
+:root[data-tema="papel"] #variaveis td:last-child,
+:root[data-tema="hibrido-claro"] #variaveis td:last-child,
+:root[data-tema="hibrido-escuro"] #variaveis td:last-child {
+  border-right: 1px solid var(--linha-grade);
+  border-radius: 0 var(--raio) var(--raio) 0;
+  font-family: var(--fonte-mono);
+}
+/* tipo como pílula discreta */
+:root[data-tema="noite"] #variaveis td:nth-child(3),
+:root[data-tema="papel"] #variaveis td:nth-child(3),
+:root[data-tema="hibrido-claro"] #variaveis td:nth-child(3),
+:root[data-tema="hibrido-escuro"] #variaveis td:nth-child(3) {
+  font: 600 11px var(--fonte-mono);
+  color: var(--sx-tipo);
+}
+/* variável que acabou de mudar */
+:root[data-tema="noite"] #variaveis tr.modificada td,
+:root[data-tema="papel"] #variaveis tr.modificada td,
+:root[data-tema="hibrido-claro"] #variaveis tr.modificada td,
+:root[data-tema="hibrido-escuro"] #variaveis tr.modificada td {
+  background: var(--selecao-grade);
+  border-top-color: var(--linha-execucao);
+  border-bottom-color: var(--linha-execucao);
+}
+:root[data-tema="noite"] #variaveis tr.modificada td:first-child,
+:root[data-tema="papel"] #variaveis tr.modificada td:first-child,
+:root[data-tema="hibrido-claro"] #variaveis tr.modificada td:first-child,
+:root[data-tema="hibrido-escuro"] #variaveis tr.modificada td:first-child { border-left-color: var(--linha-execucao); }
+:root[data-tema="noite"] #variaveis tr.modificada td:last-child,
+:root[data-tema="papel"] #variaveis tr.modificada td:last-child,
+:root[data-tema="hibrido-claro"] #variaveis tr.modificada td:last-child,
+:root[data-tema="hibrido-escuro"] #variaveis tr.modificada td:last-child { border-right-color: var(--linha-execucao); }
