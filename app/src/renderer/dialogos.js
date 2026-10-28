@@ -379,9 +379,12 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     const rotulo = l?.querySelector('label, .cfg-rotulo')?.textContent.replace(/\s*[:：]\s*$/, '') ?? ''
     ajudaNome.textContent = rotulo
     ajudaTexto.textContent = l ? (l.dataset.desc ?? '') : 'Passe o mouse ou use o teclado sobre uma opção para ver os detalhes.'
-    ajudaPadrao.textContent = l?.dataset.padrao ? `Padrão: ${l.dataset.padrao}` : ''
+    ajudaPadrao.hidden = !l?.dataset.padrao
+    ajudaValor.textContent = l?.dataset.padrao ?? ''
   }
-  const ajudaPadrao = el('p', { className: 'cfg-ajuda-padrao' })
+  // Rótulo e valor em nós separados: a tradução da página reconhece cada texto inteiro.
+  const ajudaValor = el('span')
+  const ajudaPadrao = el('p', { className: 'cfg-ajuda-padrao', hidden: true }, el('span', { textContent: 'Padrão:' }), ' ', ajudaValor)
   const ajuda = el('aside', { className: 'cfg-ajuda' }, ajudaNome, ajudaTexto, ajudaPadrao)
   const nav = el('div', { className: 'abas' }, ...botoesAba)
   nav.setAttribute('role', 'tablist')
