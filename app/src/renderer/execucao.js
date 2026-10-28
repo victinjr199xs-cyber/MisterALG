@@ -168,6 +168,9 @@ export function criarExecucao(op) {
         const span = document.createElement('span')
         span.dataset.cor = corTexto
         span.style.color = corTexto
+        // classe semântica (só os temas novos a estilizam); vermelho = erro, amarelo = aviso
+        if (corTexto === CORES.VERMELHO) span.className = 'saida-erro'
+        else if (corTexto === CORES.AMARELO) span.className = 'saida-aviso'
         span.textContent = parte
         tela.insertBefore(span, campo)
       }

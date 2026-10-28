@@ -79,3 +79,13 @@
 :root[data-tema="papel"] .console-tela::selection,
 :root[data-tema="hibrido-claro"] .console-tela::selection,
 :root[data-tema="hibrido-escuro"] .console-tela::selection { background: var(--selecao-texto, #3a3680); }
+
+/* Cores semanticas da saida (o inline style do console e sobrescrito so nos temas novos) */
+:root[data-tema="noite"] .console .saida-erro,
+:root[data-tema="papel"] .console .saida-erro,
+:root[data-tema="hibrido-claro"] .console .saida-erro,
+:root[data-tema="hibrido-escuro"] .console .saida-erro { color: #ff6b7a !important; }
+:root[data-tema="noite"] .console .saida-aviso,
+:root[data-tema="papel"] .console .saida-aviso,
+:root[data-tema="hibrido-claro"] .console .saida-aviso,
+:root[data-tema="hibrido-escuro"] .console .saida-aviso { color: #f2c94c !important; }
