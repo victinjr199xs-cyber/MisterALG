@@ -237,7 +237,19 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aba = 'editor
     el('label', { textContent: 'Entidade (escola/faculdade):' }), entidade,
     el('p', { textContent: 'Esses dados entram no cabeçalho do "Novo" algoritmo e na abreviatura "#".' }),
   )
-  const ABAS = { editor: ['Editor', abaEditor], cores: ['Cores', abaCores], listas: ['Listas', abaListas], pessoal: ['Personalizar', abaPessoal] }
+  // ---- aba Sistema: abrir junto com o computador e o que o X da janela faz ----
+  const aoLigar = el('input', { type: 'checkbox', id: 'cfg-ao-ligar', checked: prefs.abrirAoLigar === true })
+  const aoFechar = el('select', { id: 'cfg-ao-fechar' }, ...[
+    ['perguntar', 'Perguntar o que fazer'],
+    ['segundoPlano', 'Deixar em segundo plano'],
+    ['fechar', 'Fechar o MisterALG'],
+  ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.aoFechar ?? 'perguntar') })))
+  const abaSistema = el('div', { className: 'aba-conteudo', hidden: true },
+    el('label', { className: 'dica-opcao' }, aoLigar, ' Abrir quando o computador ligar'),
+    el('label', { htmlFor: aoFechar.id, textContent: 'Ao fechar a janela:' }), aoFechar,
+    el('p', { className: 'nota', textContent: 'Em segundo plano, a janela some mas o MisterALG continua aberto, com um ícone perto do relógio. Clique nele para voltar.' }),
+  )
+  const ABAS = { editor: ['Editor', abaEditor], cores: ['Cores', abaCores], listas: ['Listas', abaListas], pessoal: ['Personalizar', abaPessoal], sistema: ['Sistema', abaSistema] }
   const botoesAba = Object.entries(ABAS).map(([id, [rotulo]]) => {
     const b = el('button', { type: 'button', textContent: rotulo })
     b.addEventListener('click', () => mostrar(id))
@@ -269,6 +281,8 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aba = 'editor
     disciplina: disciplina.value,
     professor: professor.value,
     entidade: entidade.value,
+    abrirAoLigar: aoLigar.checked,
+    aoFechar: aoFechar.value,
   }
 }
 

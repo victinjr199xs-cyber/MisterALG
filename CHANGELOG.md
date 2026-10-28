@@ -3,7 +3,7 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
-## [Não lançado]
+## [1.11.0] — 2026-10-28
 
 ### Novidades
 
@@ -13,6 +13,61 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **C#**: `Span`/`ReadOnlySpan` e `stackalloc`, `BitConverter`, `Encoding.ASCII/Unicode/UTF32/Latin1`,
   `Convert` para Base64 e hexadecimal, fatias com subpadrão em padrões de lista, `ToLookup`, `new()` como
   argumento e `Math.DivRem` em tupla.
+- **C no passo a passo (F8)**: funções variádicas com `va_list` (`va_start`, `va_arg`, `va_end`, `va_copy`) e
+  arrays de tamanho variável (VLA), inclusive na tela de memória.
+- **Tutorial**: na primeira vez que a IDE abre, o MisterALG oferece um passeio guiado (também em Ajuda > Tutorial
+  do MisterALG). Balões destacam o editor, o F9, o F8, o F5, a tela de memória, o console, o assistente e a ajuda,
+  com o texto de cada linguagem. Depois o tutorial guia o primeiro programa: escreve um exemplo, espera o aluno
+  apertar F9, digitar o nome no console e seguir com F8 até o fim (no PHP, a página ao vivo; no SQL, um comando
+  por vez). Esc fecha a qualquer momento, e a IDE continua funcionando por baixo.
+- **Abrir quando o computador ligar**: opção na tela inicial e em Configurações > Sistema (desligada de fábrica).
+  No Windows e no Mac fica nos itens de início do sistema; no Linux, em `~/.config/autostart`. Na versão portátil
+  do Windows e no AppImage vale o arquivo que o aluno baixou. Desinstalar tira o MisterALG do início do Windows.
+- **Fechar ou deixar em segundo plano**: o X da janela pergunta se é para fechar o MisterALG ou deixá-lo em segundo
+  plano, com um ícone perto do relógio (clique para voltar; o menu dele tem Abrir e Sair). "Não perguntar de novo"
+  guarda a escolha, que dá para mudar em Configurações > Sistema. Abrir o MisterALG de novo também traz a janela.
+- **C++ no passo a passo (F8) com lambdas e a STL**: lambdas (captura por valor, por referência, `[n = 0]`, `this`,
+  `auto` nos parâmetros, `mutable`), `map`, `set`, `multimap`, `multiset`, `unordered_map`, `unordered_set`, `list`,
+  `deque`, `queue`, `priority_queue`, `stack`, `array`, `pair`, `tuple`, `tie`, `function`, `unique_ptr`,
+  `shared_ptr`, `stringstream`, `numeric_limits`, `<numeric>` e quase todo o `<algorithm>`, além de `auto [a, b]`,
+  `if constexpr` e `<bits/stdc++.h>`. A biblioteca é C++ de verdade, executada como o código do aluno (sem pausar
+  nas linhas dela): o `map` aparece na memória como a árvore que é, a `list` com os nós ligados, o `shared_ptr` com
+  o contador. Na tela de memória cada contêiner mostra também o conteúdo (`{"ana": 3, "bia": 1}`), e os tipos
+  internos aparecem com nomes legíveis (`nó<...>`, `lambda da linha 12`).
+- Saída igual à do g++ inclusive onde o C++ deixa a ordem livre: `sort` e `priority_queue` usam os algoritmos da
+  libstdc++ (empates na mesma ordem) e o `unordered_map` usa a mesma dispersão e os mesmos tamanhos de tabela
+  (percorre na mesma ordem). Manipuladores novos: `left`, `right`, `scientific`, `boolalpha`, `hex`, `showpos`...
+- **`<bits/stdc++.h>` também no F9.**
+- **Primeiro F9 do C++ mais rápido**: os cabeçalhos pré-compilados de `<iostream>` e `<bits/stdc++.h>` já vêm no
+  instalador, e os que o app gera ficam no disco (antes sumiam ao fechar o app). Medido num app recém-aberto:
+  `<iostream>` + `<vector>` de 4,5 s para 1,4 s; `<bits/stdc++.h>` de 5,5 s para 2,0 s.
+
+- **Passo a passo do C/C++ mais rápido**: expressões simples calculadas sem gerador, o código da biblioteca
+  não sobe mais um evento de linha por comando, caches por chamada e heap com busca binária. Um programa com
+  2000 elementos em `vector`, `sort`, `map`, `set` e `unordered_map` roda em 1,9 s (antes, 7,2 s); C puro com
+  laços e ponteiros, na metade do tempo.
+- **F8 do C++ começa mais rápido**: os cabeçalhos vão sob medida para cada programa (só o que ele usa), e a
+  árvore do `map`/`set` e a tabela do `unordered_map` fazem a busca e o rebalanceamento em JavaScript, com as
+  mesmas regras da libstdc++ (o JSON do clang fica de 15% a 40% menor). A árvore do programa já é preparada em
+  segundo plano depois de um F9 e ao abrir o arquivo, num worker à parte (o F9 nunca espera por ela): o F8
+  nesse caso começa em menos de 0,2 s.
+
+### Correções
+
+- C++ no passo a passo: `set`/`map` com uma lambda como comparador (`set<int, decltype(cmp)> s(cmp)`); a ordem de
+  `v[i] = ++i` agora é a do C++17 (o lado direito antes).
+- PHP: a atualização automática da página (700 ms depois de cada edição) disparava mesmo depois de fechar a
+  página ou de trocar de documento, e então reabria a página do PHP e escondia a tela do banco do SQL.
+- C++ no passo a passo: membros `static` de mesmo nome em classes diferentes viravam uma variável só.
+- C++ no passo a passo: uma exceção que atravessava um bloco destruía os temporários da expressão depois de liberar
+  a pilha (`stoi(...)` dentro de `try` dava "acesso à variável de uma função que já terminou").
+- Cópia de objetos de classes-template com construtor de cópia próprio dentro de um `vector` (antes copiava campo a
+  campo); campos que são referência; especializações com argumentos padrão (`map<string, int>`).
+
+### Testes
+
+- 22 programas novos com a STL comparados com o g++ (`corpus-stl*.cpp.txt`) e testes de vazamento de memória,
+  da tela de memória e do passo a passo dentro de lambdas. O teste diferencial agora roda também no Linux.
 
 ## [1.10.2] — 2026-10-24
 

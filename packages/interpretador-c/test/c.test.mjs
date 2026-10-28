@@ -182,3 +182,85 @@ int main(void) {
   })
   assert.deepEqual(linhas, [2, 3, 4, 5, 6, 7])
 })
+
+test('memória: vetor de tamanho variável aparece como vetor e o ponteiro aponta para ele', async () => {
+  const fonte = `int main(void) {
+  int n = 3;
+  int v[n];
+  for (int i = 0; i < n; i++) v[i] = i + 1;
+  int *p = &v[1];
+  int m[n][2];
+  m[2][1] = 5;
+  return 0;
+}`
+  const ast = await astDe(fonte)
+  let verificado = false
+  const linhas = []
+  await new Promise((resolve) => {
+    let maq
+    const s = new SessaoC(ast, fonte, { modo: 'passo', onStep: ({ linha }) => linhas.push(linha), onMemory: (x) => { maq = x }, onEnd: resolve })
+    const passo = () => {
+      if (s.terminado) return
+      if (linhas.at(-1) === 8) {
+        const q = maq.instantaneo().quadros[0]
+        const v = q.variaveis.find((x) => x.nome === 'v')
+        assert.equal(v.tipoTexto, 'int[3]')
+        assert.deepEqual(descrever(maq, v.endereco, v.tipo).itens.map((i) => i.texto), ['1', '2', '3'])
+        const p = q.variaveis.find((x) => x.nome === 'p')
+        assert.equal(descrever(maq, p.endereco, p.tipo).destino, 'v[1]')
+        const m = q.variaveis.find((x) => x.nome === 'm')
+        assert.equal(descrever(maq, m.endereco, m.tipo).itens[2].itens[1].texto, '5')
+        verificado = true
+      }
+      setImmediate(() => { s.passo(); passo() })
+    }
+    s.passo()
+    passo()
+  })
+  assert.ok(verificado)
+})
+
+test('função variádica: va_arg lê os argumentos e erros de formato aparecem', async () => {
+  const r = await rodar(`#include <stdarg.h>
+#include <stdio.h>
+int soma(int n, ...) { va_list ap; va_start(ap, n); int s = 0; while (n--) s += va_arg(ap, int); va_end(ap); return s; }
+int main(void) { printf("%d\\n", soma(3, 4, 5, 6)); return 0; }`)
+  assert.equal(r.saida, '15\n')
+})
+test('memória: va_list e vetor variável em funções chamadas não quebram a descrição das variáveis', async () => {
+  const fonte = `#include <stdarg.h>
+#include <stdio.h>
+int soma(int n, ...) {
+  va_list ap;
+  va_start(ap, n);
+  int s = 0;
+  for (int i = 0; i < n; i++) s += va_arg(ap, int);
+  va_end(ap);
+  return s;
+}
+int tr(int n, int a[n][n]) { int t = 0; for (int i = 0; i < n; i++) t += a[i][i]; return t; }
+int main(void) {
+  int n = 2;
+  int m[n][n];
+  m[0][0] = 1; m[1][1] = 4; m[0][1] = 0; m[1][0] = 0;
+  printf("%d %d\\n", soma(2, 10, 20), tr(n, m));
+  return 0;
+}`
+  const ast = await astDe(fonte)
+  let saida = ''
+  let passos = 0
+  await new Promise((resolve) => {
+    let maq
+    const s = new SessaoC(ast, fonte, { modo: 'passo', onOutput: (t) => { saida += t }, onStep: () => {}, onMemory: (x) => { maq = x }, onEnd: resolve })
+    const passo = () => {
+      if (s.terminado) return
+      for (const q of maq.instantaneo().quadros) for (const v of q.variaveis) descrever(maq, v.endereco, v.tipo)
+      passos += 1
+      setImmediate(() => { s.passo(); passo() })
+    }
+    s.passo()
+    passo()
+  })
+  assert.equal(saida, '30 5\n')
+  assert.ok(passos > 10)
+})

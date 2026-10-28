@@ -12,6 +12,8 @@ import { tradutor } from '../compartilhado/idiomas.js'
 import { traduzirPagina } from './traduzir-pagina.js'
 import { procurarNaIDE } from './atualizacao.js'
 import { criarAssistente } from './assistente.js'
+import { abrirTutorial } from './tutorial.js'
+import { primeiroPrograma } from './tutorial-passos.js'
 import { gerarPascal, gerarC, gerarJava } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 
@@ -335,9 +337,9 @@ const comandos = {
       <pre>// Arquivo com um algoritmo: ${escapar(doc.caminho ?? doc.nome)}\n// Data de impressão: ${new Date().toLocaleString('pt-BR')}\n\n${escapar(editor.texto())}</pre>`
     return api.imprimir({ html })
   },
-  sair: async () => {
+  sair: async (dados) => {
     // Antes de fechar, oferece voltar para a tela inicial (os testes automatizados fecham direto).
-    if (!api.automatizado) {
+    if (!api.automatizado && !dados?.direto) { // quem já escolheu fechar (X da janela, bandeja) não é perguntado de novo
       if (perguntandoSair) return
       perguntandoSair = true
       const t = tradutor(prefs.idioma)
@@ -430,6 +432,7 @@ const comandos = {
     status: (texto) => status.mensagem(texto),
   }),
   termos: () => dialogos.termos(TERMOS),
+  tutorial: () => iniciarTutorial(),
 }
 
 // Com um diálogo aberto só valem os comandos de edição de texto.
@@ -638,6 +641,47 @@ if (pendente) {
   else if (pedido.get('abrir')) await abrirResultado(await api.arquivo.abrirCaminho(pedido.get('abrir')))
 }
 
+// ---- tutorial (Ajuda > Tutorial do MisterALG) ------------------------------------------------
+
+let tutorial = null
+function iniciarTutorial() {
+  if (tutorial) return
+  const t = tradutor(prefs.idioma)
+  tutorial = abrirTutorial({
+    t,
+    linguagem: () => doc.linguagem,
+    // O primeiro programa entra pelo caminho do "Novo": pergunta antes se o atual não está salvo.
+    escreverPrograma: async (linguagem) => {
+      if (execucao.emExecucao()) execucao.parar()
+      if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return false
+      carregar({ texto: primeiroPrograma(linguagem, t), linguagem, nome: 'primeiro', codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' })
+      return true
+    },
+    aoEvento: (fn) => execucao.aoEvento(fn),
+    aoFechar: () => {
+      tutorial = null
+      if (!document.querySelector('.console-entrada')) editor.focar()
+    },
+  })
+}
+
+/** Na primeira abertura (também depois de atualizar o app), oferece o tutorial no lugar da dica do dia. */
+async function oferecerTutorial() {
+  const t = tradutor(prefs.idioma)
+  prefs = await api.prefs.gravar({ tutorialVisto: true })
+  const r = await dialogos.janela({
+    titulo: t('Tutorial do MisterALG'),
+    corpo: dialogos.el('p', { textContent: t('Primeira vez por aqui? O tutorial mostra cada parte da tela e ajuda você a escrever e executar o seu primeiro programa. Ele também fica no menu Ajuda.') }),
+    botoes: [
+      { valor: 'comecar', texto: t('Começar o tutorial'), principal: true },
+      { valor: 'depois', texto: t('Agora não') },
+    ],
+    largura: '460px',
+  })
+  if (r === 'comecar') iniciarTutorial()
+  else editor.focar()
+}
+
 // Vindo da página inicial (inicio.html), a dica do dia já foi mostrada lá.
 const veioDoInicio = Boolean(location.search)
 
@@ -650,7 +694,9 @@ async function mostrarDica() {
 
 // Dica do dia ao abrir (como o VisuAlg). Não aparece logo depois dos termos (uma
 // janela de cada vez na primeira abertura) nem nos testes automatizados.
-if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto && !veioDoInicio) void mostrarDica()
+// O tutorial, oferecido uma vez, toma o lugar dela nessa abertura (também logo depois dos termos: uma janela depois da outra).
+if (!prefs.tutorialVisto && !api.automatizado && !recuperado?.texto) void oferecerTutorial()
+else if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto && !veioDoInicio) void mostrarDica()
 
 // Para testes automatizados e depuração no DevTools.
-window.__misteralg = { editor, execucao, doc, comandos }
+window.__misteralg = { editor, execucao, doc, comandos, get tutorial() { return tutorial } }

@@ -13,6 +13,7 @@ import { baixar as baixarAtualizacao, instalar as instalarAtualizacao, procurar 
 import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
 import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
 import { montarMenu } from './menu.js'
+import { abreAoLigar, definirAbrirAoLigar, esconderBandeja, mostrarBandeja } from './sistema.js'
 import { tradutor } from '../compartilhado/idiomas.js'
 import {
   adicionarRecente,
@@ -70,6 +71,8 @@ const FILTROS_BLOCO = [
 
 let janela = null
 let podeFechar = false
+let saindoDoApp = false // ⌘Q pelo Dock, desligar o computador: fecha de verdade (perguntando se quer salvar)
+let perguntandoAoFechar = false
 let estadoMenu = {}
 let arquivoParaAbrir = null // arquivo .alg aberto pelo Finder antes da janela existir
 
@@ -97,6 +100,55 @@ const irPara = (pagina, params) => {
 const paginaInicial = () => (process.env.MISTERALG_DADOS || arquivoParaAbrir ? 'ide' : 'inicio')
 const documentos = () => app.getPath('documents')
 
+/** Traz a janela de volta (da bandeja, minimizada ou atrás de outras). */
+function mostrarJanela() {
+  if (!janela) return
+  if (janela.isMinimized()) janela.restore()
+  if (!janela.isVisible()) janela.show()
+  janela.focus()
+}
+
+/** Fecha de verdade: a IDE pergunta se quer salvar e depois chama janela:fechar. */
+function sairDeVerdade() {
+  mostrarJanela() // a pergunta "salvar?" aparece na janela
+  janela?.webContents.send('menu', 'sair', { direto: true }) // já escolheu fechar: sem a pergunta de voltar à tela inicial
+}
+
+/** Esconde a janela e deixa o ícone na bandeja; os programas que estão rodando continuam. */
+function irParaSegundoPlano() {
+  mostrarBandeja({ tr: trMain, abrir: mostrarJanela, sair: sairDeVerdade })
+  janela?.hide()
+}
+
+/** O X da janela: fechar o MisterALG ou deixá-lo em segundo plano (pergunta, a não ser que o aluno já tenha escolhido). */
+async function aoClicarEmFechar() {
+  const escolhido = lerPreferencias().aoFechar
+  if (escolhido === 'segundoPlano') return irParaSegundoPlano()
+  if (escolhido === 'fechar') return sairDeVerdade()
+  if (perguntandoAoFechar) return
+  perguntandoAoFechar = true
+  try {
+    const r = await dialog.showMessageBox(janela, {
+      type: 'question',
+      noLink: true,
+      title: 'MisterALG',
+      message: trMain('Fechar o MisterALG ou deixar em segundo plano?'),
+      detail: trMain('Em segundo plano, a janela some mas o MisterALG continua aberto, com um ícone perto do relógio. Clique nele para voltar.'),
+      buttons: [trMain('Deixar em segundo plano'), trMain('Fechar o MisterALG'), trMain('Cancelar')],
+      defaultId: 0,
+      cancelId: 2,
+      checkboxLabel: trMain('Não perguntar de novo (dá para mudar em Configurações)'),
+    })
+    if (r.response === 2) return
+    const modo = r.response === 0 ? 'segundoPlano' : 'fechar'
+    if (r.checkboxChecked) gravarPreferencias({ aoFechar: modo })
+    if (modo === 'segundoPlano') irParaSegundoPlano()
+    else sairDeVerdade()
+  } finally {
+    perguntandoAoFechar = false
+  }
+}
+
 // Temas escuros deixam escuros também a barra de título, os menus e as caixas
 // de diálogo nativas; os claros seguem o sistema, como antes.
 function aplicarTemaNativo() {
@@ -107,8 +159,14 @@ function aplicarTemaNativo() {
 }
 
 function registrarIpc() {
-  ipcMain.handle('prefs:ler', () => lerPreferencias())
+  ipcMain.handle('prefs:ler', () => {
+    const prefs = lerPreferencias()
+    // O aluno pode ter tirado (ou posto) o MisterALG no início do sistema por fora: vale o que o sistema diz.
+    const real = abreAoLigar()
+    return real == null || real === prefs.abrirAoLigar ? prefs : gravarPreferencias({ abrirAoLigar: real })
+  })
   ipcMain.handle('prefs:gravar', (_e, prefs) => {
+    if ('abrirAoLigar' in prefs && !!prefs.abrirAoLigar !== !!lerPreferencias().abrirAoLigar) definirAbrirAoLigar(!!prefs.abrirAoLigar)
     const r = gravarPreferencias(prefs)
     if ('tema' in prefs) aplicarTemaNativo()
     atualizarMenu()
@@ -359,8 +417,7 @@ else {
   app.on('second-instance', (_e, args) => {
     const caminho = arquivoDosArgumentos(args)
     if (!janela) return
-    if (janela.isMinimized()) janela.restore()
-    janela.focus()
+    mostrarJanela() // também se estava em segundo plano
     if (caminho) janela.webContents.send('menu', 'abrir-recente', caminho)
   })
 }
@@ -382,19 +439,28 @@ app.whenReady().then(() => {
   if (abertura) janela.once('show', abertura.fechar)
   irPara(paginaInicial())
 
-  // Fechar a janela pergunta ao renderer se há alterações não salvas.
+  // Fechar a janela: segundo plano ou sair (e aí o renderer pergunta se há alterações não salvas).
+  // Testes automatizados (pasta de dados própria) fecham direto, como antes.
   janela.on('close', (evento) => {
     if (podeFechar) return
     evento.preventDefault()
-    janela.webContents.send('menu', 'sair')
+    if (saindoDoApp || (process.env.MISTERALG_DADOS && !process.env.MISTERALG_TESTE_SISTEMA)) {
+      saindoDoApp = false // se o aluno cancelar o "salvar?", o próximo X volta a perguntar
+      janela.webContents.send('menu', 'sair')
+    } else void aoClicarEmFechar()
   })
+  janela.on('session-end', () => { saindoDoApp = true }) // Windows desligando
   janela.on('closed', () => {
     janela = null
+    esconderBandeja()
     app.quit()
   })
+  // Quem instalou uma versão antiga com "abrir ao ligar" ligado: o caminho do executável pode ter mudado.
+  if (lerPreferencias().abrirAoLigar) definirAbrirAoLigar(true)
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (janela) mostrarJanela() // Mac: clicar no ícone do Dock traz de volta do segundo plano
+    else if (BrowserWindow.getAllWindows().length === 0) {
       podeFechar = false
       janela = criarJanelaPrincipal(aplicarTemaNativo().fundo)
       irPara(paginaInicial())
@@ -402,6 +468,7 @@ app.whenReady().then(() => {
   })
 })
 
+app.on('before-quit', () => { saindoDoApp = true }) // ⌘Q, menu do Dock, desligar o computador
 app.on('window-all-closed', () => app.quit())
 app.on('will-quit', () => { // nenhum programa C/C++, Python ou PHP fica rodando depois que a IDE fecha
   pararTudo()

@@ -7,7 +7,9 @@ import { BIBLIOTECA } from './biblioteca.js'
 import { ErroC, EXPLICACOES } from './erros.js'
 import { INICIO_ESTATICO, Memoria } from './memoria.js'
 import { ExcecaoCpp, METODOS_CPP } from './cpp.js'
-import { DOUBLE, Tipos, alinhamentoDe, chaveDeTemplate, ehInteiro, layout, ponteiro, tamanhoDe } from './tipos.js'
+import { DOUBLE, INT, LONG_LONG, Tipos, alinhamentoDe, alinhar, ehInteiro, layout, ponteiro, tamanhoDe, vetor } from './tipos.js'
+
+const PONTEIRO_VOID = ponteiro({ k: 'void', nome: 'void', tamanho: 1, alinhamento: 1 })
 
 const FIM_DE_LACO = { tipo: 'break' }
 const PROXIMA_VOLTA = { tipo: 'continue' }
@@ -94,6 +96,7 @@ export class MaquinaC {
     this.permitirFim = false
     // Linhas: o clang dá posições em bytes (UTF-8) do arquivo.
     const bytes = new TextEncoder().encode(fonte)
+    this.bytesDaFonte = bytes
     this.inicioDasLinhas = [0]
     for (let i = 0; i < bytes.length; i += 1) if (bytes[i] === 10) this.inicioDasLinhas.push(i + 1)
     this.leitor = this.criarLeitor()
@@ -112,10 +115,33 @@ export class MaquinaC {
     return a + 1
   }
 
+  /**
+   * Os caches guardados no próprio nó (tipo, linha, campo) valem para esta máquina: se o mesmo objeto da
+   * árvore passar por outra, eles são refeitos.
+   */
+  cacheDo(no) {
+    if (no.__m !== this) {
+      no.__m = this
+      no.__t = undefined
+      no.__l = undefined
+      no.__campo = undefined
+      no.__info = undefined // (funções)
+      no.__tf = undefined
+      no.__nativa = undefined
+      no.__def = undefined
+      no.__despacho = undefined
+    }
+    return no
+  }
+
   linhaDe(no) {
-    const ini = no?.range?.begin ?? no?.loc
-    const off = ini?.offset ?? ini?.expansionLoc?.offset ?? ini?.spellingLoc?.offset
-    return off === undefined ? this.linhaAtual : this.linhaDoDeslocamento(off)
+    if (!no) return this.linhaAtual
+    if (this.cacheDo(no).__l === undefined) {
+      const ini = no.range?.begin ?? no.loc
+      const off = ini?.offset ?? ini?.expansionLoc?.offset ?? ini?.spellingLoc?.offset
+      no.__l = off === undefined ? null : this.linhaDoDeslocamento(off)
+    }
+    return no.__l ?? this.linhaAtual
   }
 
   /** Percorre a árvore inteira uma vez: tipos, enums, funções, literais e globais. */
@@ -126,6 +152,7 @@ export class MaquinaC {
       return `__anon_${linha}_${off - this.inicioDasLinhas[linha - 1] + 1}`
     }
     const globaisParaIniciar = []
+    const moldeDe = (t) => (t.inner ?? []).find((c) => /^(FunctionDecl|CXXMethodDecl|CXXConstructorDecl|CXXDestructorDecl|CXXConversionDecl|CXXRecordDecl|CXXDeductionGuideDecl)$/.test(c.kind))
     // O clang só escreve "file" numa posição quando o arquivo muda em relação à posição anterior
     // (na ordem do JSON); acompanhando isso dá para saber o que veio dos cabeçalhos.
     let arquivo = null
@@ -146,30 +173,57 @@ export class MaquinaC {
         case 'RecordDecl':
         case 'CXXRecordDecl':
         case 'ClassTemplateSpecializationDecl':
-          if (no.completeDefinition && !no.isImplicit) {
-            let nome = no.name || anonimo(no)
+          if (no.completeDefinition && (!no.isImplicit || no.nomeDaLambda)) {
+            let nome = no.nomeDaLambda ?? (no.name || anonimo(no))
             if (no.kind === 'ClassTemplateSpecializationDecl') {
-              nome = chaveDeTemplate(nome, (no.inner ?? []).filter((c) => c.kind === 'TemplateArgument').map((c) => c.type?.qualType ?? c.value ?? ''))
+              // um pacote (class... T) vem como um argumento só, com os de verdade dentro
+              const args = (no.inner ?? []).filter((c) => c.kind === 'TemplateArgument').flatMap((c) => (c.isPack ? (c.inner ?? []) : [c]))
+              nome = this.tipos.chaveDeTemplate(nome, args.map((c) => c.type?.qualType ?? String(c.value ?? '')))
             }
             const filhos = no.inner ?? []
+            // os métodos que são templates (template <class I> map(I a, I b)) entram pelas especializações
+            const metodos = filhos.flatMap((c) => (c.kind === 'FunctionTemplateDecl' ? (c.inner ?? []).filter((x) => x !== moldeDe(c)) : [c]))
             this.registros.set(nome, {
               uniao: no.tagUsed === 'union',
               campos: filhos.filter((c) => c.kind === 'FieldDecl').map((c) => ({ nome: c.name ?? '', tipo: c.type.qualType, decl: c })),
               bases: (no.bases ?? []).map((b) => b.type.qualType),
-              metodos: filhos.filter((c) => /^CXX(Method|Constructor|Destructor|Conversion)Decl$/.test(c.kind)),
+              metodos: metodos.filter((c) => /^CXX(Method|Constructor|Destructor|Conversion)Decl$/.test(c.kind)),
               polimorfica: !!no.definitionData?.isPolymorphic,
               destrutorNaoTrivial: !!no.definitionData?.dtor?.nonTrivial,
               cpp: no.kind !== 'RecordDecl',
               nome,
+              capturas: no.capturas,
+              biblioteca: !!no.biblioteca,
             })
             this.chavePorId.set(no.id, nome)
             classeDosFilhos = nome
           }
           break
+        case 'LambdaExpr': {
+          // A classe da lambda vem sem nome: ganha o do tipo, e os campos, o nome do que capturam.
+          const classe = no.inner?.[0]
+          if (classe?.kind === 'CXXRecordDecl') {
+            classe.nomeDaLambda = this.tipos.de(no.type).rotulo
+            classe.capturas = this.capturasDaLambda(no, classe)
+          }
+          break
+        }
         case 'FunctionTemplateDecl':
         case 'ClassTemplateDecl': {
+          if (no.kind === 'ClassTemplateDecl' && !this.tipos.padroes.has(no.name)) {
+            // os valores padrão dos parâmetros, para as chaves das especializações saírem como o clang escreve os tipos
+            this.tipos.padroes.set(no.name, (no.inner ?? []).filter((c) => /^(TemplateTypeParm|NonTypeTemplateParm|TemplateTemplateParm)Decl$/.test(c.kind)).map((c) => {
+              let padrao = null
+              if (c.defaultArg?.type) padrao = c.defaultArg.type.qualType
+              else if (c.defaultArg) {
+                const expr = c.inner?.find((x) => x.kind === 'TemplateArgument')?.inner?.[0]
+                try { if (expr) padrao = String(this.constante(expr)) } catch { /* sem valor fixo */ }
+              }
+              return { nome: c.name, padrao }
+            }))
+          }
           // O primeiro filho é o "molde" (com tipos T ainda abertos); só as especializações valem.
-          const molde = (no.inner ?? []).find((c) => c.kind === 'FunctionDecl' || c.kind === 'CXXRecordDecl')
+          const molde = moldeDe(no)
           for (const filho of no.inner ?? []) if (filho !== molde) visitar(filho, dentroDeFuncao, classe)
           return
         }
@@ -183,7 +237,10 @@ export class MaquinaC {
           if ((no.inner ?? []).some((c) => c.kind === 'CompoundStmt')) this.metodosPorAssinatura.set(`${dono}::${no.name}|${no.type.qualType}`, no)
           break
         }
-        case 'TypedefDecl': {
+        case 'TypedefDecl':
+        case 'TypeAliasDecl': {
+          // typedef dentro de classe (map<...>::iterator): o clang dá o tipo de verdade junto (desugaredQualType)
+          if (classe) { this.tipos.apelidosDeMembro.add(no.id); break }
           this.apelidos.set(no.name, no.type.qualType)
           // typedef struct { ... } Pessoa; — o clang chama a struct anônima de "struct Pessoa".
           const tag = /^(?:struct|union) (\w+)$/.exec(no.type.qualType)?.[1]
@@ -217,7 +274,11 @@ export class MaquinaC {
           }
           break
         case 'VarDecl':
-          if (!dentroDeFuncao || no.storageClass === 'static' || no.storageClass === 'extern') globaisParaIniciar.push(no)
+          if (!dentroDeFuncao || no.storageClass === 'static' || no.storageClass === 'extern') {
+            // membro static: a classe dele (o "int A::n = 0;" de fora da classe aponta para ela em parentDeclContextId)
+            no.classeDaVariavel = classe ?? this.chavePorId.get(no.parentDeclContextId) ?? null
+            globaisParaIniciar.push(no)
+          }
           break
         default:
       }
@@ -234,10 +295,10 @@ export class MaquinaC {
     // Globais (e static locais): uma vez só, já com o valor inicial.
     for (const d of globaisParaIniciar) {
       if (this.globais.has(d.id)) continue
-      const ja = [...this.globais.values()].find((g) => g.nome === d.name && !g.local && d.storageClass === 'extern')
+      const ja = [...this.globais.values()].find((g) => g.nome === d.name && !g.local && g.classe === d.classeDaVariavel && d.storageClass === 'extern')
       if (ja) { this.globais.set(d.id, ja); continue }
       const tipo = this.tipos.de(d.type)
-      const variavel = { nome: d.name, tipo, tipoTexto: d.type.qualType, endereco: 0, local: !!d.storageClass && d.storageClass === 'static' && this.estaEmFuncao(d) }
+      const variavel = { nome: d.name, classe: d.classeDaVariavel, tipo, tipoTexto: d.type.qualType, endereco: 0, local: !!d.storageClass && d.storageClass === 'static' && this.estaEmFuncao(d) }
       variavel.endereco = this.mem.alocarEstatico(tamanhoDe(tipo), alinhamentoDe(tipo), { nome: d.name, tipo })
       this.globais.set(d.id, variavel)
       // Um extern do cabeçalho (stdin...) ganha um valor diferente de zero, para não parecer NULL.
@@ -245,7 +306,8 @@ export class MaquinaC {
         if (tipo.k === 'ptr') this.mem.escrever(tipo, variavel.endereco, variavel.endereco)
         variavel.doCabecalho = true
       } else this.listaGlobais.push(variavel)
-      for (const outro of globaisParaIniciar) if (outro !== d && outro.name === d.name && !this.globais.has(outro.id) && !this.estaEmFuncao(outro)) this.globais.set(outro.id, variavel)
+      // (a mesma variável declarada de novo; membros static de mesmo nome em classes diferentes são variáveis diferentes)
+      for (const outro of globaisParaIniciar) if (outro !== d && outro.name === d.name && outro.classeDaVariavel === d.classeDaVariavel && !this.globais.has(outro.id) && !this.estaEmFuncao(outro)) this.globais.set(outro.id, variavel)
     }
     this.textoC = this.mem.alocarEstatico(2, 1, { nome: 'texto constante' })
     this.mem.gravarCadeia(this.textoC, 'C')
@@ -258,6 +320,61 @@ export class MaquinaC {
       while (!gen.next().done) { /* inicializar globais não pausa */ }
     }
     if (!this.funcoes.has('main')) throw new ErroC('o programa não tem a função main')
+  }
+
+  /**
+   * Capturas de uma lambda, na ordem dos campos da classe dela: { nome, ids (das variáveis de fora que o
+   * corpo usa), this }. No corpo, o clang aponta para a variável de fora, e não para o campo; ao chamar a
+   * lambda, cada campo entra no quadro com o id dessa variável.
+   */
+  capturasDaLambda(lambda, classe) {
+    const campos = (classe.inner ?? []).filter((c) => c.kind === 'FieldDecl')
+    const inits = (lambda.inner ?? []).slice(1, -1)
+    // Os nomes das capturas com valor inicial ([n = 0]) só aparecem no texto: [a, &b, n = 0, this].
+    const escritas = []
+    const ini = lambda.range?.begin?.offset
+    if (ini !== undefined && this.bytesDaFonte[ini] === 0x5b && !lambda.range.begin.includedFrom) {
+      let texto = ''
+      let nivel = 0
+      for (let i = ini + 1; i < this.bytesDaFonte.length; i += 1) {
+        const c = String.fromCharCode(this.bytesDaFonte[i])
+        if ('([{'.includes(c)) nivel += 1
+        else if (')]}'.includes(c)) { if (nivel === 0) break; nivel -= 1 }
+        texto += c === ',' && nivel > 0 ? '\u0001' : c
+      }
+      for (const item of texto.split(',').map((x) => x.trim()).filter((x) => x && x !== '&' && x !== '=')) {
+        escritas.push(/^&?\s*([A-Za-z_]\w*)\s*[={(]/.exec(item)?.[1] ?? null)
+      }
+    }
+    const operadores = []
+    const juntar = (n) => {
+      if (!n || typeof n !== 'object') return
+      if (n.kind === 'CXXMethodDecl' && n.name === 'operator()') operadores.push(n)
+      if (n.kind === 'FunctionTemplateDecl' || n === classe) for (const f of n.inner ?? []) juntar(f)
+    }
+    juntar(classe)
+    const idsUsados = (nome) => {
+      const ids = new Set()
+      const ver = (n) => {
+        if (!n || typeof n !== 'object') return
+        if (n.kind === 'DeclRefExpr' && n.referencedDecl?.kind === 'VarDecl' && n.referencedDecl.name === nome) ids.add(n.referencedDecl.id)
+        for (const f of n.inner ?? []) ver(f)
+      }
+      operadores.forEach(ver)
+      return [...ids]
+    }
+    return campos.map((campo, i) => {
+      let x = inits[i]
+      while (x && ['ImplicitCastExpr', 'ParenExpr', 'ExprWithCleanups', 'MaterializeTemporaryExpr', 'CXXBindTemporaryExpr', 'CXXConstructExpr', 'CXXFunctionalCastExpr'].includes(x.kind) && x.inner?.length === 1) x = x.inner[0]
+      if (x?.kind === 'CXXThisExpr' && !escritas[i]) {
+        campo.name = 'this'
+        return { nome: 'this', ids: [], this: true }
+      }
+      const nome = escritas[i] ?? (x?.kind === 'DeclRefExpr' ? x.referencedDecl.name : `(captura ${i + 1})`)
+      campo.name = nome
+      const ids = escritas[i] ? idsUsados(nome) : x?.kind === 'DeclRefExpr' ? [x.referencedDecl.id] : []
+      return { nome, ids }
+    })
   }
 
   /** O id da struct/union que um typedef nomeia (a árvore do tipo traz "decl" ou "ownedTagDecl"). */
@@ -362,56 +479,189 @@ export class MaquinaC {
     }
   }
 
-  /** Evento de linha (o passo a passo pausa aqui); null dentro do código dos cabeçalhos, que roda sem pausar. */
+  /**
+   * Evento de linha (o passo a passo pausa aqui); null dentro do código dos cabeçalhos, que roda sem pausar.
+   * Quem chama só faz yield quando há evento: um yield de null subiria por todos os geradores da pilha à toa.
+   */
   linha(no) {
     if (this.quadro?.biblioteca) return null
     this.linhaAtual = this.linhaDe(no)
     if (this.quadro) this.quadro.linha = this.linhaAtual
-    return { tipo: 'linha', linha: this.linhaAtual }
+    // (o mesmo objeto a cada linha: quem recebe o evento lê na hora)
+    this.eventoLinha ??= { tipo: 'linha', linha: 0 }
+    this.eventoLinha.linha = this.linhaAtual
+    return this.eventoLinha
   }
 
-  tipo(no) { return this.tipos.de(no.type) }
+  /** O que uma chamada precisa da função (parâmetros, corpo, tipo, nome por classe), calculado uma vez. */
+  infoDaFuncao(def) {
+    if (this.cacheDo(def).__info === undefined) {
+      const filhos = def.inner ?? []
+      def.__info = {
+        params: filhos.filter((n) => n.kind === 'ParmVarDecl'),
+        corpo: filhos.find((n) => n.kind === 'CompoundStmt'),
+        retorno: this.tipos.de(def.type).ret,
+        linha: this.linhaDe(def),
+        nomes: new Map(), // classe → "Classe::nome"
+      }
+    }
+    return def.__info
+  }
+
+  tipo(no) {
+    if (this.cacheDo(no).__t === undefined) no.__t = this.tipos.de(no.type)
+    return no.__t.dinamico ? this.resolver(no.__t) : no.__t
+  }
+
+  /** Vetor de tamanho variável (int v[n]): troca a expressão do tamanho pelo valor que ela tem agora. */
+  resolver(t) {
+    if (!t.dinamico) return t
+    if (t.k === 'ptr') return ponteiro(this.resolver(t.alvo))
+    if (t.k !== 'array') return t
+    const elem = this.resolver(t.elem)
+    if (t.dim === undefined || t.dim === '*') return vetor(elem, t.n) // [*] só aparece em protótipos
+    const n = this.avaliarDimensao(t.dim)
+    if (!(n > 0)) throw new ErroC(`vetor de tamanho variável com tamanho ${n}: o tamanho precisa ser maior que zero`)
+    return vetor(elem, n)
+  }
+
+  /** Calcula o texto de um tamanho de vetor (n, n * 2 + 1, (l - 1) / 2...) com as variáveis visíveis agora. */
+  avaliarDimensao(texto) {
+    const fichas = texto.match(/\d+[uUlL]*|[A-Za-z_]\w*|<<|>>|[-+*/%&|^~()]/g) ?? []
+    let i = 0
+    const niveis = [['|'], ['^'], ['&'], ['<<', '>>'], ['+', '-'], ['*', '/', '%']]
+    const falha = () => new ErroC(`o passo a passo não sabe calcular o tamanho "${texto}" do vetor (rode com F9)`)
+    const primario = () => {
+      const f = fichas[i++]
+      if (f === undefined) throw falha()
+      if (f === '(') { const v = binario(0); if (fichas[i++] !== ')') throw falha(); return v }
+      if (f === '-') return -primario()
+      if (f === '+') return primario()
+      if (f === '~') return ~primario()
+      if (/^\d/.test(f)) return Number.parseInt(f, 10)
+      if (/^[A-Za-z_]/.test(f)) {
+        const v = [...(this.quadro?.variaveis ?? [])].reverse().find((x) => x.nome === f) ?? [...this.globais.values()].find((x) => x.nome === f)
+        if (!v || !ehInteiro(v.tipo)) throw falha()
+        return Number(this.mem.ler(v.tipo, v.endereco))
+      }
+      throw falha()
+    }
+    const binario = (nivel) => {
+      if (nivel === niveis.length) return primario()
+      let a = binario(nivel + 1)
+      while (niveis[nivel].includes(fichas[i])) {
+        const op = fichas[i++]
+        const b = binario(nivel + 1)
+        if ((op === '/' || op === '%') && b === 0) throw new ErroC('divisão por zero no tamanho do vetor', 0, EXPLICACOES.divisao)
+        a = { '|': () => a | b, '^': () => a ^ b, '&': () => a & b, '<<': () => a << b, '>>': () => a >> b, '+': () => a + b, '-': () => a - b, '*': () => a * b, '/': () => Math.trunc(a / b), '%': () => a % b }[op]()
+      }
+      return a
+    }
+    const r = binario(0)
+    if (i < fichas.length) throw falha()
+    return r
+  }
+
+  /** Argumentos além dos parâmetros fixos de uma função variádica: ficam na pilha, cada um no seu alinhamento (o va_list aponta para cá). */
+  prepararVarargs(quadro, extras) {
+    let desloc = 0
+    const posicoes = extras.map((a) => {
+      desloc = alinhar(desloc, alinhamentoDe(a.tipo))
+      const p = desloc
+      desloc += tamanhoDe(a.tipo)
+      return p
+    })
+    quadro.varargs = this.mem.empilhar(Math.max(desloc, 1), 8, { nome: '(argumentos ...)' })
+    extras.forEach((a, k) => this.guardar(a.tipo, quadro.varargs + posicoes[k], a.valor))
+  }
+
+  /** Lê o próximo argumento de um va_list, avançando-o; o endereço de `ap` é o de uma variável va_list. */
+  lerVaArg(enderecoDoAp, t) {
+    const p = alinhar(this.mem.ler(PONTEIRO_VOID, enderecoDoAp), alinhamentoDe(t))
+    const v = this.carregar(t, p)
+    this.mem.escrever(PONTEIRO_VOID, enderecoDoAp, p + tamanhoDe(t))
+    return v
+  }
+
+  /** Fonte de argumentos para vprintf & cia.: cada diretiva do formato pede o seu tipo ('int', 'll', 'real', 'ptr'). */
+  argumentosDeVaList(p) {
+    const tipos = { int: INT, ll: LONG_LONG, real: DOUBLE, ptr: PONTEIRO_VOID }
+    let q = Number(p)
+    return (classe) => {
+      const t = tipos[classe]
+      q = alinhar(q, alinhamentoDe(t))
+      const valor = this.carregar(t, q)
+      q += tamanhoDe(t)
+      return { valor, tipo: t }
+    }
+  }
 
   /**
    * @param ctx C++: { this, classe, destino (onde construir a classe devolvida), construtor, destrutor }
    */
   * chamarFuncao(def, valores, linhaDaChamada, ctx = {}) {
     if (this.pilha.length >= MAX_CHAMADAS) throw new ErroC('chamadas demais uma dentro da outra (recursão infinita?)', 0, EXPLICACOES.pilha)
-    const filhos = def.inner ?? []
-    const params = filhos.filter((n) => n.kind === 'ParmVarDecl')
-    const corpo = filhos.find((n) => n.kind === 'CompoundStmt')
+    const info = this.infoDaFuncao(def)
+    const { params, corpo } = info
     const marca = this.mem.topoPilha
     const anterior = this.quadro
-    const nome = ctx.classe ? `${ctx.classe.replace(/<.*$/, '')}::${def.name}` : def.name
+    let nome = def.name
+    if (ctx.classe) {
+      nome = info.nomes.get(ctx.classe)
+      if (nome === undefined) {
+        nome = `${ctx.classe.replace(/<.*$/, '')}::${def.name}`
+        info.nomes.set(ctx.classe, nome)
+      }
+    }
     const quadro = {
-      funcao: nome, linha: this.linhaDe(def), linhaDaChamada, variaveis: [], porId: new Map(),
-      this: ctx.this, destino: ctx.destino, retorno: this.tipos.de(def.type).ret, biblioteca: !!def.biblioteca,
+      funcao: nome, linha: info.linha, linhaDaChamada, variaveis: [], porId: new Map(),
+      this: ctx.this, destino: ctx.destino, retorno: info.retorno, biblioteca: !!def.biblioteca,
     }
     this.pilha.push(quadro)
     this.quadro = quadro
     try {
-      if (ctx.this !== undefined) {
+      // (só o operator() da lambda; o operator= e os construtores dela usam o this normal)
+      const capturas = ctx.classe && def.name === 'operator()' && this.registros.get(ctx.classe)?.capturas
+      if (capturas && ctx.this !== undefined) {
+        // Lambda: o que ela capturou aparece com o nome de fora (por cópia: o campo; por referência: o original).
+        const campos = layout(this.tipoDaClasse(ctx.classe)).campos
+        quadro.this = undefined
+        capturas.forEach((c, i) => {
+          const campo = campos[i]
+          if (c.this) { quadro.this = this.mem.ler(campo.tipo, ctx.this + campo.deslocamento); return }
+          const v = { id: `captura ${i}`, nome: c.nome, tipo: campo.tipo, tipoTexto: campo.tipo.nome ?? '', endereco: ctx.this + campo.deslocamento, apelido: true }
+          quadro.variaveis.push(v)
+          for (const id of c.ids) quadro.porId.set(id, v)
+        })
+      } else if (ctx.this !== undefined) {
         // "this" aparece na tela de memória como um ponteiro para o objeto.
-        const tipoThis = ponteiro(this.tipoDaClasse(ctx.classe))
-        const e = this.mem.empilhar(4, 4, { nome: 'this', tipo: tipoThis })
-        this.mem.escrever(tipoThis, e, ctx.this)
-        quadro.variaveis.push({ id: 'this', nome: 'this', tipo: tipoThis, tipoTexto: `${ctx.classe.replace(/<.*$/, '')} *`, endereco: e, apelido: true })
+        this.ponteirosThis ??= new Map()
+        let pt = this.ponteirosThis.get(ctx.classe)
+        if (!pt) {
+          pt = { tipo: ponteiro(this.tipoDaClasse(ctx.classe)), texto: `${ctx.classe.replace(/<.*$/, '')} *` }
+          this.ponteirosThis.set(ctx.classe, pt)
+        }
+        const e = this.mem.empilhar(4, 4, { nome: 'this', tipo: pt.tipo })
+        this.mem.escrever(pt.tipo, e, ctx.this)
+        quadro.variaveis.push({ id: 'this', nome: 'this', tipo: pt.tipo, tipoTexto: pt.texto, endereco: e, apelido: true })
       }
-      params.forEach((p, i) => {
-        const t = this.tipos.de(p.type)
+      for (let i = 0; i < params.length; i += 1) {
+        const p = params[i]
+        const t = this.tipo(p)
         if (this.cpp && t.k === 'struct') {
           // Parâmetro por valor de classe: o chamador já construiu o objeto; aqui ele só ganha um nome.
           const v = { id: p.id, nome: p.name || `(parâmetro ${i + 1})`, tipo: t, tipoTexto: p.type.qualType, endereco: valores[i], apelido: true }
           quadro.variaveis.push(v)
           quadro.porId.set(p.id, v)
-          return
+          continue
         }
         const variavel = this.novaLocal(p, t)
         if (t.k === 'struct') this.mem.gravarBytes(variavel.endereco, valores[i])
         else if (valores[i] !== undefined) this.mem.escrever(t, variavel.endereco, valores[i])
         variavel.apelido = t.k === 'ref'
-      })
-      yield this.linha(def)
+      }
+      if (this.tipos.de(def.type).variadica) this.prepararVarargs(quadro, (ctx.argumentos ?? ctx.args ?? []).slice(params.length))
+      if (this.linha(def)) yield this.eventoLinha
       if (ctx.construtor) yield* this.iniciarObjeto(def, ctx.classe, ctx.this)
       const r = yield* this.bloco(corpo?.inner ?? [], true)
       if (ctx.destrutor) yield* this.destruirMembros(ctx.this, this.tipoDaClasse(ctx.classe))
@@ -446,7 +696,7 @@ export class MaquinaC {
     const tamanho = tamanhoDe(tipo)
     if (tipo.k === 'array' && tipo.n === null) throw new ErroC(`vetor "${decl.name}" sem tamanho fixo: o passo a passo ainda não aceita vetor de tamanho variável (rode com F9)`)
     const endereco = this.mem.empilhar(tamanho, alinhamentoDe(tipo), { nome: decl.name, tipo })
-    const variavel = { id: decl.id, nome: decl.name, tipo, tipoTexto: decl.type.qualType, endereco }
+    const variavel = { id: decl.id, nome: decl.name, tipo, tipoTexto: this.tipos.de(decl.type).dinamico ? tipo.nome : decl.type.qualType, endereco }
     this.quadro.variaveis.push(variavel)
     this.quadro.porId.set(decl.id, variavel)
     return variavel
@@ -456,6 +706,7 @@ export class MaquinaC {
     const marcaPilha = this.mem.topoPilha
     const quadro = this.quadro
     const marcaVariaveis = quadro.variaveis.length
+    const marcaTemporarios = this.temporarios.length
     try {
       let r
       for (let i = 0; i < lista.length; i += 1) {
@@ -468,15 +719,19 @@ export class MaquinaC {
         if (r) break
       }
       // C++: os objetos declarados neste bloco são destruídos ao sair dele (na ordem inversa).
-      if (this.cpp) yield* this.destruirLocais(quadro, marcaVariaveis)
+      if (this.cpp && quadro.variaveis.length > marcaVariaveis) yield* this.destruirLocais(quadro, marcaVariaveis)
       return r
     } catch (e) {
       // Uma exceção atravessando o bloco também destrói os objetos dele (o "desempilhamento" do C++).
-      if (e instanceof ExcecaoCpp) yield* this.destruirLocais(quadro, marcaVariaveis)
+      // (antes, os temporários da expressão que lançou: eles moram na pilha deste bloco)
+      if (e instanceof ExcecaoCpp) {
+        yield* this.limparTemporarios(marcaTemporarios)
+        yield* this.destruirLocais(quadro, marcaVariaveis)
+      }
       throw e
     } finally {
       if (!eDeFuncao) {
-        for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
+        if (quadro.variaveis.length > marcaVariaveis) for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
         this.mem.desempilharAte(marcaPilha)
       }
     }
@@ -489,19 +744,19 @@ export class MaquinaC {
       case 'CompoundStmt': return yield* this.bloco(no.inner ?? [])
       case 'NullStmt': return undefined
       case 'DeclStmt':
-        yield this.linha(no)
-        for (const d of no.inner ?? []) if (d.kind === 'VarDecl' && !this.globais.has(d.id)) yield* this.declarar(d)
+        if (this.linha(no)) yield this.eventoLinha
+        for (const d of no.inner ?? []) if ((d.kind === 'VarDecl' || d.kind === 'DecompositionDecl') && !this.globais.has(d.id)) yield* this.declarar(d)
         return undefined
       case 'IfStmt': {
         const [cond, entao, senao] = this.partesDoIf(no)
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         if (this.verdade(yield* this.val(cond))) return yield* this.exec(entao)
         return senao ? yield* this.exec(senao) : undefined
       }
       case 'WhileStmt': {
         const [cond, corpo] = no.inner
         for (;;) {
-          yield this.linha(no)
+          if (this.linha(no)) yield this.eventoLinha
           if (!this.verdade(yield* this.val(cond))) return undefined
           const r = yield* this.exec(corpo)
           if (r === FIM_DE_LACO) return undefined
@@ -514,16 +769,16 @@ export class MaquinaC {
           const r = yield* this.exec(corpo)
           if (r === FIM_DE_LACO) return undefined
           if (r && r !== PROXIMA_VOLTA) return r
-          yield this.linha(cond)
+          if (this.linha(cond)) yield this.eventoLinha
           if (!this.verdade(yield* this.val(cond))) return undefined
         }
       }
       case 'ForStmt': return yield* this.para(no)
       case 'SwitchStmt': return yield* this.escolha(no)
-      case 'BreakStmt': yield this.linha(no); return FIM_DE_LACO
-      case 'ContinueStmt': yield this.linha(no); return PROXIMA_VOLTA
+      case 'BreakStmt': if (this.linha(no)) yield this.eventoLinha; return FIM_DE_LACO
+      case 'ContinueStmt': if (this.linha(no)) yield this.eventoLinha; return PROXIMA_VOLTA
       case 'ReturnStmt': {
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         const expr = no.inner?.[0]
         if (!expr) return { tipo: 'return', valor: undefined }
         const ret = this.quadro.retorno
@@ -536,12 +791,13 @@ export class MaquinaC {
       case 'LabelStmt': return yield* this.exec(no.inner[0])
       case 'CaseStmt': return yield* this.exec(no.inner[no.inner.length - 1])
       case 'DefaultStmt': return yield* this.exec(no.inner[0])
-      case 'GotoStmt': yield this.linha(no); return { tipo: 'goto', alvo: no.targetLabelDeclId }
+      case 'GotoStmt': if (this.linha(no)) yield this.eventoLinha; return { tipo: 'goto', alvo: no.targetLabelDeclId }
       case 'CXXTryStmt': return yield* this.tentar(no)
       default:
-        if (!ehExpressao(no)) throw new ErroC(`o passo a passo ainda não sabe executar "${no.kind}"`)
-        yield this.linha(no)
-        yield* this.val(no)
+        if (!(no.__ex ??= ehExpressao(no))) throw new ErroC(`o passo a passo ainda não sabe executar "${no.kind}"`)
+        if (this.linha(no)) yield this.eventoLinha
+        if (no.__sv ?? this.simplesVal(no)) this.valR(no)
+        else yield* this.val(no)
         return undefined
     }
   }
@@ -563,7 +819,7 @@ export class MaquinaC {
       let r
       if (init?.kind) yield* this.exec(init)
       for (;;) {
-        yield this.linha(no)
+        if (this.linha(no)) yield this.eventoLinha
         if (cond?.kind && !this.verdade(yield* this.val(cond))) break
         r = yield* this.exec(corpo)
         if (r === FIM_DE_LACO) { r = undefined; break }
@@ -571,13 +827,13 @@ export class MaquinaC {
         r = undefined
         if (inc?.kind) yield* this.val(inc)
       }
-      if (this.cpp) yield* this.destruirLocais(quadro, marcaVariaveis)
+      if (this.cpp && quadro.variaveis.length > marcaVariaveis) yield* this.destruirLocais(quadro, marcaVariaveis)
       return r
     } catch (e) {
       if (e instanceof ExcecaoCpp) yield* this.destruirLocais(quadro, marcaVariaveis)
       throw e
     } finally {
-      for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
+      if (quadro.variaveis.length > marcaVariaveis) for (const v of quadro.variaveis.splice(marcaVariaveis)) quadro.porId.delete(v.id)
       this.mem.desempilharAte(marcaPilha)
     }
   }
@@ -585,7 +841,7 @@ export class MaquinaC {
   * escolha(no) {
     const cond = no.inner[0]
     const corpo = no.inner[no.inner.length - 1]
-    yield this.linha(no)
+    if (this.linha(no)) yield this.eventoLinha
     const valor = yield* this.val(cond)
     const lista = corpo.kind === 'CompoundStmt' ? corpo.inner ?? [] : [corpo]
     const casa = (s) => {
@@ -605,10 +861,23 @@ export class MaquinaC {
   }
 
   * declarar(d) {
-    const tipo = this.tipos.de(d.type)
+    const tipo = this.resolver(this.tipos.de(d.type))
     const variavel = this.novaLocal(d, tipo)
-    const init = d.init ? d.inner?.[d.inner.length - 1] : null
+    const filhos = (d.inner ?? []).filter((c) => c.kind !== 'BindingDecl')
+    const init = d.init ? filhos[filhos.length - 1] : null
     if (init && ehExpressao(init)) yield* this.inicializar(variavel.endereco, tipo, init)
+    if (d.kind === 'DecompositionDecl') {
+      // auto [a, b] = par; — cada nome é um apelido para uma parte do objeto escondido
+      variavel.nome = `[${(d.inner ?? []).filter((c) => c.kind === 'BindingDecl').map((c) => c.name).join(', ')}]`
+      for (const b of d.inner ?? []) {
+        if (b.kind !== 'BindingDecl') continue
+        const expr = b.inner?.[b.inner.length - 1]
+        const tipo = b.type ?? expr.type // (o BindingDecl vem sem tipo: é o da expressão)
+        const v = { id: b.id, nome: b.name, tipo: this.tipos.de(tipo), tipoTexto: tipo.qualType, endereco: yield* this.end(expr), apelido: true }
+        this.quadro.variaveis.push(v)
+        this.quadro.porId.set(b.id, v)
+      }
+    }
   }
 
   * inicializar(e, t, x) {
@@ -729,6 +998,7 @@ export class MaquinaC {
   literal(no) { return this.literais.get(no.id) }
 
   * val(x) {
+    if (x.__sv ?? this.simplesVal(x)) return this.valR(x)
     switch (x.kind) {
       case 'IntegerLiteral': {
         const t = this.tipo(x)
@@ -741,6 +1011,7 @@ export class MaquinaC {
       case 'ConstantExpr':
         if (x.value !== undefined) {
           const t = this.tipo(x)
+          if (x.value === 'true' || x.value === 'false') return x.value === 'true' ? 1 : 0 // if constexpr
           return ehInteiro(t) ? this.normalizar(t, t.tamanho >= 8 ? BigInt(x.value) : Number(x.value)) : yield* this.val(x.inner[0])
         }
         return yield* this.val(x.inner[0])
@@ -763,13 +1034,14 @@ export class MaquinaC {
         if (this.cpp) return this.tipo(x).k === 'struct' && x.valueCategory === 'prvalue' ? yield* this.temporario(x) : yield* this.chamadaCpp(x)
         return yield* this.chamada(x)
       case 'UnaryExprOrTypeTraitExpr': {
-        const t = x.argType ? this.tipos.de(x.argType) : this.tipo(x.inner[0])
+        const t = x.argType ? this.resolver(this.tipos.de(x.argType)) : this.tipo(x.inner[0])
         return x.name === 'alignof' || x.name === '_Alignof' ? alinhamentoDe(t) : tamanhoDe(t)
       }
       case 'ArraySubscriptExpr':
       case 'MemberExpr':
       case 'CompoundLiteralExpr': return yield* this.end(x)
       case 'PredefinedExpr': return yield* this.val(x.inner[0])
+      case 'VAArgExpr': return this.lerVaArg(yield* this.end(x.inner[0]), this.tipo(x))
       case 'ImplicitValueInitExpr': return this.tipo(x).k === 'real' ? 0 : 0
       case 'StmtExpr': throw new ErroC('expressão-comando do GNU não funciona no passo a passo')
       default:
@@ -826,6 +1098,7 @@ export class MaquinaC {
   }
 
   * end(x) {
+    if (x.__se ?? this.simplesEnd(x)) return this.endR(x)
     switch (x.kind) {
       case 'DeclRefExpr': return this.enderecoDaVariavel(x.referencedDecl)
       case 'ParenExpr': return yield* this.end(x.inner[0])
@@ -842,31 +1115,12 @@ export class MaquinaC {
         const [a, b] = x.inner
         const va = yield* this.val(a)
         const vb = yield* this.val(b)
-        const aEhPonteiro = this.tipo(a).k === 'ptr'
-        const base = aEhPonteiro ? va : vb
-        const indice = Number(aEhPonteiro ? vb : va)
-        const noBase = aEhPonteiro ? a : b
-        const tam = tamanhoDe(this.tipo(x))
-        // Vetor declarado com tamanho (v[10], m[3][4]): confere o índice pelo tamanho dele.
-        const sub = noBase.kind === 'ImplicitCastExpr' && noBase.castKind === 'ArrayToPointerDecay' ? noBase.inner[0] : null
-        const tipoVetor = sub && this.tipo(sub)
-        if (tipoVetor?.k === 'array' && tipoVetor.n !== null) {
-          const n = tipoVetor.n
-          if (indice < 0 || indice > n || (indice === n && !this.permitirFim)) {
-            throw new ErroC(`índice ${indice} fora dos limites do vetor ${this.nomeDaExpressao(sub) ?? ''} (ele tem ${n} elementos: posições 0 a ${n - 1})`.replace('vetor  (', 'vetor ('), 0, EXPLICACOES.vetor)
-          }
-        } else if (base === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(noBase) ?? 'ponteiro'}[${indice}] com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
-        return base + indice * tam
+        return this.enderecoNoVetor(x, va, vb)
       }
       case 'MemberExpr': {
         if (this.cpp && this.globais.has(x.referencedMemberDecl)) return this.globais.get(x.referencedMemberDecl).endereco // membro static
         const base = x.inner[0]
-        const e = x.isArrow ? yield* this.val(base) : yield* this.end(base)
-        if (x.isArrow && e === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(base) ?? 'ponteiro'}->${x.name} com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
-        const tipoBase = x.isArrow ? this.tipo(base).alvo : this.tipo(base)
-        const campo = layout(tipoBase).campos.find((c) => c.nome === x.name)
-        if (!campo) throw new ErroC(`campo ${x.name} desconhecido`)
-        return e + campo.deslocamento
+        return this.enderecoDoCampo(x, x.isArrow ? yield* this.val(base) : yield* this.end(base))
       }
       case 'CompoundLiteralExpr': {
         const t = this.tipo(x)
@@ -894,6 +1148,306 @@ export class MaquinaC {
     return e
   }
 
+  /** v[i] (ou i[v]): o endereço do elemento, conferindo o índice de um vetor de tamanho conhecido. */
+  enderecoNoVetor(x, va, vb) {
+    const [a, b] = x.inner
+    const aEhPonteiro = this.tipo(a).k === 'ptr'
+    const base = aEhPonteiro ? va : vb
+    const indice = Number(aEhPonteiro ? vb : va)
+    const noBase = aEhPonteiro ? a : b
+    const tam = tamanhoDe(this.tipo(x))
+    // Vetor declarado com tamanho (v[10], m[3][4]): confere o índice pelo tamanho dele.
+    const sub = noBase.kind === 'ImplicitCastExpr' && noBase.castKind === 'ArrayToPointerDecay' ? noBase.inner[0] : null
+    const tipoVetor = sub && this.tipo(sub)
+    if (tipoVetor?.k === 'array' && tipoVetor.n !== null) {
+      const n = tipoVetor.n
+      if (indice < 0 || indice > n || (indice === n && !this.permitirFim)) {
+        throw new ErroC(`índice ${indice} fora dos limites do vetor ${this.nomeDaExpressao(sub) ?? ''} (ele tem ${n} elementos: posições 0 a ${n - 1})`.replace('vetor  (', 'vetor ('), 0, EXPLICACOES.vetor)
+      }
+    } else if (base === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(noBase) ?? 'ponteiro'}[${indice}] com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
+    return base + indice * tam
+  }
+
+  /** a.campo / p->campo, com o endereço (ou o ponteiro) de a já calculado. */
+  enderecoDoCampo(x, e) {
+    const base = x.inner[0]
+    if (x.isArrow && e === 0) throw new ErroC(`uso de ${this.nomeDaExpressao(base) ?? 'ponteiro'}->${x.name} com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
+    let campo = this.cacheDo(x).__campo
+    if (!campo) {
+      const tipoBase = x.isArrow ? this.tipo(base).alvo : this.tipo(base)
+      const campos = layout(tipoBase).campos
+      campo = campos.find((c) => c.id === x.referencedMemberDecl) ?? campos.find((c) => c.nome === x.name)
+      if (!campo) throw new ErroC(`campo ${x.name} desconhecido`)
+      x.__campo = campo
+    }
+    // campo que é referência (int &r; numa classe): o endereço é o que ela guarda
+    return campo.tipo.k === 'ref' ? this.mem.ler(campo.tipo, e + campo.deslocamento) : e + campo.deslocamento
+  }
+
+  /** ++ e -- no endereço e (devolve o valor de antes, se for pós-fixado). */
+  incrementar(x, e) {
+    const ts = this.tipo(x.inner[0])
+    const velho = this.mem.ler(ts, e)
+    const passo = x.opcode === '++' ? 1 : -1
+    let novo
+    if (ts.k === 'ptr') novo = (velho + passo * tamanhoDe(ts.alvo)) >>> 0
+    else if (ts.k === 'real') novo = this.converter(velho + passo, DOUBLE, ts)
+    else novo = this.normalizar(ts, typeof velho === 'bigint' ? velho + BigInt(passo) : velho + passo)
+    this.mem.escrever(ts, e, novo)
+    return x.isPostfix ? velho : novo
+  }
+
+  /** a += b (e os outros): grava no endereço e e devolve o resultado. */
+  compor(x, e, vb) {
+    const [a, b] = x.inner
+    const ta = this.tipo(a)
+    const atual = this.mem.ler(ta, e)
+    const op = x.opcode.slice(0, -1)
+    let resultado
+    if (ta.k === 'ptr') resultado = this.operar(op, atual, vb, ta, this.tipo(b), ta)
+    else {
+      const tl = this.tipos.de(x.computeLHSType)
+      const tr = this.tipos.de(x.computeResultType)
+      resultado = this.converter(this.operar(op, this.converter(atual, ta, tl), vb, tl, this.tipo(b), tr), tr, ta)
+    }
+    this.mem.escrever(ta, e, resultado)
+    return resultado
+  }
+
+  // ---- expressões simples, sem gerador -----------------------------------------------
+  // A maior parte das expressões (variáveis, contas, v[i], p->campo, x = y, i++) nunca pausa nem chama
+  // nada: são calculadas aqui, numa função comum, sem criar um gerador por nó. simplesVal/simplesEnd
+  // decidem isso uma vez por nó (guardado nele); valR/endR fazem exatamente o que val/end fariam.
+
+  simplesVal(x) {
+    let r = false
+    const naoClasse = () => !(this.cpp && this.tipo(x).k === 'struct')
+    switch (x.kind) {
+      case 'IntegerLiteral':
+      case 'CharacterLiteral':
+      case 'FloatingLiteral':
+      case 'StringLiteral':
+      case 'DeclRefExpr':
+      case 'UnaryExprOrTypeTraitExpr':
+      case 'ImplicitValueInitExpr':
+        r = true
+        break
+      case 'CXXBoolLiteralExpr':
+      case 'CXXNullPtrLiteralExpr':
+      case 'CXXThisExpr':
+      case 'CXXScalarValueInitExpr':
+        r = this.cpp
+        break
+      case 'ParenExpr':
+      case 'ConstantExpr':
+        r = this.simplesVal(x.inner[0])
+        break
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr':
+        switch (x.castKind) {
+          case 'LValueToRValue':
+          case 'ArrayToPointerDecay': r = this.simplesEnd(x.inner[0]) && naoClasse(); break
+          case 'ConstructorConversion':
+          case 'UserDefinedConversion':
+          case 'DerivedToBase':
+          case 'UncheckedDerivedToBase':
+          case 'BaseToDerived': r = false; break
+          default: r = this.simplesVal(x.inner[0]) && naoClasse()
+        }
+        break
+      case 'UnaryOperator':
+        switch (x.opcode) {
+          case '&':
+          case '++':
+          case '--': r = this.simplesEnd(x.inner[0]); break
+          case '*':
+          case '+':
+          case '-':
+          case '~':
+          case '!':
+          case '__extension__': r = this.simplesVal(x.inner[0]); break
+          default: r = false
+        }
+        break
+      case 'BinaryOperator':
+        r = x.opcode === '='
+          ? this.simplesEnd(x.inner[0]) && this.simplesVal(x.inner[1]) && !(this.cpp && this.tipo(x.inner[0]).k === 'struct')
+          : this.simplesVal(x.inner[0]) && this.simplesVal(x.inner[1])
+        break
+      case 'CompoundAssignOperator':
+        r = this.simplesEnd(x.inner[0]) && this.simplesVal(x.inner[1])
+        break
+      case 'ConditionalOperator':
+        r = x.inner.every((f) => this.simplesVal(f)) && naoClasse()
+        break
+      case 'ArraySubscriptExpr':
+      case 'MemberExpr':
+        r = this.simplesEnd(x)
+        break
+      default:
+    }
+    x.__sv = r
+    return r
+  }
+
+  simplesEnd(x) {
+    let r = false
+    switch (x.kind) {
+      case 'DeclRefExpr':
+      case 'StringLiteral':
+        r = true
+        break
+      case 'ParenExpr':
+      case 'ConstantExpr':
+        r = this.simplesEnd(x.inner[0])
+        break
+      case 'UnaryOperator':
+        r = x.opcode === '*' && this.simplesVal(x.inner[0])
+        break
+      case 'ArraySubscriptExpr':
+        r = this.simplesVal(x.inner[0]) && this.simplesVal(x.inner[1])
+        break
+      case 'MemberExpr':
+        r = x.isArrow ? this.simplesVal(x.inner[0]) : this.simplesEnd(x.inner[0])
+        break
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr':
+        if (x.castKind === 'DerivedToBase' || x.castKind === 'UncheckedDerivedToBase') r = false
+        else r = (x.castKind === 'NoOp' || x.castKind === 'LValueBitCast' || x.castKind === 'LValueToRValue' || x.valueCategory === 'lvalue') && this.simplesEnd(x.inner[0])
+        break
+      default:
+    }
+    x.__se = r
+    return r
+  }
+
+  valR(x) {
+    switch (x.kind) {
+      // (os mais comuns primeiro: o switch compara um caso por vez)
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr': {
+        const sub = x.inner[0]
+        switch (x.castKind) {
+          case 'LValueToRValue': return this.carregar(this.tipo(x), this.endR(sub))
+          case 'ArrayToPointerDecay': return this.endR(sub)
+          case 'FunctionToPointerDecay':
+          case 'BuiltinFnToFnPtr':
+          case 'NoOp':
+          case 'LValueBitCast': return this.valR(sub)
+          case 'NullToPointer': this.valR(sub); return 0
+          case 'ToVoid': this.valR(sub); return undefined
+          default: return this.converter(this.valR(sub), this.tipo(sub), this.tipo(x))
+        }
+      }
+      case 'DeclRefExpr': {
+        const r = x.referencedDecl
+        if (r.kind === 'EnumConstantDecl') return this.enums.get(r.id)
+        if (r.kind === 'FunctionDecl' || r.kind === 'CXXMethodDecl') return this.enderecoDeFuncao(r.name)
+        return this.enderecoDaVariavel(r)
+      }
+      case 'IntegerLiteral': {
+        const t = this.tipo(x)
+        return t.tamanho >= 8 ? this.normalizar(t, BigInt(x.value)) : Number(x.value)
+      }
+      case 'CharacterLiteral': return x.value
+      case 'FloatingLiteral': return Number(x.value)
+      case 'StringLiteral': return this.literal(x)
+      case 'CXXBoolLiteralExpr': return x.value ? 1 : 0
+      case 'CXXNullPtrLiteralExpr':
+      case 'CXXScalarValueInitExpr':
+      case 'ImplicitValueInitExpr': return 0
+      case 'CXXThisExpr': return this.quadro?.this ?? 0
+      case 'ParenExpr': return this.valR(x.inner[0])
+      case 'ConstantExpr':
+        if (x.value !== undefined) {
+          const t = this.tipo(x)
+          if (x.value === 'true' || x.value === 'false') return x.value === 'true' ? 1 : 0
+          return ehInteiro(t) ? this.normalizar(t, t.tamanho >= 8 ? BigInt(x.value) : Number(x.value)) : this.valR(x.inner[0])
+        }
+        return this.valR(x.inner[0])
+      case 'UnaryOperator': {
+        const sub = x.inner[0]
+        switch (x.opcode) {
+          case '&':
+            this.permitirFim = true
+            try {
+              return this.endR(sub)
+            } finally {
+              this.permitirFim = false
+            }
+          case '*': return this.endR(x)
+          case '+':
+          case '__extension__': return this.valR(sub)
+          case '-': {
+            const t = this.tipo(x)
+            const v = this.valR(sub)
+            return t.k === 'real' ? -v : this.normalizar(t, -v)
+          }
+          case '~': return this.normalizar(this.tipo(x), ~this.valR(sub))
+          case '!': return this.verdade(this.valR(sub)) ? 0 : 1
+          default: return this.incrementar(x, this.endR(sub)) // ++ e --
+        }
+      }
+      case 'BinaryOperator': {
+        const op = x.opcode
+        const [a, b] = x.inner
+        if (op === '&&') return this.verdade(this.valR(a)) && this.verdade(this.valR(b)) ? 1 : 0
+        if (op === '||') return this.verdade(this.valR(a)) || this.verdade(this.valR(b)) ? 1 : 0
+        if (op === ',') {
+          this.valR(a)
+          return this.valR(b)
+        }
+        if (op === '=') {
+          // no C++17 o lado direito vem antes do endereço do esquerdo (v[i] = ++i); no C a ordem não é definida
+          let e
+          if (!this.cpp) e = this.endR(a)
+          const v = this.valR(b)
+          if (this.cpp) e = this.endR(a)
+          this.guardar(this.tipo(a), e, v)
+          return v
+        }
+        const va = this.valR(a)
+        const vb = this.valR(b)
+        return this.operar(op, va, vb, this.tipo(a), this.tipo(b), this.tipo(x))
+      }
+      case 'CompoundAssignOperator': {
+        const vb = this.valR(x.inner[1])
+        return this.compor(x, this.endR(x.inner[0]), vb)
+      }
+      case 'ConditionalOperator': return this.valR(this.verdade(this.valR(x.inner[0])) ? x.inner[1] : x.inner[2])
+      case 'UnaryExprOrTypeTraitExpr': {
+        const t = x.argType ? this.tipos.de(x.argType) : this.tipo(x.inner[0])
+        return x.name === 'alignof' || x.name === '_Alignof' ? alinhamentoDe(t) : tamanhoDe(t)
+      }
+      default: return this.endR(x) // ArraySubscriptExpr e MemberExpr
+    }
+  }
+
+  endR(x) {
+    switch (x.kind) {
+      case 'DeclRefExpr': return this.enderecoDaVariavel(x.referencedDecl)
+      case 'StringLiteral': return this.literal(x)
+      case 'ParenExpr':
+      case 'ConstantExpr':
+      case 'ImplicitCastExpr':
+      case 'CStyleCastExpr': return this.endR(x.inner[0])
+      case 'UnaryOperator': {
+        const p = this.valR(x.inner[0])
+        if (p === 0) throw new ErroC(`uso de *${this.nomeDaExpressao(x.inner[0]) ?? 'ponteiro'} com o ponteiro valendo NULL`, 0, EXPLICACOES.nulo)
+        return p
+      }
+      case 'ArraySubscriptExpr': {
+        const va = this.valR(x.inner[0])
+        return this.enderecoNoVetor(x, va, this.valR(x.inner[1]))
+      }
+      default: { // MemberExpr
+        if (this.cpp && this.globais.has(x.referencedMemberDecl)) return this.globais.get(x.referencedMemberDecl).endereco
+        const base = x.inner[0]
+        return this.enderecoDoCampo(x, x.isArrow ? this.valR(base) : this.endR(base))
+      }
+    }
+  }
+
   // ---- operadores -----------------------------------------------------------------
 
   * unario(x) {
@@ -918,18 +1472,7 @@ export class MaquinaC {
       case '~': return this.normalizar(t, ~(yield* this.val(sub)))
       case '!': return this.verdade(yield* this.val(sub)) ? 0 : 1
       case '++':
-      case '--': {
-        const ts = this.tipo(sub)
-        const e = yield* this.end(sub)
-        const velho = this.mem.ler(ts, e)
-        const passo = op === '++' ? 1 : -1
-        let novo
-        if (ts.k === 'ptr') novo = (velho + passo * tamanhoDe(ts.alvo)) >>> 0
-        else if (ts.k === 'real') novo = this.converter(velho + passo, DOUBLE, ts)
-        else novo = this.normalizar(ts, typeof velho === 'bigint' ? velho + BigInt(passo) : velho + passo)
-        this.mem.escrever(ts, e, novo)
-        return x.isPostfix ? velho : novo
-      }
+      case '--': return this.incrementar(x, yield* this.end(sub))
       case '__extension__': return yield* this.val(sub)
       default: throw new ErroC(`operador ${op} ainda não funciona no passo a passo`)
     }
@@ -952,8 +1495,10 @@ export class MaquinaC {
     }
     if (op === '=') {
       const ta = this.tipo(a)
-      const e = yield* this.end(a)
+      let e
+      if (!this.cpp) e = yield* this.end(a) // (a ordem: ver valR)
       const v = yield* this.val(b)
+      if (this.cpp) e = yield* this.end(a)
       this.guardar(ta, e, v)
       return v
     }
@@ -1017,21 +1562,8 @@ export class MaquinaC {
   }
 
   * atribuicaoComposta(x) {
-    const [a, b] = x.inner
-    const ta = this.tipo(a)
-    const e = yield* this.end(a)
-    const atual = this.mem.ler(ta, e)
-    const vb = yield* this.val(b)
-    const op = x.opcode.slice(0, -1)
-    let resultado
-    if (ta.k === 'ptr') resultado = this.operar(op, atual, vb, ta, this.tipo(b), ta)
-    else {
-      const tl = this.tipos.de(x.computeLHSType)
-      const tr = this.tipos.de(x.computeResultType)
-      resultado = this.converter(this.operar(op, this.converter(atual, ta, tl), vb, tl, this.tipo(b), tr), tr, ta)
-    }
-    this.mem.escrever(ta, e, resultado)
-    return resultado
+    const vb = yield* this.val(x.inner[1])
+    return this.compor(x, yield* this.end(x.inner[0]), vb)
   }
 
   // ---- chamadas -----------------------------------------------------------------
@@ -1055,7 +1587,7 @@ export class MaquinaC {
     const def = this.funcoes.get(nome)
     const linhaDaChamada = this.linhaAtual
     if (def) {
-      const r = yield* this.chamarFuncao(def, args.map((a) => a.valor), linhaDaChamada)
+      const r = yield* this.chamarFuncao(def, args.map((a) => a.valor), linhaDaChamada, { argumentos: args })
       this.linhaAtual = linhaDaChamada
       return r
     }

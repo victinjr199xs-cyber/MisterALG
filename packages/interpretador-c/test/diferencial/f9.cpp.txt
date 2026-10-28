@@ -1,0 +1,260 @@
+@@@ f9-lambda-sort
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    vector<int> v = {5, 2, 9, 1, 7};
+    sort(v.begin(), v.end(), [](int a, int b) { return a > b; });
+    for (int x : v) cout << x << " ";
+    cout << endl;
+    auto it = find_if(v.begin(), v.end(), [](int x) { return x < 6; });
+    cout << *it << endl;
+    int soma = 0;
+    for_each(v.begin(), v.end(), [&soma](int x) { soma += x; });
+    cout << soma << " " << count_if(v.begin(), v.end(), [](int x) { return x % 2; }) << endl;
+    transform(v.begin(), v.end(), v.begin(), [](int x) { return x * 2; });
+    cout << accumulate(v.begin(), v.end(), 0) << endl;
+}
+@@@ f9-map-palavras
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <string>
+using namespace std;
+int main() {
+    string linha;
+    map<string, int> freq;
+    while (getline(cin, linha)) {
+        istringstream ss(linha);
+        string p;
+        while (ss >> p) freq[p]++;
+    }
+    for (auto& [k, v] : freq) cout << k << ": " << v << "\n";
+    for (const auto& par : freq) if (par.second > 1) cout << par.first << "!\n";
+}
+--- entrada
+a casa da casa
+de a b
+@@@ f9-set-unordered
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    set<int> s = {5, 1, 3, 1};
+    s.insert(4);
+    for (int x : s) cout << x << " ";
+    cout << s.count(3) << s.size() << endl;
+    unordered_map<string, int> m;
+    m["a"] = 1; m["b"] = 2; m["a"] += 5;
+    cout << m["a"] << m["b"] << m.count("z") << endl;
+    unordered_set<int> u{1, 2, 3, 2};
+    cout << u.size() << endl;
+    cout << *s.lower_bound(2) << " " << *prev(s.end()) << endl;
+}
+@@@ f9-pq-dijkstra
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    int n = 5;
+    vector<vector<pair<int,int>>> g(n);
+    g[0].push_back({1, 4}); g[0].push_back({2, 1}); g[2].push_back({1, 2});
+    g[1].push_back({3, 1}); g[2].push_back({3, 5}); g[3].push_back({4, 3});
+    vector<int> d(n, INT_MAX);
+    priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>> pq;
+    d[0] = 0; pq.push({0, 0});
+    while (!pq.empty()) {
+        auto [du, u] = pq.top(); pq.pop();
+        if (du > d[u]) continue;
+        for (auto [v, w] : g[u]) if (d[u] + w < d[v]) { d[v] = d[u] + w; pq.push({d[v], v}); }
+    }
+    for (int i = 0; i < n; i++) cout << i << ":" << d[i] << "\n";
+}
+@@@ f9-stack-queue-deque
+#include <iostream>
+#include <stack>
+#include <queue>
+#include <deque>
+#include <list>
+#include <array>
+#include <algorithm>
+using namespace std;
+int main() {
+    stack<int> s; queue<int> q; deque<int> d; list<int> l; array<int, 3> a = {3, 1, 2};
+    for (int i = 0; i < 4; i++) { s.push(i); q.push(i); d.push_front(i); l.push_back(i * i); }
+    d.push_back(9);
+    cout << s.top() << q.front() << d.front() << d.back() << l.back() << a.size() << endl;
+    s.pop(); q.pop();
+    cout << s.top() << q.front() << " " << d.size() << endl;
+    for (int x : l) cout << x << ",";
+    sort(a.begin(), a.end());
+    for (int x : a) cout << x;
+    cout << endl;
+}
+@@@ f9-sstream-parse
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    string linha = "10 20 30 abc 4.5";
+    stringstream ss(linha);
+    int a, b, c; string s; double d;
+    ss >> a >> b >> c >> s >> d;
+    cout << a + b + c << " " << s << " " << d << endl;
+    ostringstream out;
+    out << "x=" << a << ";y=" << setw(5) << setfill('0') << b;
+    cout << out.str() << endl;
+    string csv = "um,dois,tres";
+    istringstream is(csv); string campo;
+    while (getline(is, campo, ',')) cout << "[" << campo << "]";
+    cout << endl;
+}
+@@@ f9-iomanip-precisao
+#include <iostream>
+#include <iomanip>
+#include <cmath>
+using namespace std;
+int main() {
+    double pi = acos(-1.0);
+    cout << fixed << setprecision(3) << pi << endl;
+    cout << setw(10) << pi << "|" << setfill('*') << setw(8) << 42 << "|" << left << setw(6) << "ab" << "|" << endl;
+    cout << scientific << setprecision(2) << 12345.678 << endl;
+    cout << setprecision(4) << sqrt(2.0) << " " << pow(2, 10) << " " << floor(-2.5) << endl;
+}
+@@@ f9-unique-shared-ptr
+#include <iostream>
+#include <memory>
+#include <vector>
+using namespace std;
+struct No { int v; No(int x) : v(x) { cout << "No" << v << "\n"; } ~No() { cout << "~No" << v << "\n"; } };
+int main() {
+    unique_ptr<No> p = make_unique<No>(1);
+    shared_ptr<No> a = make_shared<No>(2);
+    { shared_ptr<No> b = a; cout << a.use_count() << endl; }
+    cout << a.use_count() << " " << p->v << endl;
+    vector<unique_ptr<No>> v; v.push_back(make_unique<No>(3));
+    cout << v[0]->v << endl;
+}
+@@@ f9-tuple-pair-function
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    pair<string, int> p = make_pair("ana", 20);
+    tuple<int, double, string> t = make_tuple(1, 2.5, "x");
+    cout << p.first << p.second << get<0>(t) << get<1>(t) << get<2>(t) << endl;
+    function<int(int)> fat = [&](int n) { return n <= 1 ? 1 : n * fat(n - 1); };
+    cout << fat(5) << endl;
+    vector<pair<string,int>> v = {{"b", 2}, {"a", 2}, {"c", 1}};
+    sort(v.begin(), v.end(), [](auto& x, auto& y) { return x.second != y.second ? x.second > y.second : x.first < y.first; });
+    for (auto& [n, i] : v) cout << n << i << " ";
+    cout << endl;
+    auto [x, y] = p; cout << x << y << endl;
+}
+@@@ f9-algoritmos
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    vector<int> v = {4, 1, 3, 3, 9, 2};
+    sort(v.begin(), v.end());
+    v.erase(unique(v.begin(), v.end()), v.end());
+    for (int x : v) cout << x; cout << endl;
+    cout << binary_search(v.begin(), v.end(), 3) << (lower_bound(v.begin(), v.end(), 3) - v.begin()) << (upper_bound(v.begin(), v.end(), 3) - v.begin()) << endl;
+    reverse(v.begin(), v.end());
+    cout << *max_element(v.begin(), v.end()) << *min_element(v.begin(), v.end()) << endl;
+    v.erase(remove_if(v.begin(), v.end(), [](int x) { return x % 2 == 0; }), v.end());
+    for (int x : v) cout << x; cout << endl;
+    vector<int> w(5); iota(w.begin(), w.end(), 1);
+    cout << all_of(w.begin(), w.end(), [](int x) { return x > 0; }) << any_of(w.begin(), w.end(), [](int x) { return x > 4; }) << none_of(w.begin(), w.end(), [](int x) { return x > 5; }) << endl;
+    int p[] = {1, 2, 3}; do { cout << p[0] << p[1] << p[2] << " "; } while (next_permutation(p, p + 3));
+    fill(w.begin(), w.end(), 7); swap(w[0], w[1]); cout << accumulate(w.begin(), w.end(), 0) << endl;
+}
+@@@ f9-string-extras
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    string s = "Hello, World";
+    cout << s.substr(7, 5) << s.find("World") << (s.find('z') == string::npos) << endl;
+    s.replace(0, 5, "Ola"); s.erase(3, 1); s.insert(0, ">>");
+    cout << s << " " << stoi("42") + 1 << " " << stod("2.5") * 2 << " " << to_string(7) + to_string(1.5) << endl;
+    transform(s.begin(), s.end(), s.begin(), ::toupper);
+    cout << s << endl;
+    string a; getline(cin, a); int n; cin >> n; cout << a.size() << n << endl;
+}
+--- entrada
+um dois tres
+17
+@@@ f9-getline-loop
+#include <iostream>
+#include <string>
+#include <vector>
+using namespace std;
+int main() {
+    int n; cin >> n; cin.ignore();
+    vector<string> nomes;
+    for (int i = 0; i < n; i++) { string nome; getline(cin, nome); nomes.push_back(nome); }
+    string l;
+    while (getline(cin, l)) cout << "extra:" << l << "\n";
+    for (auto& x : nomes) cout << x.size() << x << endl;
+}
+--- entrada
+2
+Ana Maria
+Bia
+sobra 1
+sobra 2
+@@@ f9-struct-classe-vector
+#include <bits/stdc++.h>
+using namespace std;
+class Aluno {
+public:
+    string nome; double nota;
+    Aluno(string n, double x) : nome(n), nota(x) {}
+};
+int main() {
+    vector<Aluno> v = {{"Ana", 7.5}, {"Bia", 9.0}, {"Caio", 6.25}};
+    sort(v.begin(), v.end(), [](const Aluno& a, const Aluno& b) { return a.nota > b.nota; });
+    double m = 0; for (auto& a : v) { m += a.nota; cout << left << setw(6) << a.nome << fixed << setprecision(1) << a.nota << "\n"; }
+    cout << "media " << setprecision(2) << m / v.size() << endl;
+    map<char, vector<string>> por; for (auto& a : v) por[a.nome[0]].push_back(a.nome);
+    for (auto& [c, ns] : por) cout << c << ns.size();
+    cout << endl;
+}
+@@@ f9-map-iteradores
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    map<int, string> m = {{3, "c"}, {1, "a"}, {2, "b"}};
+    for (map<int, string>::iterator it = m.begin(); it != m.end(); ++it) cout << it->first << it->second;
+    cout << endl;
+    auto f = m.find(2); if (f != m.end()) m.erase(f);
+    m.insert({9, "z"}); m[0] = "o";
+    for (auto it = m.rbegin(); it != m.rend(); ++it) cout << it->first;
+    cout << m.size() << m.at(9) << endl;
+    multiset<int> ms = {3, 1, 3}; cout << ms.count(3) << endl;
+    map<string, int, greater<string>> g = {{"a", 1}, {"b", 2}}; cout << g.begin()->first << endl;
+}
+@@@ f9-excecao-limits
+#include <bits/stdc++.h>
+using namespace std;
+int main() {
+    try { vector<int> v(2); v.at(5); } catch (const out_of_range& e) { cout << "fora\n"; }
+    try { throw runtime_error("boom"); } catch (exception& e) { cout << e.what() << "\n"; }
+    cout << INT_MAX << " " << LLONG_MIN << " " << numeric_limits<double>::max() << " " << (int)numeric_limits<char>::digits << endl;
+    auto mn = min({3, 1, 2}); auto mx = max(2.5, 1.0); cout << mn << mx << abs(-3) << endl;
+}
+@@@ f9-lambda-captura-generica
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <functional>
+#include <string>
+using namespace std;
+int main() {
+    int base = 10;
+    auto soma = [base](int x) { return x + base; };
+    auto mult = [&base](int x) { base++; return x * base; };
+    auto gen = [](auto a, auto b) { return a + b; };
+    cout << soma(1) << " " << mult(2) << " " << base << " " << gen(1, 2.5) << " " << gen(string("a"), string("b")) << endl;
+    vector<function<int(int)>> fs = {soma, mult, [](int x) { return -x; }};
+    for (auto& f : fs) cout << f(3) << " ";
+    cout << endl;
+    vector<int> v = {1, 2, 3, 4};
+    sort(v.begin(), v.end(), greater<int>());
+    cout << v[0] << (count(v.begin(), v.end(), 2)) << endl;
+}

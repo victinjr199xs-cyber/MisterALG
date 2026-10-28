@@ -114,5 +114,129 @@
  "c/22-sair-codigo": {
   "saida": "antes\n",
   "codigo": 7
+ },
+ "cpp/stl01-lambdas-sort": {
+  "saida": "9 7 5 3 2 1 \nprimeiro par: 2\nsoma 27\nmaiores que 4: 3\nCarla 9.5\nAna 8.5\nDavi 7\nBruno 6\n49\n",
+  "codigo": 0
+ },
+ "cpp/stl02-map-palavras": {
+  "saida": "comeu: 1\ne: 1\ngato: 2\no: 4\nqueijo: 1\nrato: 1\ndistintas: 6\ngato aparece 2 vezes\nzebra nao aparece\ndepois do erase: 5\n",
+  "codigo": 0
+ },
+ "cpp/stl03-set-unordered": {
+  "saida": "1 3 4 5 9 | tamanho 5\ntem 3? 0 tem 4? 1\nmenor 1 maior 9\nlower_bound(6) = 9\nrepetidos 2 distintos 3\n49 10 0\ntres aparece 3 vezes; 12333\n",
+  "codigo": 0
+ },
+ "cpp/stl04-dijkstra": {
+  "saida": "dist[0] = 0\ndist[1] = 3\ndist[2] = 1\ndist[3] = 4\ndist[4] = 7\n9 8 4 3 1 \n",
+  "codigo": 0
+ },
+ "cpp/stl05-pilha-fila": {
+  "saida": "100\nfrente 10 fim 40 tamanho 4\n10 20 30 40 \n0123 -> 12\nabd 3\narray 5 7 soma 35\n",
+  "codigo": 0
+ },
+ "cpp/stl06-stringstream": {
+  "saida": "soma 100\n[ana][bia][caio]\nx=3 y=2.5 (9 letras)\n43 7 palavra\n",
+  "codigo": 0
+ },
+ "cpp/stl07-iomanip": {
+  "saida": "Produto      Preco\nArroz        22.90\nFeijao        8.46\nCafe         15.00\n00042\n1.235e+04\n0.333333\ntrue false 1\nff 255\n",
+  "codigo": 0
+ },
+ "cpp/stl08-ponteiros-inteligentes": {
+  "saida": "15\nmiau\nau\ncompartilhado 2\n1\n~Gato\n~Animal\n1\nfim\n~Gato\n~Animal\n~Animal\n",
+  "codigo": 0
+ },
+ "cpp/stl09-pair-tuple-function": {
+  "saida": "3 2\n5 3\nLia 20 1.65\nLia20\n42 42\n13 42 \n01\n",
+  "codigo": 0
+ },
+ "cpp/stl10-algoritmos": {
+  "saida": "soma 32\nmax 9 min 1\n1 2 2 4 6 8 9 \ntem 6? 1\nlower_bound(5) em 4\n1 2 4 6 8 9 \n9 8 6 4 2 1 \n1 4 9 16 25 \ncontagem de 2: 1\n73 9\n21\n123 132 213 231 312 321 \n6 4\n",
+  "codigo": 0
+ },
+ "cpp/stl11-string-metodos": {
+  "saida": "18 Programacao 12\nPROGRAMACAO EM C++\n++C me oacamargorP\npalindromo\nCodigo em C++\n9 1\nvogais 6\n42! 124 5\naXYbcz z a\nXYabcz\n",
+  "codigo": 0
+ },
+ "cpp/stl12-getline-laco": {
+  "saida": "3: terceira\n2: segunda com espacos\n1: primeira linha\nsobraram 2\n",
+  "codigo": 0
+ },
+ "cpp/stl13-classe-vector": {
+  "saida": "01\nAna: 125\nBeto: 20\ntotal 145\n0 1 2 \n3 4 5 \n6 7 8 \n",
+  "codigo": 0
+ },
+ "cpp/stl14-iteradores-map": {
+  "saida": "1=um 2=dois 3=tres 5=cinco \n5321\nDOIS cinco\ndepois do 2: 3\nprimeiro agora: 2 tamanho 3\nana: mat=9 port=7\nbia: mat=6\n",
+  "codigo": 0
+ },
+ "cpp/stl15-excecoes-limites": {
+  "saida": "2147483647 -2147483648\n9223372036854775807\n2.5\nerro: divisao por zero\nfora do vetor\nnao e numero\nexception: logica\nlido 42\n",
+  "codigo": 0
+ },
+ "cpp/stl16-lambda-captura": {
+  "saida": "3\n15\n123\n9 2.5 abd\n720\n3 6 9 12 15 18 \n3\n9\n",
+  "codigo": 0
+ },
+ "cpp/stl2-01-unordered-ordem": {
+  "saida": "eva=25 davi=40 caio=18 bia=31 ana=20 \n2:20 18:19 11:18 4:17 20:16 13:15 6:14 7:1 14:2 1:10 21:3 8:11 5:4 12:5 19:6 3:7 10:8 17:9 15:12 22:13 | baldes 29\n2 18 11 4 20 13 6 1 21 8 5 12 19 3 10 17 15 22 \nquatro tres dois cinco um 5\nn2a3b1\n",
+  "codigo": 0
+ },
+ "cpp/stl2-02-comparadores": {
+  "saida": "(1,1)(1,2)(2,5)(3,1)\nuva figo kiwi banana abacaxi \nc3b2a1\nestudar dormir comer lavar \n30 41 61 12 23 55 9 \n1 6\n",
+  "codigo": 0
+ },
+ "cpp/stl2-03-multimap-erase": {
+  "saida": "6bia 8ana 8caio 8eva 10davi | 3\nana,caio,eva,\n1:1 2:4 4:16 5:25 7:49 8:64 \n11 11 20\n11 14 17 20 \naabbc 2\nimpar:1 par:24 \n",
+  "codigo": 0
+ },
+ "cpp/stl2-04-list-deque": {
+  "saida": "123589\n985321\n1359 4 9 1\n7531\nabcde c e\nedcba\n5x\ntres dois um \n(0,0)(1,0)(0,1)(2,0)(1,1) 6\n",
+  "codigo": 0
+ },
+ "cpp/stl2-05-strings-avancado": {
+  "saida": "2024 10 26 \n7 Oratoroeuaroupadorei\nroupa,rato,roeu,rei,do,O,a,\ndlroW olleH 2\nabc acb bac bca cab cba \n0.33;0.67;1.00\n-42 375 73.500000\n[a][b][][c]\n",
+  "codigo": 0
+ },
+ "cpp/stl2-06-vetores-de-vetores": {
+  "saida": "311 312 5 98 \nbia   9.0\nana   7.5\ncaio   7.5\ndavi   6.0\n2 4 6 8 10 \n1 2 4 5 7 8 10 | 7\n73194 9\n....\n..#.\n....\n",
+  "codigo": 0
+ },
+ "cpp/20-cpp-vetor-ordem": {
+  "saida": "Beto=9 Ana=7.5 Caio=6.25 \nAna8.5,Beto10,Caio7.25,\n12 1\n30 5\n3\naaabnn\n1 9\n",
+  "codigo": 0
+ },
+ "cpp/21-cpp-ctor-dtor": {
+  "saida": "ctor a\nctor b\nctor c\ndtor c\ndtor b\ncopia a'\nusa\ndtor a'\nB()\nctor membro\nD()\nD::f\n~D()\ndtor membro\n~B()\nctor x\nctor y\nfim\ndtor y\ndtor x\ndtor a\n",
+  "codigo": 0
+ },
+ "cpp/22-cpp-excecoes": {
+  "saida": "2\nerro: div por zero\nf ok\n~G\n~G\ncod 5\nint 42\noutro\ninner ia\nouter ia\n",
+  "codigo": 0
+ },
+ "cpp/24-cpp-variadica": {
+  "saida": "60\n[log] x=7 s=ok f=2.50\n",
+  "codigo": 0
+ },
+ "c/30-variadicas": {
+  "saida": "6 0\n2.50\na, bb, ccc\n[LOG] x=5 y=ola z=2.5\n21 [n=42-abcdefghij]\ne=7\n9003\n10000000005\n11 12\ni=7 f=3.14 s=txt c=z \ni=5 c=A f=1.50 \n",
+  "codigo": 0
+ },
+ "c/31-vla": {
+  "saida": "30 16 16\n30 64 16\n  0  1  2\n  1  2  3\n8 5\n16 0.5\n32 1.5\n48 2.5\nabcd\n100 100\n",
+  "codigo": 0
+ },
+ "c/32-diversos": {
+  "saida": "1 5 0\n0 2 0 5 0 0 \n3 3\n9\n1 0 1\n3\n10 15\n5 4 3 1 1 \n<a><b><c>\n   42|42   |00042|ff|FF|10|z|hi|   3.142|1.234568e+04|0.0001|%|   ab|cd   |xy\ntrunc\n9223372036854775807 18446744073709551614 123\n4294967295\n4\n2147483649\nd 3 D\n8 12  99.5%\n",
+  "codigo": 0
+ },
+ "c/33-variadicas-repassando": {
+  "saida": "10 100\nINFO: iniciando app v1.2\nERRO: falha  99.5% em x (12345678901)\nAVISO: sem args\nid-007-ff 9\n3000000003\n9.2\n3\n30\n",
+  "codigo": 0
+ },
+ "c/34-vla-mais": {
+  "saida": "n=5 maior=9 bytes=20 itens=5\n60 30\n6 12\n120 3628800\nzzzzzzzzzz 10\n77\n30\n",
+  "codigo": 0
  }
 }

@@ -4,7 +4,7 @@
 
 import { ErroC, EXPLICACOES } from './erros.js'
 import { escanear, formatar } from './formatos.js'
-import { DOUBLE, INT, ponteiro } from './tipos.js'
+import { DOUBLE, INT, VOID, ponteiro } from './tipos.js'
 
 const v = (args, i) => args[i]?.valor
 const n = (args, i) => Number(args[i]?.valor)
@@ -65,6 +65,37 @@ export const BIBLIOTECA = {
   },
   * snprintf(m, args) {
     const s = formatar(m.cadeia(v(args, 2)), args.slice(3), (e, p) => m.cadeia(e, p))
+    const limite = n(args, 1)
+    if (limite > 0) m.mem.gravarCadeia(n(args, 0), s.slice(0, limite - 1))
+    return s.length
+  },
+  // va_list = ponteiro para os argumentos variáveis (wasm32): o primeiro argumento de va_start/va_copy chega como o endereço da variável.
+  * __builtin_va_start(m, args) {
+    m.mem.escrever(ponteiro(VOID), n(args, 0), m.quadro.varargs ?? 0)
+    return undefined
+  },
+  * __builtin_va_copy(m, args) {
+    m.mem.escrever(ponteiro(VOID), n(args, 0), m.mem.ler(ponteiro(VOID), n(args, 1)))
+    return undefined
+  },
+  * __builtin_va_end() { return undefined },
+  * vprintf(m, args) {
+    const s = formatar(m.cadeia(v(args, 0)), m.argumentosDeVaList(v(args, 1)), (e, p) => m.cadeia(e, p))
+    m.saida(s)
+    return s.length
+  },
+  * vfprintf(m, args) {
+    const s = formatar(m.cadeia(v(args, 1)), m.argumentosDeVaList(v(args, 2)), (e, p) => m.cadeia(e, p))
+    m.saida(s)
+    return s.length
+  },
+  * vsprintf(m, args) {
+    const s = formatar(m.cadeia(v(args, 1)), m.argumentosDeVaList(v(args, 2)), (e, p) => m.cadeia(e, p))
+    m.mem.gravarCadeia(n(args, 0), s)
+    return s.length
+  },
+  * vsnprintf(m, args) {
+    const s = formatar(m.cadeia(v(args, 2)), m.argumentosDeVaList(v(args, 3)), (e, p) => m.cadeia(e, p))
     const limite = n(args, 1)
     if (limite > 0) m.mem.gravarCadeia(n(args, 0), s.slice(0, limite - 1))
     return s.length
@@ -144,7 +175,7 @@ export const BIBLIOTECA = {
     const antigo = n(args, 0)
     const tamanho = n(args, 1)
     if (antigo === 0) return m.mem.malloc(tamanho)
-    const bloco = m.mem.heap.find((b) => b.inicio === antigo)
+    const bloco = m.mem.blocoDoHeap(antigo)
     if (!bloco) { m.mem.free(antigo); return 0 } // dá a mensagem certa (não veio do malloc / já liberado)
     const novo = m.mem.malloc(tamanho, false, { tipoElem: bloco.tipoElem })
     if (novo) {

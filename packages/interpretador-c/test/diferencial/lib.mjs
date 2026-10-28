@@ -1,12 +1,13 @@
 // Teste diferencial: o mesmo programa no gcc de verdade e no interpretador do MisterALG.
 //   node test/diferencial/lib.mjs            compara todos os programas (precisa do gcc) e mostra as diferenças
 //   node test/diferencial/lib.mjs --gravar   regrava esperados.json com a saída do gcc
+//   node test/diferencial/lib.mjs corpus-stl só os programas desse arquivo (e "stl0" só os que começam assim)
 // O teste automático (diferencial.test.mjs) usa só o esperados.json, então roda em qualquer máquina.
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { astDe } from '../ajudante.mjs'
 import { SessaoC } from '../../src/index.js'
 
@@ -42,13 +43,13 @@ export function rodarMotor(fonte, entrada, cpp = false) {
   })
 }
 
-const GCC = [process.env.GCC, 'D:\\REP. MR.CLAUDE\\ferramentas\\w64devkit\\bin\\gcc.exe'].filter(Boolean).find((c) => existsSync(c))
+const GCC = [process.env.GCC, 'D:\\REP. MR.CLAUDE\\ferramentas\\w64devkit\\bin\\gcc.exe', '/usr/bin/gcc'].filter(Boolean).find((c) => existsSync(c))
 const GPP = GCC && GCC.replace(/gcc(\.exe)?$/, 'g++$1')
 export const temGcc = Boolean(GCC)
 
 export function rodarReal(nome, fonte, entrada, cpp = false) {
   const dir = join(tmpdir(), 'misteralg-dif'); mkdirSync(dir, { recursive: true })
-  const src = join(dir, nome + (cpp ? '.cpp' : '.c')); const exe = join(dir, nome + '.exe')
+  const src = join(dir, nome + (cpp ? '.cpp' : '.c')); const exe = join(dir, nome + (process.platform === 'win32' ? '.exe' : ''))
   writeFileSync(src, fonte)
   const c = spawnSync(cpp ? GPP : GCC, cpp ? ['-std=c++17', src, '-o', exe] : ['-std=c11', '-w', src, '-o', exe, '-lm'], { encoding: 'utf8' })
   if (c.status !== 0) throw new Error(`gcc falhou em ${nome}:\n${c.stderr}`)
@@ -58,16 +59,20 @@ export function rodarReal(nome, fonte, entrada, cpp = false) {
 
 export function lerEsperados() { return JSON.parse(readFileSync(ARQUIVO_ESPERADOS, 'utf8')) }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1].replace(/\//g, '\\')) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (!temGcc) { console.error('gcc não encontrado (defina GCC=caminho)'); process.exit(1) }
   const gravar = process.argv.includes('--gravar')
-  const so = process.argv.find((a) => /^\d/.test(a))
-  const esperados = {}
+  const so = process.argv.slice(2).find((a) => /^(?!corpus)[^-]/.test(a))
+  const soArquivo = process.argv.slice(2).find((a) => a.startsWith('corpus'))
+  const esperados = lerEsperados() // só os programas rodados são regravados
+  let algum = false
   let ruins = 0
   for (const arq of ARQUIVOS_CORPUS()) {
+    if (soArquivo && !arq.startsWith(soArquivo)) continue
     const cpp = arq.includes('.cpp.')
     for (const p of lerCorpus(arq)) {
       if (so && !p.nome.startsWith(so)) continue
+      algum = true
       const real = rodarReal(p.nome, p.fonte, p.entrada, cpp)
       const motor = await rodarMotor(p.fonte, p.entrada, cpp).catch((e) => ({ saida: '', status: 'nao-compila', erro: e.message.slice(0, 300) }))
       esperados[(cpp ? 'cpp/' : 'c/') + p.nome] = real
@@ -79,6 +84,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1].replac
       } else console.log('ok', p.nome)
     }
   }
-  if (gravar && !so) writeFileSync(ARQUIVO_ESPERADOS, JSON.stringify(esperados, null, 1) + '\n')
+  if (gravar && algum) writeFileSync(ARQUIVO_ESPERADOS, JSON.stringify(esperados, null, 1) + '\n')
   console.log(ruins ? `${ruins} diferença(s)` : 'tudo igual')
 }

@@ -44,9 +44,110 @@ function textoDaString(mem, e) {
   return `"${new TextDecoder().decode(mem.bytes.slice(dados, dados + Math.min(n, 200)))}"`
 }
 
+/** Os nomes dos tipos internos da biblioteca do passo a passo do jeito que o aluno entende. */
+export function nomeAmigavel(nome) {
+  return String(nome)
+    .replace(/\bstd::/g, '')
+    .replace(/__lambda_(?:\w+?_)?(\d+)_\d+/g, 'lambda da linha $1')
+    .replace(/\(lambda at [^)]*?:(\d+):\d+\)/g, 'lambda da linha $1')
+    .replace(/\b__no_(?:arvore|hash|lista)</g, 'nó<')
+    .replace(/\b__elo_lista\b/g, 'nó')
+    .replace(/\b__it_\w+</g, 'iterator<')
+}
+
+const MAX_RESUMO = 20
+
+/** Os elementos guardados num contêiner da STL do passo a passo: [{ endereco, tipo }], ou null se não for um. */
+function elementos(maq, e, tipo) {
+  const mem = maq.mem
+  const campos = layout(tipo).campos
+  const campo = (lista, nome) => lista.find((c) => c.nome === nome)
+  const ler = (c, base = e) => mem.ler(c.tipo, base + c.deslocamento)
+  const base = tipo.rotulo.replace(/<.*/, '')
+  const itens = []
+  if (base === 'vector' || base === 'deque') {
+    const dados = campo(campos, '__dados')
+    const n = Number(ler(campo(campos, '__tamanho')))
+    const inicio = base === 'deque' ? Number(ler(campo(campos, '__inicio'))) : 0
+    const cap = base === 'deque' ? Number(ler(campo(campos, '__capacidade'))) : 0
+    const t = dados.tipo.alvo
+    const p = Number(ler(dados))
+    for (let i = 0; i < Math.min(n, MAX_RESUMO + 1); i += 1) itens.push({ endereco: p + (cap ? (inicio + i) % cap : i) * tamanhoDe(t), tipo: t })
+    return itens
+  }
+  if (base === 'array') {
+    const v = campo(campos, '__v')
+    for (let i = 0; i < Math.min(v.tipo.n, MAX_RESUMO + 1); i += 1) itens.push({ endereco: e + v.deslocamento + i * tamanhoDe(v.tipo.elem), tipo: v.tipo.elem })
+    return itens
+  }
+  if (base === 'list') {
+    const no = maq.tipos.de(`__no_lista${tipo.rotulo.slice(base.length)}`)
+    const valor = campo(layout(no).campos, 'valor')
+    const sentinela = Number(ler(campo(campos, '__sentinela')))
+    for (let n = mem.dv.getUint32(sentinela, true); n && n !== sentinela && itens.length <= MAX_RESUMO; n = mem.dv.getUint32(n, true)) {
+      itens.push({ endereco: n + valor.deslocamento, tipo: valor.tipo })
+    }
+    return itens
+  }
+  const parte = campos.find((c) => c.base && /^__(arvore|tabela)</.test(c.tipo.rotulo))
+  if (parte && /^(map|set|multimap|multiset)$/.test(base)) {
+    const raiz = campo(layout(parte.tipo).campos, '__raiz')
+    const camposNo = layout(raiz.tipo.alvo).campos
+    const [valor, esq, dir] = ['valor', 'esq', 'dir'].map((n) => campo(camposNo, n))
+    const visitar = (n) => {
+      if (!n || itens.length > MAX_RESUMO) return
+      visitar(Number(ler(esq, n)))
+      if (itens.length <= MAX_RESUMO) itens.push({ endereco: n + valor.deslocamento, tipo: valor.tipo })
+      visitar(Number(ler(dir, n)))
+    }
+    visitar(Number(ler(raiz, e + parte.deslocamento)))
+    return itens
+  }
+  if (parte && /^unordered_/.test(base)) {
+    const primeiro = campo(layout(parte.tipo).campos, '__primeiro')
+    const camposNo = layout(primeiro.tipo.alvo).campos
+    const [valor, prox] = ['valor', 'prox'].map((n) => campo(camposNo, n))
+    for (let n = Number(ler(primeiro, e + parte.deslocamento)); n && itens.length <= MAX_RESUMO; n = Number(ler(prox, n))) {
+      itens.push({ endereco: n + valor.deslocamento, tipo: valor.tipo })
+    }
+    return itens
+  }
+  return null
+}
+
+/** Um texto curto com o conteúdo: [1, 2, 3], {ana: 3, bia: 1}, (1, "x")... ou null. */
+function resumo(maq, e, tipo, nivel = 0) {
+  if (tipo.k !== 'struct') {
+    const d = descrever(maq, e, tipo, true)
+    return d.forma === 'valor' ? d.texto : d.forma === 'ponteiro' ? d.texto : d.texto ?? '…'
+  }
+  if (!tipo.decl || nivel > 3) return '…'
+  if (tipo.rotulo === 'string') return textoDaString(maq.mem, e) ?? '?'
+  const base = tipo.rotulo.replace(/<.*/, '')
+  const campos = layout(tipo).campos
+  if (base === 'pair') {
+    const [a, b] = ['first', 'second'].map((n) => campos.find((c) => c.nome === n))
+    return `(${resumo(maq, e + a.deslocamento, a.tipo, nivel + 1)}, ${resumo(maq, e + b.deslocamento, b.tipo, nivel + 1)})`
+  }
+  if (/^(stack|queue|priority_queue)$/.test(base)) {
+    const c = campos.find((x) => x.nome === 'c')
+    return resumo(maq, e + c.deslocamento, c.tipo, nivel)
+  }
+  const itens = elementos(maq, e, tipo)
+  if (!itens) return null
+  const mapa = /map$/.test(base)
+  const textos = itens.slice(0, MAX_RESUMO).map((it) => {
+    if (!mapa) return resumo(maq, it.endereco, it.tipo, nivel + 1)
+    const [k, v] = ['first', 'second'].map((n) => layout(it.tipo).campos.find((c) => c.nome === n))
+    return `${resumo(maq, it.endereco + k.deslocamento, k.tipo, nivel + 1)}: ${resumo(maq, it.endereco + v.deslocamento, v.tipo, nivel + 1)}`
+  })
+  if (itens.length > MAX_RESUMO) textos.push('…')
+  return /set$|map$/.test(base) ? `{${textos.join(', ')}}` : `[${textos.join(', ')}]`
+}
+
 export function descrever(maq, endereco, tipo, compacto = false) {
   const mem = maq.mem
-  const base = { endereco, tipo: tipo.nome }
+  const base = { endereco, tipo: nomeAmigavel(tipo.nome) }
   if (tipo.k === 'array') {
     const n = tipo.n ?? 0
     const tam = tamanhoDe(tipo.elem)
@@ -66,6 +167,13 @@ export function descrever(maq, endereco, tipo, compacto = false) {
       campos: layout(tipo).campos.filter((c) => !c.oculto).map((c) => ({ rotulo: c.base ? `(${c.nome})` : c.nome.replace(/^__/, ''), ...descrever(maq, endereco + c.deslocamento, c.tipo) })),
     }
     if (tipo.rotulo === 'string') r.texto = textoDaString(mem, endereco)
+    else if (tipo.decl.biblioteca) {
+      // contêiner da STL: o conteúdo num texto só (os campos de dentro continuam lá)
+      try {
+        const texto = resumo(maq, endereco, tipo)
+        if (texto) r.texto = texto
+      } catch { /* objeto ainda sendo construído: sem resumo */ }
+    }
     return r
   }
   if (tipo.k === 'void' || tipo.k === 'func') return { ...base, forma: 'valor', texto: '' }

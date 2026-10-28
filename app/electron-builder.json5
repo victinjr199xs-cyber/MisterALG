@@ -11,7 +11,11 @@
     // Python (Pyodide), PHP (php-wasm 8.3), C# (tree-sitter) e SQL (PGlite): scripts/preparar-linguagens.mjs monta esta pasta.
     { from: 'build/linguagens', to: 'linguagens' },
     // Menu Arquivo > Exemplos (src/main/menu.js).
-    { from: '../exemplos', to: 'exemplos', filter: ['**/*', '!README.md'] }],
+    { from: '../exemplos', to: 'exemplos', filter: ['**/*', '!README.md'] },
+    // Cabeçalhos pré-compilados do C++ (<iostream> e <bits/stdc++.h>): scripts/gerar-pch.mjs monta esta pasta.
+    { from: 'build/pch', to: 'pch' },
+    // Ícone da bandeja quando a janela fica em segundo plano (src/main/sistema.js).
+    { from: 'build/icon.png', to: 'icone.png' }],
   asarUnpack: ['out/main/compilador.js', 'out/main/rodar-wasm.js', 'out/main/rodar-python.js', 'out/main/rodar-php.js', 'out/main/rodar-sql.js'],
   npmRebuild: false,
   // Onde o app procura e baixa as versões novas (electron-updater). O CI só anexa os arquivos; quem publica a release é ele.

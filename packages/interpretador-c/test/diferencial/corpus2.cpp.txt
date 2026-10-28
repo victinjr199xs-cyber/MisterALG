@@ -1,0 +1,71 @@
+@@@ 20-cpp-vetor-ordem
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+using namespace std;
+struct Aluno { string nome; double nota; };
+bool porNome(const Aluno &a, const Aluno &b) { return a.nome < b.nome; }
+bool maiorNota(const Aluno &a, const Aluno &b) { return a.nota > b.nota; }
+void troca(int &a, int &b) { int t = a; a = b; b = t; }
+int main() {
+    vector<Aluno> v = { {"Ana", 7.5}, {"Beto", 9.0}, {"Caio", 6.25} };
+    sort(v.begin(), v.end(), maiorNota);
+    for (const auto &a : v) cout << a.nome << "=" << a.nota << " "; cout << endl;
+    sort(v.begin(), v.end(), porNome);
+    for (auto &a : v) a.nota += 1; for (auto a : v) cout << a.nome << a.nota << ","; cout << endl;
+    int x = 1, y = 2; troca(x, y); int &r = x; r += 10; cout << x << " " << y << endl;
+    vector<int> w(5); for (size_t i = 0; i < w.size(); i++) w[i] = i * i;
+    int soma = 0; for (int e : w) soma += e; cout << soma << " " << w.size() << endl;
+    string s = "banana"; int cont = 0; for (char c : s) if (c == 'a') cont++; cout << cont << endl;
+    sort(s.begin(), s.end()); cout << s << endl;
+    auto it = find(w.begin(), w.end(), 9); cout << (it != w.end()) << " " << *it << endl;
+    return 0;
+}
+@@@ 21-cpp-ctor-dtor
+#include <iostream>
+#include <string>
+using namespace std;
+class R { string n; public: R(string n) : n(n) { cout << "ctor " << n << endl; } R(const R &o) : n(o.n + "'") { cout << "copia " << n << endl; } ~R() { cout << "dtor " << n << endl; } };
+class B { public: B() { cout << "B()" << endl; } virtual ~B() { cout << "~B()" << endl; } virtual void f() { cout << "B::f" << endl; } };
+class D : public B { R r; public: D() : r("membro") { cout << "D()" << endl; } ~D() { cout << "~D()" << endl; } void f() override { cout << "D::f" << endl; } };
+void usa(R x) { cout << "usa" << endl; }
+int main() {
+    R a("a");
+    { R b("b"); R c("c"); }
+    usa(a);
+    B *p = new D(); p->f(); delete p;
+    R arr[2] = { R("x"), R("y") };
+    cout << "fim" << endl;
+    return 0;
+}
+@@@ 22-cpp-excecoes
+#include <iostream>
+#include <stdexcept>
+#include <string>
+using namespace std;
+struct Erro { int cod; };
+struct G { ~G() { cout << "~G" << endl; } };
+int dividir(int a, int b) { if (b == 0) throw runtime_error("div por zero"); return a / b; }
+void f(int n) { G g; if (n > 1) throw Erro{n}; cout << "f ok" << endl; }
+int main() {
+    try { cout << dividir(6, 3) << endl; dividir(1, 0); } catch (const runtime_error &e) { cout << "erro: " << e.what() << endl; }
+    try { f(1); f(5); } catch (Erro &e) { cout << "cod " << e.cod << endl; }
+    try { throw 42; } catch (int i) { cout << "int " << i << endl; }
+    try { throw string("txt"); } catch (const exception &e) { cout << "?" << endl; } catch (...) { cout << "outro" << endl; }
+    try { try { throw invalid_argument("ia"); } catch (const logic_error &e) { cout << "inner " << e.what() << endl; throw; } } catch (exception &e) { cout << "outer " << e.what() << endl; }
+    return 0;
+}
+@@@ 24-cpp-variadica
+#include <iostream>
+#include <cstdarg>
+#include <cstdio>
+#include <string>
+using namespace std;
+int soma(int n, ...) { va_list ap; va_start(ap, n); int s = 0; for (int i = 0; i < n; i++) s += va_arg(ap, int); va_end(ap); return s; }
+void log(const char *fmt, ...) { char buf[64]; va_list ap; va_start(ap, fmt); vsnprintf(buf, sizeof buf, fmt, ap); va_end(ap); cout << "[log] " << buf << endl; }
+int main() {
+    cout << soma(3, 10, 20, 30) << endl;
+    log("x=%d s=%s f=%.2f", 7, "ok", 2.5);
+    return 0;
+}

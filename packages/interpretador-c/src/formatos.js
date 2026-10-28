@@ -79,7 +79,9 @@ function geral(v, prec, alternativo, maiusculo) {
 export function formatar(formato, args, lerCadeia) {
   let saida = ''
   let a = 0
-  const proximo = () => {
+  // args também pode ser uma função (vprintf): ela lê do va_list o tipo pedido ('int', 'll', 'real' ou 'ptr').
+  const proximo = (classe = 'int') => {
+    if (typeof args === 'function') return args(classe)
     if (a >= args.length) throw new ErroC('o printf pede mais valores do que os que foram passados')
     return args[a++]
   }
@@ -101,7 +103,7 @@ export function formatar(formato, args, lerCadeia) {
     }
     largura = largura === undefined ? 0 : Number(largura)
     precisao = precisao === undefined ? undefined : Number(precisao || 0)
-    const arg = proximo()
+    const arg = proximo('cspn'.includes(conv) ? (conv === 'c' ? 'int' : 'ptr') : 'diouxX'.includes(conv) ? (mod === 'll' || mod === 'j' ? 'll' : 'int') : 'real')
     let corpo = ''
     let sinal = ''
     let numerico = true

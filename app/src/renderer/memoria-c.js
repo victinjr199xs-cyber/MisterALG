@@ -2,7 +2,7 @@
 // função), o heap (blocos do malloc) e as globais, com uma seta saindo de cada
 // ponteiro até o lugar para onde ele aponta. Fica no lugar da grade de variáveis.
 
-import { descrever, hex, tipoDoBloco } from '@misteralg/interpretador-c'
+import { descrever, hex, nomeAmigavel, tipoDoBloco } from '@misteralg/interpretador-c'
 
 const SVG = 'http://www.w3.org/2000/svg'
 
@@ -56,7 +56,7 @@ function valorEmElementos(d) {
 
 function linhaDeVariavel(nome, tipo, d, endereco) {
   const linha = el('div', 'mc-variavel')
-  linha.append(el('span', 'mc-nome', nome), el('span', 'mc-tipo', tipo), el('span', 'mc-conteudo'), el('span', 'mc-endereco', hex(endereco)))
+  linha.append(el('span', 'mc-nome', nome), el('span', 'mc-tipo', nomeAmigavel(tipo)), el('span', 'mc-conteudo'), el('span', 'mc-endereco', hex(endereco)))
   linha.children[2].append(valorEmElementos(d))
   return linha
 }

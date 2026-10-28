@@ -8,7 +8,7 @@ contextBridge.exposeInMainWorld('misteralg', {
   // A versão portátil do Windows (electron-builder) define esta variável; ela não passa pelo instalador.
   portatil: Boolean(process.env.PORTABLE_EXECUTABLE_DIR),
   // Testes e capturas usam uma pasta de dados própria; neles não abre a dica do dia.
-  automatizado: Boolean(process.env.MISTERALG_DADOS),
+  automatizado: Boolean(process.env.MISTERALG_DADOS) && !process.env.MISTERALG_TESTE_SISTEMA,
   prefs: { ler: invocar('prefs:ler'), gravar: invocar('prefs:gravar') },
   menu: {
     aoComando(fn) {

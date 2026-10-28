@@ -3,6 +3,8 @@
 // aluno ver como elas funcionam por dentro; os métodos são feitos em biblioteca-cpp.js.
 
 import { CABECALHOS_C } from './cabecalhos.js'
+import { CABECALHOS_STL, CASSERT, TODOS_OS_CABECALHOS } from './cabecalhos-stl.js'
+import { cabecalhosSobMedida } from './sob-medida.js'
 
 export const ARGUMENTOS_AST_CPP = [
   'clang++', '-fsyntax-only', '-nostdinc', '-nostdinc++', '-isystem', 'mini', '-std=c++20', '-fexceptions', '-fcxx-exceptions',
@@ -38,6 +40,7 @@ public:
 const STRING = `#pragma once
 #include <stddef.h>
 #include <initializer_list>
+#include <__base>
 namespace std {
 class string {
   char *__dados;
@@ -49,6 +52,8 @@ public:
   string(const char *s);
   string(const string &s);
   string(size_t n, char c);
+  string(const string &s, size_t pos, size_t n = npos) : __dados(), __tamanho(), __capacidade() { *this = s.substr(pos, n); } // @se substr
+  template <class I, class = decltype(*I())> string(I a, I b) : __dados(), __tamanho(), __capacidade() { for (; a != b; ++a) push_back(*a); } // @se begin end rbegin rend data c_str
   ~string();
   string &operator=(const string &s);
   string &operator=(const char *s);
@@ -61,21 +66,38 @@ public:
   bool empty() const;
   void clear();
   char &operator[](size_t i);
+  const char &operator[](size_t i) const;
   char &at(size_t i);
   char &front();
   char &back();
   const char *c_str() const;
+  const char *data() const; // @se data
   void push_back(char c);
   void pop_back();
   string substr(size_t pos, size_t n = npos) const;
   size_t find(const string &s, size_t pos = 0) const;
   size_t find(char c, size_t pos = 0) const;
-  int compare(const string &s) const;
-  string &append(const string &s);
-  string &insert(size_t pos, const string &s);
-  string &erase(size_t pos, size_t n = npos);
+  size_t rfind(const string &s, size_t pos = npos) const; // @se rfind
+  size_t rfind(char c, size_t pos = npos) const; // @se rfind
+  size_t find_first_of(const string &s, size_t pos = 0) const; // @se find_first_of
+  size_t find_last_of(const string &s, size_t pos = npos) const; // @se find_last_of
+  size_t find_first_not_of(const string &s, size_t pos = 0) const; // @se find_first_not_of
+  size_t find_last_not_of(const string &s, size_t pos = npos) const; // @se find_last_not_of
+  string &replace(size_t pos, size_t n, const string &s); // @se replace
+  void resize(size_t n, char c = 0); // @se resize
+  void swap(string &s); // @se swap
+  string &assign(const string &s); // @se assign
+  void reserve(size_t n) {}
+  int compare(const string &s) const; // @se compare
+  string &append(const string &s); // @se append
+  string &insert(size_t pos, const string &s); // @se insert
+  string &erase(size_t pos, size_t n = npos); // @se erase
   char *begin();
   char *end();
+  const char *begin() const;
+  const char *end() const;
+  reverse_iterator<char *> rbegin() { return reverse_iterator<char *>(end()); } // @se rbegin rend
+  reverse_iterator<char *> rend() { return reverse_iterator<char *>(begin()); } // @se rbegin rend
 };
 string operator+(const string &a, const string &b);
 string operator+(const string &a, const char *b);
@@ -90,17 +112,27 @@ bool operator<(const string &a, const string &b);
 bool operator>(const string &a, const string &b);
 bool operator<=(const string &a, const string &b);
 bool operator>=(const string &a, const string &b);
+// @se to_string
 string to_string(int v);
+string to_string(unsigned int v);
+string to_string(long v);
 string to_string(long long v);
+string to_string(unsigned long long v);
 string to_string(double v);
-int stoi(const string &s);
-double stod(const string &s);
+// @fim
+int stoi(const string &s); // @se stoi
+long stol(const string &s); // @se stol
+long long stoll(const string &s); // @se stoll
+double stod(const string &s); // @se stod
+float stof(const string &s); // @se stof
+inline void swap(string &a, string &b) { a.swap(b); } // @se swap
 }
 `
 
 const IOSTREAM = `#pragma once
 #include <string>
 namespace std {
+typedef long long streamsize;
 struct __setprecision { int n; };
 struct __setw { int n; };
 struct __setfill { char c; };
@@ -125,6 +157,11 @@ public:
   ostream &operator<<(__setw p);
   ostream &operator<<(__setfill p);
   ostream &flush();
+  ostream &put(char c); // @se put
+  int precision(int n); // @se precision
+  int precision() const; // @se precision
+  int width(int n); // @se width
+  char fill(char c); // @se fill
 };
 class istream {
   int __id;
@@ -139,10 +176,16 @@ public:
   istream &operator>>(bool &b);
   istream &operator>>(string &s);
   istream &operator>>(char *s);
+  istream &operator>>(unsigned long long &v);
+  istream &operator>>(short &v); // @se short
+  istream &operator>>(istream &(*manipulador)(istream &)); // @se ws
   explicit operator bool() const;
   bool operator!() const;
-  istream &ignore(long n = 1, int ate = -1);
+  istream &ignore(streamsize n = 1, int ate = -1);
   int get();
+  istream &get(char &c); // @se get
+  int peek(); // @se peek
+  bool good() const; // @se good
   bool eof() const;
   bool fail() const;
   void clear();
@@ -151,9 +194,26 @@ extern ostream cout;
 extern ostream cerr;
 extern istream cin;
 ostream &endl(ostream &o);
+ostream &flush(ostream &o);
 ostream &fixed(ostream &o);
+ostream &scientific(ostream &o);
 ostream &defaultfloat(ostream &o);
+ostream &left(ostream &o);
+ostream &right(ostream &o);
+ostream &internal(ostream &o);
+ostream &boolalpha(ostream &o);
+ostream &noboolalpha(ostream &o);
+ostream &showpoint(ostream &o);
+ostream &noshowpoint(ostream &o);
+ostream &showpos(ostream &o);
+ostream &noshowpos(ostream &o);
+ostream &uppercase(ostream &o);
+ostream &nouppercase(ostream &o);
+ostream &hex(ostream &o);
+ostream &dec(ostream &o);
+ostream &oct(ostream &o);
 istream &getline(istream &is, string &s);
+istream &getline(istream &is, string &s, char fim);
 istream &ws(istream &is);
 __setprecision setprecision(int n);
 __setw setw(int n);
@@ -164,52 +224,77 @@ __setfill setfill(char c);
 const VECTOR = `#pragma once
 #include <stddef.h>
 #include <initializer_list>
+#include <__base>
 namespace std {
 template <class T> class vector {
   T *__dados;
   size_t __tamanho;
   size_t __capacidade;
 public:
+  typedef T *iterator; // @se iterator
+  typedef const T *const_iterator; // @se const_iterator
+  typedef T value_type; // @se value_type
   vector();
   vector(size_t n);
   vector(size_t n, const T &valor);
   vector(initializer_list<T> lista);
   vector(const vector &outro);
-  ~vector();
+  ~vector() {
+    if (false) {
+      new (__dados) T(*__dados);
+      __exigir_padrao(__dados, 0);
+    }
+    __destruir();
+  }
+  void __destruir();
   vector &operator=(const vector &outro);
+  template <class I, class = decltype(*I())> vector(I a, I b) : __dados(), __tamanho(), __capacidade() { for (; a != b; ++a) push_back(*a); }
+  template <class... A> void emplace_back(const A &...a) { push_back(T(a...)); } // @se emplace_back
   void push_back(const T &x);
-  void pop_back();
+  void pop_back(); // @se pop_back
   size_t size() const;
   bool empty() const;
   void clear();
-  void resize(size_t n);
+  void resize(size_t n); // @se resize
+  size_t capacity() const; // @se capacity
+  void reserve(size_t n) {} // @se reserve
+  void shrink_to_fit() {} // @se shrink_to_fit
   T &operator[](size_t i);
-  T &at(size_t i);
-  T &front();
-  T &back();
+  const T &operator[](size_t i) const;
+  T &at(size_t i); // @se at
+  const T &at(size_t i) const; // @se at
+  T &front(); // @se front
+  T &back(); // @se back
+  const T &front() const; // @se front
+  const T &back() const; // @se back
   T *begin();
   T *end();
-  T *data();
-  void insert(T *pos, const T &x);
-  void erase(T *pos);
+  const T *begin() const;
+  const T *end() const;
+  const T *cbegin() const; // @se cbegin cend
+  const T *cend() const; // @se cbegin cend
+  reverse_iterator<T *> rbegin() { return reverse_iterator<T *>(end()); } // @se rbegin rend
+  reverse_iterator<T *> rend() { return reverse_iterator<T *>(begin()); } // @se rbegin rend
+  T *data(); // @se data
+  T *insert(T *pos, const T &x); // @se insert
+  T *erase(T *pos); // @se erase
+  T *erase(T *a, T *b) { size_t i = a - begin(), n = b - a; for (size_t k = 0; k < n; k++) erase(begin() + i); return begin() + i; } // @se erase
+  void assign(size_t n, const T &v) { clear(); for (size_t i = 0; i < n; i++) push_back(v); } // @se assign
+  void swap(vector &o) { vector t = o; o = *this; *this = t; } // @se swap
 };
+// comparações: os elementos são comparados em JavaScript (com o == e o < deles, que o "if (false)" faz existir)
+template <class I, class C> bool __iguais_js(I a, I b, I c, I d, C &comp) { return false; }
+template <class I, class C> bool __menor_lexico_js(I a, I b, I c, I d, C &comp) { return false; }
+template <class T> bool operator==(const vector<T> &a, const vector<T> &b) { equal_to<> c; if (false) c(*a.begin(), *b.begin()); return __iguais_js(a.begin(), a.end(), b.begin(), b.end(), c); }
+template <class T> bool operator!=(const vector<T> &a, const vector<T> &b) { return !(a == b); }
+template <class T> bool operator<(const vector<T> &a, const vector<T> &b) { less<> c; if (false) c(*a.begin(), *b.begin()); return __menor_lexico_js(a.begin(), a.end(), b.begin(), b.end(), c); }
+template <class T> bool operator>(const vector<T> &a, const vector<T> &b) { return b < a; }
+template <class T> bool operator<=(const vector<T> &a, const vector<T> &b) { return !(b < a); }
+template <class T> bool operator>=(const vector<T> &a, const vector<T> &b) { return !(a < b); }
+template <class T> void swap(vector<T> &a, vector<T> &b) { a.swap(b); } // @se swap
 }
 `
 
-const ALGORITHM = `#pragma once
-namespace std {
-template <class T> void swap(T &a, T &b);
-template <class T> const T &max(const T &a, const T &b);
-template <class T> const T &min(const T &a, const T &b);
-template <class I> void sort(I inicio, I fim);
-template <class I, class C> void sort(I inicio, I fim, C comparar);
-template <class I> void reverse(I inicio, I fim);
-template <class I, class T> I find(I inicio, I fim, const T &valor);
-template <class I, class T> long count(I inicio, I fim, const T &valor);
-template <class I> I max_element(I inicio, I fim);
-template <class I> I min_element(I inicio, I fim);
-}
-`
 
 // As exceções da biblioteca são C++ de verdade (com corpo): o passo a passo executa como código do aluno.
 const EXCEPTION = `#pragma once
@@ -255,12 +340,49 @@ export const CABECALHOS_CPP = {
   iostream: IOSTREAM,
   iomanip: '#pragma once\n#include <iostream>\n',
   vector: VECTOR,
-  algorithm: ALGORITHM,
   exception: EXCEPTION,
   stdexcept: STDEXCEPT,
-  utility: '#pragma once\n#include <algorithm>\n',
+  ...CABECALHOS_STL,
+  cassert: CASSERT,
+  // (uma pasta é um objeto, para o clang do WebAssembly)
+  bits: { 'stdc++.h': `#pragma once\n${TODOS_OS_CABECALHOS.map((c) => `#include <${c}>`).join('\n')}\n` },
   cstddef: '#pragma once\n#include <stddef.h>\nnamespace std { using ::size_t; }\n',
   climits: '#pragma once\n#include <limits.h>\n',
   cstdint: '#pragma once\n#include <stdint.h>\n',
+  cstdarg: '#pragma once\n#include <stdarg.h>\n',
   ...Object.fromEntries(Object.entries(NOMES_C).map(([c, nomes]) => [c, envolver(c.slice(1), nomes)])),
+}
+
+// O que pode perder as funções e classes que o programa não usa (ver sob-medida.js).
+const PODAVEIS = ['__base', 'utility', 'algorithm', 'numeric', 'tuple', 'functional', 'memory', 'limits',
+  '__arvore', 'map', 'set', '__hash', 'unordered_map', 'unordered_set', 'queue']
+
+// <bits/stdc++.h>: os cabeçalhos leves sempre; os outros, se algum dos nomes deles aparece no programa.
+const SEMPRE_NO_BITS = ['cstdio', 'cstdlib', 'cstring', 'cmath', 'cctype', 'ctime', 'climits', 'cstdint', 'cstddef',
+  'iostream', 'iomanip', 'string', 'vector', 'algorithm', 'utility']
+const NOMES_NO_BITS = {
+  numeric: ['accumulate', 'iota', 'gcd', 'lcm', 'partial_sum', 'inner_product', 'adjacent_difference'],
+  sstream: ['stringstream', 'istringstream', 'ostringstream'],
+  tuple: ['tuple', 'tie', 'make_tuple', 'get'],
+  functional: ['function', 'hash'],
+  map: ['map', 'multimap'],
+  set: ['set', 'multiset'],
+  unordered_map: ['unordered_map', 'unordered_multimap'],
+  unordered_set: ['unordered_set', 'unordered_multiset'],
+  list: ['list'],
+  deque: ['deque'],
+  queue: ['queue', 'priority_queue'],
+  stack: ['stack'],
+  array: ['array'],
+  memory: ['unique_ptr', 'shared_ptr', 'make_unique', 'make_shared'],
+  limits: ['numeric_limits', 'streamsize'],
+  stdexcept: ['exception', 'logic_error', 'runtime_error', 'invalid_argument', 'out_of_range', 'length_error', 'domain_error',
+    'range_error', 'overflow_error', 'underflow_error', 'what'],
+}
+
+/** Os cabeçalhos do C++ só com o que este programa usa (o JSON do clang fica menor e sai mais rápido). */
+export function cabecalhosCppPara(fonte) {
+  return cabecalhosSobMedida(fonte, CABECALHOS_CPP, PODAVEIS, (usados) => [
+    ...SEMPRE_NO_BITS, ...Object.keys(NOMES_NO_BITS).filter((c) => NOMES_NO_BITS[c].some((n) => usados.has(n))),
+  ].filter((c) => TODOS_OS_CABECALHOS.includes(c)))
 }
