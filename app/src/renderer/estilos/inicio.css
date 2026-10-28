@@ -1,0 +1,123 @@
+/* Tela inicial repaginada (inicio.js): cartões, saudação e callout, nas cores do tema escolhido.
+   Vem depois de visualg.css e sobrescreve o antigo "launcher" escuro de linhas finas. */
+body.pagina-inicio { background: var(--fundo-janela); }
+
+.tela-inicial {
+  --fundo: var(--fundo-janela); --texto: inherit; --linha: var(--borda); --apagado: var(--detalhe); --mono: var(--fonte-codigo);
+  --r: max(var(--raio), 8px); --cartao: var(--fundo-campo);
+  background: var(--fundo-janela); color: var(--texto); font-family: var(--fonte-ui); color-scheme: inherit;
+}
+
+/* a barra fina de rótulos em caixa-alta dá lugar a texto normal */
+.inicio-rotulo, .inicio-aba, .inicio-chip, .inicio-ext, .inicio-selo, .inicio-criar, .inicio-opcao, .tela-inicial kbd {
+  font: 600 12px/1 var(--fonte-ui); letter-spacing: 0; text-transform: none;
+}
+.tela-inicial kbd { font-family: var(--fonte-codigo); font-size: 11px; font-weight: 500; }
+
+/* Barra de topo */
+.inicio-barra { height: 56px; padding: 0 24px; gap: 14px; border-bottom: 1px solid var(--linha); background: var(--fundo-janela); }
+.inicio-logo { display: inline-flex; align-items: center; gap: 9px; margin: 0; font: 800 17px/1 var(--fonte-ui); letter-spacing: -.01em; }
+.inicio-logo b { color: var(--destaque); }
+.inicio-logo-m {
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; font-style: normal; font-size: 15px;
+  background: var(--destaque); color: var(--fundo-campo);
+}
+.inicio-aba { padding: 6px 12px; border-radius: 999px; color: var(--apagado); }
+.inicio-aba.ativa { background: color-mix(in srgb, var(--destaque) 14%, transparent); color: var(--destaque); }
+.inicio-idioma {
+  padding: 7px 28px 7px 11px; border: 1px solid var(--linha); border-radius: var(--r); background: var(--cartao); color: var(--texto); font: 13px var(--fonte-ui);
+}
+.inicio-idioma option { background: var(--cartao); color: var(--texto); }
+
+/* Botões */
+.inicio-botao-claro, .inicio-botao-linha {
+  display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: var(--r); cursor: pointer;
+  font: 600 13px/1 var(--fonte-ui); letter-spacing: 0; text-transform: none; transition: background .15s, border-color .15s, transform .15s;
+}
+.inicio-botao-claro { border: 1px solid transparent; background: var(--destaque); color: var(--fundo-campo); }
+.inicio-botao-claro:hover { background: color-mix(in srgb, var(--destaque) 86%, var(--texto)); transform: translateY(-1px); }
+.inicio-botao-claro kbd { opacity: .75; }
+.inicio-botao-linha { border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); }
+.inicio-botao-linha:hover { border-color: var(--destaque); color: var(--destaque); }
+.inicio-botao-linha kbd { color: var(--apagado); }
+
+/* Conteúdo */
+.inicio-conteudo { width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px 28px 36px; gap: 22px; }
+
+.inicio-heroi { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; animation: inicio-subir .4s ease-out backwards; }
+.inicio-avatar { flex-shrink: 0; filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--destaque) 30%, transparent)); }
+.inicio-avatar .avatar-disco { background: var(--destaque); color: var(--fundo-campo); }
+.inicio-heroi-textos { flex: 1; min-width: 220px; }
+.inicio-ola { margin: 0; font: 800 30px/1.15 var(--fonte-ui); letter-spacing: -.02em; }
+.inicio-subtitulo { margin: 4px 0 0; font-size: 15px; color: var(--apagado); }
+.inicio-atalhos { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Callout (como no Notion): bloco suave com filete de destaque */
+.inicio-faixa {
+  align-items: center; gap: 14px; padding: 14px 18px; border: 1px solid color-mix(in srgb, var(--destaque) 22%, var(--linha)); border-inline-start: 4px solid var(--destaque);
+  border-radius: var(--r); background: color-mix(in srgb, var(--destaque) 8%, var(--cartao));
+}
+.inicio-chip { padding: 5px 10px; border-radius: 999px; background: var(--destaque); color: var(--fundo-campo); }
+.inicio-dica { font-size: 14.5px; }
+.inicio-dica b { color: var(--destaque); }
+.inicio-faixa-atualizacao { border-color: color-mix(in srgb, var(--sx-literal, #16a37f) 40%, var(--linha)); border-inline-start-color: var(--sx-literal, #16a37f); background: color-mix(in srgb, var(--sx-literal, #16a37f) 9%, var(--cartao)); }
+.inicio-faixa-atualizacao .inicio-chip { background: var(--sx-literal, #16a37f); }
+
+/* Títulos de seção */
+.inicio-filtros { align-items: baseline; gap: 12px; }
+.inicio-secao { margin: 0; font: 700 17px/1.2 var(--fonte-ui); letter-spacing: -.01em; }
+.inicio-secao em { font-style: normal; font-weight: 500; color: var(--apagado); }
+.inicio-filtros .inicio-rotulo { font-weight: 400; }
+
+/* Cartões das linguagens */
+.inicio-grade { gap: 14px; border: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.inicio-linguagem {
+  padding: 18px; gap: 10px; border: 1px solid var(--linha); border-radius: calc(var(--r) + 4px); background: var(--cartao); overflow: hidden;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--texto) 6%, transparent); transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.inicio-linguagem::after { inset: 0 0 auto 0; width: auto; height: 3px; transform: scaleX(0); transform-origin: left; }
+.inicio-linguagem:hover, .inicio-linguagem:focus-visible {
+  background: var(--cartao); border-color: color-mix(in srgb, var(--cor) 55%, var(--linha)); transform: translateY(-3px);
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--cor) 18%, transparent);
+}
+.inicio-linguagem:hover::after, .inicio-linguagem:focus-visible::after { transform: scaleX(1); }
+.inicio-celula-meio { padding: 0; gap: 14px; }
+.inicio-icone { width: 56px; height: 56px; border-radius: calc(var(--r) + 2px); }
+.inicio-icone .ic { width: 48px; height: 48px; }
+.inicio-nome { font-size: 22px; font-weight: 800; }
+.inicio-linguagem:hover .inicio-nome { color: var(--cor); }
+.inicio-resumo { font-size: 13.5px; }
+.inicio-ext {
+  position: absolute; top: 14px; inset-inline-end: 14px; padding: 4px 8px; border-radius: 999px; font-family: var(--fonte-codigo); font-size: 11px;
+  background: color-mix(in srgb, var(--cor) 12%, transparent); color: var(--texto);
+}
+.inicio-selo { margin: 0; padding: 4px 9px; border-radius: 999px; border: 0; background: color-mix(in srgb, var(--cor) 14%, transparent); color: var(--texto); }
+.inicio-visao { margin: 0; min-height: 2.8em; font-size: 13px; color: var(--apagado); }
+.inicio-criar {
+  margin: 4px 0 0; padding: 10px; border-radius: var(--r); background: color-mix(in srgb, var(--cor) 14%, transparent); color: var(--texto); font-size: 13px;
+}
+.inicio-linguagem:hover .inicio-criar { background: var(--cor); color: #fff; }
+
+/* Recentes: cartões */
+.inicio-recentes { border: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.inicio-link {
+  align-items: center; gap: 12px; padding: 11px 14px; border: 1px solid var(--linha); border-radius: var(--r); background: var(--cartao);
+}
+.inicio-link:hover { padding-left: 14px; border-color: var(--destaque); background: color-mix(in srgb, var(--destaque) 6%, var(--cartao)); }
+.inicio-recente-marca {
+  flex-shrink: 0; display: grid; place-items: center; min-width: 38px; height: 38px; padding: 0 4px; border-radius: 9px; font: 700 11px var(--fonte-codigo);
+  background: color-mix(in srgb, var(--cor, var(--destaque)) 18%, transparent); color: var(--texto);
+}
+.inicio-recente-textos { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.inicio-link b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.inicio-link small { font: 11.5px var(--fonte-ui); }
+
+/* Rodapé */
+.inicio-rodape { height: 44px; border-top: 1px solid var(--linha); background: var(--fundo-janela); }
+.inicio-opcao input { accent-color: var(--destaque); }
+.tela-inicial :is(button, select, input):focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
+
+@media (max-width: 1100px) { .inicio-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .inicio-grade { grid-template-columns: 1fr; } .inicio-ola { font-size: 24px; } }
+@media (prefers-reduced-motion: reduce) { .inicio-heroi { animation: none; } .inicio-linguagem, .inicio-botao-claro { transition: none; transform: none !important; } }
+:root[dir="rtl"] .inicio-link:hover { padding-right: 14px; }

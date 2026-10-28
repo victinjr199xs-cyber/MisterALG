@@ -5,6 +5,7 @@ import { DICAS } from './dicas.js'
 import { telaInicial } from './inicio.js'
 import { VERSAO } from '../compartilhado/versao.js'
 import { tradutor } from '../compartilhado/idiomas.js'
+import { temaPorId } from '../compartilhado/temas.js'
 import { traduzirPagina } from './traduzir-pagina.js'
 import { faixaDeAtualizacao } from './atualizacao.js'
 
@@ -19,6 +20,7 @@ api.menu.aoComando((id, dados) => {
 })
 
 let prefs = await api.prefs.ler()
+document.documentElement.dataset.tema = temaPorId(prefs.tema).id // as cores da tela inicial seguem o tema da IDE
 traduzirPagina(tradutor(prefs.idioma))
 // O MisterALG fechou com um algoritmo aberto: a IDE é quem oferece recuperá-lo.
 const recuperado = await api.recuperacao.ler()

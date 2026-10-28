@@ -19,6 +19,7 @@ import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 import { BARRA, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis, itensVisiveis, principaisLateral } from '../compartilhado/barra.js'
 import { criarAvatar } from './avatar.js'
 import { criarDisposicao } from './disposicao.js'
+import { criarPaleta } from './paleta.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
@@ -477,6 +478,12 @@ function rodar(id, dados) {
 }
 
 api.menu.aoComando(rodar)
+
+// Paleta de comandos (Ctrl+K / Ctrl+Shift+P): paleta.js liga o próprio atalho.
+criarPaleta({
+  api, rodar, prefs: () => prefs, t: (...a) => tradutor(prefs.idioma)(...a),
+  aplicarDisposicao: async (d) => { prefs = await api.prefs.gravar({ disposicao: d }); aplicarBarra() },
+})
 
 // ---- barra de ferramentas -----------------------------------------------------------
 
