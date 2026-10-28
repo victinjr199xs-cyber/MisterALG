@@ -808,4 +808,7 @@ export default {
   1278: "Papier",
   1279: "Hybrid hell",
   1280: "Hybrid dunkel",
+  1281: "An",
+  1282: "Aus",
+  1283: "Fahre mit der Maus über eine Option oder wähle sie aus, um Details zu sehen.",
 }

@@ -808,4 +808,7 @@ export default {
   1278: "Papier",
   1279: "Hybrydowy jasny",
   1280: "Hybrydowy ciemny",
+  1281: "Włączone",
+  1282: "Wyłączone",
+  1283: "Najedź na opcję lub zaznacz ją, aby zobaczyć szczegóły.",
 }

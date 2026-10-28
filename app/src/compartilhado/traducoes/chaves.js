@@ -863,4 +863,7 @@ export default {
   1278: "Papel",
   1279: "Híbrido claro",
   1280: "Híbrido escuro",
+  1281: "Ligado",
+  1282: "Desligado",
+  1283: "Passe o mouse ou use o teclado sobre uma opção para ver os detalhes.",
 }

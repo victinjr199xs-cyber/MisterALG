@@ -788,4 +788,7 @@ export default {
   1278: "Giấy",
   1279: "Lai sáng",
   1280: "Lai tối",
+  1281: "Bật",
+  1282: "Tắt",
+  1283: "Rê chuột vào một tùy chọn hoặc chọn nó để xem chi tiết.",
 }

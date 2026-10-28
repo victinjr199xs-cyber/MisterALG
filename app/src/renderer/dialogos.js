@@ -1,15 +1,16 @@
 // Janelas auxiliares da IDE, no estilo dos formulários do VisuAlg.
 
 import { BARRA, ESSENCIAIS, POSICOES, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis } from '../compartilhado/barra.js'
+import { VERSAO } from '../compartilhado/versao.js'
 import { criarAvatar } from './avatar.js'
 
 const raiz = () => document.getElementById('dialogos')
 
 /** Cria um <dialog> modal com título, corpo (Node) e botões. Resolve com o valor do botão. */
-export function janela({ titulo, corpo, botoes = [{ valor: 'ok', texto: 'Fechar', principal: true }], largura }) {
+export function janela({ titulo, corpo, botoes = [{ valor: 'ok', texto: 'Fechar', principal: true }], largura, classe, aoMontar }) {
   return new Promise((resolve) => {
     const d = document.createElement('dialog')
-    d.className = 'janela'
+    d.className = classe ? `janela ${classe}` : 'janela'
     if (largura) d.style.width = largura
     const h = document.createElement('h2')
     h.className = 'janela-titulo'
@@ -33,6 +34,7 @@ export function janela({ titulo, corpo, botoes = [{ valor: 'ok', texto: 'Fechar'
       resolve(d.returnValue || 'cancelar')
     })
     raiz().append(d)
+    aoMontar?.(d, { titulo: h, acoes })
     d.showModal()
     const foco = d.querySelector('[autofocus]') ?? acoes.querySelector('.principal')
     foco?.focus()
@@ -136,7 +138,27 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   const sel = (opcoes, atual) => el('select', {}, ...opcoes.map((o) => el('option', { value: String(o), textContent: String(o), selected: String(o) === String(atual) })))
   const fonte = sel(fontes.includes(prefs.fonte) ? fontes : [prefs.fonte, ...fontes], prefs.fonte)
   const tamanho = sel([10, 11, 12, 13, 14, 16, 18, 20], prefs.tamanho)
-  const tab = sel([2, 3, 4, 5, 6, 7, 8], prefs.tabulacao)
+  const tab = el('input', { type: 'range', min: '2', max: '8', step: '1', value: String(prefs.tabulacao) })
+  const tabValor = el('output', { className: 'cfg-valor', textContent: tab.value })
+  tab.addEventListener('input', () => { tabValor.textContent = tab.value })
+  // Linhas do menu: rótulo à esquerda, controle à direita; o painel de ajuda mostra data-nome / data-desc.
+  let seqCfg = 0
+  const linha = (rotulo, controle, desc, extra) => {
+    if (!controle.id) controle.id = `cfg-c${++seqCfg}`
+    const l = el('div', { className: 'cfg-linha' }, el('label', { htmlFor: controle.id, textContent: rotulo }), el('div', { className: 'cfg-ctl' }, controle, extra))
+    if (desc) l.dataset.desc = desc
+    return l
+  }
+  const interruptor = (caixa) => {
+    caixa.classList.add('cfg-toggle')
+    return el('span', { className: 'cfg-sw' }, caixa, el('span', { className: 'cfg-estado' }, el('span', { className: 'on', textContent: 'Ligado' }), el('span', { className: 'off', textContent: 'Desligado' })))
+  }
+  const linhaToggle = (caixa, texto, desc) => {
+    const l = el('label', { className: 'cfg-linha cfg-linha-toggle' }, el('span', { className: 'cfg-rotulo', textContent: texto }), interruptor(caixa))
+    if (desc) l.dataset.desc = desc
+    return l
+  }
+  const grupo = (texto) => el('h3', { className: 'cfg-grupo', textContent: texto })
   const disciplina = el('input', { value: prefs.disciplina })
   const professor = el('input', { value: prefs.professor })
   const entidade = el('input', { value: prefs.entidade })
@@ -153,6 +175,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     atualizarSeletores()
   }
   tema.addEventListener('change', prever)
+  const notaCores = 'Cores do código para o tema escolhido na aba Editor. Cada tema guarda as suas.'
   const linhasCores = CATEGORIAS_SINTAXE.map(([cat, rotulo]) => {
     const input = el('input', { type: 'color', id: `cor-${cat}` })
     input.addEventListener('input', () => {
@@ -160,7 +183,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
       aoPrever?.(tema.value, coresSintaxe[tema.value])
     })
     seletores.set(cat, input)
-    return el('div', { className: 'linha-cor' }, input, el('label', { htmlFor: input.id, textContent: rotulo }))
+    return linha(rotulo, input, notaCores)
   })
   const restaurar = el('button', { type: 'button', className: 'acao', textContent: 'Restaurar as cores do tema' })
   restaurar.addEventListener('click', () => {
@@ -168,7 +191,6 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     prever()
   })
   const abaCores = el('div', { className: 'aba-conteudo', hidden: true },
-    el('p', { className: 'nota', textContent: 'Cores do código para o tema escolhido na aba Editor. Cada tema guarda as suas.' }),
     ...linhasCores,
     el('div', { className: 'linha-botoes' }, restaurar),
   )
@@ -229,16 +251,16 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   )
 
   const abaEditor = el('div', { className: 'aba-conteudo' },
-    el('label', { textContent: 'Tema (cores da tela):' }), tema,
-    el('label', { textContent: 'Fonte:' }), fonte,
-    el('label', { textContent: 'Tamanho:' }), tamanho,
-    el('label', { textContent: 'Largura da Tabulação (colunas):' }), tab,
+    linha('Tema (cores da tela):', tema),
+    linha('Fonte:', fonte),
+    linha('Tamanho:', tamanho),
+    linha('Largura da Tabulação (colunas):', tab, null, tabValor),
   )
+  const notaPessoal = 'Esses dados entram no cabeçalho do "Novo" algoritmo e na abreviatura "#".'
   const abaPessoal = el('div', { className: 'aba-conteudo', hidden: true },
-    el('label', { textContent: 'Disciplina:' }), disciplina,
-    el('label', { textContent: 'Professor(a):' }), professor,
-    el('label', { textContent: 'Entidade (escola/faculdade):' }), entidade,
-    el('p', { textContent: 'Esses dados entram no cabeçalho do "Novo" algoritmo e na abreviatura "#".' }),
+    linha('Disciplina:', disciplina, notaPessoal),
+    linha('Professor(a):', professor, notaPessoal),
+    linha('Entidade (escola/faculdade):', entidade, notaPessoal),
   )
   // ---- aba Sistema: abrir junto com o computador e o que o X da janela faz ----
   const aoLigar = el('input', { type: 'checkbox', id: 'cfg-ao-ligar', checked: prefs.abrirAoLigar === true })
@@ -248,9 +270,8 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     ['fechar', 'Fechar o MisterALG'],
   ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.aoFechar ?? 'perguntar') })))
   const abaSistema = el('div', { className: 'aba-conteudo', hidden: true },
-    el('label', { className: 'dica-opcao' }, aoLigar, ' Abrir quando o computador ligar'),
-    el('label', { htmlFor: aoFechar.id, textContent: 'Ao fechar a janela:' }), aoFechar,
-    el('p', { className: 'nota', textContent: 'Em segundo plano, a janela some mas o MisterALG continua aberto, com um ícone perto do relógio. Clique nele para voltar.' }),
+    linhaToggle(aoLigar, 'Abrir quando o computador ligar'),
+    linha('Ao fechar a janela:', aoFechar, 'Em segundo plano, a janela some mas o MisterALG continua aberto, com um ícone perto do relógio. Clique nele para voltar.'),
   )
   // ---- aba Barra: posição, tamanho dos ícones e quais botões aparecem (prévia ao vivo; Cancelar desfaz) ----
   const selecao = (opcoes, atual) => el('select', {}, ...opcoes.map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === atual })))
@@ -280,22 +301,24 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   const listaBotoes = el('div', { className: 'lista-botoes-barra' },
     ...caixasBotoes.map((caixa) => {
       const dica = BARRA.find((i) => i[0] === caixa.dataset.botao)
-      return el('label', { className: 'dica-opcao' }, caixa, ` ${dicaPorPlataforma(dica[2], window.misteralg?.plataforma === 'darwin')}`)
+      return linhaToggle(caixa, dicaPorPlataforma(dica[2], window.misteralg?.plataforma === 'darwin'))
     }))
   const abaBarra = el('div', { className: 'aba-conteudo', hidden: true },
-    el('label', { textContent: 'Posição da barra de ferramentas:' }), posicao,
-    el('label', { textContent: 'Tamanho dos ícones:' }), tamIcones,
-    el('label', { textContent: 'Botões visíveis na barra:' }), listaBotoes,
+    linha('Posição da barra de ferramentas:', posicao),
+    linha('Tamanho dos ícones:', tamIcones),
+    grupo('Botões visíveis na barra:'), listaBotoes,
     el('div', { className: 'linha-botoes' }, restaurarBarra),
   )
 
   // ---- aba Conta: nome e foto (a foto é escolhida, recortada e guardada pelo main) ----
   const nomeConta = el('input', { id: 'cfg-nome-conta', value: prefs.conta?.nome ?? '', maxLength: 40 })
   const fotoPrevia = el('span', { className: 'conta-previa' })
+  const avatarCab = el('span', { className: 'cfg-avatar' })
   const erroFoto = el('p', { className: 'nota', role: 'alert' })
   let fotoAtual = conta.foto ?? null
   const redesenharFoto = () => {
     fotoPrevia.replaceChildren(criarAvatar({ nome: nomeConta.value, foto: fotoAtual }, 64))
+    avatarCab.replaceChildren(criarAvatar({ nome: nomeConta.value, foto: fotoAtual }, 36))
     remover.disabled = !fotoAtual
   }
   const escolher = el('button', { type: 'button', className: 'acao', textContent: 'Escolher foto…' })
@@ -315,7 +338,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   nomeConta.addEventListener('input', redesenharFoto)
   redesenharFoto()
   const abaConta = el('div', { className: 'aba-conteudo', hidden: true },
-    el('label', { textContent: 'Seu nome:' }), nomeConta,
+    linha('Seu nome:', nomeConta),
     el('div', { className: 'linha-botoes conta-linha' }, fotoPrevia, escolher, remover),
     erroFoto,
     el('p', { className: 'nota', textContent: 'A foto fica só neste computador.' }),
@@ -325,25 +348,69 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     editor: ['Editor', abaEditor], cores: ['Cores', abaCores], barra: ['Barra', abaBarra], conta: ['Conta', abaConta],
     listas: ['Listas', abaListas], pessoal: ['Personalizar', abaPessoal], sistema: ['Sistema', abaSistema],
   }
+  let tituloEl = null
   const botoesAba = Object.entries(ABAS).map(([id, [rotulo]]) => {
     const b = el('button', { type: 'button', textContent: rotulo })
+    b.setAttribute('role', 'tab')
     b.addEventListener('click', () => mostrar(id))
     return b
   })
   const mostrar = (escolhida) => {
-    Object.entries(ABAS).forEach(([id, [, painel]], i) => {
+    Object.entries(ABAS).forEach(([id, [rotulo, painel]], i) => {
       painel.hidden = id !== escolhida
+      painel.setAttribute('role', 'tabpanel')
       botoesAba[i].setAttribute('aria-selected', String(id === escolhida))
+      if (id === escolhida && tituloEl) tituloEl.textContent = rotulo
     })
     if (escolhida === 'cores') atualizarSeletores()
+    mostrarAjuda(null)
   }
+  // Painel de ajuda (coluna direita): nome e descrição da opção sob o mouse ou o foco.
+  const ajudaNome = el('h3', { className: 'cfg-ajuda-nome' })
+  const ajudaTexto = el('p', { className: 'cfg-ajuda-texto' })
+  const mostrarAjuda = (l) => {
+    const rotulo = l?.querySelector('label, .cfg-rotulo')?.textContent.replace(/\s*[:：]\s*$/, '') ?? ''
+    ajudaNome.textContent = rotulo
+    ajudaTexto.textContent = l ? (l.dataset.desc ?? '') : 'Passe o mouse ou use o teclado sobre uma opção para ver os detalhes.'
+  }
+  const ajuda = el('aside', { className: 'cfg-ajuda' }, ajudaNome, ajudaTexto)
+  const nav = el('div', { className: 'abas' }, ...botoesAba)
+  nav.setAttribute('role', 'tablist')
+  nav.setAttribute('aria-orientation', 'vertical')
+  nav.addEventListener('keydown', (e) => {
+    const passo = { ArrowDown: 1, ArrowUp: -1 }[e.key]
+    if (!passo) return
+    e.preventDefault()
+    const novo = botoesAba[(botoesAba.indexOf(document.activeElement) + passo + botoesAba.length) % botoesAba.length]
+    novo.focus()
+    novo.click()
+  })
+  const paineis = el('div', { className: 'cfg-paineis' }, ...Object.values(ABAS).map(([, painel]) => painel))
+  for (const ev of ['mouseover', 'focusin']) paineis.addEventListener(ev, (e) => mostrarAjuda(e.target.closest?.('.cfg-linha') ?? null))
   mostrar(ABAS[aba] ? aba : 'editor')
+  botoesAba[Object.keys(ABAS).indexOf(ABAS[aba] ? aba : 'editor')].autofocus = true
 
   const r = await janela({
     titulo: 'Opções de configuração do ambiente',
-    corpo: el('div', {}, el('div', { className: 'abas' }, ...botoesAba), ...Object.values(ABAS).map(([, painel]) => painel)),
+    corpo: el('div', { className: 'cfg-corpo' }, nav, paineis, ajuda),
     botoes: [{ valor: 'cancelar', texto: 'Cancelar' }, { valor: 'ok', texto: 'OK', principal: true }],
-    largura: '560px',
+    classe: 'config',
+    aoMontar: (d, { titulo: h, acoes }) => {
+      tituloEl = h
+      h.textContent = Object.values(ABAS)[botoesAba.findIndex((b) => b.getAttribute('aria-selected') === 'true')][0]
+      d.setAttribute('aria-label', 'Opções de configuração do ambiente')
+      d.setAttribute('aria-modal', 'true')
+      const fechar = el('button', { type: 'button', className: 'cfg-fechar', ariaLabel: 'Fechar' }, el('span', { textContent: '✕', ariaHidden: 'true' }), el('kbd', { textContent: 'Esc' }))
+      fechar.addEventListener('click', () => d.close('cancelar'))
+      d.prepend(el('header', { className: 'cfg-cab' }, h, avatarCab, fechar))
+      acoes.prepend(el('span', { className: 'cfg-versao', textContent: `v${VERSAO}` }))
+      // Tira os ":" dos rótulos depois que a tradução da página passou (o texto com ":" é a chave de tradução).
+      requestAnimationFrame(() => {
+        for (const rot of d.querySelectorAll('.cfg-linha > label, .cfg-grupo')) {
+          if (rot.firstChild?.nodeType === Node.TEXT_NODE) rot.firstChild.nodeValue = rot.firstChild.nodeValue.replace(/\s*[:：]\s*$/, '')
+        }
+      })
+    },
   })
   if (r !== 'ok') return null
   return {

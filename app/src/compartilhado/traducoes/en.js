@@ -808,4 +808,7 @@ export default {
   1278: "Paper",
   1279: "Hybrid light",
   1280: "Hybrid dark",
+  1281: "On",
+  1282: "Off",
+  1283: "Hover over or focus an option to see its details.",
 }

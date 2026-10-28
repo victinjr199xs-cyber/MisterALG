@@ -140,7 +140,7 @@ async function verificarMenusEDialogos({ avaliar, esperar }) {
 
   const DIALOGOS = {
     calculadora: /calculadora/i, calendario: /Calendário de \d{4}/, dica: /Dica do dia/, termos: /Termos de Uso/, sobre: /Sobre o MisterALG/,
-    pilha: /Pilha de Ativação/, perfil: /Perfil de execução/, configuracoes: /configuração/, 'configurar-cores': /configuração/, 'configurar-ia': /Assistente de IA/,
+    pilha: /Pilha de Ativação/, perfil: /Perfil de execução/, configuracoes: /^Editor$/, 'configurar-cores': /^Cores$/, 'configurar-ia': /Assistente de IA/,
     'ajuda-tela': /Tela do MisterALG/, 'ajuda-linguagem': /Linguagem \(Portugol\)/, 'ajuda-referencia': /Referência da Linguagem/,
     localizar: /Pesquisar o Texto/, substituir: /Substituir os textos/,
     'exportar-pascal': /Pascal/, 'exportar-c': /C \/ C\+\+/, 'exportar-java': /Java/,

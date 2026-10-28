@@ -789,4 +789,7 @@ export default {
   1278: "Kertas",
   1279: "Hibrida terang",
   1280: "Hibrida gelap",
+  1281: "Aktif",
+  1282: "Nonaktif",
+  1283: "Arahkan kursor ke opsi atau pilih untuk melihat detailnya.",
 }

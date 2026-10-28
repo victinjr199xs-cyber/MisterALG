@@ -805,4 +805,7 @@ export default {
   1278: "Kağıt",
   1279: "Karma açık",
   1280: "Karma koyu",
+  1281: "Açık",
+  1282: "Kapalı",
+  1283: "Ayrıntıları görmek için bir seçeneğin üzerine gelin veya onu seçin.",
 }

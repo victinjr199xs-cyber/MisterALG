@@ -808,4 +808,7 @@ export default {
   1278: "Carta",
   1279: "Ibrido chiaro",
   1280: "Ibrido scuro",
+  1281: "Attivo",
+  1282: "Disattivo",
+  1283: "Passa il mouse o seleziona un'opzione per vederne i dettagli.",
 }

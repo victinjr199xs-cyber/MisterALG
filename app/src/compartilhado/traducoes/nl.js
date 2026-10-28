@@ -808,4 +808,7 @@ export default {
   1278: "Papier",
   1279: "Hybride licht",
   1280: "Hybride donker",
+  1281: "Aan",
+  1282: "Uit",
+  1283: "Beweeg de muis over een optie of selecteer die om de details te zien.",
 }
