@@ -10,7 +10,8 @@ function conferir(nome, obtido, esperado) {
   if (!ok) throw new Error(`${nome}: esperado ${JSON.stringify(esperado)}`)
 }
 
-export default async ({ avaliar, esperar, digitar, tecla }) => {
+export default async ({ avaliar, esperar, digitar, tecla, classico }) => {
+  await classico() // o padrão novo é a disposição moderna; esta fumaça parte do visual clássico
   const M = 'window.__misteralg'
   const ate = async (expr, tentativas = 120, ms = 250) => {
     for (let i = 0; i < tentativas; i += 1) {

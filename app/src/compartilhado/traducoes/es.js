@@ -830,4 +830,7 @@ export default {
   1299: "Ningún problema ✨",
   1300: "Línea {0}",
   1301: "Guardado",
+  1302: "Pantalla de inicio",
+  1303: "Paso {0}",
+  1304: "Ir a la línea del problema",
 }

@@ -830,4 +830,7 @@ export default {
   1299: "Aucun problème ✨",
   1300: "Ligne {0}",
   1301: "Enregistré",
+  1302: "Écran d'accueil",
+  1303: "Étape {0}",
+  1304: "Aller à la ligne du problème",
 }

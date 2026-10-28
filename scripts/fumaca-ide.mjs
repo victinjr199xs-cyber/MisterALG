@@ -30,7 +30,8 @@ function conferir(nome, obtido, esperado) {
   if (!ok) throw new Error(`${nome}: esperado ${JSON.stringify(esperado)}`)
 }
 
-export default async ({ avaliar, esperar, digitar, tecla }) => {
+export default async ({ avaliar, esperar, digitar, tecla, classico }) => {
+  await classico() // o padrão novo é a disposição moderna; esta fumaça confere o visual clássico
   // A IDE pode estar parada na tela de termos (primeira abertura).
   for (let i = 0; i < 40; i += 1) {
     const pronto = await avaliar(`!!window.__misteralg || !!document.querySelector('dialog[open] .termos')`)

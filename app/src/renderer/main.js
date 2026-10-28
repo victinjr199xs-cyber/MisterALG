@@ -295,6 +295,8 @@ execucao = criarExecucao({
   },
 })
 
+execucao.aoEvento((tipo) => disposicao?.passo(tipo)) // "Passo N" no cabeçalho da disposição moderna
+
 let ultimoErro = null // para o Assistente de IA saber o que deu errado
 const assistente = criarAssistente({
   prefs: () => prefs,
@@ -489,7 +491,11 @@ disposicao = criarDisposicao({
   extensoes: EXTENSAO,
   alturaSalva: prefs.alturaPainel ?? 0,
   gravarAltura: async (px) => { prefs = await api.prefs.gravar({ alturaPainel: px }) },
+  colunaSalva: prefs.colunaRecolhida,
+  gravarColuna: async (recolhida) => { prefs = await api.prefs.gravar({ colunaRecolhida: recolhida }) },
   novo: (linguagem) => rodar('novo', linguagem),
+  telaInicial: () => rodar('tela-inicial'),
+  irParaLinha: (n) => editor.irParaLinha(Number(n)),
   abrirRecente: (caminho) => rodar('abrir-recente', caminho),
   abrirExemplo: (e) => rodar('exemplo', e),
 })

@@ -829,4 +829,7 @@ export default {
   1299: "Brak problemów ✨",
   1300: "Wiersz {0}",
   1301: "Zapisano",
+  1302: "Ekran startowy",
+  1303: "Krok {0}",
+  1304: "Przejdź do wiersza z problemem",
 }

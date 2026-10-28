@@ -13,6 +13,7 @@ const h = (tag, props = {}, ...filhos) => {
 }
 const ARQUIVO = (doc, ext) => (doc.caminho ? doc.caminho.split(/[\\/]/).pop() : `${doc.nome}.${ext[doc.linguagem]}`)
 const ICONE_PAINEL = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>'
+const SIGLAS = { portugol: 'Pt', c: 'C', cpp: 'C++', csharp: 'C#', javascript: 'JS', typescript: 'TS', python: 'Py', php: 'PHP', sql: 'SQL' }
 const ESTREITA = '(max-width: 1279px)' // abaixo disso a coluna de arquivos começa recolhida
 
 /**
@@ -24,13 +25,17 @@ export function criarDisposicao(op) {
   let montado = false
   let ativa = false
   let problema = null
+  let passos = 0
   let nos = {}
 
   const recolher = (fechado) => {
     raiz.dataset.canais = fechado ? 'fechado' : 'aberto'
     nos.alternar?.setAttribute('aria-expanded', String(!fechado))
   }
-  window.matchMedia(ESTREITA).addEventListener('change', (e) => { if (ativa) recolher(e.matches) })
+  // Sem escolha do usuário (colunaRecolhida null) a coluna segue a largura da janela; depois do primeiro clique, a escolha vale.
+  let escolha = typeof op.colunaSalva === 'boolean' ? op.colunaSalva : null
+  const inicial = () => escolha ?? window.matchMedia(ESTREITA).matches
+  window.matchMedia(ESTREITA).addEventListener('change', (e) => { if (ativa && escolha === null) recolher(e.matches) })
 
   function montar() {
     montado = true
@@ -39,14 +44,19 @@ export function criarDisposicao(op) {
 
     // Trilho: um botão por linguagem (o mesmo que "Novo" naquela linguagem); o avatar da conta mora embaixo.
     const lista = h('div', { className: 'trilho-lista' })
+    // "M" do app no topo: volta para a tela inicial (como o logo do servidor no Discord), separado das linguagens.
+    const inicio = h('button', { type: 'button', className: 'trilho-inicio', textContent: 'M' })
+    inicio.dataset.nome = t('Tela inicial')
+    inicio.setAttribute('aria-label', t('Tela inicial'))
+    inicio.addEventListener('click', () => op.telaInicial?.())
+    lista.append(inicio, h('hr', { className: 'trilho-sep' }))
     for (const l of LINGUAGENS) {
       const nome = t('Novo programa em {0}', l.nome)
-      const b = h('button', { type: 'button', className: 'trilho-lang' })
+      const b = h('button', { type: 'button', className: 'trilho-lang', textContent: SIGLAS[l.id] ?? l.nome.slice(0, 2) })
       b.dataset.lang = l.id
       b.dataset.nome = l.nome
       b.setAttribute('aria-label', nome)
       b.style.setProperty('--cor', l.cor)
-      b.innerHTML = ICONES_LINGUAGEM[l.id] // desenho fixo do próprio app
       b.addEventListener('click', () => op.novo(l.id))
       lista.append(b)
     }
@@ -54,7 +64,7 @@ export function criarDisposicao(op) {
     const dica = h('div', { className: 'trilho-dica', hidden: true })
     dica.setAttribute('role', 'tooltip')
     const mostrarDica = (e) => {
-      const b = e.target.closest?.('.trilho-lang')
+      const b = e.target.closest?.('.trilho-lang, .trilho-inicio')
       if (!b) return
       const r = b.getBoundingClientRect()
       dica.textContent = b.dataset.nome
@@ -87,20 +97,31 @@ export function criarDisposicao(op) {
     nos.alternar.setAttribute('aria-label', t('Mostrar ou ocultar a lista de arquivos'))
     nos.alternar.setAttribute('aria-controls', 'canais')
     nos.alternar.innerHTML = ICONE_PAINEL
-    nos.alternar.addEventListener('click', () => recolher(raiz.dataset.canais !== 'fechado'))
+    nos.alternar.addEventListener('click', () => {
+      escolha = raiz.dataset.canais !== 'fechado'
+      recolher(escolha)
+      op.gravarColuna?.(escolha)
+    })
     nos.icone = h('span', { className: 'cab-icone' })
     nos.titulo = h('h1', { className: 'cab-titulo' })
     nos.propLinguagem = h('b')
     nos.propEstado = h('b')
     nos.pontoEstado = h('i', { className: 'cab-ponto' })
     const prop = (rotulo, ...valor) => h('li', { className: 'cab-prop' }, h('span', { textContent: rotulo }), ...valor)
+    // Trilha do passo a passo (F8): o total de passos não é conhecido de antemão, então só "Passo N" e uma barrinha em movimento.
+    nos.passoTexto = h('span', { className: 'cab-passo-texto' })
+    nos.passo = h('div', { className: 'cab-passo', hidden: true }, nos.passoTexto, h('i', { className: 'cab-passo-barra' }))
+    nos.passo.setAttribute('role', 'status')
     const cab = h('header', { id: 'cab-pagina', className: 'cab-pagina' },
       h('div', { className: 'cab-linha' }, nos.alternar, nos.icone, nos.titulo),
-      h('ul', { className: 'cab-props' }, prop(t('Linguagem'), nos.propLinguagem), prop(t('Arquivo'), nos.pontoEstado, nos.propEstado)))
+      h('div', { className: 'cab-linha2' },
+        h('ul', { className: 'cab-props' }, prop(t('Linguagem'), nos.propLinguagem), prop(t('Arquivo'), nos.pontoEstado, nos.propEstado)),
+        nos.passo))
 
     // Divisor arrastável + abas do painel inferior.
     nos.divisor = h('div', { id: 'divisor', className: 'divisor', tabIndex: 0 })
     nos.divisor.setAttribute('role', 'separator')
+    nos.cab = cab
     nos.divisor.setAttribute('aria-orientation', 'horizontal')
     nos.divisor.setAttribute('aria-label', t('Redimensionar o painel inferior'))
     const aba = (id, rotulo) => {
@@ -115,6 +136,7 @@ export function criarDisposicao(op) {
     nos.selo = h('span', { className: 'aba-selo', hidden: true })
     nos.abaProblemas.append(nos.selo)
     const abas = h('div', { id: 'abas-inferior', className: 'abas-inferior' }, nos.abaTerminal, nos.abaProblemas)
+    nos.abas = abas
     abas.setAttribute('role', 'tablist')
     abas.addEventListener('keydown', (e) => {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
@@ -157,11 +179,23 @@ export function criarDisposicao(op) {
       main.style.setProperty('--h-inferior', `${v}px`)
       return v
     }
-    if (op.alturaSalva > 0) altura(op.alturaSalva)
+    let manual = op.alturaSalva > 0
+    if (manual) altura(op.alturaSalva)
+    // Sem altura escolhida: ~32% da área central (editor com pelo menos 200px, painel com pelo menos 120px).
+    const automatica = () => {
+      if (manual || !ativa) return
+      const H = main.clientHeight
+      if (!H) return
+      const reserva = nos.cab.offsetHeight + nos.divisor.offsetHeight + nos.abas.offsetHeight + 200
+      main.style.setProperty('--h-inferior', `${Math.max(120, Math.min(Math.round(H * 0.32), H - reserva))}px`)
+    }
+    new ResizeObserver(automatica).observe(main)
+    nos.automatica = automatica
     const atual = () => nos.terminal.getBoundingClientRect().height
     let ultimo = 0
     nos.divisor.addEventListener('pointerdown', (e) => {
       e.preventDefault()
+      manual = true
       nos.divisor.setPointerCapture(e.pointerId)
       const y0 = e.clientY
       const h0 = atual()
@@ -178,6 +212,7 @@ export function criarDisposicao(op) {
       const passo = { ArrowUp: 24, ArrowDown: -24 }[e.key]
       if (!passo) return
       e.preventDefault()
+      manual = true
       op.gravarAltura(altura(atual() + passo))
     })
   }
@@ -199,8 +234,11 @@ export function criarDisposicao(op) {
       nos.problemas.replaceChildren(h('p', { className: 'problemas-vazio', textContent: t('Nenhum problema ✨') }))
       return
     }
-    nos.problemas.replaceChildren(h('p', { className: 'problema' },
-      h('b', { textContent: t('Linha {0}', problema.linha ?? '?') }), h('span', { textContent: problema.mensagem ?? String(problema) })))
+    // Clicar (ou Enter) leva o cursor do editor até a linha do problema.
+    const item = h('button', { type: 'button', className: 'problema', title: t('Ir para a linha do problema') },
+      h('b', { textContent: t('Linha {0}', problema.linha ?? '?') }), h('span', { textContent: problema.mensagem ?? String(problema) }))
+    item.addEventListener('click', () => op.irParaLinha?.(problema?.linha))
+    nos.problemas.replaceChildren(item)
   }
 
   async function atualizarListas() {
@@ -252,8 +290,9 @@ export function criarDisposicao(op) {
         if (!montado) montar()
         raiz.dataset.disposicao = 'moderna'
         nos.rodape.append(nos.barraConta()) // o MESMO botão da conta passa para o rodapé do trilho
-        recolher(window.matchMedia(ESTREITA).matches)
+        recolher(inicial())
         atualizar()
+        nos.automatica?.()
       } else {
         delete raiz.dataset.disposicao
         delete raiz.dataset.canais
@@ -265,6 +304,17 @@ export function criarDisposicao(op) {
     problema(erro) {
       problema = erro
       if (montado) atualizarProblemas()
+    },
+    /** Eventos da execução (execucao.aoEvento): conta as pausas (um passo cada) e some ao terminar. */
+    passo(tipo) {
+      if (!montado) return
+      if (tipo === 'inicio') passos = 0
+      if (tipo === 'inicio' || tipo === 'fim') nos.passo.hidden = true
+      else if (tipo === 'pausa') {
+        passos += 1
+        nos.passoTexto.textContent = t('Passo {0}', passos)
+        nos.passo.hidden = false
+      }
     },
     /** Ao executar, o resultado aparece: volta para a aba Terminal. */
     aoExecutar() { if (montado) mostrarAba('terminal') },

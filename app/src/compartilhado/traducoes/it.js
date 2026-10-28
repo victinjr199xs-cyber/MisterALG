@@ -829,4 +829,7 @@ export default {
   1299: "Nessun problema ✨",
   1300: "Riga {0}",
   1301: "Salvato",
+  1302: "Schermata iniziale",
+  1303: "Passo {0}",
+  1304: "Vai alla riga del problema",
 }

@@ -14,15 +14,16 @@ export const PADRAO = {
   tamanho: 13,
   tabulacao: 3,
   numerarLinhas: true,
-  tema: 'classico', // ids em ../compartilhado/temas.js
+  tema: 'hibrido-claro', // ids em ../compartilhado/temas.js
   coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
   mostrarDicas: true, // dica do dia ao abrir
   tutorialVisto: false, // o tutorial já foi oferecido (renderer/tutorial.js); quem atualiza o app também recebe a oferta uma vez
   abertura: true, // animação de abertura (main/abertura.js)
   procurarAtualizacoes: true, // ao abrir, pergunta ao GitHub se há versão nova (main/atualizacao.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
-  disposicao: 'classica', // 'classica' (molduras do VisuAlg) ou 'moderna' (trilho de linguagens, painéis; renderer/disposicao.js)
+  disposicao: 'moderna', // 'classica' (molduras do VisuAlg) ou 'moderna' (trilho de linguagens, painéis; renderer/disposicao.js)
   alturaPainel: 0, // altura do painel inferior (Terminal/Problemas) na disposição moderna; 0 = automática
+  colunaRecolhida: null, // coluna de arquivos da disposição moderna: null = segue a largura da janela; true/false = escolha do usuário
   posicaoBarra: 'topo', // barra de ferramentas: 'topo' (clássico) ou 'lateral' (compartilhado/barra.js)
   tamanhoIcones: 'medio', // 'pequeno', 'medio' ou 'grande'
   botoesOcultos: [], // data-id dos botões tirados da barra (os essenciais nunca saem)

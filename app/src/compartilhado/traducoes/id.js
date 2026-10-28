@@ -810,4 +810,7 @@ export default {
   1299: "Tidak ada masalah ✨",
   1300: "Baris {0}",
   1301: "Tersimpan",
+  1302: "Layar awal",
+  1303: "Langkah {0}",
+  1304: "Buka baris masalah",
 }

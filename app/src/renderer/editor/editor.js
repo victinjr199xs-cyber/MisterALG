@@ -326,6 +326,14 @@ export function criarEditor(parent, op) {
     selecionar(inicio, fim) {
       view.dispatch({ selection: EditorSelection.single(inicio, fim), scrollIntoView: true })
     },
+    /** Leva o cursor ao começo da linha `n` (1-based), rola até ela e devolve o foco ao editor. Devolve false se a linha não existe. */
+    irParaLinha(n) {
+      if (!(n >= 1 && n <= view.state.doc.lines)) return false
+      const linha = view.state.doc.line(n)
+      view.dispatch({ selection: EditorSelection.cursor(linha.from), effects: EditorView.scrollIntoView(linha.from, { y: 'center' }) })
+      view.focus()
+      return true
+    },
     textoSelecionado: () => {
       const { from, to } = view.state.selection.main
       return view.state.sliceDoc(from, to)

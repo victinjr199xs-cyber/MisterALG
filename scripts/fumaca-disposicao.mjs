@@ -15,7 +15,7 @@ function conferir(nome, obtido, esperado) {
 const PROGRAMA = 'algoritmo "t"\nvar\n  a, b: inteiro\ninicio\n  a <- 3\n  b <- a * 2\n  escreval("Resultado: ", b)\nfimalgoritmo\n'
 const LINGUAGENS = ['portugol', 'csharp', 'javascript', 'typescript', 'python', 'c', 'cpp', 'php', 'sql']
 
-export default async ({ avaliar, esperar, foto, tecla, cdp }) => {
+export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   const M = 'window.__misteralg'
   const pasta = process.env.PRINTS_DISPOSICAO
   if (pasta) mkdirSync(pasta, { recursive: true })
@@ -44,6 +44,11 @@ export default async ({ avaliar, esperar, foto, tecla, cdp }) => {
   const doc = (campo) => avaliar(`${M}.doc.${campo}`)
 
   await pronta()
+  // Quem instala agora começa na disposição moderna com o tema Híbrido claro (pasta de dados nova = sem preferências gravadas).
+  conferir('padrão novo: disposição moderna', await disp(), 'moderna')
+  conferir('padrão novo: tema Híbrido claro', await avaliar(`document.documentElement.dataset.tema`), 'hibrido-claro')
+  conferir('padrão novo: trilho visível', await visivel('#trilho'), true)
+  await classico() // o resto da fumaça parte do visual clássico, como antes
   await avaliar(`${M}.execucao.restaurar(); ${M}.doc.modificado = false; ${M}.comandos.tema('hibrido-claro')`)
 
   // ---- clássica por padrão: nada da moderna aparece -------------------------------------------

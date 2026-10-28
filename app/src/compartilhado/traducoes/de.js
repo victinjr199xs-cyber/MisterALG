@@ -829,4 +829,7 @@ export default {
   1299: "Keine Probleme ✨",
   1300: "Zeile {0}",
   1301: "Gespeichert",
+  1302: "Startseite",
+  1303: "Schritt {0}",
+  1304: "Zur Zeile des Problems springen",
 }

@@ -13,7 +13,8 @@ function conferir(nome, obtido, esperado) {
   if (!ok) throw new Error(`${nome}: esperado ${JSON.stringify(esperado)}`)
 }
 
-export default async ({ avaliar, esperar, foto, tecla }) => {
+export default async ({ avaliar, esperar, foto, tecla, classico }) => {
+  await classico() // o padrão novo é a disposição moderna; esta fumaça confere a barra clássica
   const M = 'window.__misteralg'
   const pasta = process.env.PRINTS_BARRA ?? 'D:/temp/prints-barra'
   mkdirSync(pasta, { recursive: true })

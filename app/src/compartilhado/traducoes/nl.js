@@ -829,4 +829,7 @@ export default {
   1299: "Geen problemen ✨",
   1300: "Regel {0}",
   1301: "Opgeslagen",
+  1302: "Startscherm",
+  1303: "Stap {0}",
+  1304: "Ga naar de regel van het probleem",
 }

@@ -829,4 +829,7 @@ export default {
   1299: "No problems ✨",
   1300: "Line {0}",
   1301: "Saved",
+  1302: "Home screen",
+  1303: "Step {0}",
+  1304: "Go to the line of the problem",
 }

@@ -809,4 +809,7 @@ export default {
   1299: "Không có vấn đề ✨",
   1300: "Dòng {0}",
   1301: "Đã lưu",
+  1302: "Màn hình chính",
+  1303: "Bước {0}",
+  1304: "Đi tới dòng có vấn đề",
 }

@@ -826,4 +826,7 @@ export default {
   1299: "Sorun yok ✨",
   1300: "Satır {0}",
   1301: "Kaydedildi",
+  1302: "Ana ekran",
+  1303: "Adım {0}",
+  1304: "Sorunun satırına git",
 }

@@ -92,6 +92,24 @@ const ferramentas = {
     await enviar('Input.insertText', { text: texto })
   },
   erros,
+  /** O padrão de quem instala agora é a disposição moderna + tema Híbrido claro; as fumaças antigas assumem o visual clássico: grava e recarrega. */
+  async classico() {
+    const pronta = async () => {
+      for (let i = 0; i < 40; i += 1) {
+        try {
+          if (await ferramentas.avaliar('!!window.__misteralg')) return
+        } catch { /* a página ainda recarrega */ }
+        await ferramentas.esperar(500)
+      }
+    }
+    await pronta()
+    await ferramentas.avaliar(`window.misteralg.prefs.gravar({ tema: 'classico', disposicao: 'classica' }).then(() => 1)`)
+    await ferramentas.esperar(1000)
+    await ferramentas.avaliar('location.reload(); 1')
+    await ferramentas.esperar(1500)
+    await pronta()
+    await ferramentas.esperar(400)
+  },
 }
 
 const passos = (await import(pathToFileURL(resolve(roteiro)).href)).default

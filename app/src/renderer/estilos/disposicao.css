@@ -47,25 +47,36 @@
   overflow-x: hidden; overflow-y: auto; scrollbar-width: none;
 }
 :root[data-disposicao="moderna"] .trilho-lista::-webkit-scrollbar { display: none; }
-:root[data-disposicao="moderna"] .trilho-lang {
+/* círculos com a sigla; hover e ativo viram quadrado arredondado (como os servidores do Discord) */
+:root[data-disposicao="moderna"] .trilho-lang,
+:root[data-disposicao="moderna"] .trilho-inicio {
   position: relative; flex: none; display: grid; place-items: center;
   inline-size: 44px; block-size: 44px; padding: 0; border: 0; border-radius: 50%;
-  background: var(--fundo-campo); cursor: pointer;
-  transition: border-radius .18s, background .18s, transform .18s;
+  background: var(--fundo-campo); color: var(--texto); cursor: pointer;
+  font: 700 14px/1 var(--fonte-ui); letter-spacing: -.01em;
+  box-shadow: 0 1px 0 rgb(0 0 0 / .05);
+  transition: border-radius .18s, background .18s, color .18s, transform .18s;
 }
-:root[data-disposicao="moderna"] .trilho-lang svg { inline-size: 28px; block-size: 28px; }
+:root[data-disposicao="moderna"] .trilho-inicio { background: var(--destaque); color: #fff; font-size: 18px; font-weight: 800; }
 :root[data-disposicao="moderna"] .trilho-lang:hover,
-:root[data-disposicao="moderna"] .trilho-lang[aria-current="true"] { border-radius: 14px; background: var(--cor); }
-:root[data-disposicao="moderna"] .trilho-lang:active { transform: translateY(1px); }
+:root[data-disposicao="moderna"] .trilho-lang[aria-current="true"] { border-radius: 14px; background: var(--destaque); color: #fff; }
+:root[data-disposicao="moderna"] .trilho-inicio:hover { border-radius: 14px; }
+:root[data-disposicao="moderna"] .trilho-lang:active,
+:root[data-disposicao="moderna"] .trilho-inicio:active { transform: translateY(1px); }
+:root[data-disposicao="moderna"] .trilho-sep { flex: none; inline-size: 28px; block-size: 2px; margin: 0; border: 0; border-radius: 2px; background: var(--borda); }
+:root[data-disposicao="moderna"] .trilho-inicio:focus-visible,
 :root[data-disposicao="moderna"] .trilho-lang:focus-visible { outline: 2px solid var(--destaque); outline-offset: 2px; }
 /* a pílula do Discord: marca a linguagem do documento atual */
-:root[data-disposicao="moderna"] .trilho-lang::before {
+:root[data-disposicao="moderna"] .trilho-lang::before,
+:root[data-disposicao="moderna"] .trilho-inicio::before {
   content: ""; position: absolute; inset-inline-start: -12px; inset-block-start: 50%;
   inline-size: 4px; block-size: 8px; border-radius: 0 4px 4px 0;
   background: var(--texto); opacity: 0; transform: translateY(-50%);
   transition: block-size .18s, opacity .18s;
 }
-:root[data-disposicao="moderna"][dir="rtl"] .trilho-lang::before { border-radius: 4px 0 0 4px; }
+:root[data-disposicao="moderna"][dir="rtl"] .trilho-lang::before,
+:root[data-disposicao="moderna"][dir="rtl"] .trilho-inicio::before { border-radius: 4px 0 0 4px; }
+:root[data-disposicao="moderna"] .trilho-inicio:hover::before,
 :root[data-disposicao="moderna"] .trilho-lang:hover::before { opacity: 1; block-size: 20px; }
 :root[data-disposicao="moderna"] .trilho-lang[aria-current="true"]::before { opacity: 1; block-size: 36px; }
 :root[data-disposicao="moderna"] .trilho-rodape { flex: none; display: grid; place-items: center; padding-block-start: 8px; }
@@ -132,6 +143,23 @@
 :root[data-disposicao="moderna"] .cab-ponto { inline-size: 8px; block-size: 8px; border-radius: 50%; background: #2fb67c; }
 :root[data-disposicao="moderna"] .cab-ponto[data-estado="modificado"] { background: #f0a020; }
 
+/* trilha do passo a passo */
+:root[data-disposicao="moderna"] .cab-linha2 { display: flex; flex-wrap: wrap; align-items: center; column-gap: 20px; margin-block-start: 10px; }
+:root[data-disposicao="moderna"] .cab-linha2 .cab-props { margin: 0; }
+:root[data-disposicao="moderna"] .cab-passo { display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--detalhe); }
+:root[data-disposicao="moderna"] .cab-passo[hidden] { display: none; }
+:root[data-disposicao="moderna"] .cab-passo-texto { font-weight: 600; white-space: nowrap; }
+:root[data-disposicao="moderna"] .cab-passo-barra {
+  position: relative; flex: 0 1 280px; block-size: 5px; border-radius: 3px; overflow: hidden;
+  background: color-mix(in srgb, var(--destaque) 18%, transparent);
+}
+:root[data-disposicao="moderna"] .cab-passo-barra::after {
+  content: ""; position: absolute; inset-block: 0; inline-size: 35%; border-radius: 3px; background: var(--destaque);
+  animation: cab-passo-vai 1.3s ease-in-out infinite;
+}
+@keyframes cab-passo-vai { from { inset-inline-start: -35%; } to { inset-inline-start: 100%; } }
+@media (prefers-reduced-motion: reduce) { :root[data-disposicao="moderna"] .cab-passo-barra::after { animation: none; inline-size: 100%; } }
+
 /* ---- editor em cartão ----------------------------------------------------------------------- */
 :root[data-disposicao="moderna"] body .moldura-editor {
   grid-area: ed; margin-inline: 16px; min-inline-size: 0;
@@ -180,9 +208,11 @@
 :root[data-disposicao="moderna"] .problemas[hidden] { display: none; }
 :root[data-disposicao="moderna"] .problemas-vazio { display: grid; place-items: center; block-size: 100%; margin: 0; color: var(--detalhe); }
 :root[data-disposicao="moderna"] .problema {
-  display: flex; gap: 10px; align-items: baseline; margin: 0; padding: 8px 12px; border-radius: var(--raio);
-  background: var(--linha-erro-fundo); color: var(--texto); user-select: text;
+  display: flex; gap: 10px; align-items: baseline; inline-size: 100%; margin: 0; padding: 8px 12px; border: 0; border-radius: var(--raio);
+  background: var(--linha-erro-fundo); color: var(--texto); font: inherit; text-align: start; cursor: pointer;
 }
+:root[data-disposicao="moderna"] .problema:hover { outline: 1px solid var(--linha-erro); }
+:root[data-disposicao="moderna"] .problema:focus-visible { outline: 2px solid var(--destaque); outline-offset: 1px; }
 :root[data-disposicao="moderna"] .problema b { color: var(--linha-erro); white-space: nowrap; }
 /* o console já tem a aba "Terminal": a barra de título dele fica só com o botão de fechar */
 :root[data-disposicao="moderna"] body .console-titulo { min-block-size: 0; padding: 2px 6px; background: transparent; border: 0; justify-content: flex-end; }
@@ -213,6 +243,6 @@
 
 @media (max-height: 760px) {
   :root[data-disposicao="moderna"] .cab-pagina { padding-block: 8px 6px; }
-  :root[data-disposicao="moderna"] .cab-props { margin-block-start: 6px; }
+  :root[data-disposicao="moderna"] .cab-linha2 { margin-block-start: 6px; }
   :root[data-disposicao="moderna"] body main { grid-template-rows: auto minmax(120px, 1fr) 8px auto var(--h-inferior, clamp(150px, 30vh, 340px)); }
 }
