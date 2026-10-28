@@ -800,4 +800,5 @@ export default {
   1273: "Hesap: ad ve fotoğraf",
   1274: "Hesap fotoğrafını seç",
   1275: "Görseller",
+  1276: "Daha fazla araç",
 }

@@ -16,7 +16,7 @@ import { abrirTutorial } from './tutorial.js'
 import { primeiroPrograma } from './tutorial-passos.js'
 import { gerarPascal, gerarC, gerarJava } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
-import { BARRA, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis, itensVisiveis } from '../compartilhado/barra.js'
+import { BARRA, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis, itensVisiveis, principaisLateral } from '../compartilhado/barra.js'
 import { criarAvatar } from './avatar.js'
 
 const api = window.misteralg
@@ -482,9 +482,63 @@ function aplicarBarra(p = prefs) {
   document.documentElement.dataset.tamIcone = TAMANHOS_ICONE.includes(p.tamanhoIcones) ? p.tamanhoIcones : 'medio'
   const barra = $('#barra')
   barra.setAttribute('aria-orientation', lateral ? 'vertical' : 'horizontal')
-  const ver = itensVisiveis(idsOcultaveis(p.botoesOcultos))
-  barra.querySelectorAll('[data-item]').forEach((e) => { e.hidden = !ver[Number(e.dataset.item)] })
+  const ocultos = idsOcultaveis(p.botoesOcultos)
+  let ver = itensVisiveis(ocultos)
+  // Lateral: só os principais ficam na coluna (separadores calculados entre eles); o resto vai para o painel "⋯".
+  const fixo = principaisLateral()
+  if (lateral) {
+    const sub = itensVisiveis(ocultos, BARRA.filter((_, i) => fixo[i]))
+    let k = 0
+    ver = ver.map((v, i) => (fixo[i] ? sub[k++] : v))
+  } else fecharMais(false)
+  // Os MESMOS elementos mudam de pai (nada de clones), na ordem da tabela.
+  const lista = barra.querySelector('.barra-lista')
+  const painel = $('#barra-mais .barra-mais-lista')
+  ;[...document.querySelectorAll('[data-item]')]
+    .sort((a, b) => Number(a.dataset.item) - Number(b.dataset.item))
+    .forEach((e) => {
+      const i = Number(e.dataset.item)
+      ;(lateral && !fixo[i] ? painel : lista).append(e)
+      e.hidden = !ver[i]
+    })
+  $('[data-id="mais"]').hidden = !lateral
 }
+
+/** Painel flutuante "⋯" da barra lateral: abre ao lado da coluna, foco dentro, Esc/clique fora/ação fecham. */
+function abrirMais(foco = true) {
+  const painel = $('#barra-mais')
+  const botao = $('[data-id="mais"]')
+  if (!document.body.classList.contains('barra-lateral') || !painel.hidden) return
+  painel.hidden = false
+  const r = botao.getBoundingClientRect()
+  painel.style.insetInlineStart = `${$('#barra').getBoundingClientRect().width}px`
+  painel.style.bottom = `${Math.max(4, innerHeight - r.bottom)}px`
+  painel.style.maxHeight = `${Math.max(120, r.bottom - 8)}px`
+  botao.setAttribute('aria-expanded', 'true')
+  if (foco) painel.focus({ preventScroll: true })
+}
+function fecharMais(devolverFoco = true) {
+  const painel = $('#barra-mais')
+  if (painel.hidden) return
+  const ativo = document.activeElement
+  painel.hidden = true
+  const botao = $('[data-id="mais"]')
+  botao.setAttribute('aria-expanded', 'false')
+  // Só puxa o foco de volta se ele estava no painel (uma ação que levou o foco ao editor ou a um diálogo manda).
+  if (devolverFoco && (painel.contains(ativo) || ativo === document.body || !ativo)) botao.focus({ preventScroll: true })
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || $('#barra-mais').hidden || document.querySelector('.tutorial, dialog[open]')) return
+  e.preventDefault()
+  e.stopPropagation()
+  fecharMais()
+}, true)
+document.addEventListener('pointerdown', (e) => {
+  if ($('#barra-mais').hidden || e.target.closest('#barra-mais, [data-id="mais"], .tutorial')) return
+  fecharMais(false)
+})
+// O tutorial abre o painel quando o alvo do passo está dentro dele (tutorial.js).
+document.addEventListener('barra-mais', (e) => (e.detail ? abrirMais(false) : fecharMais(false)))
 
 /** Botão da conta no fim da barra: foto ou iniciais; abre Configurações > Conta. */
 function atualizarAvatar() {
@@ -503,6 +557,26 @@ function montarBarra() {
   // Lista rolável própria: na lateral o avatar fica fora dela (rodapé fixo); no topo ela é `display: contents`.
   const lista = Object.assign(document.createElement('div'), { className: 'barra-lista' })
   barra.append(lista)
+  const mais = Object.assign(document.createElement('button'), { type: 'button', className: 'botao' })
+  const dicaMais = 'Mais ferramentas' // traduzirPagina troca depois, como nas outras dicas da barra
+  Object.assign(mais.dataset, { id: 'mais', dica: dicaMais })
+  mais.title = dicaMais
+  mais.setAttribute('aria-label', dicaMais)
+  mais.setAttribute('aria-haspopup', 'dialog')
+  mais.setAttribute('aria-expanded', 'false')
+  mais.innerHTML = ICONES.mais
+  mais.addEventListener('click', () => ($('#barra-mais').hidden ? abrirMais() : fecharMais()))
+  barra.append(mais)
+  const painelMais = Object.assign(document.createElement('div'), { id: 'barra-mais', className: 'barra-mais', hidden: true, tabIndex: -1 })
+  painelMais.setAttribute('role', 'dialog')
+  painelMais.setAttribute('aria-label', dicaMais)
+  painelMais.append(Object.assign(document.createElement('div'), { className: 'barra-mais-lista' }))
+  // Clicar numa ação fecha o painel (menos o liga/desliga do aleatório, que ainda pede De/Até/Decimais).
+  painelMais.addEventListener('click', (e) => {
+    const b = e.target.closest('button.botao')
+    if (b && b.dataset.id !== 'aleatorio') fecharMais()
+  })
+  document.body.append(painelMais)
   BARRA.forEach((item, indice) => {
     const antes = lista.childElementCount
     montarItem(lista, item)
@@ -527,7 +601,8 @@ function montarItem(barra, item) {
     INTERVALOS.forEach(([rotulo], i) => sel.append(new Option(rotulo, String(i), false, i === prefs.timer)))
     sel.addEventListener('change', async () => { prefs = await api.prefs.gravar({ timer: Number(sel.value) }) })
     const span = Object.assign(document.createElement('span'), { className: 'campo-barra' })
-    span.append(sel)
+    // Rótulo só aparece no painel "⋯" da lateral (visualg.css).
+    span.append(Object.assign(document.createElement('label'), { className: 'so-painel', htmlFor: 'intervalo', textContent: 'Intervalo do timer' }), sel)
     barra.append(span)
   } else if (item === 'faixa') {
     const campo = (rotulo, chave, dica, opcoes) => {

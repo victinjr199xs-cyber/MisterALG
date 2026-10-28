@@ -784,4 +784,5 @@ export default {
   1273: "Akun: nama dan foto",
   1274: "Pilih foto akun",
   1275: "Gambar",
+  1276: "Alat lainnya",
 }

@@ -255,16 +255,32 @@ body.barra-lateral .barra {
 body.barra-lateral .barra-lista {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   flex: 1 1 0; min-height: 0; width: 100%;
-  overflow: hidden auto; scrollbar-width: thin; scrollbar-color: var(--borda) transparent;
+  overflow: hidden auto; scrollbar-width: none; /* janela baixíssima: rola, mas sem barra que descentralize os ícones */
 }
+body.barra-lateral .barra-lista::-webkit-scrollbar { display: none; }
 body.barra-lateral main { grid-column: 2; grid-row: 1; }
 body.barra-lateral .status { grid-column: 1 / -1; grid-row: 2; }
 body.barra-lateral .botao { width: calc(var(--btn-w) + 6px); height: calc(var(--btn-h) + 4px); flex-shrink: 0; }
-body.barra-lateral .campo-barra { flex-direction: column; align-items: stretch; gap: 1px; width: 44px; margin: 1px 0; font-size: 10px; flex-shrink: 0; }
-body.barra-lateral .campo-barra input, body.barra-lateral .campo-barra select { width: 100%; min-width: 0; height: 20px; padding: 0 2px; font-size: 11px; }
 body.barra-lateral .separador { width: 22px; height: 1px; margin: 2px 0; box-shadow: none; flex-shrink: 0; }
 body.barra-lateral .botao.avatar { margin: 2px 0 0; flex-shrink: 0; }
 .barra-lista { display: contents; }
+/* Painel "⋯" da lateral: os botões restantes em grade e os campos com rótulo, em tamanho normal. */
+.barra-mais {
+  position: fixed; z-index: 30;
+  box-sizing: border-box; width: 280px; padding: 6px; overflow: hidden auto;
+  border: 1px solid var(--borda); border-radius: 4px;
+  background: var(--fundo-janela); color: var(--texto);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
+}
+.barra-mais[hidden], body .barra-mais [hidden] { display: none !important; }
+.barra-mais:focus { outline: none; }
+.barra-mais-lista { display: flex; flex-wrap: wrap; gap: 2px; }
+.barra-mais .separador { display: none; }
+body.barra-lateral .barra-mais .campo-barra { flex: 1 0 100%; display: flex; flex-direction: row; align-items: center; gap: 6px; margin: 4px 0; font-size: 13px; }
+body.barra-lateral .barra-mais .campo-barra label { flex: 0 0 104px; }
+body.barra-lateral .barra-mais .campo-barra input, body.barra-lateral .barra-mais .campo-barra select { flex: 1; width: auto; min-width: 0; height: 24px; padding: 0 4px; font-size: 13px; }
+.so-painel { display: none; }
+.barra-mais .so-painel { display: block; }
 
 .separador {
   width: 1px;

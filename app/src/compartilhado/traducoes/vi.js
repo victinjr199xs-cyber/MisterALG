@@ -783,4 +783,5 @@ export default {
   1273: "Tài khoản: tên và ảnh",
   1274: "Chọn ảnh tài khoản",
   1275: "Hình ảnh",
+  1276: "Thêm công cụ",
 }

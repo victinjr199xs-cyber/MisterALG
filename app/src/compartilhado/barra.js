@@ -1,19 +1,20 @@
 // Barra de ferramentas: a tabela dos botões e a lógica de quem aparece (preferência `botoesOcultos`).
-// Cada item é [data-id, chave em renderer/icones.js, dica em português] ou um marcador:
+// Cada item é [data-id, chave em renderer/icones.js, dica em português, 'principal'?] ou um marcador
+// (o 4º campo marca o que fica fixo na barra lateral; o resto vai para o painel "⋯"):
 // '|' (separador), 'intervalo' (lista do timer) e 'faixa' (campos De/Até/Decimais do aleatório).
 
 export const BARRA = [
-  ['novo', 'novo', 'Botão Novo (⌘N)'],
-  ['abrir', 'abrir', 'Botão Abrir (⌘O)'],
-  ['salvar', 'salvar', 'Botão Salvar (⌘S)'],
+  ['novo', 'novo', 'Botão Novo (⌘N)', 'principal'],
+  ['abrir', 'abrir', 'Botão Abrir (⌘O)', 'principal'],
+  ['salvar', 'salvar', 'Botão Salvar (⌘S)', 'principal'],
   '|',
-  ['executar', 'executar', 'Botão Executar (F9)'],
-  ['passo', 'passo', 'Botão Passo a Passo (F8)'],
-  ['timer', 'timer', 'Executar com Timer (Tempo) (Shift+F9)'],
+  ['executar', 'executar', 'Botão Executar (F9)', 'principal'],
+  ['passo', 'passo', 'Botão Passo a Passo (F8)', 'principal'],
+  ['timer', 'timer', 'Executar com Timer (Tempo) (Shift+F9)', 'principal'],
   'intervalo',
   '|',
-  ['parar', 'parar', 'Botão Parar (Ctrl+F2)'],
-  ['breakpoint', 'breakpoint', 'Botão Liga/desliga breakpoint (F5)'],
+  ['parar', 'parar', 'Botão Parar (Ctrl+F2)', 'principal'],
+  ['breakpoint', 'breakpoint', 'Botão Liga/desliga breakpoint (F5)', 'principal'],
   ['limpar-breakpoints', 'limparBreakpoints', 'Botão Desmarca todos os breakpoints (Ctrl+F5)'],
   ['restaurar', 'restaurar', 'Botão Restaura a tela inicial do MisterALG'],
   ['cortar', 'cortar', 'Botão Cortar (⌘X)'],
@@ -22,10 +23,10 @@ export const BARRA = [
   '|',
   ['gravar-bloco', 'gravarBloco', 'Botão Grava o bloco de texto selecionado (Ctrl+W)'],
   ['inserir-bloco', 'inserirBloco', 'Botão Insere um bloco de algoritmo na posição do cursor (Ctrl+R)'],
-  ['desfazer', 'desfazer', 'Botão Desfazer (⌘Z)'],
-  ['refazer', 'refazer', 'Botão Refazer (Shift+⌘Z)'],
+  ['desfazer', 'desfazer', 'Botão Desfazer (⌘Z)', 'principal'],
+  ['refazer', 'refazer', 'Botão Refazer (Shift+⌘Z)', 'principal'],
   '|',
-  ['localizar', 'localizar', 'Botão Localizar (⌘F ou Ctrl+L)'],
+  ['localizar', 'localizar', 'Botão Localizar (⌘F ou Ctrl+L)', 'principal'],
   ['localizar-proximo', 'proximo', 'Botão Localizar o próximo (F3)'],
   ['localizar-anterior', 'anterior', 'Botão Localizar o anterior (F4)'],
   ['substituir', 'substituir', 'Botão Substituir (⌥⌘F ou Ctrl+U)'],
@@ -73,6 +74,18 @@ export function itensVisiveis(ocultos, itens = BARRA) {
     }
   })
   return ver
+}
+/**
+ * Na barra lateral: um booleano por item, na mesma ordem (true = fica fixo na coluna, false = vai para o painel "⋯").
+ * Botões com 4º campo 'principal' ficam fixos; a lista do timer e os campos do aleatório sempre vão para o painel;
+ * o separador acompanha o botão que vem antes dele.
+ */
+export function principaisLateral(itens = BARRA) {
+  let ultimo = false
+  return itens.map((i) => {
+    if (Array.isArray(i)) ultimo = i[3] === 'principal'
+    return i === '|' ? ultimo : Array.isArray(i) && ultimo
+  })
 }
 /** No Windows e no Linux as dicas mostram os atalhos originais do VisuAlg em vez dos do Mac. */
 export function dicaDaPlataforma(dica, ehMac) {

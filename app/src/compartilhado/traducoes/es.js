@@ -804,4 +804,5 @@ export default {
   1273: "Cuenta: nombre y foto",
   1274: "Elegir la foto de la cuenta",
   1275: "Imágenes",
+  1276: "Más herramientas",
 }

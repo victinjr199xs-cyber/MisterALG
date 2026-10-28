@@ -71,7 +71,10 @@ export function abrirTutorial(op) {
   // Botão que o aluno tirou da barra (Configurações > Barra): o passo que aponta para ele é pulado.
   const botaoOculto = (p) => {
     if (!p.alvo?.startsWith('[data-id')) return false
-    const r = document.querySelector(p.alvo)?.getBoundingClientRect()
+    const e = document.querySelector(p.alvo)
+    // Alvo dentro do painel "⋯" da barra lateral: abre o painel para o passo funcionar (main.js).
+    if (e?.closest('.barra-mais')) document.dispatchEvent(new CustomEvent('barra-mais', { detail: true }))
+    const r = e?.getBoundingClientRect()
     return !r || r.width === 0 || r.height === 0
   }
 
@@ -79,7 +82,8 @@ export function abrirTutorial(op) {
     atual = Math.max(0, Math.min(i, passos.length - 1))
     while (botaoOculto(passo()) && atual + sentido >= 0 && atual + sentido < passos.length) atual += sentido
     const p = passo()
-    contador.textContent = t('Passo {0} de {1}', atual + 1, passos.length)
+    document.dispatchEvent(new CustomEvent('barra-mais', { detail: !!(p.alvo && document.querySelector(p.alvo)?.closest('.barra-mais')) }))
+    contador.textContent =t('Passo {0} de {1}', atual + 1, passos.length)
     texto.textContent = t(p.texto, nomeDaLinguagem(linguagem))
     voltar.hidden = atual === 0
     const ultimo = atual === passos.length - 1
@@ -106,6 +110,7 @@ export function abrirTutorial(op) {
   function fechar() {
     if (fechado) return
     fechado = true
+    document.dispatchEvent(new CustomEvent('barra-mais', { detail: false }))
     desligar()
     clearInterval(relogio)
     removeEventListener('resize', posicionar)

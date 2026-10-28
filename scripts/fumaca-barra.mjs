@@ -13,7 +13,7 @@ function conferir(nome, obtido, esperado) {
   if (!ok) throw new Error(`${nome}: esperado ${JSON.stringify(esperado)}`)
 }
 
-export default async ({ avaliar, esperar, foto }) => {
+export default async ({ avaliar, esperar, foto, tecla }) => {
   const M = 'window.__misteralg'
   const pasta = process.env.PRINTS_BARRA ?? 'D:/temp/prints-barra'
   mkdirSync(pasta, { recursive: true })
@@ -25,6 +25,7 @@ export default async ({ avaliar, esperar, foto }) => {
   await avaliar(`[...document.querySelectorAll('dialog[open] button')].find(b => b.textContent === 'Aceito')?.click()`)
   for (let i = 0; i < 40 && !(await avaliar('!!window.__misteralg')); i += 1) await esperar(500)
 
+  const oculto = (id) => avaliar(`document.querySelector('[data-id="${id}"]').hidden`)
   const visivel = (id) => avaliar(`(() => { const r = document.querySelector('[data-id="${id}"]').getBoundingClientRect(); return r.width > 0 && r.height > 0 })()`)
   const lateral = () => avaliar(`document.body.classList.contains('barra-lateral')`)
   const abrir = async (aba) => {
@@ -62,20 +63,45 @@ export default async ({ avaliar, esperar, foto }) => {
   conferir('aria-orientation vertical', await avaliar(`document.querySelector('#barra').getAttribute('aria-orientation')`), 'vertical')
   conferir('executar visível na lateral', await visivel('executar'), true)
   conferir('barra à esquerda e main à direita', await avaliar(`document.querySelector('#barra').getBoundingClientRect().right <= document.querySelector('main').getBoundingClientRect().left + 1`), true)
-  conferir('campos do timer empilhados na lateral', await avaliar(`getComputedStyle(document.querySelector('.campo-barra')).flexDirection`), 'column')
   conferir('avatar fora da lista rolável', await avaliar(`document.querySelector('[data-id="conta"]').parentElement.id`), 'barra')
-  await foto(`${pasta}/classico-lateral.png`)
+  // Activity Bar: principais fixos sem rolagem, resto no painel "⋯"
+  conferir('lista principal sem rolagem', await avaliar(`(() => { const l = document.querySelector('.barra-lista'); return l.scrollHeight <= l.clientHeight })()`), true)
+  conferir('copiar está no painel', await avaliar(`!!document.querySelector('#barra-mais [data-id="copiar"]')`), true)
+  conferir('desfazer fica na barra', await avaliar(`!!document.querySelector('.barra-lista [data-id="desfazer"]')`), true)
+  conferir('painel fechado', await avaliar(`document.querySelector('#barra-mais').hidden`), true)
+  conferir('aria-expanded fechado', await avaliar(`document.querySelector('[data-id="mais"]').getAttribute('aria-expanded')`), 'false')
+  await foto(`${pasta}/v3-classico-lateral-fechada.png`)
+  await avaliar(`document.querySelector('[data-id="mais"]').click()`)
+  conferir('painel abre', await avaliar(`!document.querySelector('#barra-mais').hidden`), true)
+  conferir('aria-expanded aberto', await avaliar(`document.querySelector('[data-id="mais"]').getAttribute('aria-expanded')`), 'true')
+  conferir('foco no painel', await avaliar(`document.activeElement.id`), 'barra-mais')
+  conferir('timer visível no painel', await avaliar(`(() => { const r = document.querySelector('#barra-mais #intervalo').getBoundingClientRect(); return r.width > 80 })()`), true)
+  conferir('De/Até/Decimais com rótulo legível', await avaliar(`[...document.querySelectorAll('#barra-mais .campo-barra label')].map(l => l.scrollWidth <= l.clientWidth + 1 && l.getBoundingClientRect().width > 0).every(Boolean)`), true)
+  conferir('painel dentro da janela', await avaliar(`(() => { const r = document.querySelector('#barra-mais').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight && r.right <= innerWidth })()`), true)
+  await foto(`${pasta}/v3-classico-lateral-painel.png`)
+  await tecla('Escape')
+  conferir('Esc fecha o painel', await avaliar(`document.querySelector('#barra-mais').hidden`), true)
+  conferir('foco volta ao ⋯', await avaliar(`document.activeElement.dataset.id`), 'mais')
+  await avaliar(`document.querySelector('[data-id="mais"]').click()`)
+  await avaliar(`document.querySelector('main').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))`)
+  conferir('clique fora fecha', await avaliar(`document.querySelector('#barra-mais').hidden`), true)
+  await avaliar(`document.querySelector('[data-id="mais"]').click()`)
+  await avaliar(`document.querySelector('#barra-mais [data-id="calculadora"]').click()`)
+  conferir('clicar numa ação fecha', await avaliar(`document.querySelector('#barra-mais').hidden`), true)
+  await esperar(300)
+  await tecla('Escape')
+  await esperar(300)
 
   // ocultar um botão (copiar) com a barra lateral; o essencial (executar) não pode sair
   await abrir('barra')
   conferir('essencial desabilitado', await avaliar(`document.querySelector('dialog[open] input[data-botao="executar"]').disabled`), true)
   await avaliar(`(() => { const c = document.querySelector('dialog[open] input[data-botao="copiar"]'); c.checked = false; c.dispatchEvent(new Event('change', { bubbles: true })) })()`)
-  conferir('prévia: copiar some', await visivel('copiar'), false)
+  conferir('prévia: copiar some', await oculto('copiar'), true)
   await botaoDoDialogo('OK')
   await fechado()
   conferir('copiar oculto gravado', await prefs('botoesOcultos'), ['copiar'])
-  conferir('copiar continua oculto', await visivel('copiar'), false)
-  conferir('cortar continua visível', await visivel('cortar'), true)
+  conferir('copiar continua oculto', await oculto('copiar'), true)
+  conferir('cortar continua visível', await oculto('cortar'), false)
   conferir('comando copiar continua existindo', await avaliar(`typeof ${M}.comandos.copiar`), 'function')
 
   // restaurar o padrão e voltar ao topo
@@ -108,9 +134,19 @@ export default async ({ avaliar, esperar, foto }) => {
     await avaliar(`void ${M}.comandos.tema('${tema}')`)
     await esperar(300)
     for (const pos of ['topo', 'lateral']) {
-      await avaliar(`window.misteralg.prefs.gravar({ posicaoBarra: '${pos}' }).then(p => { document.body.classList.toggle('barra-lateral', p.posicaoBarra === 'lateral') })`)
+      await abrir('barra') // pelo diálogo, para passar por aplicarBarra de verdade (move os botões para o painel)
+      await mudar('#cfg-posicao-barra', pos)
+      await botaoDoDialogo('OK')
+      await fechado()
       await esperar(300)
       await foto(`${pasta}/${nome}-${pos}-nome.png`)
+      await foto(`${pasta}/v3-${nome}-${pos}${pos === 'lateral' ? '-fechada' : ''}.png`)
+      if (pos === 'lateral') {
+        await avaliar(`document.querySelector('[data-id="mais"]').click()`)
+        await esperar(200)
+        await foto(`${pasta}/v3-${nome}-lateral-painel.png`)
+        await avaliar(`document.querySelector('[data-id="mais"]').click()`)
+      }
     }
   }
   await avaliar(`window.misteralg.prefs.gravar({ posicaoBarra: 'topo' })`)
