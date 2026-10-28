@@ -1,6 +1,16 @@
 /* Cores da IDE. O tema "Clássico" é o "Nenhum" do VisuAlg 3.0.7 (cores do DFM —
    docs/spec/_sintese-B §2.2.5); os outros trocam só as variáveis abaixo.
    A lista de temas fica em ../../compartilhado/temas.js. */
+/* Fontes locais (offline), licença OFL em ../fontes/LICENSE-*.txt */
+@font-face {
+  font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900;
+  src: url('../fontes/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'JetBrains Mono Variable'; font-style: normal; font-display: swap; font-weight: 100 800;
+  src: url('../fontes/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+}
+
 :root {
   /* janela e molduras */
   --fundo-janela: #c0dcc0;
@@ -174,7 +184,7 @@
   --linha-execucao: #5865f2; --texto-execucao: #ffffff; --linha-breakpoint: #a1282c; --texto-breakpoint: #ffffff;
   --linha-erro: #ff6b6e; --linha-erro-fundo: #4a2326; --selecao-texto: #3b3f6e; --mesma-palavra: #3a3d4d;
   --cursor: #dbdee1; --detalhe: #a3a6aa;
-  --sx-comentario: #8b93a3; --sx-literal: #ffb86b; --sx-chave: #b4a7ff; --sx-especial: #8ab4ff; --sx-tipo: #5fd2e6; --sx-variavel: #7ee0a0;
+  --sx-comentario: #8b93a3; --sx-literal: #ffb86b; --sx-chave: #b4a7ff; --sx-especial: #ff8fb0; --sx-tipo: #5fd2e6; --sx-variavel: #7ee0a0;
   --dialogo-fundo: #2b2d31; --dialogo-moldura: #1e1f22; --dialogo-borda: #3f4147; --campo-borda: #4e5058;
   --titulo-inicio: #4752c4; --titulo-fim: #5865f2; --titulo-texto: #ffffff;
   --acao-inicio: #404249; --acao-fim: #35373c; --aba: #2b2d31; --aba-ativa: #313338;
@@ -214,7 +224,7 @@
   --linha-execucao: #5b4be8; --texto-execucao: #ffffff; --linha-breakpoint: #c0303f; --texto-breakpoint: #ffffff;
   --linha-erro: #d03a4a; --linha-erro-fundo: #fde6e9; --selecao-texto: #dcd8fb; --mesma-palavra: #eeebff;
   --cursor: #23223a; --detalhe: #625f80;
-  --sx-comentario: #767394; --sx-literal: #0f8a5f; --sx-chave: #6d3fe0; --sx-especial: #3558d8; --sx-tipo: #0a7fa8; --sx-variavel: #c2570c;
+  --sx-comentario: #767394; --sx-literal: #0f8a5f; --sx-chave: #6d3fe0; --sx-especial: #3558d8; --sx-tipo: #0a7fa8; --sx-variavel: #a94a06;
   --dialogo-fundo: #f4f3fb; --dialogo-moldura: #8e8cab; --dialogo-borda: #d3d1e8; --campo-borda: #bdbbd9;
   --titulo-inicio: #4a3bd0; --titulo-fim: #5b4be8; --titulo-texto: #ffffff;
   --acao-inicio: #ffffff; --acao-fim: #eeedf8; --aba: #eeedf8; --aba-ativa: #fcfcff;
@@ -234,7 +244,7 @@
   --linha-execucao: #5b4be8; --texto-execucao: #ffffff; --linha-breakpoint: #a1283a; --texto-breakpoint: #ffffff;
   --linha-erro: #ff8a94; --linha-erro-fundo: #4a2030; --selecao-texto: #3a3680; --mesma-palavra: #2e2c4d;
   --cursor: #e9e8f7; --detalhe: #a8a6c6;
-  --sx-comentario: #8d8bae; --sx-literal: #7ee8b4; --sx-chave: #b6a9ff; --sx-especial: #8fb0ff; --sx-tipo: #62d6ee; --sx-variavel: #ffb86b;
+  --sx-comentario: #8d8bae; --sx-literal: #7ee8b4; --sx-chave: #b6a9ff; --sx-especial: #ff9ec4; --sx-tipo: #62d6ee; --sx-variavel: #ffb86b;
   --dialogo-fundo: #171627; --dialogo-moldura: #2b2a44; --dialogo-borda: #2b2a44; --campo-borda: #3a3860;
   --titulo-inicio: #3f33a8; --titulo-fim: #5b4be8; --titulo-texto: #ffffff;
   --acao-inicio: #33315a; --acao-fim: #26253d; --aba: #26253d; --aba-ativa: #1d1c2f;
