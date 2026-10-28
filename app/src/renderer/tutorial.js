@@ -68,8 +68,16 @@ export function abrirTutorial(op) {
     balao.dataset.lado = p.lado
   }
 
-  function mostrar(i) {
+  // Botão que o aluno tirou da barra (Configurações > Barra): o passo que aponta para ele é pulado.
+  const botaoOculto = (p) => {
+    if (!p.alvo?.startsWith('[data-id')) return false
+    const r = document.querySelector(p.alvo)?.getBoundingClientRect()
+    return !r || r.width === 0 || r.height === 0
+  }
+
+  function mostrar(i, sentido = 1) {
     atual = Math.max(0, Math.min(i, passos.length - 1))
+    while (botaoOculto(passo()) && atual + sentido >= 0 && atual + sentido < passos.length) atual += sentido
     const p = passo()
     contador.textContent = t('Passo {0} de {1}', atual + 1, passos.length)
     texto.textContent = t(p.texto, nomeDaLinguagem(linguagem))
@@ -124,7 +132,7 @@ export function abrirTutorial(op) {
     const frente = rtl ? 'ArrowLeft' : 'ArrowRight'
     const tras = rtl ? 'ArrowRight' : 'ArrowLeft'
     if (e.key === frente && !passo().espera && !passo().acao) avancar()
-    else if (e.key === tras && atual > 0) mostrar(atual - 1)
+    else if (e.key === tras && atual > 0) mostrar(atual - 1, -1)
     else if (e.key === 'Tab') { // o foco circula dentro do balão
       const botoes = [...balao.querySelectorAll('button:not([hidden]):not(:disabled)')]
       const i = botoes.indexOf(document.activeElement)
@@ -135,7 +143,7 @@ export function abrirTutorial(op) {
     e.stopPropagation()
   }
 
-  voltar.addEventListener('click', () => mostrar(atual - 1))
+  voltar.addEventListener('click', () => mostrar(atual - 1, -1))
   proximo.addEventListener('click', avancar)
   sair.addEventListener('click', fechar)
   addEventListener('resize', posicionar)

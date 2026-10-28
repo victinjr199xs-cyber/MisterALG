@@ -14,7 +14,6 @@
   --fundo-campo: #ffffff;
   /* barra de ferramentas */
   --texto-barra: #000080;
-  --icone-papel: #ffffff;
   --botao-hover: #d8ecd8;
   --botao-ativo: #a8c8a8;
   --desabilitado: #6a7a6a;
@@ -69,7 +68,7 @@
 :root[data-tema="escuro"] {
   --fundo-janela: #181818; --moldura-editor: #1d2b3a; --moldura-variaveis: #3b2326; --moldura-visualizacao: #35321d;
   --destaque: #8ab4f8; --borda: #3c3c3c; --borda-clara: rgb(255 255 255 / 0.05); --texto: #d4d4d4; --fundo-campo: #1e1e1e;
-  --texto-barra: #9cdcfe; --icone-papel: #3c3f44; --botao-hover: #2a2d2e; --botao-ativo: #37373d;
+  --texto-barra: #9cdcfe; --botao-hover: #2a2d2e; --botao-ativo: #37373d;
   --desabilitado: #6b6b6b; --desabilitado-fundo: #252526; --desabilitado-campo: #6b6b6b;
   --cabecalho: #2d2d30; --linha-grade: #333333; --selecao-grade: #3d3a1c;
   --calha-borda: #333333; --calha-fim: #1e1e1e; --calha-texto: #858585;
@@ -88,7 +87,7 @@
 :root[data-tema="meia-noite"] {
   --fundo-janela: #16161e; --moldura-editor: #1e2340; --moldura-variaveis: #3a1f2b; --moldura-visualizacao: #33301e;
   --destaque: #7aa2f7; --borda: #2f334d; --borda-clara: rgb(255 255 255 / 0.05); --texto: #c0caf5; --fundo-campo: #1a1b26;
-  --texto-barra: #7dcfff; --icone-papel: #2f3549; --botao-hover: #292e42; --botao-ativo: #33395a;
+  --texto-barra: #7dcfff; --botao-hover: #292e42; --botao-ativo: #33395a;
   --desabilitado: #565f89; --desabilitado-fundo: #1f2335; --desabilitado-campo: #565f89;
   --cabecalho: #24283b; --linha-grade: #292e42; --selecao-grade: #3d3a1e;
   --calha-borda: #292e42; --calha-fim: #1a1b26; --calha-texto: #737aa2;
@@ -107,7 +106,7 @@
 :root[data-tema="dracula"] {
   --fundo-janela: #21222c; --moldura-editor: #2b2d45; --moldura-variaveis: #3d2a3a; --moldura-visualizacao: #3a3a2a;
   --destaque: #bd93f9; --borda: #44475a; --borda-clara: rgb(255 255 255 / 0.05); --texto: #f8f8f2; --fundo-campo: #282a36;
-  --texto-barra: #8be9fd; --icone-papel: #44475a; --botao-hover: #343746; --botao-ativo: #44475a;
+  --texto-barra: #8be9fd; --botao-hover: #343746; --botao-ativo: #44475a;
   --desabilitado: #6272a4; --desabilitado-fundo: #2a2c38; --desabilitado-campo: #6272a4;
   --cabecalho: #343746; --linha-grade: #3a3c4e; --selecao-grade: #4a4630;
   --calha-borda: #3a3c4e; --calha-fim: #282a36; --calha-texto: #6272a4;
@@ -126,7 +125,7 @@
 :root[data-tema="terminal"] {
   --fundo-janela: #000000; --moldura-editor: #04140a; --moldura-variaveis: #140f04; --moldura-visualizacao: #0a140a;
   --destaque: #ffb000; --borda: #1f5f2f; --borda-clara: rgb(51 255 102 / 0.06); --texto: #33ff66; --fundo-campo: #000000;
-  --texto-barra: #ffb000; --icone-papel: #062a12; --botao-hover: #062a12; --botao-ativo: #0b3d1a;
+  --texto-barra: #ffb000; --botao-hover: #062a12; --botao-ativo: #0b3d1a;
   --desabilitado: #1d6b33; --desabilitado-fundo: #020c05; --desabilitado-campo: #1d6b33;
   --cabecalho: #062a12; --linha-grade: #0f3a1c; --selecao-grade: #2a2200;
   --calha-borda: #0f3a1c; --calha-fim: #000000; --calha-texto: #1fa34a;
@@ -146,7 +145,7 @@
 :root[data-tema="sepia"] {
   --fundo-janela: #e9dfc7; --moldura-editor: #d3dac6; --moldura-variaveis: #e6c3ae; --moldura-visualizacao: #ebdc9c;
   --destaque: #2a5d8f; --borda: #b3a68a; --borda-clara: #fffaf0; --texto: #3b3226; --fundo-campo: #fbf4e2;
-  --texto-barra: #2a5d8f; --icone-papel: #fffaf0; --botao-hover: #f3ead3; --botao-ativo: #d9cba8;
+  --texto-barra: #2a5d8f; --botao-hover: #f3ead3; --botao-ativo: #d9cba8;
   --desabilitado: #9c9078; --desabilitado-fundo: #efe6cf; --desabilitado-campo: #a89c82;
   --cabecalho: #e3d7b8; --linha-grade: #ddd0b0; --selecao-grade: #f6e7a8;
   --calha-borda: #d6c9a8; --calha-fim: #fbf4e2; --calha-texto: #7a6e58;
@@ -192,11 +191,19 @@ button, input, select { font: inherit; color: inherit; }
   box-shadow: inset 0 1px 0 var(--borda-clara);
 }
 
+/* Tamanho dos ícones (preferência tamanhoIcones, main.js aplicarBarra) e acentos por tema
+   (--icone-*, definidos em compartilhado/temas.js e aplicados por aplicarTema). */
+:root { --tam-icone: 20px; --btn-w: 30px; --btn-h: 28px; --icone-ok: #1a7a1a; --icone-perigo: #b00000; --icone-acento: #1c4fb0; }
+:root[data-tam-icone="pequeno"] { --tam-icone: 16px; --btn-w: 26px; --btn-h: 24px; }
+:root[data-tam-icone="grande"] { --tam-icone: 24px; --btn-w: 36px; --btn-h: 34px; }
+
+.barra [hidden] { display: none; }
+
 .botao {
   display: inline-grid;
   place-items: center;
-  width: 30px;
-  height: 28px;
+  width: var(--btn-w);
+  height: var(--btn-h);
   padding: 0;
   border: 1px solid transparent;
   border-radius: 3px;
@@ -211,8 +218,46 @@ button, input, select { font: inherit; color: inherit; }
 }
 .botao:disabled { opacity: 0.35; }
 .botao:focus-visible { outline: 2px solid var(--destaque); outline-offset: -2px; }
-.botao svg { width: 20px; height: 20px; }
-.botao svg .papel { fill: var(--icone-papel); }
+.botao svg { width: var(--tam-icone); height: var(--tam-icone); }
+.botao svg.ic-ok { color: var(--icone-ok); }
+.botao svg.ic-perigo { color: var(--icone-perigo); }
+.botao svg.ic-acento { color: var(--icone-acento); }
+:root[dir="rtl"] .botao svg.direcional { transform: scaleX(-1); }
+
+/* Avatar da conta: foto redonda, ou as iniciais do nome sobre a cor de acento. */
+.avatar-disco {
+  --av: 26px;
+  display: inline-grid;
+  place-items: center;
+  width: var(--av);
+  height: var(--av);
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--icone-acento);
+  color: var(--fundo-janela);
+  font: 700 calc(var(--av) * 0.4)/1 var(--fonte-ui);
+  user-select: none;
+}
+.avatar-disco img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-disco svg { width: 70%; height: 70%; }
+.botao.avatar { margin-inline-start: auto; }
+.botao.avatar .avatar-disco { --av: calc(var(--tam-icone) + 6px); }
+/* Barra na lateral (preferência posicaoBarra): coluna de ícones à esquerda (à direita no árabe). */
+body.barra-lateral { grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+body.barra-lateral .barra {
+  grid-column: 1; grid-row: 1;
+  flex-direction: column; flex-wrap: nowrap; align-items: center; gap: 2px;
+  min-height: 0; padding: 4px;
+  overflow: hidden auto; scrollbar-width: none;
+  border-bottom: 0; border-inline-end: 1px solid var(--borda);
+  box-shadow: none;
+}
+body.barra-lateral main { grid-column: 2; grid-row: 1; }
+body.barra-lateral .status { grid-column: 1 / -1; grid-row: 2; }
+body.barra-lateral .botao { width: calc(var(--btn-h) + 8px); height: calc(var(--btn-h) + 8px); flex-shrink: 0; }
+body.barra-lateral .campo-barra { display: none; }
+body.barra-lateral .separador { width: 22px; height: 1px; margin: 4px 0; box-shadow: none; flex-shrink: 0; }
+body.barra-lateral .botao.avatar { position: sticky; bottom: 0; margin: auto 0 0; background: var(--fundo-janela); }
 
 .separador {
   width: 1px;
@@ -576,6 +621,12 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
 .abas button { padding: 4px 12px; border: 1px solid var(--dialogo-borda); border-bottom: 0; border-radius: 4px 4px 0 0; background: var(--aba); }
 .abas button[aria-selected="true"] { background: var(--aba-ativa); font-weight: 700; }
 .aba-conteudo { padding: 10px; border: 1px solid var(--dialogo-borda); background: var(--aba-ativa); }
+.abas { flex-wrap: wrap; }
+.lista-botoes-barra { display: grid; gap: 2px 12px; max-height: 190px; overflow-y: auto; padding: 4px; border: 1px solid var(--dialogo-borda); background: var(--fundo-campo); }
+.janela .lista-botoes-barra .dica-opcao { margin-top: 0; }
+.conta-previa { display: inline-flex; }
+.conta-linha { align-items: center; margin-top: 8px; }
+.conta-previa .avatar-disco { --av: 64px; }
 
 .nota { color: var(--detalhe); font-size: 11px; }
 .codigo-pascal {
@@ -783,6 +834,9 @@ body.pagina-inicio { background: #0f1115; }
 }
 @keyframes inicio-entrar { from { opacity: 0; } }
 .inicio-espaco { flex: 1; }
+.inicio-ola { font-weight: 600; }
+.inicio-avatar { display: inline-flex; }
+.inicio-avatar .avatar-disco { background: #8b5cf6; color: #fff; }
 .inicio-rotulo, .inicio-aba, .inicio-filtro, .inicio-chip, .inicio-numero, .inicio-ext, .inicio-selo, .inicio-criar, .inicio-opcao, .tela-inicial kbd {
   font: 600 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
 }
@@ -898,7 +952,8 @@ body.pagina-inicio { background: #0f1115; }
 body.modo-codigo {
   --fundo-janela: #0f1115; --moldura-editor: #0f1115; --moldura-variaveis: #0f1115; --moldura-visualizacao: #0f1115;
   --destaque: #a78bfa; --borda: #262a33; --borda-clara: transparent; --texto: #e6e8eb; --fundo-campo: #0b0d11;
-  --texto-barra: #e6e8eb; --icone-papel: #2a2f39; --botao-hover: #1c2029; --botao-ativo: #262b36;
+  --icone-ok: #4ec96a; --icone-perigo: #ff6b6b; --icone-acento: #6cb6ff;
+  --texto-barra: #e6e8eb; --botao-hover: #1c2029; --botao-ativo: #262b36;
   --desabilitado: #5c6370; --desabilitado-fundo: #13161c; --desabilitado-campo: #5c6370;
   --cabecalho: #13161c; --linha-grade: #1c2027; --selecao-grade: #2b2413;
   --calha-borda: #1c2027; --calha-fim: #0b0d11; --calha-texto: #4b5263;
