@@ -28,6 +28,7 @@ const BASICOS = new Map([
   ['float', real('float', 4)], ['double', DOUBLE], ['long double', real('long double', 16, 16)],
   // Tipos que o próprio clang define (o resultado do sizeof vira __size_t).
   ['__size_t', SIZE_T], ['__ptrdiff_t', inteiro('long', 4, true)], ['__int128', inteiro('__int128', 16, true)],
+  ['__builtin_va_list', { k: 'ptr', alvo: VOID, tamanho: 4, alinhamento: 4, nome: 'void *' }],
   ['char16_t', inteiro('char16_t', 2, false)], ['char32_t', inteiro('char32_t', 4, false)], ['wchar_t', inteiro('wchar_t', 4, true)],
 ])
 
@@ -52,8 +53,9 @@ function normalizarBasico(palavras) {
 
 const ehBasica = (p) => ['void', '_Bool', 'bool', 'char', 'short', 'int', 'long', 'float', 'double', 'unsigned', 'signed'].includes(p)
 
-export const ponteiro = (alvo) => ({ k: 'ptr', alvo, tamanho: 4, alinhamento: 4, nome: `${alvo.nome} *` })
-export const vetor = (elem, n) => ({ k: 'array', elem, n, get tamanho() { return n === null ? 0 : n * tamanhoDe(elem) }, get alinhamento() { return alinhamentoDe(elem) }, nome: `${elem.nome}[${n ?? ''}]` })
+export const ponteiro = (alvo) => ({ k: 'ptr', alvo, tamanho: 4, alinhamento: 4, nome: `${alvo.nome} *`, dinamico: alvo.dinamico })
+// dim: texto da expressão do tamanho de um vetor de tamanho variável (VLA, "int[n]"); a máquina resolve com o valor de agora.
+export const vetor = (elem, n, dim) => ({ k: 'array', elem, n, dim, dinamico: dim !== undefined || elem.dinamico, get tamanho() { return n === null ? 0 : n * tamanhoDe(elem) }, get alinhamento() { return alinhamentoDe(elem) }, nome: `${elem.nome}[${dim ?? n ?? ''}]` })
 const funcao = (ret, params, variadica) => ({ k: 'func', ret, params, variadica, tamanho: 1, alinhamento: 1, nome: `${ret.nome} (${params.map((p) => p.nome).join(', ')})` })
 const referencia = (alvo) => ({ k: 'ref', alvo, tamanho: 4, alinhamento: 4, nome: `${alvo.nome} &` })
 
@@ -230,6 +232,9 @@ export class Tipos {
   }
 
   ler(texto) {
+    // Tamanho variável (int[n * 2]): o texto da expressão fica à parte e no lugar vai uma ficha __vlaN.
+    const dimensoes = []
+    texto = texto.replace(/\[([^[\]]*[^[\]\d\s][^[\]]*)\]/g, (_m, expr) => `[__vla${dimensoes.push(expr.trim()) - 1}]`)
     const fichas = normalizarNomeCpp(texto.replace(ANONIMO, (_m, _tipo, l, c) => `__anon_${l}_${c}`))
       .match(/::|\.\.\.|&&|[A-Za-z_][\w]*|\d+|[*&()[\],<>]/g) ?? []
     let i = 0
@@ -331,9 +336,11 @@ export class Tipos {
         if (ver() === '[') {
           i += 1
           let n = null
+          let dim
           if (/^\d+$/.test(ver())) { n = Number(ver()); i += 1 }
+          else if (/^__vla\d+$/.test(ver() ?? '')) { dim = dimensoes[Number(ver().slice(5))]; i += 1 }
           comer(']')
-          sufixos.push(Object.assign((t) => vetor(t, n), { vetor: true }))
+          sufixos.push(Object.assign((t) => vetor(t, n, dim), { vetor: true }))
         } else {
           i += 1
           const { lista, variadica } = parametros()

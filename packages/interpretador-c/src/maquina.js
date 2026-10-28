@@ -7,7 +7,9 @@ import { BIBLIOTECA } from './biblioteca.js'
 import { ErroC, EXPLICACOES } from './erros.js'
 import { INICIO_ESTATICO, Memoria } from './memoria.js'
 import { ExcecaoCpp, METODOS_CPP } from './cpp.js'
-import { DOUBLE, Tipos, alinhamentoDe, ehInteiro, layout, ponteiro, tamanhoDe } from './tipos.js'
+import { DOUBLE, INT, LONG_LONG, Tipos, alinhamentoDe, alinhar, ehInteiro, layout, ponteiro, tamanhoDe, vetor } from './tipos.js'
+
+const PONTEIRO_VOID = ponteiro({ k: 'void', nome: 'void', tamanho: 1, alinhamento: 1 })
 
 const FIM_DE_LACO = { tipo: 'break' }
 const PROXIMA_VOLTA = { tipo: 'continue' }
@@ -508,7 +510,90 @@ export class MaquinaC {
 
   tipo(no) {
     if (this.cacheDo(no).__t === undefined) no.__t = this.tipos.de(no.type)
-    return no.__t
+    return no.__t.dinamico ? this.resolver(no.__t) : no.__t
+  }
+
+  /** Vetor de tamanho variável (int v[n]): troca a expressão do tamanho pelo valor que ela tem agora. */
+  resolver(t) {
+    if (!t.dinamico) return t
+    if (t.k === 'ptr') return ponteiro(this.resolver(t.alvo))
+    if (t.k !== 'array') return t
+    const elem = this.resolver(t.elem)
+    if (t.dim === undefined || t.dim === '*') return vetor(elem, t.n) // [*] só aparece em protótipos
+    const n = this.avaliarDimensao(t.dim)
+    if (!(n > 0)) throw new ErroC(`vetor de tamanho variável com tamanho ${n}: o tamanho precisa ser maior que zero`)
+    return vetor(elem, n)
+  }
+
+  /** Calcula o texto de um tamanho de vetor (n, n * 2 + 1, (l - 1) / 2...) com as variáveis visíveis agora. */
+  avaliarDimensao(texto) {
+    const fichas = texto.match(/\d+[uUlL]*|[A-Za-z_]\w*|<<|>>|[-+*/%&|^~()]/g) ?? []
+    let i = 0
+    const niveis = [['|'], ['^'], ['&'], ['<<', '>>'], ['+', '-'], ['*', '/', '%']]
+    const falha = () => new ErroC(`o passo a passo não sabe calcular o tamanho "${texto}" do vetor (rode com F9)`)
+    const primario = () => {
+      const f = fichas[i++]
+      if (f === undefined) throw falha()
+      if (f === '(') { const v = binario(0); if (fichas[i++] !== ')') throw falha(); return v }
+      if (f === '-') return -primario()
+      if (f === '+') return primario()
+      if (f === '~') return ~primario()
+      if (/^\d/.test(f)) return Number.parseInt(f, 10)
+      if (/^[A-Za-z_]/.test(f)) {
+        const v = [...(this.quadro?.variaveis ?? [])].reverse().find((x) => x.nome === f) ?? [...this.globais.values()].find((x) => x.nome === f)
+        if (!v || !ehInteiro(v.tipo)) throw falha()
+        return Number(this.mem.ler(v.tipo, v.endereco))
+      }
+      throw falha()
+    }
+    const binario = (nivel) => {
+      if (nivel === niveis.length) return primario()
+      let a = binario(nivel + 1)
+      while (niveis[nivel].includes(fichas[i])) {
+        const op = fichas[i++]
+        const b = binario(nivel + 1)
+        if ((op === '/' || op === '%') && b === 0) throw new ErroC('divisão por zero no tamanho do vetor', 0, EXPLICACOES.divisao)
+        a = { '|': () => a | b, '^': () => a ^ b, '&': () => a & b, '<<': () => a << b, '>>': () => a >> b, '+': () => a + b, '-': () => a - b, '*': () => a * b, '/': () => Math.trunc(a / b), '%': () => a % b }[op]()
+      }
+      return a
+    }
+    const r = binario(0)
+    if (i < fichas.length) throw falha()
+    return r
+  }
+
+  /** Argumentos além dos parâmetros fixos de uma função variádica: ficam na pilha, cada um no seu alinhamento (o va_list aponta para cá). */
+  prepararVarargs(quadro, extras) {
+    let desloc = 0
+    const posicoes = extras.map((a) => {
+      desloc = alinhar(desloc, alinhamentoDe(a.tipo))
+      const p = desloc
+      desloc += tamanhoDe(a.tipo)
+      return p
+    })
+    quadro.varargs = this.mem.empilhar(Math.max(desloc, 1), 8, { nome: '(argumentos ...)' })
+    extras.forEach((a, k) => this.guardar(a.tipo, quadro.varargs + posicoes[k], a.valor))
+  }
+
+  /** Lê o próximo argumento de um va_list, avançando-o; o endereço de `ap` é o de uma variável va_list. */
+  lerVaArg(enderecoDoAp, t) {
+    const p = alinhar(this.mem.ler(PONTEIRO_VOID, enderecoDoAp), alinhamentoDe(t))
+    const v = this.carregar(t, p)
+    this.mem.escrever(PONTEIRO_VOID, enderecoDoAp, p + tamanhoDe(t))
+    return v
+  }
+
+  /** Fonte de argumentos para vprintf & cia.: cada diretiva do formato pede o seu tipo ('int', 'll', 'real', 'ptr'). */
+  argumentosDeVaList(p) {
+    const tipos = { int: INT, ll: LONG_LONG, real: DOUBLE, ptr: PONTEIRO_VOID }
+    let q = Number(p)
+    return (classe) => {
+      const t = tipos[classe]
+      q = alinhar(q, alinhamentoDe(t))
+      const valor = this.carregar(t, q)
+      q += tamanhoDe(t)
+      return { valor, tipo: t }
+    }
   }
 
   /**
@@ -575,6 +660,7 @@ export class MaquinaC {
         else if (valores[i] !== undefined) this.mem.escrever(t, variavel.endereco, valores[i])
         variavel.apelido = t.k === 'ref'
       }
+      if (this.tipos.de(def.type).variadica) this.prepararVarargs(quadro, (ctx.argumentos ?? ctx.args ?? []).slice(params.length))
       if (this.linha(def)) yield this.eventoLinha
       if (ctx.construtor) yield* this.iniciarObjeto(def, ctx.classe, ctx.this)
       const r = yield* this.bloco(corpo?.inner ?? [], true)
@@ -610,7 +696,7 @@ export class MaquinaC {
     const tamanho = tamanhoDe(tipo)
     if (tipo.k === 'array' && tipo.n === null) throw new ErroC(`vetor "${decl.name}" sem tamanho fixo: o passo a passo ainda não aceita vetor de tamanho variável (rode com F9)`)
     const endereco = this.mem.empilhar(tamanho, alinhamentoDe(tipo), { nome: decl.name, tipo })
-    const variavel = { id: decl.id, nome: decl.name, tipo, tipoTexto: decl.type.qualType, endereco }
+    const variavel = { id: decl.id, nome: decl.name, tipo, tipoTexto: this.tipos.de(decl.type).dinamico ? tipo.nome : decl.type.qualType, endereco }
     this.quadro.variaveis.push(variavel)
     this.quadro.porId.set(decl.id, variavel)
     return variavel
@@ -775,7 +861,7 @@ export class MaquinaC {
   }
 
   * declarar(d) {
-    const tipo = this.tipos.de(d.type)
+    const tipo = this.resolver(this.tipos.de(d.type))
     const variavel = this.novaLocal(d, tipo)
     const filhos = (d.inner ?? []).filter((c) => c.kind !== 'BindingDecl')
     const init = d.init ? filhos[filhos.length - 1] : null
@@ -948,13 +1034,14 @@ export class MaquinaC {
         if (this.cpp) return this.tipo(x).k === 'struct' && x.valueCategory === 'prvalue' ? yield* this.temporario(x) : yield* this.chamadaCpp(x)
         return yield* this.chamada(x)
       case 'UnaryExprOrTypeTraitExpr': {
-        const t = x.argType ? this.tipos.de(x.argType) : this.tipo(x.inner[0])
+        const t = x.argType ? this.resolver(this.tipos.de(x.argType)) : this.tipo(x.inner[0])
         return x.name === 'alignof' || x.name === '_Alignof' ? alinhamentoDe(t) : tamanhoDe(t)
       }
       case 'ArraySubscriptExpr':
       case 'MemberExpr':
       case 'CompoundLiteralExpr': return yield* this.end(x)
       case 'PredefinedExpr': return yield* this.val(x.inner[0])
+      case 'VAArgExpr': return this.lerVaArg(yield* this.end(x.inner[0]), this.tipo(x))
       case 'ImplicitValueInitExpr': return this.tipo(x).k === 'real' ? 0 : 0
       case 'StmtExpr': throw new ErroC('expressão-comando do GNU não funciona no passo a passo')
       default:
@@ -1500,7 +1587,7 @@ export class MaquinaC {
     const def = this.funcoes.get(nome)
     const linhaDaChamada = this.linhaAtual
     if (def) {
-      const r = yield* this.chamarFuncao(def, args.map((a) => a.valor), linhaDaChamada)
+      const r = yield* this.chamarFuncao(def, args.map((a) => a.valor), linhaDaChamada, { argumentos: args })
       this.linhaAtual = linhaDaChamada
       return r
     }

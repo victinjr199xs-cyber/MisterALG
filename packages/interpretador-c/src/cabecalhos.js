@@ -38,6 +38,10 @@ int fgetc(FILE *arquivo);
 int fprintf(FILE *arquivo, const char *formato, ...);
 int sprintf(char *destino, const char *formato, ...);
 int snprintf(char *destino, size_t tamanho, const char *formato, ...);
+int vprintf(const char *formato, __builtin_va_list ap);
+int vfprintf(FILE *arquivo, const char *formato, __builtin_va_list ap);
+int vsprintf(char *destino, const char *formato, __builtin_va_list ap);
+int vsnprintf(char *destino, size_t tamanho, const char *formato, __builtin_va_list ap);
 int sscanf(const char *texto, const char *formato, ...);
 int fflush(FILE *arquivo);
 int feof(FILE *arquivo);
@@ -149,5 +153,5 @@ typedef unsigned long long uint64_t;
   'conio.h': '#pragma once\nint getch(void);\nint getche(void);\nint kbhit(void);\nvoid clrscr(void);\n',
   'windows.h': '#pragma once\n#define CP_UTF8 65001\nvoid Sleep(unsigned long ms);\nint SetConsoleOutputCP(unsigned int cp);\nint SetConsoleCP(unsigned int cp);\n',
   'assert.h': '#pragma once\nvoid __misteralg_assert(int ok, const char *expressao);\n#define assert(e) __misteralg_assert(!!(e), #e)\n',
-  'stdarg.h': '#pragma once\n', // funções variádicas do aluno ainda não entram no passo a passo
+  'stdarg.h': '#pragma once\ntypedef __builtin_va_list va_list;\n#define va_start(v, ...) __builtin_va_start(v, __VA_ARGS__)\n#define va_end(v) __builtin_va_end(v)\n#define va_arg(v, t) __builtin_va_arg(v, t)\n#define va_copy(d, s) __builtin_va_copy(d, s)\n',
 }

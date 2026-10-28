@@ -1,0 +1,66 @@
+{
+ "f9-lambda-sort": {
+  "saida": "9 7 5 2 1 \n5\n24 4\n48\n",
+  "codigo": 0
+ },
+ "f9-map-palavras": {
+  "saida": "a: 2\nb: 1\ncasa: 2\nda: 1\nde: 1\na!\ncasa!\n",
+  "codigo": 0
+ },
+ "f9-set-unordered": {
+  "saida": "1 3 4 5 14\n620\n3\n3 5\n",
+  "codigo": 0
+ },
+ "f9-pq-dijkstra": {
+  "saida": "0:0\n1:3\n2:1\n3:4\n4:7\n",
+  "codigo": 0
+ },
+ "f9-stack-queue-deque": {
+  "saida": "303993\n21 5\n0,1,4,9,123\n",
+  "codigo": 0
+ },
+ "f9-sstream-parse": {
+  "saida": "60 abc 4.5\nx=10;y=00020\n[um][dois][tres]\n",
+  "codigo": 0
+ },
+ "f9-iomanip-precisao": {
+  "saida": "3.142\n     3.142|******42|ab****|\n1.23e+04\n1.4142e+00 1.0240e+03 -3.0000e+00\n",
+  "codigo": 0
+ },
+ "f9-unique-shared-ptr": {
+  "saida": "No1\nNo2\n2\n1 1\nNo3\n3\n~No3\n~No2\n~No1\n",
+  "codigo": 0
+ },
+ "f9-tuple-pair-function": {
+  "saida": "ana2012.5x\n120\na2 b2 c1 \nana20\n",
+  "codigo": 0
+ },
+ "f9-algoritmos": {
+  "saida": "12349\n123\n91\n931\n111\n123 132 213 231 312 321 35\n",
+  "codigo": 0
+ },
+ "f9-string-extras": {
+  "saida": "World71\n>>Ola World 43 5 71.500000\n>>OLA WORLD\n1217\n",
+  "codigo": 0
+ },
+ "f9-getline-loop": {
+  "saida": "extra:sobra 1\nextra:sobra 2\n9Ana Maria\n3Bia\n",
+  "codigo": 0
+ },
+ "f9-struct-classe-vector": {
+  "saida": "Bia   9.0\nAna   7.5\nCaio  6.2\nmedia 7.58\nA1B1C1\n",
+  "codigo": 0
+ },
+ "f9-map-iteradores": {
+  "saida": "1a2b3c\n93104z\n2\nb\n",
+  "codigo": 0
+ },
+ "f9-excecao-limits": {
+  "saida": "fora\nboom\n2147483647 -9223372036854775808 1.79769e+308 7\n12.53\n",
+  "codigo": 0
+ },
+ "f9-lambda-captura-generica": {
+  "saida": "11 22 11 3.5 ab\n13 36 -3 \n41\n",
+  "codigo": 0
+ }
+}

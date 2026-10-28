@@ -458,17 +458,17 @@ const CODIFICACOES = {
       let r = ''
       for (let i = 0; i + 4 <= b.length; i += 4) {
         const c = (b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24)) >>> 0
-        r += c > 0x10ffff || ehSurrogato(c) ? '�' : String.fromCodePoint(c)
+        r += c > 0x10ffff || ehSurrogato(c) ? '\uFFFD' : String.fromCodePoint(c)
       }
-      return b.length % 4 ? r + '�' : r
+      return b.length % 4 ? r + '\uFFFD' : r
     },
   },
 }
 function decodificar16(b, be) {
   let r = ''
   for (let i = 0; i + 2 <= b.length; i += 2) r += String.fromCharCode(be ? (b[i] << 8) | b[i + 1] : (b[i + 1] << 8) | b[i])
-  r = r.replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '�')
-  return b.length % 2 ? r + '�' : r
+  r = r.replace(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g, '\uFFFD')
+  return b.length % 2 ? r + '\uFFFD' : r
 }
 class CodificacaoCS {
   constructor(c) { this.c = c }

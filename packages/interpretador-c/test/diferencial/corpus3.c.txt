@@ -1,0 +1,135 @@
+@@@ 30-variadicas
+#include <stdio.h>
+#include <stdarg.h>
+#include <string.h>
+int soma(int n, ...) { va_list ap; va_start(ap, n); int s = 0; for (int i = 0; i < n; i++) s += va_arg(ap, int); va_end(ap); return s; }
+double media(int n, ...) { va_list ap; va_start(ap, n); double s = 0; for (int i = 0; i < n; i++) s += va_arg(ap, double); va_end(ap); return n ? s / n : 0; }
+void juntar(const char *sep, int n, ...) { va_list ap; va_start(ap, n); for (int i = 0; i < n; i++) { char *p = va_arg(ap, char *); printf("%s%s", i ? sep : "", p); } printf("\n"); va_end(ap); }
+void meu_printf(const char *fmt, ...) { va_list ap; va_start(ap, fmt); printf("[LOG] "); vprintf(fmt, ap); va_end(ap); }
+int fmt_str(char *buf, size_t n, const char *fmt, ...) { va_list ap; va_start(ap, fmt); int r = vsnprintf(buf, n, fmt, ap); va_end(ap); return r; }
+void erro(const char *fmt, ...) { va_list ap; va_start(ap, fmt); vfprintf(stdout, fmt, ap); va_end(ap); }
+int maior(int n, ...) { va_list a, b; va_start(a, n); va_copy(b, a); int m = va_arg(a, int); for (int i = 1; i < n; i++) { int v = va_arg(a, int); if (v > m) m = v; } int primeiro = va_arg(b, int); va_end(a); va_end(b); return m * 1000 + primeiro; }
+long long somall(int n, ...) { va_list ap; va_start(ap, n); long long s = 0; for (int i = 0; i < n; i++) s += va_arg(ap, long long); va_end(ap); return s; }
+void ptrs(int n, ...) { va_list ap; va_start(ap, n); for (int i = 0; i < n; i++) { int *p = va_arg(ap, int *); *p += 10; } va_end(ap); }
+void misto(const char *f, ...) { va_list ap; va_start(ap, f); for (; *f; f++) { switch (*f) { case 'd': printf("i=%d ", va_arg(ap, int)); break; case 'f': printf("f=%.2f ", va_arg(ap, double)); break; case 's': printf("s=%s ", va_arg(ap, char *)); break; case 'c': printf("c=%c ", va_arg(ap, int)); break; } } printf("\n"); va_end(ap); }
+int main() {
+    printf("%d %d\n", soma(3, 1, 2, 3), soma(0));
+    printf("%.2f\n", media(3, 1.5, 2.5, 3.5));
+    juntar(", ", 3, "a", "bb", "ccc");
+    meu_printf("x=%d y=%s z=%.1f\n", 5, "ola", 2.5);
+    char buf[16]; int r = fmt_str(buf, sizeof buf, "n=%d-%s", 42, "abcdefghijklmnop"); printf("%d [%s]\n", r, buf);
+    erro("e=%d\n", 7);
+    printf("%d\n", maior(4, 3, 9, 2, 5));
+    printf("%lld\n", somall(2, 10000000000LL, 5LL));
+    int a = 1, b = 2; ptrs(2, &a, &b); printf("%d %d\n", a, b);
+    misto("dfsc", 7, 3.14159, "txt", 'z');
+    short sh = 5; char ch = 'A'; float fl = 1.5f; misto("dcf", sh, ch, fl);
+    return 0;
+}
+@@@ 31-vla
+#include <stdio.h>
+void preenche(int n, int a[n][n]) { for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) a[i][j] = i * n + j; }
+int traco(int n, int a[n][n]) { int s = 0; for (int i = 0; i < n; i++) s += a[i][i]; return s; }
+int soma(int n, int v[]) { int s = 0; for (int i = 0; i < n; i++) s += v[i]; return s; }
+void mostra(int l, int c, int m[l][c]) { for (int i = 0; i < l; i++) { for (int j = 0; j < c; j++) printf("%3d", m[i][j]); printf("\n"); } }
+int main() {
+    int n = 4;
+    int v[n];
+    for (int i = 0; i < n; i++) v[i] = (i + 1) * (i + 1);
+    printf("%d %d %zu\n", soma(n, v), v[3], sizeof v);
+    int m[n][n]; preenche(n, m); printf("%d %zu %zu\n", traco(n, m), sizeof m, sizeof m[0]);
+    int l = 2, c = 3; int q[l][c];
+    for (int i = 0; i < l; i++) for (int j = 0; j < c; j++) q[i][j] = i + j;
+    mostra(l, c, q);
+    const int K = 5; int w[K]; for (int i = 0; i < K; i++) w[i] = i * 2; printf("%d %zu\n", w[K - 1], sizeof(w) / sizeof(w[0]));
+    for (int k = 1; k <= 3; k++) { double d[k * 2]; for (int i = 0; i < k * 2; i++) d[i] = i / 2.0; printf("%zu %.1f\n", sizeof d, d[k * 2 - 1]); }
+    char s[n + 1]; for (int i = 0; i < n; i++) s[i] = 'a' + i; s[n] = 0; printf("%s\n", s);
+    int *p = v; p[1] = 100; printf("%d %d\n", v[1], *(v + 1));
+    return 0;
+}
+@@@ 32-diversos
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <limits.h>
+struct P { int x, y, z; };
+int cmp(const void *a, const void *b) { return *(const int *)b - *(const int *)a; }
+int contador(void) { static int c = 0; return ++c; }
+int dobro(int x) { return x * 2; } int triplo(int x) { return x * 3; }
+int main() {
+    struct P p = { .y = 5, .x = 1 }; printf("%d %d %d\n", p.x, p.y, p.z);
+    int a[6] = { [3] = 5, [1] = 2 }; for (int i = 0; i < 6; i++) printf("%d ", a[i]); printf("\n");
+    int *c = (int[]){ 1, 2, 3 }; printf("%d %d\n", c[0] + c[1], c[2]);
+    struct P q = (struct P){ 7, 8, 9 }; printf("%d\n", q.z);
+    bool b = 5; _Bool d = 0; printf("%d %d %d\n", b, d, (int)sizeof(bool));
+    contador(); contador(); printf("%d\n", contador());
+    int (*fs[2])(int) = { dobro, triplo }; printf("%d %d\n", fs[0](5), fs[1](5));
+    int v[5] = { 3, 1, 4, 1, 5 }; qsort(v, 5, sizeof(int), cmp); for (int i = 0; i < 5; i++) printf("%d ", v[i]); printf("\n");
+    char s[] = "a,b;;c"; for (char *t = strtok(s, ",;"); t; t = strtok(NULL, ",;")) printf("<%s>", t); printf("\n");
+    char buf[80]; sprintf(buf, "%5d|%-5d|%05d|%x|%X|%o|%c|%s|%8.3f|%e|%g|%%|%5s|%-5s|%.2s", 42, 42, 42, 255, 255, 8, 'z', "hi", 3.14159, 12345.678, 0.0001, "ab", "cd", "xyz"); puts(buf);
+    snprintf(buf, 6, "%s", "truncado"); puts(buf);
+    long long big = 9223372036854775807LL; printf("%lld %llu %ld\n", big, (unsigned long long)big * 2, (long)123);
+    unsigned int u = 0; u--; printf("%u\n", u); unsigned char uc = 250; uc += 10; printf("%d\n", uc);
+    int mx = INT_MAX; unsigned int w = mx; w += 2; printf("%u\n", w);
+    char ch = 'a'; ch += 2; ch++; printf("%c %d %c\n", ch, ch - 'a', 'A' + 3);
+    printf("%zu %ld %5.1f%%\n", sizeof(long long), (long)sizeof(struct P), 99.5);
+    return 0;
+}
+@@@ 33-variadicas-repassando
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
+static int somav(int n, va_list ap) { int s = 0; while (n--) s += va_arg(ap, int); return s; }
+int soma(int n, ...) { va_list ap; va_start(ap, n); int r = somav(n, ap); va_end(ap); return r; }
+void log_msg(int nivel, const char *fmt, ...) {
+    static const char *nomes[] = { "INFO", "AVISO", "ERRO" };
+    char buf[128]; va_list ap; va_start(ap, fmt); vsnprintf(buf, sizeof buf, fmt, ap); va_end(ap);
+    printf("%s: %s\n", nomes[nivel], buf);
+}
+char *formatar(const char *fmt, ...) {
+    va_list ap, ap2; va_start(ap, fmt); va_copy(ap2, ap);
+    int n = vsnprintf(NULL, 0, fmt, ap); va_end(ap);
+    char *s = malloc(n + 1); vsprintf(s, fmt, ap2); va_end(ap2); return s;
+}
+unsigned long somal(int n, ...) { va_list ap; va_start(ap, n); unsigned long s = 0; while (n--) s += va_arg(ap, unsigned long); va_end(ap); return s; }
+double maxd(double primeiro, ...) { va_list ap; va_start(ap, primeiro); double m = primeiro, x; while ((x = va_arg(ap, double)) >= 0) if (x > m) m = x; va_end(ap); return m; }
+int conta(const char *fmt, ...) { va_list ap; va_start(ap, fmt); int c = 0; for (const char *p = fmt; *p; p++) if (*p == '%') { p++; if (*p == 'd') { (void)va_arg(ap, int); c++; } else if (*p == 'f') { (void)va_arg(ap, double); c++; } } va_end(ap); return c; }
+int main() {
+    printf("%d %d\n", soma(4, 1, 2, 3, 4), soma(1, 100));
+    log_msg(0, "iniciando %s v%d.%d", "app", 1, 2); log_msg(2, "falha %5.1f%% em %c (%lld)", 99.5, 'x', 12345678901LL); log_msg(1, "sem args");
+    char *s = formatar("%s-%03d-%x", "id", 7, 255); printf("%s %d\n", s, (int)strlen(s)); free(s);
+    printf("%lu\n", somal(3, 1UL, 2UL, 3000000000UL));
+    printf("%.1f\n", maxd(1.5, 9.25, 3.0, -1.0));
+    printf("%d\n", conta("%d %f %d", 1, 2.0, 3));
+    int (*fp)(int, ...) = soma; printf("%d\n", fp(2, 10, 20));
+    return 0;
+}
+@@@ 34-vla-mais
+#include <stdio.h>
+#include <string.h>
+int soma_lin(int c, int lin[c]) { int s = 0; for (int j = 0; j < c; j++) s += lin[j]; return s; }
+int soma_m(int l, int c, int m[][c]) { int s = 0; for (int i = 0; i < l; i++) s += soma_lin(c, m[i]); return s; }
+int fat(int n) { int tab[n + 1]; tab[0] = 1; for (int i = 1; i <= n; i++) tab[i] = tab[i - 1] * i; return tab[n]; }
+int main() {
+    int n;
+    scanf("%d", &n);
+    int v[n];
+    for (int i = 0; i < n; i++) scanf("%d", &v[i]);
+    int maior = v[0]; for (int i = 1; i < n; i++) if (v[i] > maior) maior = v[i];
+    printf("n=%d maior=%d bytes=%d itens=%d\n", n, maior, (int)sizeof(v), (int)(sizeof(v) / sizeof(v[0])));
+    int l = 3, c = 4; int m[l][c];
+    for (int i = 0; i < l; i++) for (int j = 0; j < c; j++) m[i][j] = (i + 1) * (j + 1);
+    printf("%d %d\n", soma_m(l, c, m), soma_lin(c, m[2]));
+    int (*p)[c] = m; printf("%d %d\n", p[1][2], (*(p + 2))[3]);
+    printf("%d %d\n", fat(5), fat(10));
+    char nome[n * 2 + 1]; memset(nome, 'z', n * 2); nome[n * 2] = 0; printf("%s %d\n", nome, (int)strlen(nome));
+    int *q = &v[1]; q[1] = 77; printf("%d\n", v[2]);
+    int soma = 0; for (int k = 1; k <= 3; k++) { int tmp[k]; for (int i = 0; i < k; i++) tmp[i] = k; soma += tmp[k - 1] + (int)sizeof tmp; }
+    printf("%d\n", soma);
+    return 0;
+}
+--- entrada
+5
+3 8 1 9 4

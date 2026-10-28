@@ -349,6 +349,7 @@ export const CABECALHOS_CPP = {
   cstddef: '#pragma once\n#include <stddef.h>\nnamespace std { using ::size_t; }\n',
   climits: '#pragma once\n#include <limits.h>\n',
   cstdint: '#pragma once\n#include <stdint.h>\n',
+  cstdarg: '#pragma once\n#include <stdarg.h>\n',
   ...Object.fromEntries(Object.entries(NOMES_C).map(([c, nomes]) => [c, envolver(c.slice(1), nomes)])),
 }
 

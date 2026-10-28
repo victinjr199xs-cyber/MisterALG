@@ -111,6 +111,17 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('JS: Ctrl+F2 para o laço', await ate(`${M}.execucao.emExecucao() === false`, 20), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
+  // JS: recursão funda (5000 chamadas) e await no topo numa Promise que nunca termina
+  await novo('javascript', 'function soma(n) {\n  return n === 0 ? 0 : n + soma(n - 1)\n}\nconsole.log(soma(5000))\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('JS: recursão de 5000 chamadas', await ate(`document.querySelector('#console-tela').textContent.includes('12502500')`, 40), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+  await novo('javascript', 'console.log("antes")\nawait new Promise(() => {})\nconsole.log("nunca")\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('JS: await sem fim explica o que houve', await ate(`[...document.querySelectorAll('dialog[open]')].some((d) => d.textContent.includes('nunca foi resolvida (await na linha 2)'))`, 40), true)
+  await avaliar(`document.querySelector('dialog[open]')?.close()`)
+  await avaliar(`${M}.execucao.restaurar()`)
+
   // ---- TypeScript ---------------------------------------------------------------------------
   await novo('typescript', 'const n: number = 20\nconst m: number = n + 1\nconsole.log(m)\n')
   await avaliar(`void ${M}.comandos.executar()`)
@@ -170,6 +181,19 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   conferir('C: F8 até o fim', (await console_()).includes('5 7'), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
+  // C: função variádica (va_list) e vetor de tamanho variável no F8; o VLA aparece como vetor na memória
+  await novo('c', '#include <stdio.h>\n#include <stdarg.h>\nint soma(int n, ...) {\n    va_list ap;\n    va_start(ap, n);\n    int s = 0;\n    for (int i = 0; i < n; i++) s += va_arg(ap, int);\n    va_end(ap);\n    return s;\n}\nint main(void) {\n    int n = 3;\n    int v[n];\n    for (int i = 0; i < n; i++) v[i] = i + 1;\n    printf("soma=%d\\n", soma(n, v[0], v[1], v[2]));\n    return 0;\n}\n')
+  await avaliar(`void ${M}.comandos.passo()`)
+  conferir('C: F8 com va_list e VLA abre a memória', await ate(`!!document.querySelector('.memoria-c:not([hidden]) .mc-quadro')`, 240, 500), true)
+  let viuVla = false
+  for (let i = 0; i < 80 && (await avaliar(`${M}.execucao.emExecucao()`)); i += 1) {
+    await passo(); await esperar(250)
+    viuVla ||= await avaliar(`[...document.querySelectorAll('.memoria-c .mc-tipo')].some((t) => t.textContent === 'int[3]')`)
+  }
+  conferir('C: VLA aparece como int[3] na memória', viuVla, true)
+  conferir('C: va_list e VLA, F8 até o fim', (await console_()).includes('soma=6'), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
   await novo('cpp', '#include <iostream>\n#include <vector>\nusing namespace std;\nint main() {\n    vector<int> v = {3, 1, 2};\n    int soma = 0;\n    for (int x : v) soma += x;\n    cout << "soma=" << soma << endl;\n    return 0;\n}\n')
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('C++: F9 compila e roda', await ate(`document.querySelector('#console-tela').textContent.includes('soma=6')`, 240, 500), true)
@@ -219,6 +243,12 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   await novo('csharp', 'using System;\nclass P\n{\n    static void Main()\n    {\n        int[] v = { 1, 2, 3, 4 };\n        var b = "abc"u8;\n        int a = -16;\n        if (v is [1, .. var resto])\n            Console.WriteLine($"lista {resto.Length} u8 {b.Length} shift {a >>> 28}");\n    }\n}\n')
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('C# 11: lista, u8 e >>> em interpolação', await ate(`document.querySelector('#console-tela').textContent.includes('lista 3 u8 3 shift 15')`), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+
+  // Span sobre array, fatia com subpadrão, BitConverter, Encoding.Unicode e Base64 (saída conferida com o dotnet)
+  await novo('csharp', 'using System;\nusing System.Text;\nclass P\n{\n    static void Main()\n    {\n        int[] v = { 1, 2, 3 };\n        Span<int> s = v;\n        s.Slice(1)[0] = 9;\n        string r = v is [1, .. [9, 3]] ? "ok" : "no";\n        Console.WriteLine(r + " " + BitConverter.ToString(BitConverter.GetBytes(258)) + " " + Convert.ToBase64String(Encoding.Unicode.GetBytes("Hi")) + " " + Encoding.Unicode.GetByteCount("Hi"));\n    }\n}\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('C#: Span, fatia com subpadrão, BitConverter, Encoding e Base64', await ate(`document.querySelector('#console-tela').textContent.includes('ok 02-01-00-00 SABpAA== 4')`), true)
   await avaliar(`${M}.execucao.restaurar()`)
 
   // ---- SQL: PostgreSQL (PGlite) num processo à parte; F8 pára antes de cada comando ------------
