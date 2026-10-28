@@ -785,4 +785,8 @@ export default {
   1274: "Pilih foto akun",
   1275: "Gambar",
   1276: "Alat lainnya",
+  1277: "Malam",
+  1278: "Kertas",
+  1279: "Hibrida terang",
+  1280: "Hibrida gelap",
 }

@@ -801,4 +801,8 @@ export default {
   1274: "Hesap fotoğrafını seç",
   1275: "Görseller",
   1276: "Daha fazla araç",
+  1277: "Gece",
+  1278: "Kağıt",
+  1279: "Karma açık",
+  1280: "Karma koyu",
 }

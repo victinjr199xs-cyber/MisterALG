@@ -805,4 +805,8 @@ export default {
   1274: "Elegir la foto de la cuenta",
   1275: "Imágenes",
   1276: "Más herramientas",
+  1277: "Noche",
+  1278: "Papel",
+  1279: "Híbrido claro",
+  1280: "Híbrido oscuro",
 }

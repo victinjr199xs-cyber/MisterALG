@@ -61,6 +61,9 @@
 
   --fonte-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --fonte-codigo: Menlo, Monaco, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Courier New', monospace;
+  /* forma: 3px reproduz o visual clássico; os temas novos definem --raio maior */
+  --raio: 3px;
+  --fonte-mono: var(--fonte-codigo);
   color-scheme: light;
 }
 
@@ -160,6 +163,86 @@
   color-scheme: light;
 }
 
+/* ---- Repaginação: Noite (estilo Discord) ----------------------------------- */
+:root[data-tema="noite"] {
+  --fundo-janela: #1e1f22; --moldura-editor: #2b2d31; --moldura-variaveis: #2b2d31; --moldura-visualizacao: #2b2d31;
+  --destaque: #949cf7; --borda: #3f4147; --borda-clara: rgb(255 255 255 / 0.05); --texto: #dbdee1; --fundo-campo: #313338;
+  --texto-barra: #aab2ff; --botao-hover: #35373c; --botao-ativo: #404249;
+  --desabilitado: #80848e; --desabilitado-fundo: #2b2d31; --desabilitado-campo: #80848e;
+  --cabecalho: #2b2d31; --linha-grade: #3f4147; --selecao-grade: #404249;
+  --calha-borda: #3f4147; --calha-fim: #313338; --calha-texto: #80848e;
+  --linha-execucao: #5865f2; --texto-execucao: #ffffff; --linha-breakpoint: #a1282c; --texto-breakpoint: #ffffff;
+  --linha-erro: #ff6b6e; --linha-erro-fundo: #4a2326; --selecao-texto: #3b3f6e; --mesma-palavra: #3a3d4d;
+  --cursor: #dbdee1; --detalhe: #a3a6aa;
+  --sx-comentario: #8b93a3; --sx-literal: #ffb86b; --sx-chave: #b4a7ff; --sx-especial: #8ab4ff; --sx-tipo: #5fd2e6; --sx-variavel: #7ee0a0;
+  --dialogo-fundo: #2b2d31; --dialogo-moldura: #1e1f22; --dialogo-borda: #3f4147; --campo-borda: #4e5058;
+  --titulo-inicio: #4752c4; --titulo-fim: #5865f2; --titulo-texto: #ffffff;
+  --acao-inicio: #404249; --acao-fim: #35373c; --aba: #2b2d31; --aba-ativa: #313338;
+  --aviso: #f0b232; --domingo: #ff6b6e;
+  --raio: 6px; --fonte-ui: 'Inter Variable', 'Segoe UI', system-ui, sans-serif; --fonte-codigo: 'JetBrains Mono Variable', Consolas, 'Courier New', monospace;
+  color-scheme: dark;
+}
+
+/* ---- Repaginação: Papel (estilo Notion) ------------------------------------ */
+:root[data-tema="papel"] {
+  --fundo-janela: #f7f6f3; --moldura-editor: #f7f6f3; --moldura-variaveis: #f7f6f3; --moldura-visualizacao: #f7f6f3;
+  --destaque: #0b6bcb; --borda: #d3d2ce; --borda-clara: #ffffff; --texto: #37352f; --fundo-campo: #fdfdfc;
+  --texto-barra: #37352f; --botao-hover: #ebeae6; --botao-ativo: #dddcd7;
+  --desabilitado: #9b9a97; --desabilitado-fundo: #f1f0ed; --desabilitado-campo: #9b9a97;
+  --cabecalho: #f1f0ed; --linha-grade: #e9e9e7; --selecao-grade: #fff3c4;
+  --calha-borda: #e9e9e7; --calha-fim: #fdfdfc; --calha-texto: #787774;
+  --linha-execucao: #0b6bcb; --texto-execucao: #ffffff; --linha-breakpoint: #c9372c; --texto-breakpoint: #ffffff;
+  --linha-erro: #c9372c; --linha-erro-fundo: #fbe4e1; --selecao-texto: #d3e4f7; --mesma-palavra: #f1efe6;
+  --cursor: #37352f; --detalhe: #6f6e69;
+  --sx-comentario: #787774; --sx-literal: #1c7a4d; --sx-chave: #a6389c; --sx-especial: #0b6bcb; --sx-tipo: #b45309; --sx-variavel: #37352f;
+  --dialogo-fundo: #ffffff; --dialogo-moldura: #9b9a97; --dialogo-borda: #d3d2ce; --campo-borda: #c7c6c2;
+  --titulo-inicio: #0b6bcb; --titulo-fim: #0b6bcb; --titulo-texto: #ffffff;
+  --acao-inicio: #ffffff; --acao-fim: #f1f0ed; --aba: #f1f0ed; --aba-ativa: #ffffff;
+  --aviso: #9a6700; --domingo: #c9372c;
+  --raio: 5px; --fonte-ui: 'Inter Variable', 'Segoe UI', system-ui, sans-serif; --fonte-codigo: 'JetBrains Mono Variable', Consolas, 'Courier New', monospace;
+  color-scheme: light;
+}
+
+/* ---- Repaginação: Híbrido claro -------------------------------------------- */
+:root[data-tema="hibrido-claro"] {
+  --fundo-janela: #e9e8f5; --moldura-editor: #f4f3fb; --moldura-variaveis: #f4f3fb; --moldura-visualizacao: #f4f3fb;
+  --destaque: #5b4be8; --borda: #d3d1e8; --borda-clara: #ffffff; --texto: #23223a; --fundo-campo: #fcfcff;
+  --texto-barra: #5b4be8; --botao-hover: #e0def4; --botao-ativo: #d0cdee;
+  --desabilitado: #8e8cab; --desabilitado-fundo: #eeedf8; --desabilitado-campo: #8e8cab;
+  --cabecalho: #eeedf8; --linha-grade: #e3e2f0; --selecao-grade: #ece9ff;
+  --calha-borda: #e3e2f0; --calha-fim: #fcfcff; --calha-texto: #767394;
+  --linha-execucao: #5b4be8; --texto-execucao: #ffffff; --linha-breakpoint: #c0303f; --texto-breakpoint: #ffffff;
+  --linha-erro: #d03a4a; --linha-erro-fundo: #fde6e9; --selecao-texto: #dcd8fb; --mesma-palavra: #eeebff;
+  --cursor: #23223a; --detalhe: #625f80;
+  --sx-comentario: #767394; --sx-literal: #0f8a5f; --sx-chave: #6d3fe0; --sx-especial: #3558d8; --sx-tipo: #0a7fa8; --sx-variavel: #c2570c;
+  --dialogo-fundo: #f4f3fb; --dialogo-moldura: #8e8cab; --dialogo-borda: #d3d1e8; --campo-borda: #bdbbd9;
+  --titulo-inicio: #4a3bd0; --titulo-fim: #5b4be8; --titulo-texto: #ffffff;
+  --acao-inicio: #ffffff; --acao-fim: #eeedf8; --aba: #eeedf8; --aba-ativa: #fcfcff;
+  --aviso: #9a6700; --domingo: #d03a4a;
+  --raio: 10px; --fonte-ui: 'Inter Variable', 'Segoe UI', system-ui, sans-serif; --fonte-codigo: 'JetBrains Mono Variable', Consolas, 'Courier New', monospace;
+  color-scheme: light;
+}
+
+/* ---- Repaginação: Híbrido escuro ------------------------------------------- */
+:root[data-tema="hibrido-escuro"] {
+  --fundo-janela: #100f1b; --moldura-editor: #171627; --moldura-variaveis: #171627; --moldura-visualizacao: #171627;
+  --destaque: #8b7cff; --borda: #2b2a44; --borda-clara: rgb(255 255 255 / 0.05); --texto: #e9e8f7; --fundo-campo: #1d1c2f;
+  --texto-barra: #b6a9ff; --botao-hover: #26253d; --botao-ativo: #33315a;
+  --desabilitado: #7d7b9c; --desabilitado-fundo: #171627; --desabilitado-campo: #7d7b9c;
+  --cabecalho: #26253d; --linha-grade: #2b2a44; --selecao-grade: #33315a;
+  --calha-borda: #2b2a44; --calha-fim: #1d1c2f; --calha-texto: #7d7b9c;
+  --linha-execucao: #5b4be8; --texto-execucao: #ffffff; --linha-breakpoint: #a1283a; --texto-breakpoint: #ffffff;
+  --linha-erro: #ff8a94; --linha-erro-fundo: #4a2030; --selecao-texto: #3a3680; --mesma-palavra: #2e2c4d;
+  --cursor: #e9e8f7; --detalhe: #a8a6c6;
+  --sx-comentario: #8d8bae; --sx-literal: #7ee8b4; --sx-chave: #b6a9ff; --sx-especial: #8fb0ff; --sx-tipo: #62d6ee; --sx-variavel: #ffb86b;
+  --dialogo-fundo: #171627; --dialogo-moldura: #2b2a44; --dialogo-borda: #2b2a44; --campo-borda: #3a3860;
+  --titulo-inicio: #3f33a8; --titulo-fim: #5b4be8; --titulo-texto: #ffffff;
+  --acao-inicio: #33315a; --acao-fim: #26253d; --aba: #26253d; --aba-ativa: #1d1c2f;
+  --aviso: #ffc266; --domingo: #ff8a94;
+  --raio: 10px; --fonte-ui: 'Inter Variable', 'Segoe UI', system-ui, sans-serif; --fonte-codigo: 'JetBrains Mono Variable', Consolas, 'Courier New', monospace;
+  color-scheme: dark;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -206,7 +289,7 @@ button, input, select { font: inherit; color: inherit; }
   height: var(--btn-h);
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 3px;
+  border-radius: var(--raio);
   background: transparent;
   cursor: default;
 }
@@ -333,7 +416,7 @@ main {
   flex-direction: column;
   min-height: 0;
   border: 1px solid var(--borda);
-  border-radius: 3px;
+  border-radius: var(--raio);
   box-shadow: inset 1px 1px 0 var(--borda-clara);
 }
 .moldura-editor { background: var(--moldura-editor); }
@@ -358,6 +441,7 @@ main {
   margin: 0 6px 6px;
   border: 1px solid var(--borda);
   background: var(--fundo-campo);
+  border-radius: max(0px, calc(var(--raio) - 3px));
   user-select: text;
 }
 
@@ -419,6 +503,7 @@ main {
   display: flex;
   flex-direction: column;
   border: 2px solid #404040;
+  border-radius: max(0px, calc(var(--raio) - 3px));
   background: #000000;
   z-index: 5;
 }

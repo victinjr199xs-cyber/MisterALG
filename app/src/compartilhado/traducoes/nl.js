@@ -804,4 +804,8 @@ export default {
   1274: "Accountfoto kiezen",
   1275: "Afbeeldingen",
   1276: "Meer hulpmiddelen",
+  1277: "Nacht",
+  1278: "Papier",
+  1279: "Hybride licht",
+  1280: "Hybride donker",
 }

@@ -784,4 +784,8 @@ export default {
   1274: "Chọn ảnh tài khoản",
   1275: "Hình ảnh",
   1276: "Thêm công cụ",
+  1277: "Đêm",
+  1278: "Giấy",
+  1279: "Lai sáng",
+  1280: "Lai tối",
 }

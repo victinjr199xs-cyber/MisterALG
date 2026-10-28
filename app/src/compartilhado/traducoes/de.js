@@ -804,4 +804,8 @@ export default {
   1274: "Kontofoto auswählen",
   1275: "Bilder",
   1276: "Weitere Werkzeuge",
+  1277: "Nacht",
+  1278: "Papier",
+  1279: "Hybrid hell",
+  1280: "Hybrid dunkel",
 }

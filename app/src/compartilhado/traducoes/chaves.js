@@ -223,7 +223,7 @@ export default {
   526: "Ativar e configurar",
   527: "Abrir no GitHub",
   528: "Inspirado no VisuAlg e compatível com a versão 3.0.7. O VisuAlg foi criado pelo Prof. Cláudio Morgado de Souza (até a versão 2.5) e continuado pelo Prof. Antonio Carlos Nicolodi (versão 3.0). Todo o crédito pela ideia é deles. O MisterALG é uma recriação independente: não contém código do original.",
-  529: "Clássico (VisuAlg)",
+  529: "VisuAlg Clássico",
   530: "Escuro",
   531: "Meia-noite",
   532: "Drácula",
@@ -859,4 +859,8 @@ export default {
   1274: "Escolher foto da conta",
   1275: "Imagens",
   1276: "Mais ferramentas",
+  1277: "Noite",
+  1278: "Papel",
+  1279: "Híbrido claro",
+  1280: "Híbrido escuro",
 }
