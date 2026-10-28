@@ -16,9 +16,12 @@ export const PADRAO = {
   tema: 'classico', // ids em ../compartilhado/temas.js
   coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
   mostrarDicas: true, // dica do dia ao abrir
+  tutorialVisto: false, // o tutorial já foi oferecido (renderer/tutorial.js); quem atualiza o app também recebe a oferta uma vez
   abertura: true, // animação de abertura (main/abertura.js)
   procurarAtualizacoes: true, // ao abrir, pergunta ao GitHub se há versão nova (main/atualizacao.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
+  abrirAoLigar: false, // abrir quando o computador liga (main/sistema.js)
+  aoFechar: 'perguntar', // o X da janela: 'perguntar', 'fechar' ou 'segundoPlano' (fica na bandeja)
   // Assistente de IA (main/ia.js): desligado até o usuário ativar. As chaves ficam à parte, criptografadas.
   ia: { ativo: false, provedor: 'claude', modelos: {}, urls: {}, modo: 'dica' },
   dicaAtual: 0,

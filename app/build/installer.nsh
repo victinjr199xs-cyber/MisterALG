@@ -14,3 +14,9 @@
   !define MUI_WELCOMEPAGE_TEXT "Este assistente vai instalar o MisterALG no seu computador.$\r$\n$\r$\nCom ele você escreve, executa e depura algoritmos em Portugol, com a mesma linguagem, os mesmos menus e as mesmas teclas do VisuAlg 3.0.7. Os arquivos .alg feitos no VisuAlg abrem direto no MisterALG.$\r$\n$\r$\nNa próxima tela você vai ler os Termos de Uso e a Política de Privacidade.$\r$\n$\r$\nClique em Avançar para continuar."
   !insertmacro MUI_PAGE_WELCOME
 !macroend
+
+; Desinstalar tira o MisterALG do início do Windows ("Abrir quando o computador ligar", src/main/sistema.js).
+; Numa atualização o app novo grava a entrada de novo ao abrir.
+!macro customUnInstall
+  DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "MisterALG"
+!macroend

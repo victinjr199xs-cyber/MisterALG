@@ -1,0 +1,271 @@
+@@@ stl2-01-unordered-ordem
+#include <iostream>
+#include <unordered_map>
+#include <unordered_set>
+#include <string>
+using namespace std;
+int main() {
+    unordered_map<string, int> idade = {{"ana", 20}, {"bia", 31}, {"caio", 18}};
+    idade["davi"] = 40;
+    idade["eva"] = 25;
+    for (auto &[nome, i] : idade) cout << nome << "=" << i << " ";
+    cout << endl;
+    unordered_map<int, int> q;
+    for (int i = 1; i <= 20; i++) q[i * 7 % 23] = i;
+    for (auto &p : q) cout << p.first << ":" << p.second << " ";
+    cout << "| baldes " << q.bucket_count() << endl;
+    q.erase(7);
+    q.erase(14);
+    for (auto &p : q) cout << p.first << " ";
+    cout << endl;
+    unordered_set<string> palavras;
+    for (string w : {"um", "dois", "tres", "dois", "quatro", "cinco", "um"}) palavras.insert(w);
+    for (auto &w : palavras) cout << w << " ";
+    cout << palavras.size() << endl;
+    unordered_map<char, int> letras;
+    for (char c : string("banana")) letras[c]++;
+    for (auto &[c, n] : letras) cout << c << n;
+    cout << endl;
+    return 0;
+}
+@@@ stl2-02-comparadores
+#include <iostream>
+#include <set>
+#include <map>
+#include <queue>
+#include <vector>
+#include <string>
+#include <algorithm>
+using namespace std;
+struct Ponto {
+    int x, y;
+    bool operator<(const Ponto &o) const { return x != o.x ? x < o.x : y < o.y; }
+};
+struct PorTamanho {
+    bool operator()(const string &a, const string &b) const { return a.size() != b.size() ? a.size() < b.size() : a < b; }
+};
+struct Tarefa { string nome; int prioridade; };
+struct MenosUrgente {
+    bool operator()(const Tarefa &a, const Tarefa &b) const { return a.prioridade < b.prioridade; }
+};
+int main() {
+    set<Ponto> pontos = {{3, 1}, {1, 2}, {1, 1}, {2, 5}, {1, 2}};
+    for (auto &p : pontos) cout << "(" << p.x << "," << p.y << ")";
+    cout << endl;
+    set<string, PorTamanho> s = {"banana", "kiwi", "uva", "abacaxi", "figo"};
+    for (auto &w : s) cout << w << " ";
+    cout << endl;
+    map<string, int, greater<string>> m = {{"a", 1}, {"c", 3}, {"b", 2}};
+    for (auto &[k, v] : m) cout << k << v;
+    cout << endl;
+    priority_queue<Tarefa, vector<Tarefa>, MenosUrgente> fila;
+    fila.push({"lavar", 2});
+    fila.push({"estudar", 5});
+    fila.push({"comer", 3});
+    fila.push({"dormir", 5});
+    while (!fila.empty()) { cout << fila.top().nome << " "; fila.pop(); }
+    cout << endl;
+    auto cmp = [](int a, int b) { return a % 10 < b % 10; };
+    vector<int> v = {23, 41, 12, 55, 30, 9, 61};
+    stable_sort(v.begin(), v.end(), cmp);
+    for (int x : v) cout << x << ' ';
+    cout << endl;
+    priority_queue<int, vector<int>, greater<int>> menor;
+    for (int x : {5, 1, 8, 3, 9, 2}) menor.push(x);
+    cout << menor.top() << " " << menor.size() << endl;
+    return 0;
+}
+@@@ stl2-03-multimap-erase
+#include <iostream>
+#include <map>
+#include <set>
+#include <vector>
+#include <string>
+using namespace std;
+int main() {
+    multimap<int, string> notas;
+    notas.insert({8, "ana"});
+    notas.insert({6, "bia"});
+    notas.insert({8, "caio"});
+    notas.insert({10, "davi"});
+    notas.insert({8, "eva"});
+    for (auto &[n, a] : notas) cout << n << a << " ";
+    cout << "| " << notas.count(8) << endl;
+    auto [ini, fim] = notas.equal_range(8);
+    for (auto it = ini; it != fim; ++it) cout << it->second << ",";
+    cout << endl;
+    map<int, int> m;
+    for (int i = 0; i < 10; i++) m[i] = i * i;
+    for (auto it = m.begin(); it != m.end();) {
+        if (it->first % 3 == 0) it = m.erase(it);
+        else ++it;
+    }
+    for (auto &[k, v] : m) cout << k << ":" << v << " ";
+    cout << endl;
+    set<int> s;
+    for (int i = 20; i > 0; i -= 3) s.insert(i);
+    auto it = s.upper_bound(10);
+    cout << *it << " " << *s.lower_bound(10) << " " << *prev(s.end()) << endl;
+    s.erase(s.begin(), s.find(11));
+    for (int x : s) cout << x << ' ';
+    cout << endl;
+    multiset<string> ms = {"b", "a", "b", "c", "a", "b"};
+    ms.erase(ms.find("b"));
+    for (auto &x : ms) cout << x;
+    cout << " " << ms.count("b") << endl;
+    map<string, vector<int>> grupos;
+    grupos["par"].push_back(2);
+    grupos["impar"].push_back(1);
+    grupos["par"].push_back(4);
+    for (auto &[g, v] : grupos) {
+        cout << g << ":";
+        for (int x : v) cout << x;
+        cout << " ";
+    }
+    cout << endl;
+    return 0;
+}
+@@@ stl2-04-list-deque
+#include <iostream>
+#include <list>
+#include <deque>
+#include <stack>
+#include <queue>
+#include <string>
+#include <algorithm>
+using namespace std;
+int main() {
+    list<int> l = {5, 3, 8, 1, 9, 2};
+    l.sort();
+    for (int x : l) cout << x;
+    cout << endl;
+    l.reverse();
+    for (int x : l) cout << x;
+    cout << endl;
+    l.sort(greater<int>());
+    l.remove_if([](int x) { return x % 2 == 0; });
+    for (auto it = l.rbegin(); it != l.rend(); ++it) cout << *it;
+    cout << " " << l.size() << " " << l.front() << " " << l.back() << endl;
+    auto it = find(l.begin(), l.end(), 5);
+    l.insert(it, 7);
+    l.erase(l.begin());
+    for (int x : l) cout << x;
+    cout << endl;
+    deque<string> d;
+    for (string s : {"c", "d", "e"}) d.push_back(s);
+    d.push_front("b");
+    d.push_front("a");
+    for (auto &s : d) cout << s;
+    cout << " " << d[2] << " " << d.at(4) << endl;
+    sort(d.begin(), d.end(), greater<string>());
+    for (auto &s : d) cout << s;
+    cout << endl;
+    for (int i = 0; i < 20; i++) { d.push_back("x"); d.pop_front(); }
+    cout << d.size() << d.front() << endl;
+    stack<string> pilha;
+    for (string s : {"um", "dois", "tres"}) pilha.push(s);
+    while (!pilha.empty()) { cout << pilha.top() << " "; pilha.pop(); }
+    cout << endl;
+    queue<pair<int, int>> bfs;
+    bfs.push({0, 0});
+    int passos = 0;
+    while (!bfs.empty() && passos < 5) {
+        auto [x, y] = bfs.front();
+        bfs.pop();
+        cout << "(" << x << "," << y << ")";
+        bfs.push({x + 1, y});
+        bfs.push({x, y + 1});
+        passos++;
+    }
+    cout << " " << bfs.size() << endl;
+    return 0;
+}
+@@@ stl2-05-strings-avancado
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <cctype>
+using namespace std;
+vector<string> dividir(const string &s, char sep) {
+    vector<string> partes;
+    stringstream ss(s);
+    string p;
+    while (getline(ss, p, sep)) partes.push_back(p);
+    return partes;
+}
+int main() {
+    auto partes = dividir("2024-10-26", '-');
+    for (auto &p : partes) cout << stoi(p) << " ";
+    cout << endl;
+    string frase = "  O rato roeu a roupa do rei  ";
+    stringstream ss(frase);
+    string w;
+    vector<string> palavras;
+    while (ss >> w) palavras.push_back(w);
+    cout << palavras.size() << " " << accumulate(palavras.begin(), palavras.end(), string("")) << endl;
+    sort(palavras.begin(), palavras.end(), [](const string &a, const string &b) { return a.size() > b.size(); });
+    for (auto &p : palavras) cout << p << ",";
+    cout << endl;
+    string t = "Hello World";
+    int maiusculas = count_if(t.begin(), t.end(), [](char c) { return isupper(c); });
+    reverse(t.begin(), t.end());
+    cout << t << " " << maiusculas << endl;
+    string u = "abc";
+    do cout << u << " "; while (next_permutation(u.begin(), u.end()));
+    cout << endl;
+    ostringstream os;
+    os << fixed;
+    os.precision(2);
+    for (int i = 1; i <= 3; i++) os << i / 3.0 << (i < 3 ? ";" : "");
+    cout << os.str() << endl;
+    string num = "  -42xyz";
+    cout << stoi(num) << " " << stod("3.75e2") << " " << to_string(7) + to_string(3.5) << endl;
+    string s = "a,b,,c";
+    size_t pos = 0, achado;
+    while ((achado = s.find(',', pos)) != string::npos) {
+        cout << "[" << s.substr(pos, achado - pos) << "]";
+        pos = achado + 1;
+    }
+    cout << "[" << s.substr(pos) << "]" << endl;
+    return 0;
+}
+@@@ stl2-06-vetores-de-vetores
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <iomanip>
+using namespace std;
+int main() {
+    vector<vector<int>> grade = {{3, 1, 2}, {9, 8}, {5}, {3, 1, 1}};
+    sort(grade.begin(), grade.end());
+    for (auto &linha : grade) {
+        for (int x : linha) cout << x;
+        cout << " ";
+    }
+    cout << endl;
+    vector<pair<string, double>> notas = {{"ana", 7.5}, {"bia", 9}, {"caio", 7.5}, {"davi", 6}};
+    sort(notas.begin(), notas.end(), [](auto &a, auto &b) { return a.second != b.second ? a.second > b.second : a.first < b.first; });
+    for (auto &[n, x] : notas) cout << n << setw(6) << fixed << setprecision(1) << x << endl;
+    vector<int> v(10);
+    iota(v.begin(), v.end(), 1);
+    vector<int> pares;
+    copy_if(v.begin(), v.end(), back_inserter(pares), [](int x) { return x % 2 == 0; });
+    for (int x : pares) cout << x << ' ';
+    cout << endl;
+    v.erase(remove_if(v.begin(), v.end(), [](int x) { return x % 3 == 0; }), v.end());
+    for (int x : v) cout << x << ' ';
+    cout << "| " << v.size() << endl;
+    vector<int> w = {4, 1, 3};
+    w.insert(w.begin() + 1, 9);
+    w.emplace_back(7);
+    for (auto it = w.rbegin(); it != w.rend(); ++it) cout << *it;
+    cout << " " << *max_element(w.begin(), w.end()) << endl;
+    vector<vector<char>> mapa(3, vector<char>(4, '.'));
+    mapa[1][2] = '#';
+    for (auto &l : mapa) cout << string(l.begin(), l.end()) << endl;
+    return 0;
+}

@@ -93,10 +93,10 @@ export function layout(t) {
     const tipo = t.tipos.de(c.tipo)
     const a = alinhamentoDe(tipo)
     alinhamento = Math.max(alinhamento, a)
-    if (t.uniao) campos.push({ nome: c.nome, tipo, deslocamento: 0 })
+    if (t.uniao) campos.push({ nome: c.nome, tipo, deslocamento: 0, id: c.decl?.id })
     else {
       deslocamento = alinhar(deslocamento, a)
-      campos.push({ nome: c.nome, tipo, deslocamento })
+      campos.push({ nome: c.nome, tipo, deslocamento, id: c.decl?.id })
       deslocamento += tamanhoDe(tipo)
     }
   }
@@ -119,13 +119,24 @@ const ANONIMO = /\((?:unnamed|anonymous) (struct|union|enum|class) at [^)]*?:(\d
 
 /** "std::vector<std::string>" → "vector<string>"; "nullptr_t" vira ponteiro. */
 export const normalizarNomeCpp = (texto) => texto.replace(/\bstd::/g, '').replace(/\bdecltype\(nullptr\)|\bnullptr_t\b/g, 'void *')
+  .replace(LAMBDA, (_m, arquivo, l, c) => nomeDaLambda(arquivo, l, c))
+
+// O tipo de uma lambda é uma classe sem nome: "(lambda at programa.cpp:3:14)" vira "__lambda_3_14".
+const LAMBDA = /\(lambda at ([^)]*?):(\d+):(\d+)\)/g
+export const nomeDaLambda = (arquivo, l, c) => `__lambda_${/^programa\.cpp$/.test(arquivo) ? '' : `${arquivo.replace(/\W/g, '_')}_`}${l}_${c}`
+
+// (true/false viram 1/0: o clang escreve "false" no tipo e "0" no argumento do template)
+const fichasDoTipo = (texto) => (normalizarNomeCpp(texto).match(/::|\.\.\.|&&|[A-Za-z_]\w*|\d+|[*&()[\],<>]/g) ?? [])
+  .map((f) => (f === 'true' ? '1' : f === 'false' ? '0' : f))
+const juntarFicha = (s, f) => s + (/^\w/.test(f) && /\w$/.test(s) ? ' ' : '') + f
+const canonico = (texto) => fichasDoTipo(texto).reduce(juntarFicha, '')
 
 /** Chave de uma especialização ("vector", ["int"]) → "vector<int>", igual à que o leitor de tipos monta. */
 export function chaveDeTemplate(nome, argumentos) {
-  const canonico = (texto) => (normalizarNomeCpp(texto).match(/::|\.\.\.|&&|[A-Za-z_]\w*|\d+|[*&()[\],<>]/g) ?? [])
-    .reduce((s, f) => s + (/^\w/.test(f) && /\w$/.test(s) ? ' ' : '') + f, '')
   return `${nome}<${argumentos.map(canonico).join(',')}>`
 }
+
+
 
 export class Tipos {
   /**
@@ -137,11 +148,65 @@ export class Tipos {
     this.apelidos = apelidos
     this.cache = new Map()
     this.structs = new Map()
+    this.apelidosDeMembro = new Set() // ids dos typedefs feitos dentro de classes
+    this.padroes = new Map() // nome do template → [{ nome, padrao }] dos parâmetros (map: C = less<K>)
+  }
+
+  /**
+   * A chave de uma especialização sem os argumentos que são o padrão: o clang escreve "map<string, int>",
+   * e não "map<string, int, less<string>>" (nem "less<>" para less<void>).
+   */
+  chaveDeTemplate(nome, argumentos) { return this.semPadroes(nome, argumentos.map((a) => this.canonizar(a))) }
+
+  /** O texto canônico de um tipo, com os templates de dentro também sem os argumentos padrão. */
+  canonizar(texto) {
+    const f = fichasDoTipo(texto)
+    const trecho = (a, b) => {
+      let s = ''
+      for (let i = a; i < b; i += 1) {
+        if (/^[A-Za-z_]/.test(f[i]) && f[i + 1] === '<') {
+          const partes = []
+          let nivel = 0
+          let ini = i + 2
+          let j = i + 1
+          for (; j < b; j += 1) {
+            if (f[j] === '<' || f[j] === '(') nivel += 1
+            else if (f[j] === '>' || f[j] === ')') { nivel -= 1; if (nivel === 0) break }
+            else if (f[j] === ',' && nivel === 1) { partes.push(trecho(ini, j)); ini = j + 1 }
+          }
+          if (ini < j) partes.push(trecho(ini, j))
+          s = juntarFicha(s, this.semPadroes(f[i], partes))
+          i = j
+        } else s = juntarFicha(s, f[i])
+      }
+      return s
+    }
+    return trecho(0, f.length)
+  }
+
+  semPadroes(nome, args) {
+    const params = this.padroes.get(nome)
+    args = [...args]
+    if (params) {
+      const valores = new Map()
+      params.forEach((p, i) => { if (i < args.length) valores.set(p.nome, args[i]) })
+      while (args.length) {
+        const p = params[args.length - 1]
+        if (!p || p.padrao === null) break
+        const padrao = this.canonizar(p.padrao.replace(/[A-Za-z_]\w*/g, (n) => valores.get(n) ?? n))
+        if (padrao !== args[args.length - 1]) break
+        args.pop()
+      }
+    }
+    return `${nome}<${args.join(',')}>`
   }
 
   /** Tipo a partir do objeto "type" do clang ({qualType, desugaredQualType}) ou do texto. */
   de(tipo) {
-    const texto = typeof tipo === 'string' ? tipo : (tipo.qualType ?? tipo.desugaredQualType)
+    let texto = typeof tipo === 'string' ? tipo : (tipo.qualType ?? tipo.desugaredQualType)
+    // "map<int, string>::iterator" ou só "iterator": o nome do typedef não basta (cada classe tem o seu)
+    if (typeof tipo !== 'string' && tipo.desugaredQualType
+      && (this.apelidosDeMembro.has(tipo.typeAliasDeclId) || /::\s*[A-Za-z_]|\bdecltype\s*\(/.test(normalizarNomeCpp(texto)))) texto = tipo.desugaredQualType
     let t = this.cache.get(texto)
     if (!t) {
       t = this.ler(texto)
@@ -174,10 +239,11 @@ export class Tipos {
       let profundidade = 0
       let s = ''
       do {
-        const f = fichas[i++]
+        let f = fichas[i++]
         if (f === undefined) break
         if (f === '<') profundidade += 1
         else if (f === '>') profundidade -= 1
+        else if (f === 'true' || f === 'false') f = f === 'true' ? '1' : '0'
         if (/^\w/.test(f) && /\w$/.test(s)) s += ' '
         s += f
       } while (profundidade > 0)
@@ -207,7 +273,7 @@ export class Tipos {
           let nome = f
           i += 1
           for (;;) {
-            if (fichas[i] === '<') nome += this.argumentosDeTemplate()
+            if (fichas[i] === '<') nome = this.canonizar(nome + this.argumentosDeTemplate())
             else if (fichas[i] === '::' && /^[A-Za-z_]/.test(fichas[i + 1] ?? '')) { nome = fichas[i + 1]; i += 2 }
             else break
           }
@@ -267,7 +333,7 @@ export class Tipos {
           let n = null
           if (/^\d+$/.test(ver())) { n = Number(ver()); i += 1 }
           comer(']')
-          sufixos.push((t) => vetor(t, n))
+          sufixos.push(Object.assign((t) => vetor(t, n), { vetor: true }))
         } else {
           i += 1
           const { lista, variadica } = parametros()
@@ -276,9 +342,13 @@ export class Tipos {
           sufixos.push((t) => funcao(t, lista, variadica))
         }
       }
+      // "const char &[4]" (é assim que o clang escreve um pacote de const A &... com A = char[4]): não
+      // existe vetor de referências, então é uma referência para o vetor
+      const refDeVetor = /&/.test(prefixos[prefixos.length - 1] ?? '') && sufixos.length && sufixos.every((f) => f.vetor)
       return (t) => {
-        for (const p of prefixos) t = p === '*' ? ponteiro(t) : referencia(t)
+        for (const p of refDeVetor ? prefixos.slice(0, -1) : prefixos) t = p === '*' ? ponteiro(t) : referencia(t)
         for (let j = sufixos.length - 1; j >= 0; j -= 1) t = sufixos[j](t)
+        if (refDeVetor) t = referencia(t)
         return interno(t)
       }
     }

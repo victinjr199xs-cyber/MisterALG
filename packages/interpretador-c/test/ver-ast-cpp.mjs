@@ -1,7 +1,7 @@
 // Mostra a árvore C++ de um programa (só os tipos de nó do main e de uma classe), para estudo.
 import { runClang } from '@yowasp/clang'
 import { readFileSync } from 'node:fs'
-import { ARGUMENTOS_AST_CPP, CABECALHOS_CPP } from '../src/cabecalhos-cpp.js'
+import { ARGUMENTOS_AST_CPP, cabecalhosCppPara } from '../src/cabecalhos-cpp.js'
 
 const fonte = readFileSync(process.argv[2], 'utf8')
 let json = ''
@@ -9,7 +9,7 @@ let erros = ''
 const d = new TextDecoder()
 const d2 = new TextDecoder()
 try {
-  await runClang(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: CABECALHOS_CPP }, {
+  await runClang(ARGUMENTOS_AST_CPP, { 'programa.cpp': fonte, mini: cabecalhosCppPara(fonte) }, {
     stdout: (b) => { if (b) json += d.decode(b, { stream: true }) },
     stderr: (b) => { if (b) erros += d2.decode(b, { stream: true }) },
     fetchProgress: () => {},

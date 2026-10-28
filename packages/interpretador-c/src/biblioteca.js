@@ -144,7 +144,7 @@ export const BIBLIOTECA = {
     const antigo = n(args, 0)
     const tamanho = n(args, 1)
     if (antigo === 0) return m.mem.malloc(tamanho)
-    const bloco = m.mem.heap.find((b) => b.inicio === antigo)
+    const bloco = m.mem.blocoDoHeap(antigo)
     if (!bloco) { m.mem.free(antigo); return 0 } // dá a mensagem certa (não veio do malloc / já liberado)
     const novo = m.mem.malloc(tamanho, false, { tipoElem: bloco.tipoElem })
     if (novo) {

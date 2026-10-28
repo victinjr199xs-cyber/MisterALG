@@ -174,6 +174,20 @@ export default async ({ avaliar, esperar, digitar, tecla, erros }) => {
   await avaliar(`void ${M}.comandos.executar()`)
   conferir('C++: F9 compila e roda', await ate(`document.querySelector('#console-tela').textContent.includes('soma=6')`, 240, 500), true)
   await avaliar(`${M}.execucao.restaurar()`)
+  // C++ com a STL: bits/stdc++.h no F9; no F8, o map com o conteúdo na tela e o sort com uma lambda
+  await novo('cpp', '#include <bits/stdc++.h>\nusing namespace std;\nint main() {\n    map<string, int> m = {{"ana", 3}, {"bia", 1}};\n    vector<int> v = {5, 2, 8};\n    sort(v.begin(), v.end(), [](int a, int b) { return a > b; });\n    cout << v[0] << " " << m["ana"] << endl;\n    return 0;\n}\n')
+  await avaliar(`void ${M}.comandos.executar()`)
+  conferir('C++: F9 com bits/stdc++.h', await ate(`document.querySelector('#console-tela').textContent.includes('8 3')`, 240, 500), true)
+  await avaliar(`${M}.execucao.restaurar()`)
+  await avaliar(`void ${M}.comandos.passo()`)
+  conferir('C++: F8 com a STL abre a memória', await ate(`!!document.querySelector('.memoria-c:not([hidden]) .mc-quadro')`, 240, 500), true)
+  await passo()
+  await esperar(400)
+  await passo()
+  conferir('C++: o map aparece com o conteúdo', await ate(`[...document.querySelectorAll('.memoria-c .mc-texto')].some((e) => e.textContent === '{"ana": 3, "bia": 1}')`, 40), true)
+  for (let i = 0; i < 60 && (await avaliar(`${M}.execucao.emExecucao()`)); i += 1) { await passo(); await esperar(150) }
+  conferir('C++: F8 com sort e lambda até o fim', (await console_()).includes('8 3'), true)
+  await avaliar(`${M}.execucao.restaurar()`)
   // ---- PHP: a página gerada ao vivo (servidor de desenvolvimento dentro do app) ---------------
   await novo('php', '<h1>Olá, <?= strtoupper("php") ?>!</h1>\n<?php for ($i = 1; $i <= 3; $i++) echo "<p>$i</p>"; ?>\n')
   await avaliar(`void ${M}.comandos.executar()`)

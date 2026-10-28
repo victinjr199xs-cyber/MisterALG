@@ -86,7 +86,7 @@ Tudo roda **dentro do app**, sem instalar compilador nem interpretador.
 | Entrada pelo teclado | `leia` | `Console.ReadLine` | `prompt` | `input()` | `scanf` | `cin` | formulários | — |
 | Motor | próprio | próprio (tree-sitter) | Babel + próprio | Pyodide | clang (Wasm) | clang (Wasm) | php-wasm 8.3 | PostgreSQL (PGlite) |
 
-<sub>¹ No passo a passo, C e C++ usam uma biblioteca própria, menor; o F9 usa o compilador completo.</sub>
+<sub>¹ No passo a passo, C e C++ usam uma biblioteca própria; a do C++ tem lambdas e a STL do dia a dia (map, set, unordered_map, list, deque, queue, stack, stringstream, unique_ptr, function, sort...), com o conteúdo de cada contêiner na tela de memória. O F9 usa o compilador completo.</sub>
 
 ## ⬇️ Baixar e instalar
 

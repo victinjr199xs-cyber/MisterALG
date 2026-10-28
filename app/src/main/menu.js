@@ -170,6 +170,7 @@ export function montarMenu(janela, prefs, estado = {}) {
         item('A &Tela do MisterALG', 'ajuda-tela', 'F1'),
         item('A &Linguagem (Portugol)', 'ajuda-linguagem', 'Ctrl+H'),
         item('&Referência da Linguagem', 'ajuda-referencia', 'Ctrl+Alt+H'),
+        item('T&utorial do MisterALG', 'tutorial'),
         { type: 'separator' },
         item('&Dica do dia', 'dica'),
         item('&Procurar atualizações…', 'atualizacoes'),

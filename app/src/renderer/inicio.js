@@ -31,6 +31,7 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
     }
     const [animar, rotuloAnimar] = caixa(t('Animação de abertura'), prefs.abertura !== false)
     const [atualizar, rotuloAtualizar] = caixa(t('Procurar atualizações ao abrir'), prefs.procurarAtualizacoes !== false)
+    const [aoLigar, rotuloAoLigar] = caixa(t('Abrir quando o computador ligar'), prefs.abrirAoLigar === true)
     // Trocar o idioma refaz a tela inicial já traduzida (main.js).
     const idioma = el('select', { className: 'inicio-idioma', ariaLabel: t('Idioma') },
       ...IDIOMAS.map((i) => el('option', { value: i.id, textContent: i.nome, selected: i.id === (prefs.idioma ?? 'pt') })))
@@ -40,7 +41,7 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
     const terminar = (escolha) => {
       if (!tela.isConnected) return
       tela.remove()
-      resolve({ ...escolha, prefs: { abertura: animar.checked, procurarAtualizacoes: atualizar.checked } })
+      resolve({ ...escolha, prefs: { abertura: animar.checked, procurarAtualizacoes: atualizar.checked, abrirAoLigar: aoLigar.checked } })
     }
 
     const botao = (classe, filhos, aoClicar, extra = {}) => {
@@ -103,7 +104,7 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
         ),
       ),
       el('footer', { className: 'inicio-rodape' },
-        rotuloAnimar, rotuloAtualizar,
+        rotuloAnimar, rotuloAtualizar, rotuloAoLigar,
         el('span', { className: 'inicio-espaco' }),
         el('span', { className: 'inicio-rotulo', textContent: `MisterALG ${t('versão')} ${versao}` }),
       ),

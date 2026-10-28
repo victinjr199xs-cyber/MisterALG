@@ -8,7 +8,7 @@ export { CABECALHOS_C } from './cabecalhos.js'
 export { CABECALHOS_CPP } from './cabecalhos-cpp.js'
 export { ErroC, EXPLICACOES } from './erros.js'
 export { MaquinaC } from './maquina.js'
-export { descrever, nomeDoEndereco, tipoDoBloco } from './descrever.js'
+export { descrever, nomeAmigavel, nomeDoEndereco, tipoDoBloco } from './descrever.js'
 export { hex } from './memoria.js'
 
 const FATIA = 20000
