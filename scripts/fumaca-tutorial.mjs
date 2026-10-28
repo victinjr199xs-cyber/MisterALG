@@ -30,6 +30,14 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
     const r = document.querySelector('.tutorial-recorte').getBoundingClientRect()
     return dentro && r.width > 10 && r.height > 10
   })()`)
+  // O balão e o recorte têm transição: espera até 3 s para assentarem antes de reclamar.
+  const noLugarAte = async () => {
+    for (let i = 0; i < 12; i += 1) {
+      if (await noLugar()) return true
+      await esperar(250)
+    }
+    return false
+  }
   const digitarNome = async (nome) => {
     await avaliar(`document.querySelector('.console-entrada').focus()`)
     await digitar(nome)
@@ -46,7 +54,7 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
     for (let i = 0; i < 20; i += 1) {
       const t = await tutorial()
       if (await avaliar(`document.querySelector('.tutorial-acoes .acao:last-child').textContent`) === 'Escrever o programa') break
-      if (!(await noLugar())) throw new Error(`${rotulo}: balão fora do lugar no passo ${t.passo + 1}: ${t.texto}`)
+      if (!(await noLugarAte())) throw new Error(`${rotulo}: balão fora do lugar no passo ${t.passo + 1}: ${t.texto}`)
       vistos += 1
       await clicarProximo()
       await esperar(120)
@@ -116,7 +124,7 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
   await avaliar(`document.documentElement.dir = 'rtl'; document.documentElement.dataset.tema = 'dracula'`)
   await avaliar(`${M}.comandos.tutorial()`)
   for (let i = 0; i < 9; i += 1) {
-    if (!(await noLugar())) throw new Error(`RTL: balão fora do lugar no passo ${i + 1}`)
+    if (!(await noLugarAte())) throw new Error(`RTL: balão fora do lugar no passo ${i + 1}`)
     await clicarProximo()
     await esperar(100)
   }

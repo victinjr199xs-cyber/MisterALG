@@ -12,7 +12,8 @@ import { dirname, join } from 'node:path'
 import { ARG_AO_LIGAR, arquivoAutostart, executavel, textoAutostart } from './autostart.js'
 
 /** Só o app instalado mexe no início do sistema (em desenvolvimento seria o Electron de node_modules). */
-const podeConfigurar = () => app.isPackaged && !process.env.MISTERALG_DADOS
+// MISTERALG_TESTE_SISTEMA: so para scripts/teste-sistema.mjs, que testa o registro e a bandeja com pasta de dados propria.
+const podeConfigurar = () => !!process.env.MISTERALG_TESTE_SISTEMA || (app.isPackaged && !process.env.MISTERALG_DADOS)
 
 /** Liga ou desliga a abertura junto com o computador. Devolve false se não deu (desenvolvimento, sem permissão...). */
 export function definirAbrirAoLigar(ligar) {
@@ -41,7 +42,9 @@ export function abreAoLigar() {
       const arquivo = arquivoAutostart()
       return existsSync(arquivo) && readFileSync(arquivo, 'utf8').includes(executavel())
     }
-    return app.getLoginItemSettings({ path: executavel(), args: [ARG_AO_LIGAR], name: 'MisterALG' }).openAtLogin
+    // No Windows, openAtLogin vem false mesmo com a entrada certa (os argumentos voltam vazios); vale launchItems.
+    const s = app.getLoginItemSettings({ path: executavel(), args: [ARG_AO_LIGAR], name: 'MisterALG' })
+    return s.openAtLogin || (s.launchItems ?? []).some((i) => i.enabled && i.name === 'MisterALG') || s.executableWillLaunchAtLogin === true
   } catch {
     return null
   }
@@ -77,6 +80,7 @@ export function mostrarBandeja({ tr, abrir, sair }) {
     { type: 'separator' },
     { label: tr('Sair do MisterALG'), click: sair },
   ]))
+  if (process.env.MISTERALG_TESTE_SISTEMA) console.log('[bandeja] criada')
   bandeja.on('click', abrir) // Windows e a maioria dos Linux; no Mac o clique abre o menu
   return bandeja
 }

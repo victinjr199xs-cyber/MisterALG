@@ -337,9 +337,9 @@ const comandos = {
       <pre>// Arquivo com um algoritmo: ${escapar(doc.caminho ?? doc.nome)}\n// Data de impressão: ${new Date().toLocaleString('pt-BR')}\n\n${escapar(editor.texto())}</pre>`
     return api.imprimir({ html })
   },
-  sair: async () => {
+  sair: async (dados) => {
     // Antes de fechar, oferece voltar para a tela inicial (os testes automatizados fecham direto).
-    if (!api.automatizado) {
+    if (!api.automatizado && !dados?.direto) { // quem já escolheu fechar (X da janela, bandeja) não é perguntado de novo
       if (perguntandoSair) return
       perguntandoSair = true
       const t = tradutor(prefs.idioma)

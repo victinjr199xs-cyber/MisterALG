@@ -111,7 +111,7 @@ function mostrarJanela() {
 /** Fecha de verdade: a IDE pergunta se quer salvar e depois chama janela:fechar. */
 function sairDeVerdade() {
   mostrarJanela() // a pergunta "salvar?" aparece na janela
-  janela?.webContents.send('menu', 'sair')
+  janela?.webContents.send('menu', 'sair', { direto: true }) // já escolheu fechar: sem a pergunta de voltar à tela inicial
 }
 
 /** Esconde a janela e deixa o ícone na bandeja; os programas que estão rodando continuam. */
@@ -444,7 +444,7 @@ app.whenReady().then(() => {
   janela.on('close', (evento) => {
     if (podeFechar) return
     evento.preventDefault()
-    if (saindoDoApp || process.env.MISTERALG_DADOS) {
+    if (saindoDoApp || (process.env.MISTERALG_DADOS && !process.env.MISTERALG_TESTE_SISTEMA)) {
       saindoDoApp = false // se o aluno cancelar o "salvar?", o próximo X volta a perguntar
       janela.webContents.send('menu', 'sair')
     } else void aoClicarEmFechar()
