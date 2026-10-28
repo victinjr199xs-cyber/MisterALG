@@ -1,0 +1,81 @@
+/* Terminal moderno: so nos temas novos. O tema classico (console MS-DOS) fica intocado. */
+:root[data-tema="noite"] .console,
+:root[data-tema="papel"] .console,
+:root[data-tema="hibrido-claro"] .console,
+:root[data-tema="hibrido-escuro"] .console {
+  --term-fundo: #14131f; --term-barra: #1d1c2f; --term-texto: #e9e8f7; --term-suave: #8d8bae; --term-borda: #2b2a44;
+  border: 1px solid var(--term-borda);
+  border-radius: var(--raio);
+  background: var(--term-fundo);
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+}
+:root[data-tema="noite"] .console { --term-fundo: #17181b; --term-barra: #1e1f22; --term-borda: #2e3035; }
+:root[data-tema="papel"] .console { --term-fundo: #1f1e1b; --term-barra: #2a2926; --term-borda: #3a3834; }
+
+:root[data-tema="noite"] .console-titulo,
+:root[data-tema="papel"] .console-titulo,
+:root[data-tema="hibrido-claro"] .console-titulo,
+:root[data-tema="hibrido-escuro"] .console-titulo {
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--term-barra);
+  border-bottom: 1px solid var(--term-borda);
+  color: var(--term-suave);
+  font: 600 11px var(--fonte-ui);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+:root[data-tema="noite"] .console-icone,
+:root[data-tema="papel"] .console-icone,
+:root[data-tema="hibrido-claro"] .console-icone,
+:root[data-tema="hibrido-escuro"] .console-icone {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--destaque);
+  color: #ffffff;
+  font: 700 10px var(--fonte-codigo);
+}
+:root[data-tema="noite"] .console-fechar,
+:root[data-tema="papel"] .console-fechar,
+:root[data-tema="hibrido-claro"] .console-fechar,
+:root[data-tema="hibrido-escuro"] .console-fechar {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--term-borda);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--term-suave);
+  cursor: pointer;
+}
+:root[data-tema="noite"] .console-fechar:hover,
+:root[data-tema="papel"] .console-fechar:hover,
+:root[data-tema="hibrido-claro"] .console-fechar:hover,
+:root[data-tema="hibrido-escuro"] .console-fechar:hover { background: #c4384a; border-color: #c4384a; color: #ffffff; }
+
+:root[data-tema="noite"] .console-tela,
+:root[data-tema="papel"] .console-tela,
+:root[data-tema="hibrido-claro"] .console-tela,
+:root[data-tema="hibrido-escuro"] .console-tela {
+  padding: 12px 14px;
+  color: var(--term-texto);
+  font: 400 13px/1.6 var(--fonte-codigo);
+  word-break: break-word;
+}
+:root[data-tema="noite"] .console-entrada,
+:root[data-tema="papel"] .console-entrada,
+:root[data-tema="hibrido-claro"] .console-entrada,
+:root[data-tema="hibrido-escuro"] .console-entrada {
+  min-width: 6ch;
+  padding: 1px 6px;
+  border-bottom: 1px solid var(--destaque);
+  border-radius: 3px 3px 0 0;
+  background: rgb(255 255 255 / 0.07);
+  color: #ffd28a;
+  caret-color: #ffd28a;
+}
+:root[data-tema="noite"] .console-tela::selection,
+:root[data-tema="papel"] .console-tela::selection,
+:root[data-tema="hibrido-claro"] .console-tela::selection,
+:root[data-tema="hibrido-escuro"] .console-tela::selection { background: var(--selecao-texto, #3a3680); }
