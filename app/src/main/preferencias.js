@@ -21,6 +21,10 @@ export const PADRAO = {
   abertura: true, // animação de abertura (main/abertura.js)
   procurarAtualizacoes: true, // ao abrir, pergunta ao GitHub se há versão nova (main/atualizacao.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
+  posicaoBarra: 'topo', // barra de ferramentas: 'topo' (clássico) ou 'lateral' (compartilhado/barra.js)
+  tamanhoIcones: 'medio', // 'pequeno', 'medio' ou 'grande'
+  botoesOcultos: [], // data-id dos botões tirados da barra (os essenciais nunca saem)
+  conta: { nome: '' }, // a foto fica à parte, em userData/conta.png (main/index.js)
   abrirAoLigar: false, // abrir quando o computador liga (main/sistema.js)
   aoFechar: 'perguntar', // o X da janela: 'perguntar', 'fechar' ou 'segundoPlano' (fica na bandeja)
   // Assistente de IA (main/ia.js): desligado até o usuário ativar. As chaves ficam à parte, criptografadas.

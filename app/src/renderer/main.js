@@ -16,6 +16,8 @@ import { abrirTutorial } from './tutorial.js'
 import { primeiroPrograma } from './tutorial-passos.js'
 import { gerarPascal, gerarC, gerarJava } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
+import { BARRA, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis, itensVisiveis } from '../compartilhado/barra.js'
+import { criarAvatar } from './avatar.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
@@ -26,10 +28,12 @@ const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')
 const VERSAO_TERMOS = '1.5'
 
 let prefs = await api.prefs.ler()
+let fotoConta = await api.conta.foto() // data URL da foto da conta, ou null
 /** Tema + cores de código que o usuário trocou para esse tema (Configurações → Cores). */
 function aplicarTema(id, cores = prefs.coresSintaxe?.[temaPorId(id).id] ?? {}) {
   const raiz = document.documentElement
   raiz.dataset.tema = temaPorId(id).id
+  for (const [nome, cor] of Object.entries(temaPorId(id).icones)) raiz.style.setProperty(`--icone-${nome}`, cor)
   for (const [cat] of dialogos.CATEGORIAS_SINTAXE) {
     if (cores[cat]) raiz.style.setProperty(`--sx-${cat}`, cores[cat])
     else raiz.style.removeProperty(`--sx-${cat}`)
@@ -409,13 +413,25 @@ const comandos = {
   'exportar-c': () => exportarPrograma('c', 'C / C++', 'c', gerarC),
   'exportar-java': () => exportarPrograma('java', 'Java', 'java', gerarJava),
   configuracoes: async (aba) => {
-    const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema, aba })
+    const conta = {
+      foto: fotoConta,
+      aoEscolher: async () => {
+        const r = await api.conta.escolherFoto()
+        if (r?.foto) { fotoConta = r.foto; atualizarAvatar() }
+        return r
+      },
+      aoRemover: async () => { fotoConta = await api.conta.removerFoto(); atualizarAvatar() },
+    }
+    const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema, aoPreverBarra: (p) => aplicarBarra({ ...prefs, ...p }), conta, aba })
     if (novas) {
       prefs = await api.prefs.gravar(novas)
       editor.aplicarPrefs(prefs)
     }
     aplicarTema(prefs.tema)
+    aplicarBarra()
+    atualizarAvatar()
   },
+  conta: () => comandos.configuracoes('conta'),
   'configurar-cores': () => comandos.configuracoes('cores'),
   temas: () => abrirMenuTemas(),
   tema: async (id) => {
@@ -455,123 +471,108 @@ api.menu.aoComando(rodar)
 
 // ---- barra de ferramentas -----------------------------------------------------------
 
-const BARRA = [
-  ['novo', 'novo', 'Botão Novo (⌘N)'],
-  ['abrir', 'abrir', 'Botão Abrir (⌘O)'],
-  ['salvar', 'salvar', 'Botão Salvar (⌘S)'],
-  '|',
-  ['executar', 'executar', 'Botão Executar (F9)'],
-  ['passo', 'passo', 'Botão Passo a Passo (F8)'],
-  ['timer', 'timer', 'Executar com Timer (Tempo) (Shift+F9)'],
-  'intervalo',
-  '|',
-  ['parar', 'parar', 'Botão Parar (Ctrl+F2)'],
-  ['breakpoint', 'breakpoint', 'Botão Liga/desliga breakpoint (F5)'],
-  ['limpar-breakpoints', 'limparBreakpoints', 'Botão Desmarca todos os breakpoints (Ctrl+F5)'],
-  ['restaurar', 'restaurar', 'Botão Restaura a tela inicial do MisterALG'],
-  ['cortar', 'cortar', 'Botão Cortar (⌘X)'],
-  ['copiar', 'copiar', 'Botão Copiar (⌘C)'],
-  ['colar', 'colar', 'Botão Colar (⌘V)'],
-  '|',
-  ['gravar-bloco', 'gravarBloco', 'Botão Grava o bloco de texto selecionado (Ctrl+W)'],
-  ['inserir-bloco', 'inserirBloco', 'Botão Insere um bloco de algoritmo na posição do cursor (Ctrl+R)'],
-  ['desfazer', 'desfazer', 'Botão Desfazer (⌘Z)'],
-  ['refazer', 'refazer', 'Botão Refazer (Shift+⌘Z)'],
-  '|',
-  ['localizar', 'localizar', 'Botão Localizar (⌘F ou Ctrl+L)'],
-  ['localizar-proximo', 'proximo', 'Botão Localizar o próximo (F3)'],
-  ['localizar-anterior', 'anterior', 'Botão Localizar o anterior (F4)'],
-  ['substituir', 'substituir', 'Botão Substituir (⌥⌘F ou Ctrl+U)'],
-  ['indentar', 'indentar', 'Botão Corrigir indentação (Ctrl+G)'],
-  ['imprimir', 'imprimir', 'Botão Imprimir (⌘P)'],
-  ['perfil', 'perfil', 'Botão Perfil (F7)'],
-  ['aleatorio', 'aleatorio', 'Botão Ativa/Desativa Aleatório'],
-  'faixa',
-  '|',
-  ['pilha', 'pilha', 'Botão Mostra a pilha de ativação dos procedimentos e funções (Ctrl+F3)'],
-  ['calculadora', 'calculadora', 'Mostra uma calculadora prática'],
-  ['calendario', 'calendario', 'Mostra um calendário do ano atual'],
-  ['temas', 'temas', 'Botão Temas: escolhe as cores da tela (claras ou escuras)'],
-  ['assistente', 'assistente', 'Botão Assistente de IA: explica o código e dá dicas (⌘I)'],
-  ['ajuda-tela', 'ajuda', 'Botão Ajuda on-line (F1)'],
-  ['sair', 'sair', 'Sair do MisterALG'],
-]
-
 const ehMac = api.plataforma === 'darwin'
 
-/** No Windows as dicas mostram os atalhos originais do VisuAlg em vez dos do Mac. */
-function dicaDaPlataforma(dica) {
-  if (ehMac) return dica
-  return dica
-    .replace(' (⌘F ou Ctrl+L)', ' (Ctrl+L)')
-    .replace(' (⌥⌘F ou Ctrl+U)', ' (Ctrl+U)')
-    .replace('⌘O', 'Ctrl+A')
-    .replace('⌘', 'Ctrl+')
+const dicaDaPlataforma = (dica) => dicaPorPlataforma(dica, ehMac)
+
+/** Posição, tamanho dos ícones e botões ocultos. `p` pode ser só uma prévia (Configurações), sem gravar. */
+function aplicarBarra(p = prefs) {
+  const lateral = p.posicaoBarra === 'lateral'
+  document.body.classList.toggle('barra-lateral', lateral)
+  document.documentElement.dataset.tamIcone = TAMANHOS_ICONE.includes(p.tamanhoIcones) ? p.tamanhoIcones : 'medio'
+  const barra = $('#barra')
+  barra.setAttribute('aria-orientation', lateral ? 'vertical' : 'horizontal')
+  const ver = itensVisiveis(idsOcultaveis(p.botoesOcultos))
+  barra.querySelectorAll('[data-item]').forEach((e) => { e.hidden = !ver[Number(e.dataset.item)] })
+}
+
+/** Botão da conta no fim da barra: foto ou iniciais; abre Configurações > Conta. */
+function atualizarAvatar() {
+  const b = $('[data-id="conta"]')
+  if (!b) return
+  const nome = prefs.conta?.nome ?? ''
+  const dica = nome ? tradutor(prefs.idioma)('Conta de {0}', nome) : tradutor(prefs.idioma)('Conta: nome e foto')
+  b.replaceChildren(criarAvatar({ nome, foto: fotoConta }))
+  b.title = dica
+  b.dataset.dica = dica
+  b.setAttribute('aria-label', dica)
 }
 
 function montarBarra() {
   const barra = $('#barra')
-  for (const item of BARRA) {
-    if (item === '|') {
-      barra.append(Object.assign(document.createElement('span'), { className: 'separador' }))
-    } else if (item === 'intervalo') {
-      const sel = document.createElement('select')
-      sel.id = 'intervalo'
-      sel.dataset.dica = 'Intervalo do timer'
-      sel.title = 'Intervalo do timer'
-      INTERVALOS.forEach(([rotulo], i) => sel.append(new Option(rotulo, String(i), false, i === prefs.timer)))
-      sel.addEventListener('change', async () => { prefs = await api.prefs.gravar({ timer: Number(sel.value) }) })
+  BARRA.forEach((item, indice) => {
+    const antes = barra.childElementCount
+    montarItem(barra, item)
+    for (const e of [...barra.children].slice(antes)) e.dataset.item = String(indice)
+  })
+  const avatar = Object.assign(document.createElement('button'), { type: 'button', className: 'botao avatar' })
+  avatar.dataset.id = 'conta'
+  avatar.addEventListener('click', () => rodar('conta'))
+  barra.append(avatar)
+  atualizarAvatar()
+  aplicarBarra()
+}
+
+function montarItem(barra, item) {
+  if (item === '|') {
+    barra.append(Object.assign(document.createElement('span'), { className: 'separador' }))
+  } else if (item === 'intervalo') {
+    const sel = document.createElement('select')
+    sel.id = 'intervalo'
+    sel.dataset.dica = 'Intervalo do timer'
+    sel.title = 'Intervalo do timer'
+    INTERVALOS.forEach(([rotulo], i) => sel.append(new Option(rotulo, String(i), false, i === prefs.timer)))
+    sel.addEventListener('change', async () => { prefs = await api.prefs.gravar({ timer: Number(sel.value) }) })
+    const span = Object.assign(document.createElement('span'), { className: 'campo-barra' })
+    span.append(sel)
+    barra.append(span)
+  } else if (item === 'faixa') {
+    const campo = (rotulo, chave, dica, opcoes) => {
       const span = Object.assign(document.createElement('span'), { className: 'campo-barra' })
-      span.append(sel)
-      barra.append(span)
-    } else if (item === 'faixa') {
-      const campo = (rotulo, chave, dica, opcoes) => {
-        const span = Object.assign(document.createElement('span'), { className: 'campo-barra' })
-        span.dataset.dica = dica
-        const lab = document.createElement('label')
-        lab.textContent = rotulo
-        let input
-        if (opcoes) {
-          input = document.createElement('select')
-          opcoes.forEach((o) => input.append(new Option(String(o), String(o), false, String(o) === String(prefs.aleatorio[chave]))))
-        } else {
-          input = Object.assign(document.createElement('input'), { value: prefs.aleatorio[chave], inputMode: 'decimal' })
-        }
-        input.id = `aleatorio-${chave}`
-        input.title = dica
-        input.disabled = true
-        input.addEventListener('change', async () => {
-          prefs = await api.prefs.gravar({ aleatorio: { ...prefs.aleatorio, [chave]: input.value } })
-        })
-        lab.htmlFor = input.id
-        span.append(lab, input)
-        barra.append(span)
+      span.dataset.dica = dica
+      const lab = document.createElement('label')
+      lab.textContent = rotulo
+      let input
+      if (opcoes) {
+        input = document.createElement('select')
+        opcoes.forEach((o) => input.append(new Option(String(o), String(o), false, String(o) === String(prefs.aleatorio[chave]))))
+      } else {
+        input = Object.assign(document.createElement('input'), { value: prefs.aleatorio[chave], inputMode: 'decimal' })
       }
-      campo('De:', 'de', 'Digita o valor aleatório inicial')
-      campo('Até:', 'ate', 'Digita o valor aleatório final')
-      campo('Decimais:', 'decimais', 'Digita as casas decimais do valor aleatório', [0, 1, 2, 3, 4, 5])
-    } else {
-      const [id, icone] = item
-      const dica = dicaDaPlataforma(item[2])
-      const b = document.createElement('button')
-      b.type = 'button'
-      b.className = 'botao'
-      b.dataset.id = id
-      b.dataset.dica = dica
-      b.title = dica
-      b.setAttribute('aria-label', dica)
-      b.innerHTML = ICONES[icone]
-      b.addEventListener('click', () => rodar(id))
-      if (id === 'aleatorio' || id === 'assistente') b.setAttribute('aria-pressed', 'false')
-      if (id === 'parar') b.disabled = true
-      barra.append(b)
+      input.id = `aleatorio-${chave}`
+      input.title = dica
+      input.disabled = true
+      input.addEventListener('change', async () => {
+        prefs = await api.prefs.gravar({ aleatorio: { ...prefs.aleatorio, [chave]: input.value } })
+      })
+      lab.htmlFor = input.id
+      span.append(lab, input)
+      barra.append(span)
     }
+    campo('De:', 'de', 'Digita o valor aleatório inicial')
+    campo('Até:', 'ate', 'Digita o valor aleatório final')
+    campo('Decimais:', 'decimais', 'Digita as casas decimais do valor aleatório', [0, 1, 2, 3, 4, 5])
+  } else {
+    const [id, icone] = item
+    const dica = dicaDaPlataforma(item[2])
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.className = 'botao'
+    b.dataset.id = id
+    b.dataset.dica = dica
+    b.title = dica
+    b.setAttribute('aria-label', dica)
+    b.innerHTML = ICONES[icone]
+    b.addEventListener('click', () => rodar(id))
+    if (id === 'aleatorio' || id === 'assistente') b.setAttribute('aria-pressed', 'false')
+    if (id === 'parar') b.disabled = true
+    barra.append(b)
   }
 }
 
 function alternarAleatorio() {
   aleatorioLigado = !aleatorioLigado
-  $('[data-id="aleatorio"]').setAttribute('aria-pressed', String(aleatorioLigado))
+  $('[data-id="aleatorio"]').setAttribute('aria-pressed', String(aleatorioLigado)) // oculto só some (hidden), continua no DOM
   for (const c of ['de', 'ate', 'decimais']) $(`#aleatorio-${c}`).disabled = !aleatorioLigado
   api.menu.estado({ aleatorio: aleatorioLigado })
 }

@@ -32,6 +32,7 @@ for (;;) {
     dica: tradutor(prefs.idioma)(DICAS[dica]),
     prefs,
     atalhos: { novo: ehMac ? '⌘N' : 'Ctrl+N', abrir: ehMac ? '⌘O' : 'Ctrl+A' },
+    conta: { nome: prefs.conta?.nome ?? '', foto: await api.conta.foto() },
   })
   if (prefs.procurarAtualizacoes !== false) void faixaDeAtualizacao(tradutor(prefs.idioma))
   const r = await promessa

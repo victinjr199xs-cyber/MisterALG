@@ -1,5 +1,8 @@
 // Janelas auxiliares da IDE, no estilo dos formulários do VisuAlg.
 
+import { BARRA, ESSENCIAIS, POSICOES, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis } from '../compartilhado/barra.js'
+import { criarAvatar } from './avatar.js'
+
 const raiz = () => document.getElementById('dialogos')
 
 /** Cria um <dialog> modal com título, corpo (Node) e botões. Resolve com o valor do botão. */
@@ -125,7 +128,7 @@ function corDaVariavel(nome) {
  * @param aoPrever(idTema, cores) aplica tema e cores enquanto o usuário escolhe;
  *        quem chama desfaz se cancelar
  */
-export async function configuracoes(prefs, { temas = [], aoPrever, aba = 'editor' } = {}) {
+export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra, conta = {}, aba = 'editor' } = {}) {
   const fontes = [
     'Menlo', 'Monaco', 'SF Mono', 'Consolas', 'Lucida Console', 'DejaVu Sans Mono', 'Liberation Mono',
     'Ubuntu Mono', 'Noto Sans Mono', 'Courier New', 'Courier',
@@ -249,7 +252,79 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aba = 'editor
     el('label', { htmlFor: aoFechar.id, textContent: 'Ao fechar a janela:' }), aoFechar,
     el('p', { className: 'nota', textContent: 'Em segundo plano, a janela some mas o MisterALG continua aberto, com um ícone perto do relógio. Clique nele para voltar.' }),
   )
-  const ABAS = { editor: ['Editor', abaEditor], cores: ['Cores', abaCores], listas: ['Listas', abaListas], pessoal: ['Personalizar', abaPessoal], sistema: ['Sistema', abaSistema] }
+  // ---- aba Barra: posição, tamanho dos ícones e quais botões aparecem (prévia ao vivo; Cancelar desfaz) ----
+  const selecao = (opcoes, atual) => el('select', {}, ...opcoes.map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === atual })))
+  const posicao = selecao([['topo', 'Topo (clássico)'], ['lateral', 'Lateral (coluna de ícones)']], POSICOES.includes(prefs.posicaoBarra) ? prefs.posicaoBarra : 'topo')
+  posicao.id = 'cfg-posicao-barra'
+  const tamIcones = selecao([['pequeno', 'Pequeno'], ['medio', 'Médio'], ['grande', 'Grande']], TAMANHOS_ICONE.includes(prefs.tamanhoIcones) ? prefs.tamanhoIcones : 'medio')
+  const ocultosAtuais = new Set(idsOcultaveis(prefs.botoesOcultos))
+  const caixasBotoes = BARRA.filter(Array.isArray).map(([id]) => {
+    const caixa = el('input', { type: 'checkbox', checked: !ocultosAtuais.has(id), disabled: ESSENCIAIS.has(id) })
+    caixa.dataset.botao = id
+    return caixa
+  })
+  const valoresBarra = () => ({
+    posicaoBarra: posicao.value,
+    tamanhoIcones: tamIcones.value,
+    botoesOcultos: caixasBotoes.filter((c) => !c.checked).map((c) => c.dataset.botao),
+  })
+  const preverBarra = () => aoPreverBarra?.(valoresBarra())
+  for (const c of [posicao, tamIcones, ...caixasBotoes]) c.addEventListener('change', preverBarra)
+  const restaurarBarra = el('button', { type: 'button', className: 'acao', textContent: 'Restaurar barra padrão' })
+  restaurarBarra.addEventListener('click', () => {
+    posicao.value = 'topo'
+    tamIcones.value = 'medio'
+    for (const c of caixasBotoes) c.checked = true
+    preverBarra()
+  })
+  const listaBotoes = el('div', { className: 'lista-botoes-barra' },
+    ...caixasBotoes.map((caixa) => {
+      const dica = BARRA.find((i) => i[0] === caixa.dataset.botao)
+      return el('label', { className: 'dica-opcao' }, caixa, ` ${dicaPorPlataforma(dica[2], window.misteralg?.plataforma === 'darwin')}`)
+    }))
+  const abaBarra = el('div', { className: 'aba-conteudo', hidden: true },
+    el('label', { textContent: 'Posição da barra de ferramentas:' }), posicao,
+    el('label', { textContent: 'Tamanho dos ícones:' }), tamIcones,
+    el('label', { textContent: 'Botões visíveis na barra:' }), listaBotoes,
+    el('div', { className: 'linha-botoes' }, restaurarBarra),
+  )
+
+  // ---- aba Conta: nome e foto (a foto é escolhida, recortada e guardada pelo main) ----
+  const nomeConta = el('input', { id: 'cfg-nome-conta', value: prefs.conta?.nome ?? '', maxLength: 40 })
+  const fotoPrevia = el('span', { className: 'conta-previa' })
+  const erroFoto = el('p', { className: 'nota', role: 'alert' })
+  let fotoAtual = conta.foto ?? null
+  const redesenharFoto = () => {
+    fotoPrevia.replaceChildren(criarAvatar({ nome: nomeConta.value, foto: fotoAtual }, 64))
+    remover.disabled = !fotoAtual
+  }
+  const escolher = el('button', { type: 'button', className: 'acao', textContent: 'Escolher foto…' })
+  const remover = el('button', { type: 'button', className: 'acao', textContent: 'Remover foto' })
+  escolher.addEventListener('click', async () => {
+    const r = await conta.aoEscolher?.()
+    erroFoto.textContent = r?.erro ? 'Essa imagem não serve: use PNG, JPG ou WEBP de até 5 MB.' : ''
+    if (r?.foto) fotoAtual = r.foto
+    redesenharFoto()
+  })
+  remover.addEventListener('click', async () => {
+    await conta.aoRemover?.()
+    fotoAtual = null
+    erroFoto.textContent = ''
+    redesenharFoto()
+  })
+  nomeConta.addEventListener('input', redesenharFoto)
+  redesenharFoto()
+  const abaConta = el('div', { className: 'aba-conteudo', hidden: true },
+    el('label', { textContent: 'Seu nome:' }), nomeConta,
+    el('div', { className: 'linha-botoes conta-linha' }, fotoPrevia, escolher, remover),
+    erroFoto,
+    el('p', { className: 'nota', textContent: 'A foto fica só neste computador.' }),
+  )
+
+  const ABAS = {
+    editor: ['Editor', abaEditor], cores: ['Cores', abaCores], barra: ['Barra', abaBarra], conta: ['Conta', abaConta],
+    listas: ['Listas', abaListas], pessoal: ['Personalizar', abaPessoal], sistema: ['Sistema', abaSistema],
+  }
   const botoesAba = Object.entries(ABAS).map(([id, [rotulo]]) => {
     const b = el('button', { type: 'button', textContent: rotulo })
     b.addEventListener('click', () => mostrar(id))
@@ -283,6 +358,8 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aba = 'editor
     entidade: entidade.value,
     abrirAoLigar: aoLigar.checked,
     aoFechar: aoFechar.value,
+    ...valoresBarra(),
+    conta: { nome: nomeConta.value.trim() },
   }
 }
 

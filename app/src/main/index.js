@@ -1,8 +1,10 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron'
-import { existsSync, statSync } from 'node:fs'
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, shell } from 'electron'
+import { existsSync, readFileSync, rmSync, statSync } from 'node:fs'
+import { extname, join } from 'node:path'
 import { temaPorId } from '../compartilhado/temas.js'
+import { FOTO_EXTENSOES, FOTO_LADO, FOTO_LADO_MAX, recorteQuadrado, validarFoto } from '../compartilhado/conta.js'
 import { mostrarAbertura } from './abertura.js'
-import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
+import { anexarDados, gravarArquivo, gravarAtomicoSync, lerArquivo, lerDados } from './arquivos.js'
 import { aquecer, arvore, compilar, enviarEntrada, executar, foiCancelado, parar, pararTudo } from './clang.js'
 import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
 import { carregarPagina, criarJanelaPrincipal } from './janelas.js'
@@ -171,6 +173,41 @@ function registrarIpc() {
     if ('tema' in prefs) aplicarTemaNativo()
     atualizarMenu()
     return r
+  })
+  // Foto da conta: o renderer nunca passa caminho; o main escolhe o arquivo, recorta ao centro, reduz para
+  // 128x128 e grava sempre em userData/conta.png. Volta como data URL (cabe na CSP img-src data:).
+  const arquivoFoto = () => join(app.getPath('userData'), 'conta.png')
+  const lerFoto = () => {
+    try {
+      return `data:image/png;base64,${readFileSync(arquivoFoto()).toString('base64')}`
+    } catch {
+      return null
+    }
+  }
+  ipcMain.handle('conta:foto', () => lerFoto())
+  ipcMain.handle('conta:removerFoto', () => {
+    rmSync(arquivoFoto(), { force: true })
+    return null
+  })
+  ipcMain.handle('conta:escolherFoto', async () => {
+    const r = await dialog.showOpenDialog(janela, {
+      title: trMain('Escolher foto da conta'),
+      filters: [{ name: trMain('Imagens'), extensions: FOTO_EXTENSOES }],
+      properties: ['openFile'],
+    })
+    if (r.canceled || !r.filePaths[0]) return null
+    const caminho = r.filePaths[0]
+    try {
+      if (!validarFoto({ extensao: extname(caminho), tamanho: statSync(caminho).size }).ok) return { erro: true }
+      const original = nativeImage.createFromPath(caminho)
+      const { width, height } = original.getSize()
+      if (original.isEmpty() || width > FOTO_LADO_MAX || height > FOTO_LADO_MAX) return { erro: true }
+      const png = original.crop(recorteQuadrado(width, height)).resize({ width: FOTO_LADO, height: FOTO_LADO, quality: 'best' }).toPNG()
+      gravarAtomicoSync(arquivoFoto(), png)
+      return { foto: lerFoto() }
+    } catch {
+      return { erro: true } // a conta anterior continua como estava
+    }
   })
   ipcMain.handle('menu:estado', (_e, estado) => {
     estadoMenu = { ...estadoMenu, ...estado }

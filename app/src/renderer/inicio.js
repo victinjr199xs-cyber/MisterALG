@@ -5,6 +5,7 @@
 import { comNegrito, el } from './dialogos.js'
 import { ICONES_LINGUAGEM } from './icones-linguagens.js'
 import { IDIOMAS, tradutor } from '../compartilhado/idiomas.js'
+import { criarAvatar } from './avatar.js'
 
 export const LINGUAGENS = [
   { id: 'portugol', nome: 'Portugol', ext: '.alg', cor: '#8b5cf6', resumo: 'Lógica de programação em português', visao: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', selo: 'Como no VisuAlg' },
@@ -22,7 +23,7 @@ export const LINGUAGENS = [
  * @param {{versao:string, recentes:string[], dica:string, prefs:{abertura:boolean, idioma?:string}, atalhos:{novo:string, abrir:string}}} opcoes
  * @returns {Promise<{acao:'novo'|'abrir'|'recente'|'idioma', idioma?:string, linguagem?:string, caminho?:string, prefs:{abertura:boolean}}>}
  */
-export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
+export function telaInicial({ versao, recentes, dica, prefs, atalhos, conta = null }) {
   const t = tradutor(prefs.idioma)
   return new Promise((resolve) => {
     const caixa = (rotulo, marcado) => {
@@ -83,6 +84,8 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
         el('span', { className: 'inicio-aba ativa', textContent: t('Início') }),
         el('span', { className: 'inicio-aba', textContent: t('Ambiente de programação') }),
         el('span', { className: 'inicio-espaco' }),
+        ...(conta?.nome ? [el('span', { className: 'inicio-ola', textContent: t('Olá, {0}!', conta.nome) })] : []),
+        ...(conta ? [el('span', { className: 'inicio-avatar', role: 'img', ariaLabel: conta.nome ? t('Conta de {0}', conta.nome) : t('Conta: nome e foto') }, criarAvatar(conta, 34))] : []),
         el('label', { className: 'inicio-rotulo' }, t('Idioma'), idioma),
         botao('inicio-botao-claro', [t('Abrir…'), el('kbd', { textContent: atalhos.abrir })], () => terminar({ acao: 'abrir' })),
       ),

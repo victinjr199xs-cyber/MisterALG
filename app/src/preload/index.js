@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('misteralg', {
   // Testes e capturas usam uma pasta de dados própria; neles não abre a dica do dia.
   automatizado: Boolean(process.env.MISTERALG_DADOS) && !process.env.MISTERALG_TESTE_SISTEMA,
   prefs: { ler: invocar('prefs:ler'), gravar: invocar('prefs:gravar') },
+  conta: { foto: invocar('conta:foto'), escolherFoto: invocar('conta:escolherFoto'), removerFoto: invocar('conta:removerFoto') },
   menu: {
     aoComando(fn) {
       const ouvinte = (_e, id, dados) => fn(id, dados)
