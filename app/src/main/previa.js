@@ -7,6 +7,7 @@ import { protocol } from 'electron'
 import { readFile, stat } from 'node:fs/promises'
 import { extname, join, relative, resolve, sep } from 'node:path'
 import { executar } from './php.js'
+import { dentroDaPasta as dentroDe } from './arquivos.js'
 
 export const ESQUEMA = 'misteralg-previa'
 
@@ -41,9 +42,7 @@ const naoAchei = (caminho) => resposta(`<p style="font:16px sans-serif">Não ach
 /** Resolve o caminho da URL dentro da pasta do programa, sem deixar sair dela. */
 function dentroDaPasta(caminho) {
   if (!pagina?.diretorio) return null
-  const base = resolve(pagina.diretorio)
-  const alvo = resolve(join(base, caminho))
-  return alvo === base || alvo.startsWith(base + sep) ? alvo : null
+  return dentroDe(pagina.diretorio, caminho)
 }
 
 async function manipular(req) {

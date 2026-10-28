@@ -1,10 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { gravarArquivo, lerArquivo } from './arquivos.js'
+import { join, resolve } from 'node:path'
+import { anexarDados, dentroDaPasta, gravarArquivo, gravarAtomicoSync, lerArquivo, lerDados } from './arquivos.js'
 
 const pasta = mkdtempSync(join(tmpdir(), 'misteralg-arq-'))
 test.after(() => rmSync(pasta, { recursive: true, force: true }))
@@ -57,4 +57,33 @@ test('arquivo oculto continua oculto depois de salvar', { skip: process.platform
   await gravarArquivo(caminho, 'b\n')
   assert.ok(execFileSync('attrib', [caminho], { encoding: 'utf8' }).slice(0, 20).includes('H'))
   assert.equal((await lerArquivo(caminho)).texto, 'b\n')
+})
+
+test('comando arquivo: só pasta do algoritmo ou Documentos; .. e absoluto de fora são barrados', () => {
+  const algoritmo = join(pasta, 'alg')
+  const docs = join(pasta, 'docs')
+  const fora = join(pasta, 'fora')
+  for (const d of [algoritmo, docs, fora]) mkdirSync(d)
+  writeFileSync(join(algoritmo, 'dados.txt'), 'a\nb\n')
+  writeFileSync(join(docs, 'dd.txt'), 'doc\n')
+  writeFileSync(join(fora, 'segredo.txt'), 'x\n')
+  assert.equal(lerDados('dados.txt', algoritmo, docs), 'a\nb\n')
+  assert.equal(lerDados('sub/nao-existe.txt', algoritmo, docs), null)
+  assert.equal(lerDados(join(docs, 'dd.txt'), algoritmo, docs), 'doc\n') // absoluto dentro de Documentos
+  for (const nome of ['..\\fora\\segredo.txt', '../fora/segredo.txt', '..\\..\\..\\Windows\\win.ini', join(fora, 'segredo.txt')]) {
+    assert.throws(() => lerDados(nome, algoritmo, docs), { code: 'FORA_DA_PASTA' }, nome)
+    assert.throws(() => anexarDados(nome, algoritmo, docs, 'x'), { code: 'FORA_DA_PASTA' }, nome)
+  }
+  assert.equal(readFileSync(join(fora, 'segredo.txt'), 'utf8'), 'x\n')
+  assert.equal(dentroDaPasta(algoritmo, 'a/../b.txt'), resolve(algoritmo, 'b.txt'))
+  assert.equal(dentroDaPasta(algoritmo, '..'), null)
+})
+
+test('gravarAtomicoSync grava e não deixa .misteralg-tmp', () => {
+  const caminho = join(pasta, 'prefs.json')
+  gravarAtomicoSync(caminho, '{"a":1}')
+  gravarAtomicoSync(caminho, '{"a":2}')
+  assert.equal(readFileSync(caminho, 'utf8'), '{"a":2}')
+  assert.deepEqual(readdirSync(pasta).filter((n) => n.endsWith('.misteralg-tmp')), [])
+  assert.throws(() => gravarAtomicoSync(join(pasta, 'sumida', 'x.json'), '{}'))
 })

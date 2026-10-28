@@ -757,4 +757,9 @@ export default {
   1247: "Giờ nhấn F8 để xem cùng chương trình đó từng dòng một. Việc chuẩn bị chạy từng bước mất vài giây.",
   1248: "Giờ nhấn F8 để xem cùng chương trình đó từng dòng một.",
   1249: "Dòng được tô sáng trong trình soạn thảo là dòng sẽ chạy tiếp theo. Tiếp tục nhấn F8 và xem bộ nhớ thay đổi; khi chương trình hỏi tên, hãy gõ vào bảng điều khiển.",
+  1250: "… đầu ra đã bị cắt (hơn 500 nghìn ký tự)",
+  1251: "Tệp \"{0}\" nằm ngoài thư mục của thuật toán và thư mục Tài liệu. Lệnh arquivo chỉ truy cập các thư mục đó.",
+  1252: "Không ghi được vào tệp \"{0}\": {1}",
+  1253: "Không mở được tệp {0}: {1}",
+  1254: "chế độ từng bước của MisterALG đã chạm giới hạn số lời gọi lồng nhau (khoảng 500): có thể là đệ quy vô hạn, hoặc chỉ là đệ quy quá sâu so với chế độ từng bước (F9 không có điểm dừng chạy chương trình đã biên dịch, chịu được nhiều hơn)",
 }

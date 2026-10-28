@@ -758,4 +758,9 @@ export default {
   1247: "Sekarang tekan F8 untuk melihat program yang sama baris demi baris. Persiapan langkah demi langkah butuh beberapa detik.",
   1248: "Sekarang tekan F8 untuk melihat program yang sama baris demi baris.",
   1249: "Baris yang disorot di editor adalah baris berikutnya yang akan dijalankan. Terus tekan F8 dan lihat memori berubah; saat program menanyakan nama, ketik di konsol.",
+  1250: "… keluaran dipotong (lebih dari 500 ribu karakter)",
+  1251: "File \"{0}\" berada di luar folder algoritma dan folder Dokumen. Perintah arquivo hanya mengakses folder-folder itu.",
+  1252: "Tidak dapat menulis ke file \"{0}\": {1}",
+  1253: "Tidak dapat membuka file {0}: {1}",
+  1254: "langkah demi langkah MisterALG mencapai batas panggilan bersarang (sekitar 500): bisa jadi rekursi tak hingga, atau hanya rekursi yang terlalu dalam untuk langkah demi langkah (F9 tanpa breakpoint menjalankan program hasil kompilasi, yang sanggup lebih banyak)",
 }

@@ -777,4 +777,9 @@ export default {
   1247: "Ora premi F8 per vedere lo stesso programma riga per riga. La preparazione del passo a passo richiede alcuni secondi.",
   1248: "Ora premi F8 per vedere lo stesso programma riga per riga.",
   1249: "La riga evidenziata nell’editor è la prossima da eseguire. Continua a premere F8 e guarda la memoria cambiare; quando il programma chiede il nome, scrivilo nella console.",
+  1250: "… output troncato (più di 500 mila caratteri)",
+  1251: "Il file \"{0}\" è fuori dalla cartella dell'algoritmo e dalla cartella Documenti. Il comando arquivo accede solo a queste cartelle.",
+  1252: "Impossibile scrivere nel file \"{0}\": {1}",
+  1253: "Impossibile aprire il file {0}: {1}",
+  1254: "il passo-passo di MisterALG ha raggiunto il limite di chiamate annidate (circa 500): può essere ricorsione infinita, o solo una ricorsione troppo profonda per il passo-passo (F9 senza punti di interruzione esegue il programma compilato, che ne regge di più)",
 }

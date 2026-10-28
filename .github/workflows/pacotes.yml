@@ -68,6 +68,16 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y rpm xvfb
 
+      - name: Conferir que a tag bate com a versão do app/package.json
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          versao="v$(node -p "require('./app/package.json').version")"
+          if [ "$versao" != "$GITHUB_REF_NAME" ]; then
+            echo "A tag $GITHUB_REF_NAME não bate com a versão do app ($versao). Ajuste app/package.json ou a tag." >&2
+            exit 1
+          fi
+
       - name: Instalar dependências
         run: npm ci
 

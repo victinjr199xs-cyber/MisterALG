@@ -2,8 +2,9 @@
 // de dados do app (~/Library/Application Support/MisterALG no Mac).
 
 import { app } from 'electron'
-import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs'
+import { readFileSync, existsSync, mkdirSync, unlinkSync } from 'node:fs'
 import { join } from 'node:path'
+import { gravarAtomicoSync } from './arquivos.js'
 
 // Fonte monoespaçada que vem instalada em cada sistema.
 const FONTE_DO_SISTEMA = { darwin: 'Menlo', win32: 'Consolas', linux: 'DejaVu Sans Mono' }[process.platform] ?? 'Courier New'
@@ -67,7 +68,7 @@ export function lerPreferencias() {
 
 export function gravarPreferencias(prefs) {
   const final = { ...lerPreferencias(), ...prefs }
-  writeFileSync(arquivoPrefs(), JSON.stringify(final, null, 2), 'utf8')
+  gravarAtomicoSync(arquivoPrefs(), JSON.stringify(final, null, 2))
   return final
 }
 
@@ -94,7 +95,7 @@ export function lerRecuperacao() {
 }
 
 export function gravarRecuperacao(dados) {
-  writeFileSync(arquivoRecuperacao(), JSON.stringify(dados), 'utf8')
+  gravarAtomicoSync(arquivoRecuperacao(), JSON.stringify(dados))
 }
 
 export function limparRecuperacao() {

@@ -163,7 +163,7 @@ export class SessaoC {
       this.rodando = false
       if (e instanceof SaidaDoPrograma) return this.finalizar('terminado', undefined, e.codigo)
       if (e instanceof RangeError && /call stack/i.test(e.message)) {
-        return this.finalizar('erro', new ErroC('a pilha de chamadas estourou (recursão infinita?)', 0, EXPLICACOES.pilha))
+        return this.finalizar('erro', new ErroC('o passo a passo do MisterALG chegou ao limite de chamadas aninhadas (cerca de 500): pode ser recursão infinita, ou só uma recursão funda demais para o passo a passo (F9 sem pontos de parada roda o programa compilado, que aguenta mais)', 0, EXPLICACOES.pilha))
       }
       return this.finalizar('erro', e)
     }

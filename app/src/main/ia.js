@@ -4,8 +4,9 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { app, safeStorage } from 'electron'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { gravarAtomicoSync } from './arquivos.js'
 import { PROVEDORES, provedorPorId, separarSSE } from '../compartilhado/ia.js'
 
 const SISTEMA = `Você é o assistente do MisterALG, uma IDE para quem está aprendendo lógica de programação.
@@ -60,7 +61,7 @@ export function gravarChave(provedor, chave) {
     if (safeStorage.isEncryptionAvailable()) chaves[provedor] = safeStorage.encryptString(chave).toString('base64')
     else naMemoria[provedor] = chave
   }
-  writeFileSync(arquivoChaves(), JSON.stringify(chaves), 'utf8')
+  gravarAtomicoSync(arquivoChaves(), JSON.stringify(chaves))
 }
 
 /** Quais provedores já têm chave (o renderer só fica sabendo disso, nunca da chave). */

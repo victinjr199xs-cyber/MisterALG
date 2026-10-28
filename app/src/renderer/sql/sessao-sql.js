@@ -85,7 +85,9 @@ export class SessaoSQL {
         }
         this.op.onOutput(`${resultadoPsql(c.sql, r.campos, r.linhas, r.afetadas)}\n\n`, 'resultado')
         if (this.modo !== 'continuo') await this.mostrarBanco()
+        if (this.terminado) return
         if (this.modo === 'timer') await esperar(this.timerMs)
+        if (this.terminado) return // Parar durante a espera nao pode rodar o proximo comando
       }
       await this.mostrarBanco()
       this.fim('terminado')

@@ -777,4 +777,9 @@ export default {
   1247: "Drücke jetzt F8, um dasselbe Programm Zeile für Zeile zu sehen. Die Vorbereitung des Einzelschrittmodus dauert ein paar Sekunden.",
   1248: "Drücke jetzt F8, um dasselbe Programm Zeile für Zeile zu sehen.",
   1249: "Die hervorgehobene Zeile im Editor ist die nächste, die ausgeführt wird. Drücke weiter F8 und sieh zu, wie sich der Speicher ändert; wenn das Programm nach dem Namen fragt, tippe ihn in die Konsole.",
+  1250: "… Ausgabe abgeschnitten (mehr als 500 Tausend Zeichen)",
+  1251: "Die Datei \"{0}\" liegt außerhalb des Algorithmus-Ordners und des Ordners Dokumente. Der Befehl arquivo greift nur auf diese Ordner zu.",
+  1252: "Die Datei \"{0}\" konnte nicht beschrieben werden: {1}",
+  1253: "Die Datei {0} konnte nicht geöffnet werden: {1}",
+  1254: "die Einzelschrittausführung von MisterALG hat ihre Grenze für verschachtelte Aufrufe erreicht (etwa 500): Es kann eine Endlosrekursion sein oder nur eine für die Einzelschrittausführung zu tiefe Rekursion (F9 ohne Haltepunkte führt das kompilierte Programm aus, das mehr verträgt)",
 }

@@ -28,3 +28,9 @@ export function textoAutostart(exec) {
     '',
   ].join('\n')
 }
+
+/** O .desktop gravado ainda abre este executável? Compara a linha Exec= inteira (com aspas e escapes), não só o caminho solto. */
+export function autostartConfere(conteudo, exec) {
+  const esperada = textoAutostart(exec).split('\n').find((l) => l.startsWith('Exec='))
+  return conteudo.split(/\r?\n/).includes(esperada)
+}

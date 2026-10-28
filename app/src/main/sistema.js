@@ -9,7 +9,7 @@
 import { app, Menu, nativeImage, Tray } from 'electron'
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import { ARG_AO_LIGAR, arquivoAutostart, executavel, textoAutostart } from './autostart.js'
+import { ARG_AO_LIGAR, arquivoAutostart, autostartConfere, executavel, textoAutostart } from './autostart.js'
 
 /** Só o app instalado mexe no início do sistema (em desenvolvimento seria o Electron de node_modules). */
 // MISTERALG_TESTE_SISTEMA: so para scripts/teste-sistema.mjs, que testa o registro e a bandeja com pasta de dados propria.
@@ -40,7 +40,7 @@ export function abreAoLigar() {
   try {
     if (process.platform === 'linux') {
       const arquivo = arquivoAutostart()
-      return existsSync(arquivo) && readFileSync(arquivo, 'utf8').includes(executavel())
+      return existsSync(arquivo) && autostartConfere(readFileSync(arquivo, 'utf8'), executavel())
     }
     // No Windows, openAtLogin vem false mesmo com a entrada certa (os argumentos voltam vazios); vale launchItems.
     const s = app.getLoginItemSettings({ path: executavel(), args: [ARG_AO_LIGAR], name: 'MisterALG' })

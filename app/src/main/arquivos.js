@@ -3,9 +3,9 @@
 // caímos para UTF-8 se o texto tiver algum caractere fora do 1252.
 
 import { open, readFile, rename, rm } from 'node:fs/promises'
-import { readFileSync, appendFileSync, existsSync } from 'node:fs'
+import { readFileSync, appendFileSync, existsSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
-import { isAbsolute, join } from 'node:path'
+import { isAbsolute, relative, resolve } from 'node:path'
 
 const cp1252 = new TextDecoder('windows-1252')
 const utf8 = new TextDecoder('utf-8', { fatal: true })
@@ -78,6 +78,18 @@ export async function gravarArquivo(caminho, texto, codificacao) {
   return r.codificacao
 }
 
+/** Versão síncrona e simples (preferências, recuperação, chaves): grava num .tmp e troca de nome, como o gravarArquivo. */
+export function gravarAtomicoSync(caminho, dados) {
+  const tmp = `${caminho}.${process.pid}.misteralg-tmp`
+  try {
+    writeFileSync(tmp, dados, 'utf8')
+    renameSync(tmp, caminho)
+  } catch (e) {
+    rmSync(tmp, { force: true })
+    throw e
+  }
+}
+
 // No Windows o rename troca o arquivo e perde o atributo "oculto"; reaplicamos (falhar aqui não pode derrubar o salvar).
 function estaOculto(caminho) {
   if (process.platform !== 'win32' || !existsSync(caminho)) return false
@@ -96,9 +108,22 @@ function ocultar(caminho) {
 
 // ---- comando `arquivo "dados.txt"` do Portugol (chamado de forma síncrona) ----
 
+/** Resolve `caminho` dentro de `base`, sem deixar sair dela (.., absoluto de outra pasta). Devolve null se sair. */
+export function dentroDaPasta(base, caminho) {
+  const raiz = resolve(base)
+  const alvo = resolve(raiz, caminho) // com caminho absoluto o resolve ignora a base; o relative abaixo é que barra
+  const rel = relative(raiz, alvo)
+  return alvo === raiz || (rel !== '' && !rel.startsWith('..') && !isAbsolute(rel)) ? alvo : null
+}
+
+/** O comando `arquivo` só acessa a pasta do algoritmo ou Documentos; fora delas lança um erro com code 'FORA_DA_PASTA'. */
 function resolver(nome, pastaBase, pastaPadrao) {
-  if (isAbsolute(nome)) return nome
-  return join(pastaBase || pastaPadrao, nome)
+  for (const base of [pastaBase, pastaPadrao]) {
+    if (!base) continue
+    const alvo = dentroDaPasta(base, nome)
+    if (alvo) return alvo
+  }
+  throw Object.assign(new Error(`caminho fora da pasta permitida: ${nome}`), { code: 'FORA_DA_PASTA' })
 }
 
 export function lerDados(nome, pastaBase, pastaPadrao) {

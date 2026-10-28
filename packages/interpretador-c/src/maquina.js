@@ -14,7 +14,8 @@ const PONTEIRO_VOID = ponteiro({ k: 'void', nome: 'void', tamanho: 1, alinhament
 const FIM_DE_LACO = { tipo: 'break' }
 const PROXIMA_VOLTA = { tipo: 'continue' }
 const INICIO_FUNCOES = 0x100 // "endereços" das funções (para ponteiros de função); fora da memória de dados
-// Cada chamada do C usa uns 10 quadros de gerador do JS; acima disto a pilha do próprio JS estoura.
+// Cada chamada do C usa uns 10 quadros de gerador do JS; acima disto a pilha do próprio JS estoura. É um limite do
+// passo a passo (a pilha do JS), não do programa: o estouro real da pilha simulada é outro erro (memoria.js).
 const MAX_CHAMADAS = 900
 
 /** exit(n): sai do programa de qualquer profundidade. */
@@ -600,7 +601,7 @@ export class MaquinaC {
    * @param ctx C++: { this, classe, destino (onde construir a classe devolvida), construtor, destrutor }
    */
   * chamarFuncao(def, valores, linhaDaChamada, ctx = {}) {
-    if (this.pilha.length >= MAX_CHAMADAS) throw new ErroC('chamadas demais uma dentro da outra (recursão infinita?)', 0, EXPLICACOES.pilha)
+    if (this.pilha.length >= MAX_CHAMADAS) throw new ErroC('o passo a passo do MisterALG chegou ao limite de chamadas aninhadas (cerca de 500): pode ser recursão infinita, ou só uma recursão funda demais para o passo a passo (F9 sem pontos de parada roda o programa compilado, que aguenta mais)', 0, EXPLICACOES.pilha)
     const info = this.infoDaFuncao(def)
     const { params, corpo } = info
     const marca = this.mem.topoPilha

@@ -777,4 +777,9 @@ export default {
   1247: "Druk nu op F8 om hetzelfde programma regel voor regel te zien. Het voorbereiden van stap voor stap duurt een paar seconden.",
   1248: "Druk nu op F8 om hetzelfde programma regel voor regel te zien.",
   1249: "De gemarkeerde regel in de editor is de volgende die wordt uitgevoerd. Blijf op F8 drukken en zie het geheugen veranderen; als het programma om je naam vraagt, typ die in de console.",
+  1250: "… uitvoer afgekapt (meer dan 500 duizend tekens)",
+  1251: "Het bestand \"{0}\" staat buiten de map van het algoritme en de map Documenten. Het commando arquivo gebruikt alleen die mappen.",
+  1252: "Kon niet naar het bestand \"{0}\" schrijven: {1}",
+  1253: "Kon het bestand {0} niet openen: {1}",
+  1254: "het stap-voor-stap van MisterALG heeft zijn limiet voor geneste aanroepen bereikt (ongeveer 500): het kan oneindige recursie zijn, of gewoon een recursie die te diep is voor stap-voor-stap (F9 zonder breekpunten voert het gecompileerde programma uit, dat meer aankan)",
 }

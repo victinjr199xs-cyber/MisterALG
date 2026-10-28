@@ -778,4 +778,9 @@ export default {
   1247: "Ahora pulsa F8 para ver el mismo programa línea por línea. Preparar el paso a paso tarda unos segundos.",
   1248: "Ahora pulsa F8 para ver el mismo programa línea por línea.",
   1249: "La línea resaltada en el editor es la próxima en ejecutarse. Sigue pulsando F8 y mira cómo cambia la memoria; cuando el programa pida el nombre, escríbelo en la consola.",
+  1250: "… salida cortada (más de 500 mil caracteres)",
+  1251: "El archivo \"{0}\" está fuera de la carpeta del algoritmo y de la carpeta Documentos. El comando arquivo solo accede a esas carpetas.",
+  1252: "No se pudo escribir en el archivo \"{0}\": {1}",
+  1253: "No se pudo abrir el archivo {0}: {1}",
+  1254: "el paso a paso de MisterALG llegó al límite de llamadas anidadas (unas 500): puede ser recursión infinita, o solo una recursión demasiado profunda para el paso a paso (F9 sin puntos de interrupción ejecuta el programa compilado, que aguanta más)",
 }

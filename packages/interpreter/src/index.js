@@ -246,7 +246,9 @@ export class Sessao {
       erroFinal = e instanceof ErroVisualg
         ? e
         : Object.assign(new ErroVisualg(28, this.linhaAtual), {
-          mensagem: e instanceof RangeError && /call stack/i.test(e.message)
+          mensagem: e.paraAluno
+            ? e.message
+            : e instanceof RangeError && /call stack/i.test(e.message)
             ? 'Estouro de pilha: recursão profunda demais (falta a condição de parada?).'
             : `Erro interno: ${e.message}`,
           interno: e,

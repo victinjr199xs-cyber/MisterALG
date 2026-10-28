@@ -777,4 +777,9 @@ export default {
   1247: "Teraz naciśnij F8, aby zobaczyć ten sam program linia po linii. Przygotowanie pracy krokowej trwa kilka sekund.",
   1248: "Teraz naciśnij F8, aby zobaczyć ten sam program linia po linii.",
   1249: "Wyróżniona linia w edytorze zostanie wykonana jako następna. Naciskaj dalej F8 i patrz, jak zmienia się pamięć; gdy program zapyta o imię, wpisz je w konsoli.",
+  1250: "… wyjście obcięte (ponad 500 tysięcy znaków)",
+  1251: "Plik \"{0}\" znajduje się poza folderem algorytmu i folderem Dokumenty. Polecenie arquivo ma dostęp tylko do tych folderów.",
+  1252: "Nie udało się zapisać do pliku \"{0}\": {1}",
+  1253: "Nie udało się otworzyć pliku {0}: {1}",
+  1254: "tryb krok po kroku MisterALG osiągnął limit zagnieżdżonych wywołań (około 500): to może być nieskończona rekurencja albo po prostu rekurencja zbyt głęboka dla trybu krok po kroku (F9 bez punktów przerwania uruchamia skompilowany program, który znosi więcej)",
 }

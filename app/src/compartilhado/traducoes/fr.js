@@ -778,4 +778,9 @@ export default {
   1247: "Appuyez maintenant sur F8 pour voir le même programme ligne par ligne. La préparation du pas à pas prend quelques secondes.",
   1248: "Appuyez maintenant sur F8 pour voir le même programme ligne par ligne.",
   1249: "La ligne mise en évidence dans l’éditeur est la prochaine à s’exécuter. Continuez d’appuyer sur F8 et regardez la mémoire changer ; quand le programme demande votre nom, tapez-le dans la console.",
+  1250: "… sortie coupée (plus de 500 mille caractères)",
+  1251: "Le fichier \"{0}\" est en dehors du dossier de l'algorithme et du dossier Documents. La commande arquivo n'accède qu'à ces dossiers.",
+  1252: "Impossible d'écrire dans le fichier \"{0}\" : {1}",
+  1253: "Impossible d'ouvrir le fichier {0} : {1}",
+  1254: "le pas à pas de MisterALG a atteint sa limite d'appels imbriqués (environ 500) : ce peut être une récursion infinie, ou simplement une récursion trop profonde pour le pas à pas (F9 sans points d'arrêt exécute le programme compilé, qui en supporte davantage)",
 }

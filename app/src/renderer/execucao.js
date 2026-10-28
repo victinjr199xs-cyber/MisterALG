@@ -9,6 +9,7 @@ import { SessaoCS } from '@misteralg/interpretador-csharp'
 import { SessaoPython } from './python/sessao-python.js'
 import { criarPrevia } from './previa.js'
 import * as dialogos from './dialogos.js'
+import { tradutor } from '../compartilhado/idiomas.js'
 import { criarMemoriaC } from './memoria-c.js'
 import { criarMemoriaBanco } from './memoria-banco.js'
 import { SessaoSQL } from './sql/sessao-sql.js'
@@ -135,7 +136,24 @@ export function criarExecucao(op) {
   // ---- console ------------------------------------------------------------
 
   // A saída entra antes do campo de digitação, se houver (no C/C++ ele fica aberto o tempo todo).
+  // Limite por execução: um laço infinito de escreva não pode travar a janela enchendo o DOM.
+  const LIMITE_SAIDA = 500_000
+  let emitidos = 0
+  let cortou = false
   function escrever(texto) {
+    emitidos += texto.length
+    if (emitidos > LIMITE_SAIDA) {
+      if (cortou) return
+      cortou = true
+      const cor = corTexto
+      corTexto = CORES.AMARELO
+      escreverBruto(`\n${tradutor(op.idioma?.() ?? 'pt')('… saída cortada (mais de 500 mil caracteres)')}\n`)
+      corTexto = cor
+      return
+    }
+    escreverBruto(texto)
+  }
+  function escreverBruto(texto) {
     const campo = tela.querySelector('.console-entrada')
     const partes = texto.split('\f')
     partes.forEach((parte, i) => {
@@ -193,6 +211,8 @@ export function criarExecucao(op) {
   }
 
   function abrirConsole() {
+    emitidos = 0
+    cortou = false
     tela.replaceChildren()
     tela.style.background = ''
     corTexto = CORES.BRANCO
@@ -243,9 +263,9 @@ export function criarExecucao(op) {
     const quebra = tela.textContent.endsWith('\n') || tela.textContent === '' ? '' : '\n'
     // Nas linguagens de programação (modo-codigo, main.js) o terminal fala inglês, como os de verdade.
     const ingles = document.body.classList.contains('modo-codigo')
-    if (estadoFinal === 'terminado') escrever(`${quebra}\n${ingles ? 'Process finished with exit code 0' : TEXTOS.fimPrograma}`)
-    else if (estadoFinal === 'parado') escrever(`${quebra}${ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario}`)
-    else if (estadoFinal === 'erro') escrever(`${quebra}${ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro}`)
+    if (estadoFinal === 'terminado') escreverBruto(`${quebra}\n${ingles ? 'Process finished with exit code 0' : TEXTOS.fimPrograma}`)
+    else if (estadoFinal === 'parado') escreverBruto(`${quebra}${ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario}`)
+    else if (estadoFinal === 'erro') escreverBruto(`${quebra}${ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro}`)
     status.estado()
     status.mensagem(TEXTOS.rodapeConsole)
     op.aoMudarEstado(false)

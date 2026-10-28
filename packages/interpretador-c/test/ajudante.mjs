@@ -2,7 +2,8 @@
 import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { createRequire } from 'node:module'
+import { dirname, join } from 'node:path'
 import { runClang } from '@yowasp/clang'
 import { ARGUMENTOS_AST_C, CABECALHOS_C } from '../src/cabecalhos.js'
 import { ARGUMENTOS_AST_CPP, cabecalhosCppPara } from '../src/cabecalhos-cpp.js'
@@ -12,9 +13,12 @@ import { rodarC } from '../src/index.js'
 // travamento, so lentidao): a saida fica em cache em disco, indexada pelo hash dos argumentos, cabecalhos e fonte.
 const DIR_CACHE = process.env.MISTERALG_AST_CACHE || join(tmpdir(), 'misteralg-ast-cache')
 
+// Atualizar o clang muda o AST: a versão dele entra na chave para o cache velho não valer (o main do pacote fica em gen/bundle.js).
+const VERSAO_CLANG = JSON.parse(readFileSync(join(dirname(dirname(createRequire(import.meta.url).resolve('@yowasp/clang'))), 'package.json'), 'utf8')).version
+
 export async function astDe(fonte, cpp = false) {
   const arquivos = cpp ? { 'programa.cpp': fonte, mini: cabecalhosCppPara(fonte) } : { 'programa.c': fonte, mini: CABECALHOS_C }
-  const chave = createHash('sha256').update(JSON.stringify([cpp ? ARGUMENTOS_AST_CPP : ARGUMENTOS_AST_C, arquivos])).digest('hex')
+  const chave = createHash('sha256').update(JSON.stringify([VERSAO_CLANG, cpp ? ARGUMENTOS_AST_CPP : ARGUMENTOS_AST_C, arquivos])).digest('hex')
   const arq = join(DIR_CACHE, chave + '.txt')
   try { return readFileSync(arq, 'utf8') } catch {}
   const saida = await compilarAst(fonte, cpp, arquivos)

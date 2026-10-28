@@ -1,7 +1,15 @@
 // "Abrir quando o computador ligar" no Linux: o .desktop de ~/.config/autostart (main/autostart.js).
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { ARG_AO_LIGAR, arquivoAutostart, executavel, textoAutostart } from './autostart.js'
+import { ARG_AO_LIGAR, arquivoAutostart, autostartConfere, executavel, textoAutostart } from './autostart.js'
+
+test('autostartConfere: só vale se a linha Exec= for a deste executável', () => {
+  const exe = '/home/ana/Meus "apps"/MisterALG.AppImage'
+  assert.equal(autostartConfere(textoAutostart(exe), exe), true)
+  assert.equal(autostartConfere(textoAutostart('/opt/outro/misteralg'), exe), false)
+  assert.equal(autostartConfere(`# ${exe}\nExec=/bin/true\n`, exe), false)
+  assert.equal(autostartConfere('', exe), false)
+})
 
 test('o sistema abre o arquivo que o aluno tem, não a cópia temporária do portátil ou do AppImage', () => {
   assert.equal(executavel({}, '/opt/MisterALG/misteralg'), '/opt/MisterALG/misteralg')

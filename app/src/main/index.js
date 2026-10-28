@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron'
-import { existsSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, statSync } from 'node:fs'
 import { temaPorId } from '../compartilhado/temas.js'
 import { mostrarAbertura } from './abertura.js'
 import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
@@ -197,10 +197,13 @@ function registrarIpc() {
       adicionarRecente(caminho)
       atualizarMenu()
       return lido
-    } catch {
+    } catch (e) {
+      const t = tradutor(lerPreferencias().idioma)
+      // Só some da lista de recentes quem de fato não existe mais; permissão negada, disco ocupado etc. mantêm o recente.
+      if (e?.code !== 'ENOENT') return { erro: t('Não deu para abrir o arquivo {0}: {1}', caminho, e?.message ?? String(e)) }
       removerRecente(caminho)
       atualizarMenu()
-      return { erro: tradutor(lerPreferencias().idioma)('O arquivo {0} não pode ser encontrado.', caminho) }
+      return { erro: t('O arquivo {0} não pode ser encontrado.', caminho) }
     }
   })
 
@@ -255,7 +258,11 @@ function registrarIpc() {
       defaultPath: `${documentos()}/${nome || 'semnome'}.${extensao}`,
     })
     if (r.canceled || !r.filePath) return null
-    writeFileSync(r.filePath, texto, 'utf8')
+    try {
+      await gravarArquivo(r.filePath, texto, 'utf-8')
+    } catch (e) {
+      return { erro: tradutor(lerPreferencias().idioma)('Não deu para salvar o arquivo: {0}', e?.message ?? String(e)) }
+    }
     return r.filePath
   })
 
@@ -274,16 +281,17 @@ function registrarIpc() {
   ipcMain.on('dados:ler', (e, { nome, pasta }) => {
     try {
       e.returnValue = lerDados(nome, pasta, documentos())
-    } catch {
-      e.returnValue = null
+    } catch (err) {
+      e.returnValue = err?.code === 'FORA_DA_PASTA' ? { erro: tradutor(lerPreferencias().idioma)('O arquivo "{0}" está fora da pasta do algoritmo e da pasta Documentos. O comando arquivo só acessa essas pastas.', nome) } : null
     }
   })
   ipcMain.on('dados:anexar', (e, { nome, pasta, linha }) => {
     try {
       anexarDados(nome, pasta, documentos(), linha)
       e.returnValue = true
-    } catch {
-      e.returnValue = false
+    } catch (err) {
+      const t = tradutor(lerPreferencias().idioma)
+      e.returnValue = { erro: err?.code === 'FORA_DA_PASTA' ? t('O arquivo "{0}" está fora da pasta do algoritmo e da pasta Documentos. O comando arquivo só acessa essas pastas.', nome) : t('Não deu para gravar no arquivo "{0}": {1}', nome, err?.message ?? String(err)) }
     }
   })
 

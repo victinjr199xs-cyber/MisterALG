@@ -243,6 +243,12 @@ async function abrirResultado(lido) {
   carregar({ ...lido, nome: lido.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(lido.caminho) })
 }
 
+/** O main devolve { erro } (já traduzido) quando o comando `arquivo` não pode usar o caminho; o interpretador mostra a mensagem ao aluno. */
+function erroDeArquivo(r) {
+  if (r && typeof r === 'object' && r.erro) throw Object.assign(new Error(r.erro), { paraAluno: true })
+  return r
+}
+
 const pastaAtual = () => (doc.caminho ? doc.caminho.replace(/[\\/][^\\/]*$/, '') : null)
 
 // ---- execução e busca ---------------------------------------------------------------
@@ -257,10 +263,11 @@ execucao = criarExecucao({
       : null,
     listas: prefs.listas,
     arquivos: {
-      ler: (nome) => api.dados.ler(nome, pastaAtual()),
-      anexar: (nome, linha) => api.dados.anexar(nome, pastaAtual(), linha),
+      ler: (nome) => erroDeArquivo(api.dados.ler(nome, pastaAtual())),
+      anexar: (nome, linha) => erroDeArquivo(api.dados.anexar(nome, pastaAtual(), linha)),
     },
   }),
+  idioma: () => prefs.idioma,
   aoErro: (erro) => { ultimoErro = erro },
   iaAtiva: () => !!prefs.ia?.ativo,
   aoPedirIA: () => assistente.explicarErro(),
@@ -309,7 +316,8 @@ async function exportarPrograma(linguagem, rotulo, extensao, gerar) {
   if (await dialogos.codigoExportado(gerado.codigo, linguagem) === 'salvar') {
     // Em Java o arquivo precisa ter o nome da classe pública.
     const caminho = await api.exportar({ texto: gerado.codigo, nome: gerado.classe ?? doc.nome, extensao })
-    if (caminho) status.mensagem(` MENSAGEM: Programa ${rotulo} gravado em ${caminho}`)
+    if (caminho?.erro) await api.mensagem({ type: 'error', title: 'Exportar', message: caminho.erro })
+    else if (caminho) status.mensagem(` MENSAGEM: Programa ${rotulo} gravado em ${caminho}`)
   }
 }
 
@@ -614,10 +622,7 @@ if (mostrouTermos) {
 
 const pendente = await api.arquivoPendente()
 const recuperado = await api.recuperacao.ler()
-if (pendente) {
-  carregar({ texto: esqueleto(prefs) })
-  await abrirResultado(await api.arquivo.abrirCaminho(pendente))
-} else if (recuperado?.texto) {
+if (recuperado?.texto) {
   const r = await api.mensagem({
     type: 'question',
     title: 'Falha!',
@@ -633,6 +638,11 @@ if (pendente) {
     carregar({ texto: esqueleto(prefs) })
   }
   api.recuperacao.limpar()
+  // Arquivo pendente (duplo clique): o recuperado fica no editor e, se nao for salvo, o aluno decide antes de abrir o outro.
+  if (pendente && (r !== 0 || (await podeDescartar('Abrir')))) await abrirResultado(await api.arquivo.abrirCaminho(pendente))
+} else if (pendente) {
+  carregar({ texto: esqueleto(prefs) })
+  await abrirResultado(await api.arquivo.abrirCaminho(pendente))
 } else {
   carregar({ texto: esqueleto(prefs) })
   // A escolha feita na página inicial: uma linguagem nova ou um arquivo para abrir.

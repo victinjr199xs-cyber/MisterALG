@@ -777,4 +777,9 @@ export default {
   1247: "Now press F8 to see the same program line by line. Preparing the step by step takes a few seconds.",
   1248: "Now press F8 to see the same program line by line.",
   1249: "The highlighted line in the editor is the next one to run. Keep pressing F8 and watch the memory change; when the program asks for your name, type it in the console.",
+  1250: "… output cut (more than 500 thousand characters)",
+  1251: "The file \"{0}\" is outside the algorithm folder and the Documents folder. The arquivo command only accesses those folders.",
+  1252: "Could not write to the file \"{0}\": {1}",
+  1253: "Could not open the file {0}: {1}",
+  1254: "the MisterALG step by step reached its limit of nested calls (about 500): it may be infinite recursion, or just recursion too deep for the step by step (F9 without breakpoints runs the compiled program, which handles more)",
 }

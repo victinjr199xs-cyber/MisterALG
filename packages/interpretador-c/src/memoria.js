@@ -140,6 +140,9 @@ export class Memoria {
     const tamanho = Math.max(0, Math.floor(n))
     const ocupa = alinhar(Math.max(tamanho, 1), 8)
     const i = this.livres.findIndex((l) => l.fim - l.inicio >= ocupa)
+    // shortcut: sem aviso ao aluno quando o malloc falha por falta dos 16 MB simulados (o programa só recebe NULL, como no C).
+    // Não há canal de aviso separado da saída do programa (m.saida mistura stdout e stderr) e escrever lá mudaria a saída
+    // que os testes e o aluno comparam; um canal onAviso no op da sessão resolveria.
     if (i < 0) return 0
     const livre = this.livres[i]
     const inicio = livre.inicio

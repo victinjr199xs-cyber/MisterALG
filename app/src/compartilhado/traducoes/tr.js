@@ -774,4 +774,9 @@ export default {
   1247: "Şimdi aynı programı satır satır görmek için F8’e bas. Adım adım çalıştırmanın hazırlanması birkaç saniye sürer.",
   1248: "Şimdi aynı programı satır satır görmek için F8’e bas.",
   1249: "Düzenleyicide vurgulanan satır, sıradaki çalışacak satırdır. F8’e basmaya devam et ve belleğin değişmesini izle; program adını sorduğunda konsola yaz.",
+  1250: "… çıktı kesildi (500 binden fazla karakter)",
+  1251: "\"{0}\" dosyası algoritma klasörünün ve Belgeler klasörünün dışında. arquivo komutu yalnızca bu klasörlere erişir.",
+  1252: "\"{0}\" dosyasına yazılamadı: {1}",
+  1253: "{0} dosyası açılamadı: {1}",
+  1254: "MisterALG adım adım modu iç içe çağrı sınırına ulaştı (yaklaşık 500): sonsuz özyineleme olabilir ya da adım adım mod için fazla derin bir özyineleme olabilir (kesme noktası olmadan F9, daha fazlasına dayanan derlenmiş programı çalıştırır)",
 }
