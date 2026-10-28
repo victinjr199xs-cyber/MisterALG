@@ -3,7 +3,7 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
-## [Não lançado]
+## [1.11.0] — 2026-10-28
 
 ### Novidades
 
@@ -13,7 +13,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **C#**: `Span`/`ReadOnlySpan` e `stackalloc`, `BitConverter`, `Encoding.ASCII/Unicode/UTF32/Latin1`,
   `Convert` para Base64 e hexadecimal, fatias com subpadrão em padrões de lista, `ToLookup`, `new()` como
   argumento e `Math.DivRem` em tupla.
-
+- **C no passo a passo (F8)**: funções variádicas com `va_list` (`va_start`, `va_arg`, `va_end`, `va_copy`) e
+  arrays de tamanho variável (VLA), inclusive na tela de memória.
 - **Tutorial**: na primeira vez que a IDE abre, o MisterALG oferece um passeio guiado (também em Ajuda > Tutorial
   do MisterALG). Balões destacam o editor, o F9, o F8, o F5, a tela de memória, o console, o assistente e a ajuda,
   com o texto de cada linguagem. Depois o tutorial guia o primeiro programa: escreve um exemplo, espera o aluno
