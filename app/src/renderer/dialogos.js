@@ -163,6 +163,10 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
   const professor = el('input', { value: prefs.professor })
   const entidade = el('input', { value: prefs.entidade })
   const tema = el('select', {}, ...temas.map((t) => el('option', { value: t.id, textContent: t.nome, selected: t.id === prefs.tema })))
+  const disposicao = el('select', { id: 'cfg-disposicao' }, ...[
+    ['classica', 'Clássica (como o VisuAlg)'],
+    ['moderna', 'Moderna (linguagens à esquerda, painéis)'],
+  ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.disposicao ?? 'classica') })))
 
   // ---- aba Cores: uma cor por categoria, guardada por tema ----
   const coresSintaxe = structuredClone(prefs.coresSintaxe ?? {})
@@ -252,6 +256,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
 
   const abaEditor = el('div', { className: 'aba-conteudo' },
     linha('Tema (cores da tela):', tema),
+    linha('Disposição da tela:', disposicao, 'Moderna: trilho de linguagens à esquerda, lista de arquivos, memória à direita e painel com abas embaixo. A barra de ferramentas fica sempre no topo.'),
     linha('Fonte:', fonte),
     linha('Tamanho:', tamanho),
     linha('Largura da Tabulação (colunas):', tab, null, tabValor),
@@ -285,12 +290,13 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     return caixa
   })
   const valoresBarra = () => ({
+    disposicao: disposicao.value, // prévia e gravação passam pelo mesmo caminho da barra (main.js aplicarBarra)
     posicaoBarra: posicao.value,
     tamanhoIcones: tamIcones.value,
     botoesOcultos: caixasBotoes.filter((c) => !c.checked).map((c) => c.dataset.botao),
   })
   const preverBarra = () => aoPreverBarra?.(valoresBarra())
-  for (const c of [posicao, tamIcones, ...caixasBotoes]) c.addEventListener('change', preverBarra)
+  for (const c of [disposicao, posicao, tamIcones, ...caixasBotoes]) c.addEventListener('change', preverBarra)
   const restaurarBarra = el('button', { type: 'button', className: 'acao', textContent: 'Restaurar barra padrão' })
   restaurarBarra.addEventListener('click', () => {
     posicao.value = 'topo'

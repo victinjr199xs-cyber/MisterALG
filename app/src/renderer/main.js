@@ -18,6 +18,7 @@ import { gerarPascal, gerarC, gerarJava } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
 import { BARRA, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis, itensVisiveis, principaisLateral } from '../compartilhado/barra.js'
 import { criarAvatar } from './avatar.js'
+import { criarDisposicao } from './disposicao.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
@@ -100,6 +101,7 @@ menuTemas.addEventListener('keydown', (e) => {
 })
 const editandoCampo = () => !!document.querySelector('dialog[open]') || !!document.activeElement?.matches('input, textarea')
 const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modificado: false, linguagem: 'portugol' }
+let disposicao = null // criada junto da barra (disposição moderna); atualizarTitulo avisa quando o documento muda
 
 // ---- linguagens --------------------------------------------------------------------
 
@@ -168,6 +170,7 @@ function atualizarTitulo() {
   const t = tradutor(prefs.idioma)
   api.janela.titulo(doc.modificado ? t('MisterALG — {0} (modificado)', arquivo) : t('MisterALG — {0}', arquivo))
   status.estado()
+  disposicao?.atualizar()
 }
 
 function marcarModificado() {
@@ -276,7 +279,7 @@ execucao = criarExecucao({
     },
   }),
   idioma: () => prefs.idioma,
-  aoErro: (erro) => { ultimoErro = erro },
+  aoErro: (erro) => { ultimoErro = erro; disposicao?.problema(erro) },
   iaAtiva: () => !!prefs.ia?.ativo,
   aoPedirIA: () => assistente.explicarErro(),
   linguagem: () => doc.linguagem,
@@ -286,7 +289,7 @@ execucao = criarExecucao({
     diretorio: doc.caminho ? doc.caminho.replace(/[\\/][^\\/]*$/, '') : null,
   }),
   aoMudarEstado: (rodando) => {
-    if (rodando) ultimoErro = null
+    if (rodando) { ultimoErro = null; disposicao?.problema(null); disposicao?.aoExecutar() }
     api.menu.estado({ executando: rodando })
     for (const id of ['parar']) $(`[data-id="${id}"]`).disabled = !rodando
   },
@@ -479,9 +482,23 @@ const ehMac = api.plataforma === 'darwin'
 
 const dicaDaPlataforma = (dica) => dicaPorPlataforma(dica, ehMac)
 
+disposicao = criarDisposicao({
+  api,
+  t: (...a) => tradutor(prefs.idioma)(...a),
+  doc,
+  extensoes: EXTENSAO,
+  alturaSalva: prefs.alturaPainel ?? 0,
+  gravarAltura: async (px) => { prefs = await api.prefs.gravar({ alturaPainel: px }) },
+  novo: (linguagem) => rodar('novo', linguagem),
+  abrirRecente: (caminho) => rodar('abrir-recente', caminho),
+  abrirExemplo: (e) => rodar('exemplo', e),
+})
+
 /** Posição, tamanho dos ícones e botões ocultos. `p` pode ser só uma prévia (Configurações), sem gravar. */
 function aplicarBarra(p = prefs) {
-  const lateral = p.posicaoBarra === 'lateral'
+  disposicao.aplicar(p.disposicao)
+  // Na disposição moderna o trilho de linguagens ocupa a lateral: a barra fica sempre no topo (compacta).
+  const lateral = p.posicaoBarra === 'lateral' && p.disposicao !== 'moderna'
   document.body.classList.toggle('barra-lateral', lateral)
   document.documentElement.dataset.tamIcone = TAMANHOS_ICONE.includes(p.tamanhoIcones) ? p.tamanhoIcones : 'medio'
   const barra = $('#barra')
