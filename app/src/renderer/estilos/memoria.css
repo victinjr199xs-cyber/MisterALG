@@ -71,3 +71,34 @@
 :root[data-tema="papel"] #variaveis tr.modificada td:last-child,
 :root[data-tema="hibrido-claro"] #variaveis tr.modificada td:last-child,
 :root[data-tema="hibrido-escuro"] #variaveis tr.modificada td:last-child { border-right-color: var(--linha-execucao); }
+
+/* Pilula de tipo na grade de memoria. */
+:root[data-tema="noite"] #variaveis .pilula-tipo,
+:root[data-tema="papel"] #variaveis .pilula-tipo,
+:root[data-tema="hibrido-claro"] #variaveis .pilula-tipo,
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo {
+  --cor-tipo: #6b7280;
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.85em;
+  color: var(--cor-tipo);
+  background: color-mix(in srgb, var(--cor-tipo) 18%, transparent);
+}
+:root[data-tema] #variaveis .pilula-tipo[data-tipo="inteiro"] { --cor-tipo: #3b82f6; }
+:root[data-tema] #variaveis .pilula-tipo[data-tipo="real"] { --cor-tipo: #16a34a; }
+:root[data-tema] #variaveis .pilula-tipo[data-tipo="caractere"] { --cor-tipo: #ea7a0c; }
+:root[data-tema] #variaveis .pilula-tipo[data-tipo="logico"] { --cor-tipo: #8b5cf6; }
+:root[data-tema] #variaveis .pilula-tipo[data-tipo="vetor"] { --cor-tipo: #ec4899; }
+:root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="inteiro"],
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="inteiro"] { --cor-tipo: #60a5fa; }
+:root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="real"],
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="real"] { --cor-tipo: #4ade80; }
+:root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="caractere"],
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="caractere"] { --cor-tipo: #fb923c; }
+:root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="logico"],
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="logico"] { --cor-tipo: #a78bfa; }
+:root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="vetor"],
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="vetor"] { --cor-tipo: #f472b6; }
+:root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="outro"],
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="outro"] { --cor-tipo: #9ca3af; }

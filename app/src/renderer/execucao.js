@@ -231,6 +231,16 @@ export function criarExecucao(op) {
 
   // ---- grade de variáveis -----------------------------------------------------
 
+  function categoriaTipo(tipo) {
+    const t = String(tipo ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    if (t.startsWith('vetor') || t.includes('[')) return 'vetor'
+    if (/^(inteiro|int|long)\b/.test(t)) return 'inteiro'
+    if (/^(real|double|float)\b/.test(t)) return 'real'
+    if (/^(caractere|char|string|str)\b/.test(t)) return 'caractere'
+    if (/^(logico|bool|boolean)\b/.test(t)) return 'logico'
+    return 'outro'
+  }
+
   function mostrarVariaveis({ globais, locais }) {
     const linhas = [...globais, ...locais]
     const novos = new Map()
@@ -245,9 +255,15 @@ export function criarExecucao(op) {
         tr.className = 'modificada'
         primeiraModificada ??= tr
       }
-      for (const texto of [v.escopo, v.nome, v.tipo, v.valor]) {
+      for (const [i, texto] of [v.escopo, v.nome, v.tipo, v.valor].entries()) {
         const td = document.createElement('td')
-        td.textContent = texto
+        if (i === 2) {
+          const pilula = document.createElement('span')
+          pilula.className = 'pilula-tipo'
+          pilula.dataset.tipo = categoriaTipo(texto)
+          pilula.textContent = texto
+          td.append(pilula)
+        } else td.textContent = texto
         tr.append(td)
       }
       frag.append(tr)
