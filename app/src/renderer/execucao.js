@@ -241,16 +241,66 @@ export function criarExecucao(op) {
     return 'outro'
   }
 
+  // Vetores em caixinhas (valor + índice) na disposição moderna e nos temas novos; no clássico ficam as linhas do VisuAlg.
+  const TEMAS_NOVOS = new Set(['noite', 'papel', 'hibrido-claro', 'hibrido-escuro'])
+  const MAX_CAIXAS = 20
+  const agruparVetores = () => document.documentElement.dataset.disposicao === 'moderna' || TEMAS_NOVOS.has(document.documentElement.dataset.tema)
+
+  /** Linha única de um vetor de uma dimensão: o interpretador manda um elemento por linha (V[1], V[2]...); a matriz (V[1,2]) continua em texto. */
+  function linhaDeVetor(g, mudouItem) {
+    const tr = document.createElement('tr')
+    tr.className = 'vetor-linha'
+    const mudados = g.itens.filter((it) => mudouItem(it))
+    if (mudados.length > 1) tr.classList.add('modificada')
+    const caixas = document.createElement('div')
+    caixas.className = 'caixinhas'
+    for (const it of g.itens.slice(0, MAX_CAIXAS)) {
+      const c = document.createElement('span')
+      c.className = 'caixa'
+      if (mudados.length === 1 && mudados[0] === it) c.classList.add('mudou')
+      c.append(Object.assign(document.createElement('b'), { textContent: it.valor }), Object.assign(document.createElement('i'), { textContent: it.indice }))
+      caixas.append(c)
+    }
+    if (g.itens.length > MAX_CAIXAS) caixas.append(Object.assign(document.createElement('span'), { className: 'caixas-mais', textContent: `…+${g.itens.length - MAX_CAIXAS}` }))
+    const nome = `${g.base}[${g.itens[0].indice}..${g.itens.at(-1).indice}]`
+    const pilula = Object.assign(document.createElement('span'), { className: 'pilula-tipo', textContent: `${g.tipo}[ ]` })
+    pilula.dataset.tipo = 'vetor'
+    for (const conteudo of [g.escopo, nome, pilula, caixas]) {
+      const td = document.createElement('td')
+      td.append(conteudo)
+      tr.append(td)
+    }
+    return tr
+  }
+
   function mostrarVariaveis({ globais, locais }) {
     const linhas = [...globais, ...locais]
     const novos = new Map()
     let primeiraModificada = null
     const frag = document.createDocumentFragment()
+    const agrupar = agruparVetores()
+    const mudouChave = (chave, valor) => valoresAnteriores.size > 0 && valoresAnteriores.get(chave) !== valor
+    const entradas = []
     for (const v of linhas) {
       const chave = `${v.escopo}|${v.nome}`
       novos.set(chave, v.valor)
+      const m = agrupar ? /^(.+)\[([^\],]+)\]$/.exec(v.nome) : null
+      if (!m) { entradas.push({ v, chave }); continue }
+      const item = { indice: m[2], valor: v.valor, chave }
+      const ant = entradas.at(-1)
+      if (ant?.grupo && ant.escopo === v.escopo && ant.base === m[1]) ant.itens.push(item)
+      else entradas.push({ grupo: true, escopo: v.escopo, base: m[1], tipo: v.tipo, itens: [item] })
+    }
+    for (const e of entradas) {
+      if (e.grupo) {
+        const tr = linhaDeVetor(e, (it) => mudouChave(it.chave, it.valor))
+        primeiraModificada ??= tr.classList.contains('modificada') ? tr : tr.querySelector('.mudou')
+        frag.append(tr)
+        continue
+      }
+      const { v, chave } = e
       const tr = document.createElement('tr')
-      const mudou = valoresAnteriores.size > 0 && valoresAnteriores.get(chave) !== v.valor
+      const mudou = mudouChave(chave, v.valor)
       if (mudou) {
         tr.className = 'modificada'
         primeiraModificada ??= tr

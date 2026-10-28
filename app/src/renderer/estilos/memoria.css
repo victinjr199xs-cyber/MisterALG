@@ -102,3 +102,16 @@
 :root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="vetor"] { --cor-tipo: #f472b6; }
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="outro"],
 :root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="outro"] { --cor-tipo: #9ca3af; }
+/* Vetor de uma dimensão em caixinhas (valor em cima, índice embaixo); só nasce na disposição moderna e nos temas novos (execucao.js). */
+#variaveis tr.vetor-linha td { vertical-align: top; }
+#variaveis .caixinhas { display: flex; flex-wrap: wrap; gap: 4px; padding-block: 2px; }
+#variaveis .caixa {
+  display: flex; flex-direction: column; align-items: center; min-inline-size: 28px; max-inline-size: 64px; padding: 3px 5px 2px;
+  border: 1px solid var(--linha-grade); border-radius: 7px; background: color-mix(in srgb, var(--selecao-grade) 55%, var(--fundo-campo));
+}
+#variaveis .caixa b { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 12px/1.3 var(--fonte-mono); color: var(--texto); }
+#variaveis .caixa i { font: normal 9.5px/1.2 var(--fonte-ui); color: var(--detalhe); }
+#variaveis .caixa.mudou { border-color: var(--linha-execucao); background: var(--selecao-grade); animation: caixa-pisca .5s ease-out; }
+#variaveis .caixas-mais { align-self: center; font: 600 11px var(--fonte-ui); color: var(--detalhe); }
+@keyframes caixa-pisca { from { transform: scale(1.18); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { #variaveis .caixa.mudou { animation: none; } }
