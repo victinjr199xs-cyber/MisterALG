@@ -500,10 +500,13 @@ function atualizarAvatar() {
 
 function montarBarra() {
   const barra = $('#barra')
+  // Lista rolável própria: na lateral o avatar fica fora dela (rodapé fixo); no topo ela é `display: contents`.
+  const lista = Object.assign(document.createElement('div'), { className: 'barra-lista' })
+  barra.append(lista)
   BARRA.forEach((item, indice) => {
-    const antes = barra.childElementCount
-    montarItem(barra, item)
-    for (const e of [...barra.children].slice(antes)) e.dataset.item = String(indice)
+    const antes = lista.childElementCount
+    montarItem(lista, item)
+    for (const e of [...lista.children].slice(antes)) e.dataset.item = String(indice)
   })
   const avatar = Object.assign(document.createElement('button'), { type: 'button', className: 'botao avatar' })
   avatar.dataset.id = 'conta'

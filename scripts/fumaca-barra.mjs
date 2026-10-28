@@ -62,7 +62,8 @@ export default async ({ avaliar, esperar, foto }) => {
   conferir('aria-orientation vertical', await avaliar(`document.querySelector('#barra').getAttribute('aria-orientation')`), 'vertical')
   conferir('executar visível na lateral', await visivel('executar'), true)
   conferir('barra à esquerda e main à direita', await avaliar(`document.querySelector('#barra').getBoundingClientRect().right <= document.querySelector('main').getBoundingClientRect().left + 1`), true)
-  conferir('campos do timer escondidos na lateral', await avaliar(`getComputedStyle(document.querySelector('.campo-barra')).display`), 'none')
+  conferir('campos do timer empilhados na lateral', await avaliar(`getComputedStyle(document.querySelector('.campo-barra')).flexDirection`), 'column')
+  conferir('avatar fora da lista rolável', await avaliar(`document.querySelector('[data-id="conta"]').parentElement.id`), 'barra')
   await foto(`${pasta}/classico-lateral.png`)
 
   // ocultar um botão (copiar) com a barra lateral; o essencial (executar) não pode sair
