@@ -150,7 +150,7 @@
 :root[data-disposicao="moderna"] .cab-passo[hidden] { display: none; }
 :root[data-disposicao="moderna"] .cab-passo-texto { font-weight: 600; white-space: nowrap; }
 :root[data-disposicao="moderna"] .cab-passo-barra {
-  position: relative; flex: 0 1 280px; block-size: 5px; border-radius: 3px; overflow: hidden;
+  position: relative; flex: none; inline-size: clamp(120px, 20vw, 280px); block-size: 5px; border-radius: 3px; overflow: hidden;
   background: color-mix(in srgb, var(--destaque) 18%, transparent);
 }
 :root[data-disposicao="moderna"] .cab-passo-barra::after {

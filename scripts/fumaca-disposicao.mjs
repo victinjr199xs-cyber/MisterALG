@@ -29,7 +29,7 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
     for (let i = 0; i < 40 && !(await avaliar('!!window.__misteralg')); i += 1) await esperar(500)
     await esperar(400)
   }
-  const recarregar = async () => { await avaliar('location.reload(); 1'); await esperar(1500); await pronta() }
+  const recarregar = async () => { await cdp('Page.reload', {}); await esperar(2500); await pronta() }
   const gravar = async (p) => { await avaliar(`window.misteralg.prefs.gravar(${JSON.stringify(p)}).then(() => 1)`); await esperar(1000) }
   const abrir = async (aba) => {
     await avaliar(`void ${M}.comandos.configuracoes('${aba}')`)
@@ -150,7 +150,52 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   await avaliar(`document.querySelector('#aba-problemas').click()`)
   conferir('problema mostra a linha', await avaliar(`/\\d/.test(document.querySelector('#problemas .problema b')?.textContent ?? '')`), true)
   console.log('problema:', await q('#problemas', 'e.textContent'))
+  await avaliar(`${M}.editor.irParaLinha(1); document.querySelector('#problemas .problema').click()`)
+  await esperar(300)
+  conferir('clicar no problema leva o cursor à linha 5', await avaliar(`${M}.editor.linhaDoCursor()`), 5)
   await avaliar(`${M}.execucao.restaurar(); ${M}.editor.definirTexto(${JSON.stringify(PROGRAMA)}); ${M}.doc.modificado = false; document.querySelector('#aba-terminal').click(); 1`)
+
+  // ---- altura padrão do painel inferior (sem altura salva): ~32% da área central ------------------------
+  conferir('sem altura salva ainda', await avaliar(`window.misteralg.prefs.ler().then(p => p.alturaPainel)`), 0)
+  const proporcao = await avaliar(`(() => { const m = document.querySelector('main'); return document.querySelector('.moldura-visualizacao').getBoundingClientRect().height / m.clientHeight })()`)
+  console.log('proporção do painel inferior:', proporcao.toFixed(3))
+  conferir('painel inferior ~32% da área central', proporcao > 0.28 && proporcao < 0.36, true)
+  conferir('editor com pelo menos 200px', await q('.moldura-editor', 'e.getBoundingClientRect().height >= 200'), true)
+
+  // ---- barra numa linha só, com o painel "⋯" abrindo para baixo -----------------------------------------
+  const linhasDaBarra = () => avaliar(`new Set([...document.querySelectorAll('#barra .botao')].filter((e) => e.getBoundingClientRect().width > 0).map((e) => Math.round(e.getBoundingClientRect().top))).size`)
+  conferir('barra em uma linha só', await linhasDaBarra(), 1)
+  conferir('barra só com os principais (sem Cortar)', await avaliar(`!!document.querySelector('#barra [data-id="cortar"]')`), false)
+  await avaliar(`document.querySelector('[data-id="mais"]').click()`)
+  await esperar(300)
+  conferir('painel ⋯ aberto', await visivel('#barra-mais'), true)
+  conferir('painel abre logo abaixo do botão', await avaliar(`(() => { const p = document.querySelector('#barra-mais').getBoundingClientRect(); const b = document.querySelector('[data-id="mais"]').getBoundingClientRect(); return p.top >= b.bottom - 1 && p.top - b.bottom < 16 && p.left >= 0 && p.right <= innerWidth })()`), true)
+  conferir('Cortar dentro do painel', await avaliar(`!!document.querySelector('#barra-mais [data-id="cortar"]')`), true)
+  await avaliar(`document.querySelector('[data-id="mais"]').click()`)
+  await esperar(200)
+  conferir('painel ⋯ fecha', await visivel('#barra-mais'), false)
+
+  // ---- trilho: siglas, logo M e tela inicial ----------------------------------------------------------------
+  conferir('siglas no trilho', await avaliar(`[...document.querySelectorAll('.trilho-lang')].map(b => b.textContent).join(' ')`), 'Pt C# JS TS Py C C++ PHP SQL')
+  conferir('logo M no topo do trilho', await q('.trilho-inicio', 'e.textContent'), 'M')
+
+  // ---- F8 com vetor: "Passo N" e caixinhas na memória ------------------------------------------------------
+  await avaliar(`${M}.execucao.restaurar(); ${M}.doc.modificado = false; 1`)
+  await avaliar(`[...document.querySelectorAll('.canais-lista')[1].querySelectorAll('.canal')].find(b => b.textContent === 'ordena_vetor.alg').click()`)
+  await esperar(800)
+  await avaliar(`${M}.doc.modificado = false; ${M}.editor.focar()`)
+  conferir('Passo N escondido antes do F8', await visivel('.cab-passo'), false)
+  for (let i = 0; i < 12; i += 1) { await avaliar(`void ${M}.comandos.passo()`); await esperar(450) }
+  conferir('Passo N visível no F8', await visivel('.cab-passo'), true)
+  console.log('trilha:', await q('.cab-passo', 'e.textContent'))
+  conferir('Passo conta os passos', await avaliar(`/^Passo \\d+$/.test(document.querySelector('.cab-passo-texto').textContent)`), true)
+  conferir('vetor em caixinhas', await avaliar(`document.querySelectorAll('#variaveis .caixa').length > 0`), true)
+  conferir('caixinhas têm índice', await avaliar(`document.querySelector('#variaveis .caixa i').textContent`), '1')
+  console.log('vetor:', await avaliar(`[...document.querySelectorAll('#variaveis tr.vetor-linha')].map(t => t.querySelector('.vetor-cab b').textContent + ' = ' + [...t.querySelectorAll('.caixa b')].map(b => b.textContent).join(',')).join(' | ')`))
+  await avaliar(`${M}.comandos.parar(); 1`)
+  await esperar(600)
+  conferir('Passo N some ao terminar', await visivel('.cab-passo'), false)
+  await avaliar(`${M}.execucao.restaurar(); 1`)
 
   // ---- divisor (teclado) salva a altura ---------------------------------------------------------------
   const alt0 = await q('.moldura-visualizacao', 'e.getBoundingClientRect().height')
@@ -167,12 +212,27 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   conferir('aria-expanded', await q('.cab-alternar', 'e.getAttribute("aria-expanded")'), 'false')
   await avaliar(`document.querySelector('.cab-alternar').click()`)
   conferir('botão reabre', await visivel('#canais'), true)
+  await esperar(500)
+  conferir('escolha gravada (aberta)', await avaliar(`window.misteralg.prefs.ler().then(p => p.colunaRecolhida)`), false)
+  await gravar({ colunaRecolhida: null }) // sem escolha: a coluna volta a seguir a largura da janela
+  await recarregar()
   await cdp('Emulation.setDeviceMetricsOverride', { width: 1200, height: 700, deviceScaleFactor: 1, mobile: false })
   await esperar(500)
   conferir('abaixo de 1280px recolhe sozinha', await visivel('#canais'), false)
   await cdp('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
   await esperar(500)
   conferir('em 1366 a coluna volta', await visivel('#canais'), true)
+  // a escolha do usuário (coluna recolhida) sobrevive ao recarregar
+  await avaliar(`document.querySelector('.cab-alternar').click()`)
+  await esperar(600)
+  conferir('recolhida gravada', await avaliar(`window.misteralg.prefs.ler().then(p => p.colunaRecolhida)`), true)
+  await recarregar()
+  conferir('recolhida persiste ao recarregar', await visivel('#canais'), false)
+  await avaliar(`document.querySelector('.cab-alternar').click()`)
+  await esperar(600)
+  conferir('reaberta persiste', await avaliar(`window.misteralg.prefs.ler().then(p => p.colunaRecolhida)`), false)
+  await recarregar()
+  conferir('aberta depois de recarregar', await visivel('#canais'), true)
 
   // ---- nada cortado nem com tamanho zero (1366x768) --------------------------------------------------
   const medir = () => avaliar(`(() => {

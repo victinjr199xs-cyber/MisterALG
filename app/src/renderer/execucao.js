@@ -262,14 +262,16 @@ export function criarExecucao(op) {
       caixas.append(c)
     }
     if (g.itens.length > MAX_CAIXAS) caixas.append(Object.assign(document.createElement('span'), { className: 'caixas-mais', textContent: `…+${g.itens.length - MAX_CAIXAS}` }))
+    // O painel da memória é estreito: o vetor vira um cartão de largura total (escopo, nome e tipo em cima; caixinhas embaixo).
     const nome = `${g.base}[${g.itens[0].indice}..${g.itens.at(-1).indice}]`
-    const pilula = Object.assign(document.createElement('span'), { className: 'pilula-tipo', textContent: `${g.tipo}[ ]` })
+    const pilula = Object.assign(document.createElement('span'), { className: 'pilula-tipo', textContent: 'vetor' })
     pilula.dataset.tipo = 'vetor'
-    for (const conteudo of [g.escopo, nome, pilula, caixas]) {
-      const td = document.createElement('td')
-      td.append(conteudo)
-      tr.append(td)
-    }
+    const cab = document.createElement('div')
+    cab.className = 'vetor-cab'
+    cab.append(Object.assign(document.createElement('span'), { className: 'vetor-escopo', textContent: g.escopo }), Object.assign(document.createElement('b'), { textContent: nome }), pilula)
+    const td = Object.assign(document.createElement('td'), { colSpan: 4 })
+    td.append(cab, caixas)
+    tr.append(td)
     return tr
   }
 

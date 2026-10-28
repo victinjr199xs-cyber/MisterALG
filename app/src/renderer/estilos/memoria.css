@@ -103,7 +103,14 @@
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="outro"],
 :root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="outro"] { --cor-tipo: #9ca3af; }
 /* Vetor de uma dimensão em caixinhas (valor em cima, índice embaixo); só nasce na disposição moderna e nos temas novos (execucao.js). */
-#variaveis tr.vetor-linha td { vertical-align: top; }
+#variaveis tr.vetor-linha td { vertical-align: top; padding: 6px 8px 8px; }
+:root[data-tema] #variaveis tr.vetor-linha td:first-child,
+:root[data-tema] #variaveis tr.vetor-linha td:last-child { border: 1px solid var(--linha-grade); border-radius: var(--raio); }
+:root[data-tema] #variaveis tr.vetor-linha.modificada td:first-child { border-color: var(--linha-execucao); }
+#variaveis .vetor-cab { display: flex; align-items: center; gap: 8px; margin-block-end: 6px; }
+#variaveis .vetor-escopo { color: var(--detalhe); font-size: 11px; }
+#variaveis .vetor-cab b { font: 700 13px var(--fonte-mono); color: var(--texto); }
+#variaveis .vetor-cab .pilula-tipo { margin-inline-start: auto; }
 #variaveis .caixinhas { display: flex; flex-wrap: wrap; gap: 4px; padding-block: 2px; }
 #variaveis .caixa {
   display: flex; flex-direction: column; align-items: center; min-inline-size: 28px; max-inline-size: 64px; padding: 3px 5px 2px;
