@@ -776,6 +776,8 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
   position: fixed;
   z-index: 20;
   min-width: 230px;
+  max-height: calc(100vh - 8px);
+  overflow-y: auto;
   padding: 4px;
   border: 1px solid var(--dialogo-moldura);
   border-radius: 5px;

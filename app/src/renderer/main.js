@@ -73,10 +73,14 @@ function abrirMenuTemas() {
     document.createElement('hr'),
     item(['Personalizar as cores do código…'], () => comandos['configurar-cores']()),
   )
-  const r = botao.getBoundingClientRect()
+  let r = botao.getBoundingClientRect()
+  if (!r.width) r = $('[data-id="mais"]')?.getBoundingClientRect() ?? r // o painel "⋯" já fechou: ancora no botão dele
   menuTemas.hidden = false
-  menuTemas.style.top = `${r.bottom + 2}px`
-  menuTemas.style.left = `${Math.max(4, Math.min(r.left, innerWidth - menuTemas.offsetWidth - 4))}px`
+  // Na barra lateral (ou no painel "⋯") o botão fica embaixo: abre ao lado e sem sair da janela.
+  const lateral = document.body.classList.contains('barra-lateral')
+  const topo = lateral ? r.top : r.bottom + 2
+  menuTemas.style.top = `${Math.max(4, Math.min(topo, innerHeight - menuTemas.offsetHeight - 4))}px`
+  menuTemas.style.left = `${Math.max(4, Math.min(lateral ? r.right + 4 : r.left, innerWidth - menuTemas.offsetWidth - 4))}px`
   botao.setAttribute('aria-expanded', 'true')
   menuTemas.querySelector('[aria-checked="true"]')?.focus()
 }
