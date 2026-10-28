@@ -3,19 +3,32 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
-## [1.10.1] — 2026-10-24
+## [Não lançado]
+
+### Novidades
+
+- **JavaScript**: `yield*` dentro de `async function*`, `for await` com rótulo, geradores assíncronos como
+  método de classe, recursão até ~12 mil níveis (antes ~700) e aviso claro quando um `await` espera uma
+  Promise que nunca termina.
+- **C#**: `Span`/`ReadOnlySpan` e `stackalloc`, `BitConverter`, `Encoding.ASCII/Unicode/UTF32/Latin1`,
+  `Convert` para Base64 e hexadecimal, fatias com subpadrão em padrões de lista, `ToLookup`, `new()` como
+  argumento e `Math.DivRem` em tupla.
+
+## [1.10.2] — 2026-10-24
 
 ### Novidades
 
 - **JavaScript no estilo do Node**: `require('readline')` (`question`, `on('line')`, `readline/promises`),
   `fs.readFileSync(0)` para ler toda a entrada, `process.stdin`, `util` e `assert`. Esc encerra a entrada.
   Um módulo que não existe no MisterALG dá uma mensagem clara.
-- **C# 11**: deslocamento sem sinal `>>>` / `>>>=` e textos brutos `"""…"""` (também com `# Novidades do MisterALG
-
-O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
-[versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
-
- e `$`).
+- **JavaScript assíncrono**: `await` direto no programa (fora de função `async`), `for await` (inclusive
+  `for await (const linha of rl)` no readline e sobre `process.stdin`) e geradores `async function*`, com
+  passo a passo e breakpoints.
+- **C# 11**: deslocamento sem sinal `>>>` / `>>>=` (também dentro de `$"..."`) e textos brutos `"""…"""`
+  (também com `$"""` e `$$"""`).
+- **C# 11, padrões de lista**: `x is [1, 2, ..]`, `[var primeiro, .., var ultimo]`, `[1, .. var resto]` em `is`
+  e `switch`, sobre vetores, `List<T>` e textos.
+- **C#**: literais UTF-8 `"abc"u8` e `Encoding.UTF8` (`GetBytes`, `GetString`, `GetByteCount`).
 
 ## [1.10.0] — 2026-10-24
 
