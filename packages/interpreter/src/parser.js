@@ -1,7 +1,7 @@
 // Parser de descida recursiva: tokens → AST (gramática de
 // docs/spec/_sintese-A-linguagem.md §1.4). Um comando por linha.
 
-import { erro } from './erros.js'
+import { erro, EXPLICACOES_SUB } from './erros.js'
 import { tokenizar } from './lexer.js'
 import { PALAVRAS_CHAVE, TIPOS_BASICOS } from './palavras.js'
 
@@ -79,6 +79,9 @@ class Parser {
   programa() {
     this.pularLinhas()
     if (!this.ehPalavra('ALGORITMO')) {
+      if (this.ehPalavra('FUNCAO') || this.ehPalavra('PROCEDIMENTO')) {
+        throw Object.assign(erro(1, this.tok.linha), { explicacao: EXPLICACOES_SUB.antes })
+      }
       throw erro(this.tok.k === 'ID' && PALAVRAS_CHAVE.has(this.tok.n) ? 1 : 4, this.tok.linha)
     }
     const linha = this.avancar().linha
@@ -239,7 +242,9 @@ class Parser {
           const porRef = this.aceitarPalavra('VAR')
           const nomes = [this.nome()]
           while (this.aceitarOp(',')) nomes.push(this.nome())
-          if (!this.aceitarOp(':')) throw erro(42, this.tok.linha)
+          if (!this.aceitarOp(':')) {
+            throw Object.assign(erro(30, this.tok.linha, "':'"), { explicacao: EXPLICACOES_SUB.parametro })
+          }
           const tipo = this.tipo()
           for (const n of nomes) params.push({ ...n, porRef, tipo })
         } while (this.aceitarOp(';') || this.aceitarOp(','))
@@ -248,7 +253,7 @@ class Parser {
     }
     let retorno = null
     if (ehFuncao) {
-      if (!this.aceitarOp(':')) throw erro(30, this.tok.linha, "':'")
+      if (!this.aceitarOp(':')) throw Object.assign(erro(30, this.tok.linha, "':'"), { explicacao: EXPLICACOES_SUB.parametro })
       retorno = this.tipo()
     }
     this.fimComando()
