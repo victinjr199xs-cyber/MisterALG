@@ -10,7 +10,8 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 - **Disposição Moderna** (agora o padrão) e **tema Híbrido claro** (também o padrão). O "VisuAlg Clássico" continua
   nas Configurações, com a mesma cara de sempre.
 - **Temas novos**: Noite, Papel e Híbrido, claro e escuro, com fontes Inter e JetBrains Mono embutidas (funcionam sem internet).
-- **Na disposição Moderna**: trilho de linguagens à esquerda (Pt, C#, JS...), lista de recentes e exemplos, cabeçalho
+- **Na disposição Moderna**: guias (abas) de documentos no topo, como as do VS Code (o "+" abre a escolha de linguagem,
+  Ctrl+W fecha, Ctrl+Tab alterna, arraste para reordenar), relógio com projetos anteriores (recentes e exemplos), cabeçalho
   da página com o nome do arquivo, abas Terminal e Problemas (clicar num problema leva à linha), "Passo N" no F8 e
   vetores da memória em caixinhas com valor e índice.
 - **Console moderno**: selo de estado (executando, aguardando, finalizado), histórico do `leia`, linha de erro clicável,
