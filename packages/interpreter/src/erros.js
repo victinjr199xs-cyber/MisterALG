@@ -84,7 +84,7 @@ export const EXPLICACOES_SUB = {
   parametro: 'Cada parâmetro é escrito como nome: tipo, por exemplo funcao dobro(n: real): real. Faltou o sinal de dois-pontos entre o nome e o tipo (e, numa função, o tipo do resultado depois dos parênteses).',
 }
 
-const EXPLICACOES = {
+export const EXPLICACOES = {
   1: 'Todo programa começa com a linha Algoritmo "nome". Escreva-a primeiro; var, funções, procedimentos e inicio vêm depois dela.',
   13: 'Dê à função ou ao procedimento um nome que não seja palavra reservada, sem espaços nem acentos.',
   36: 'Duas sub-rotinas não podem ter o mesmo nome (maiúsculas e minúsculas contam como iguais). Renomeie uma delas.',

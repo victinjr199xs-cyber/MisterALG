@@ -934,4 +934,13 @@ export default {
   1625: "*** Schließen Sie dieses Fenster, um zu MisterALG zurückzukehren.",
   1626: "Korrigieren",
   1627: "Korrigieren und ausführen",
+  1680: "Jedes Programm beginnt mit der Zeile Algoritmo \"Name\". Schreiben Sie sie zuerst; var, Funktionen, Prozeduren und inicio folgen danach.",
+  1681: "Geben Sie der Funktion oder Prozedur einen Namen, der kein reserviertes Wort ist, ohne Leerzeichen und Akzente.",
+  1682: "Zwei Unterprogramme dürfen nicht denselben Namen haben (Groß- und Kleinschreibung zählen gleich). Benennen Sie eines um.",
+  1683: "Jede Deklaration wird als Name: Typ geschrieben (zum Beispiel x: real oder a, b: inteiro). Prüfen Sie den Doppelpunkt und den Typnamen.",
+  1684: "Ein mit var markierter Parameter erhält die Variable selbst, keinen Wert: Rufen Sie mit einem Variablennamen (oder einer Vektorposition) auf, nie mit einer Zahl oder einem Ausdruck.",
+  1685: "Die aufgerufene Funktion oder Prozedur existiert nicht. Prüfen Sie die Schreibweise und denken Sie daran, dass sie nach var und vor inicio deklariert werden muss.",
+  1686: "Der Aufruf hat mehr oder weniger Werte, als die Deklaration Parameter hat. Prüfen Sie Anzahl und Reihenfolge.",
+  1687: "Funktionen und Prozeduren stehen INNERHALB des Algorithmus: zuerst die Zeile Algoritmo \"Name\", dann der Abschnitt var, dann die Unterprogramme (funcao ... fimfuncao, procedimento ... fimprocedimento) und erst danach das inicio des Hauptprogramms. Eine Funktion vor Algoritmo wird nicht akzeptiert.",
+  1688: "Jeder Parameter wird als Name: Typ geschrieben, zum Beispiel funcao dobro(n: real): real. Der Doppelpunkt zwischen Name und Typ fehlt (und bei einer Funktion der Ergebnistyp nach den Klammern).",
 }

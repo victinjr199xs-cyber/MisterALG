@@ -935,4 +935,13 @@ export default {
   1625: "*** Cierre esta ventana para volver a MisterALG.",
   1626: "Corregir",
   1627: "Corregir y ejecutar",
+  1680: "Todo programa empieza con la línea Algoritmo \"nombre\". Escríbela primero; var, funciones, procedimientos e inicio van después.",
+  1681: "Dale a la función o al procedimiento un nombre que no sea una palabra reservada, sin espacios ni tildes.",
+  1682: "Dos subrutinas no pueden tener el mismo nombre (mayúsculas y minúsculas cuentan igual). Cambia el nombre de una de ellas.",
+  1683: "Cada declaración se escribe como nombre: tipo (por ejemplo x: real o a, b: inteiro). Revisa los dos puntos y el nombre del tipo.",
+  1684: "Un parámetro marcado con var recibe la propia variable, no un valor: llama con el nombre de una variable (o de una posición de vector), nunca con un número o una expresión.",
+  1685: "La función o el procedimiento llamado no existe. Revisa la ortografía y recuerda que debe declararse después de var y antes de inicio.",
+  1686: "La llamada tiene más o menos valores que parámetros en la declaración. Revisa la cantidad y el orden.",
+  1687: "Las funciones y los procedimientos van DENTRO del algoritmo: primero la línea Algoritmo \"nombre\", luego la sección var, luego las subrutinas (funcao ... fimfuncao, procedimento ... fimprocedimento) y solo después el inicio del programa principal. Una función escrita antes de Algoritmo no se acepta.",
+  1688: "Cada parámetro se escribe como nombre: tipo, por ejemplo funcao dobro(n: real): real. Falta el signo de dos puntos entre el nombre y el tipo (y, en una función, el tipo del resultado después de los paréntesis).",
 }

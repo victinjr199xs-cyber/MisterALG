@@ -931,4 +931,13 @@ export default {
   1625: "*** MisterALG'ye dönmek için bu pencereyi kapatın.",
   1626: "Düzelt",
   1627: "Düzelt ve çalıştır",
+  1680: "Her program Algoritmo \"ad\" satırıyla başlar. Önce onu yazın; var, fonksiyonlar, prosedürler ve inicio ondan sonra gelir.",
+  1681: "Fonksiyona veya prosedüre ayrılmış bir sözcük olmayan, boşluksuz ve aksansız bir ad verin.",
+  1682: "İki alt program aynı ada sahip olamaz (büyük ve küçük harf aynı sayılır). Birinin adını değiştirin.",
+  1683: "Her bildirim ad: tür biçiminde yazılır (örneğin x: real veya a, b: inteiro). İki noktayı ve tür adını kontrol edin.",
+  1684: "var ile işaretli parametre bir değeri değil değişkenin kendisini alır: bir değişken adıyla (veya bir vektör konumuyla) çağırın, asla bir sayı ya da ifadeyle değil.",
+  1685: "Çağrılan fonksiyon veya prosedür yok. Yazımı kontrol edin ve var'dan sonra, inicio'dan önce bildirilmesi gerektiğini unutmayın.",
+  1686: "Çağrıdaki değer sayısı bildirimdeki parametre sayısından fazla veya az. Sayıyı ve sırayı kontrol edin.",
+  1687: "Fonksiyonlar ve prosedürler algoritmanın İÇİNDE yer alır: önce Algoritmo \"ad\" satırı, sonra var bölümü, sonra alt programlar (funcao ... fimfuncao, procedimento ... fimprocedimento) ve ancak sonra ana programın inicio'su. Algoritmo'dan önce yazılmış fonksiyon kabul edilmez.",
+  1688: "Her parametre ad: tür biçiminde yazılır, örneğin funcao dobro(n: real): real. Ad ile tür arasındaki iki nokta eksik (ve fonksiyonda parantezlerden sonra sonuç türü).",
 }

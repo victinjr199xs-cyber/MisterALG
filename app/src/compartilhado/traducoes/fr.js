@@ -935,4 +935,13 @@ export default {
   1625: "*** Fermez cette fenêtre pour revenir à MisterALG.",
   1626: "Corriger",
   1627: "Corriger et exécuter",
+  1680: "Tout programme commence par la ligne Algoritmo \"nom\". Écrivez-la en premier ; var, fonctions, procédures et inicio viennent après.",
+  1681: "Donnez à la fonction ou à la procédure un nom qui n'est pas un mot réservé, sans espaces ni accents.",
+  1682: "Deux sous-programmes ne peuvent pas avoir le même nom (majuscules et minuscules comptent pour pareil). Renommez l'un d'eux.",
+  1683: "Chaque déclaration s'écrit nom: type (par exemple x: real ou a, b: inteiro). Vérifiez les deux-points et le nom du type.",
+  1684: "Un paramètre marqué var reçoit la variable elle-même, pas une valeur : appelez avec le nom d'une variable (ou d'une position de tableau), jamais avec un nombre ou une expression.",
+  1685: "La fonction ou la procédure appelée n'existe pas. Vérifiez l'orthographe et rappelez-vous qu'elle doit être déclarée après var et avant inicio.",
+  1686: "L'appel contient plus ou moins de valeurs que la déclaration n'a de paramètres. Vérifiez le nombre et l'ordre.",
+  1687: "Les fonctions et procédures se placent DANS l'algorithme : d'abord la ligne Algoritmo \"nom\", puis la section var, puis les sous-programmes (funcao ... fimfuncao, procedimento ... fimprocedimento) et seulement ensuite l'inicio du programme principal. Une fonction écrite avant Algoritmo n'est pas acceptée.",
+  1688: "Chaque paramètre s'écrit nom: type, par exemple funcao dobro(n: real): real. Il manque les deux-points entre le nom et le type (et, dans une fonction, le type du résultat après les parenthèses).",
 }

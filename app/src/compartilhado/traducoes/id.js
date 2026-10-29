@@ -915,4 +915,13 @@ export default {
   1625: "*** Tutup jendela ini untuk kembali ke MisterALG.",
   1626: "Perbaiki",
   1627: "Perbaiki dan jalankan",
+  1680: "Setiap program diawali baris Algoritmo \"nama\". Tulis lebih dulu; var, fungsi, prosedur, dan inicio menyusul setelahnya.",
+  1681: "Beri fungsi atau prosedur nama yang bukan kata cadangan, tanpa spasi dan aksen.",
+  1682: "Dua subrutin tidak boleh bernama sama (huruf besar dan kecil dianggap sama). Ubah nama salah satunya.",
+  1683: "Setiap deklarasi ditulis sebagai nama: tipe (misalnya x: real atau a, b: inteiro). Periksa titik dua dan nama tipenya.",
+  1684: "Parameter bertanda var menerima variabelnya sendiri, bukan nilai: panggil dengan nama variabel (atau posisi vektor), jangan dengan angka atau ekspresi.",
+  1685: "Fungsi atau prosedur yang dipanggil tidak ada. Periksa ejaannya dan ingat bahwa ia harus dideklarasikan setelah var dan sebelum inicio.",
+  1686: "Panggilan memiliki nilai lebih banyak atau lebih sedikit daripada parameter pada deklarasi. Periksa jumlah dan urutannya.",
+  1687: "Fungsi dan prosedur berada DI DALAM algoritma: pertama baris Algoritmo \"nama\", lalu bagian var, lalu subrutin (funcao ... fimfuncao, procedimento ... fimprocedimento), dan baru kemudian inicio program utama. Fungsi yang ditulis sebelum Algoritmo tidak diterima.",
+  1688: "Setiap parameter ditulis sebagai nama: tipe, misalnya funcao dobro(n: real): real. Titik dua antara nama dan tipe hilang (dan, pada fungsi, tipe hasil setelah tanda kurung).",
 }

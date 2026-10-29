@@ -934,4 +934,13 @@ export default {
   1625: "*** Sluit dit venster om terug te keren naar MisterALG.",
   1626: "Corrigeren",
   1627: "Corrigeren en uitvoeren",
+  1680: "Elk programma begint met de regel Algoritmo \"naam\". Schrijf die eerst; var, functies, procedures en inicio komen erna.",
+  1681: "Geef de functie of procedure een naam die geen gereserveerd woord is, zonder spaties of accenten.",
+  1682: "Twee subroutines mogen niet dezelfde naam hebben (hoofdletters en kleine letters tellen gelijk). Hernoem een van beide.",
+  1683: "Elke declaratie wordt geschreven als naam: type (bijvoorbeeld x: real of a, b: inteiro). Controleer de dubbele punt en de typenaam.",
+  1684: "Een parameter met var krijgt de variabele zelf, geen waarde: roep aan met de naam van een variabele (of een vectorpositie), nooit met een getal of een expressie.",
+  1685: "De aangeroepen functie of procedure bestaat niet. Controleer de spelling en onthoud dat ze na var en vóór inicio gedeclareerd moet worden.",
+  1686: "De aanroep heeft meer of minder waarden dan de declaratie parameters heeft. Controleer het aantal en de volgorde.",
+  1687: "Functies en procedures staan BINNEN het algoritme: eerst de regel Algoritmo \"naam\", dan de sectie var, dan de subroutines (funcao ... fimfuncao, procedimento ... fimprocedimento) en pas daarna het inicio van het hoofdprogramma. Een functie vóór Algoritmo wordt niet geaccepteerd.",
+  1688: "Elke parameter wordt geschreven als naam: type, bijvoorbeeld funcao dobro(n: real): real. De dubbele punt tussen naam en type ontbreekt (en bij een functie het resultaattype na de haakjes).",
 }

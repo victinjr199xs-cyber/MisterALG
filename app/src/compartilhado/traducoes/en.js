@@ -934,4 +934,13 @@ export default {
   1625: "*** Close this window to return to MisterALG.",
   1626: "Fix",
   1627: "Fix and run",
+  1680: "Every program starts with the line Algoritmo \"name\". Write it first; var, functions, procedures and inicio come after it.",
+  1681: "Give the function or procedure a name that is not a reserved word, with no spaces or accents.",
+  1682: "Two subroutines cannot have the same name (upper and lower case count as the same). Rename one of them.",
+  1683: "Each declaration is written as name: type (for example x: real or a, b: inteiro). Check the colon and the type name.",
+  1684: "A parameter marked with var receives the variable itself, not a value: call it with a variable name (or a vector position), never with a number or an expression.",
+  1685: "The function or procedure being called does not exist. Check the spelling, and remember it must be declared after var and before inicio.",
+  1686: "The call has more or fewer values than the declaration has parameters. Check the number and the order.",
+  1687: "Functions and procedures go INSIDE the algorithm: first the line Algoritmo \"name\", then the var section, then the subroutines (funcao ... fimfuncao, procedimento ... fimprocedimento) and only then the inicio of the main program. A function written before Algoritmo is not accepted.",
+  1688: "Each parameter is written as name: type, for example funcao dobro(n: real): real. The colon between the name and the type is missing (and, in a function, the result type after the parentheses).",
 }

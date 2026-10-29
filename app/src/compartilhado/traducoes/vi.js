@@ -914,4 +914,13 @@ export default {
   1625: "*** Đóng cửa sổ này để quay lại MisterALG.",
   1626: "Sửa",
   1627: "Sửa và chạy",
+  1680: "Mọi chương trình bắt đầu bằng dòng Algoritmo \"tên\". Hãy viết nó trước; var, hàm, thủ tục và inicio đứng sau.",
+  1681: "Đặt cho hàm hoặc thủ tục một tên không phải từ khóa dành riêng, không có dấu cách hay dấu phụ.",
+  1682: "Hai chương trình con không được trùng tên (chữ hoa và chữ thường coi như nhau). Hãy đổi tên một trong hai.",
+  1683: "Mỗi khai báo được viết dưới dạng tên: kiểu (ví dụ x: real hoặc a, b: inteiro). Kiểm tra dấu hai chấm và tên kiểu.",
+  1684: "Tham số đánh dấu var nhận chính biến đó chứ không phải một giá trị: hãy gọi bằng tên biến (hoặc vị trí trong vectơ), không bao giờ bằng số hay biểu thức.",
+  1685: "Hàm hoặc thủ tục được gọi không tồn tại. Kiểm tra chính tả và nhớ rằng nó phải được khai báo sau var và trước inicio.",
+  1686: "Lời gọi có nhiều hoặc ít giá trị hơn số tham số trong khai báo. Kiểm tra số lượng và thứ tự.",
+  1687: "Hàm và thủ tục nằm BÊN TRONG thuật toán: trước hết là dòng Algoritmo \"tên\", rồi phần var, rồi các chương trình con (funcao ... fimfuncao, procedimento ... fimprocedimento) và chỉ sau đó mới đến inicio của chương trình chính. Hàm viết trước Algoritmo không được chấp nhận.",
+  1688: "Mỗi tham số được viết dưới dạng tên: kiểu, ví dụ funcao dobro(n: real): real. Thiếu dấu hai chấm giữa tên và kiểu (và, với hàm, thiếu kiểu kết quả sau dấu ngoặc).",
 }

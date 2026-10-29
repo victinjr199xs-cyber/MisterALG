@@ -934,4 +934,13 @@ export default {
   1625: "*** Zamknij to okno, aby wrócić do MisterALG.",
   1626: "Popraw",
   1627: "Popraw i uruchom",
+  1680: "Każdy program zaczyna się od wiersza Algoritmo \"nazwa\". Napisz go jako pierwszy; var, funkcje, procedury i inicio następują po nim.",
+  1681: "Nadaj funkcji lub procedurze nazwę, która nie jest słowem zastrzeżonym, bez spacji i akcentów.",
+  1682: "Dwie podprocedury nie mogą mieć tej samej nazwy (wielkie i małe litery liczą się tak samo). Zmień nazwę jednej z nich.",
+  1683: "Każda deklaracja ma postać nazwa: typ (na przykład x: real lub a, b: inteiro). Sprawdź dwukropek i nazwę typu.",
+  1684: "Parametr oznaczony var otrzymuje samą zmienną, a nie wartość: wywołaj go nazwą zmiennej (lub pozycją wektora), nigdy liczbą ani wyrażeniem.",
+  1685: "Wywoływana funkcja lub procedura nie istnieje. Sprawdź pisownię i pamiętaj, że musi być zadeklarowana po var i przed inicio.",
+  1686: "Wywołanie ma więcej lub mniej wartości niż deklaracja parametrów. Sprawdź liczbę i kolejność.",
+  1687: "Funkcje i procedury umieszcza się WEWNĄTRZ algorytmu: najpierw wiersz Algoritmo \"nazwa\", potem sekcja var, potem podprogramy (funcao ... fimfuncao, procedimento ... fimprocedimento) i dopiero potem inicio programu głównego. Funkcja napisana przed Algoritmo nie jest akceptowana.",
+  1688: "Każdy parametr zapisuje się jako nazwa: typ, na przykład funcao dobro(n: real): real. Brakuje dwukropka między nazwą a typem (a w funkcji typu wyniku po nawiasach).",
 }
