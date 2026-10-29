@@ -1,6 +1,6 @@
 // Teste de fumaça da disposição moderna (Configurações > Editor > Disposição da tela) no app de verdade:
-// prévia/Cancelar/OK, trilho de linguagens, recentes e exemplos, cabeçalho da página, abas Terminal/Problemas,
-// memória, divisor, coluna que recolhe em janela estreita, nada com tamanho zero e a volta à clássica.
+// prévia/Cancelar/OK, faixa de guias (abas), relógio de projetos anteriores (recentes e exemplos), cabeçalho da página, abas Terminal/Problemas,
+// memória, divisor, nada com tamanho zero e a volta à clássica.
 // Com PRINTS_DISPOSICAO=<pasta> também tira as capturas (4 temas + 1366x768).
 // Uso: electron app/out/main/index.js --remote-debugging-port=9347 (MISTERALG_DADOS=<pasta vazia>)
 //      node scripts/cdp.mjs 9347 scripts/fumaca-disposicao.mjs
@@ -41,30 +41,40 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   const disp = () => avaliar(`document.documentElement.dataset.disposicao ?? null`)
   const q = (sel, js) => avaliar(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); return e ? (${js}) : null })()`)
   const visivel = (sel) => q(sel, `(() => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && getComputedStyle(e).display !== 'none' })()`)
+  const relogio = async () => {
+    await avaliar(`document.querySelector('.aba-historico').click()`)
+    for (let i = 0; i < 30 && !(await avaliar(`!!document.querySelector('#historico .historico-corpo section')`)); i += 1) await esperar(100)
+  }
+  const itensRelogio = (secao) => avaliar(`[...document.querySelectorAll('#historico section')[${secao}].querySelectorAll('.historico-item')].map(b => b.querySelector('.historico-nome').textContent)`)
+  const abrirDoRelogio = async (secao, nome) => {
+    await relogio()
+    await avaliar(`[...document.querySelectorAll('#historico section')[${secao}].querySelectorAll('.historico-item')].find(b => b.querySelector('.historico-nome').textContent === ${JSON.stringify(nome)}).click()`)
+    await esperar(800)
+  }
   const doc = (campo) => avaliar(`${M}.doc.${campo}`)
 
   await pronta()
   // Quem instala agora começa na disposição moderna com o tema Híbrido claro (pasta de dados nova = sem preferências gravadas).
   conferir('padrão novo: disposição moderna', await disp(), 'moderna')
   conferir('padrão novo: tema Híbrido claro', await avaliar(`document.documentElement.dataset.tema`), 'hibrido-claro')
-  conferir('padrão novo: trilho visível', await visivel('#trilho'), true)
+  conferir('padrão novo: faixa de guias visível', await visivel('#faixa-abas'), true)
   await classico() // o resto da fumaça parte do visual clássico, como antes
   await avaliar(`${M}.execucao.restaurar(); ${M}.doc.modificado = false; ${M}.comandos.tema('hibrido-claro')`)
 
   // ---- clássica por padrão: nada da moderna aparece -------------------------------------------
   conferir('começa na clássica', await disp(), null)
-  conferir('sem trilho na clássica', await avaliar(`!document.querySelector('.trilho')`), true)
+  conferir('sem faixa de guias na clássica', await avaliar(`!document.querySelector('.faixa-abas')`), true)
   conferir('avatar na barra (clássica)', await avaliar(`!!document.querySelector('#barra [data-id="conta"]')`), true)
 
   // ---- prévia, Cancelar e OK nas Configurações ----------------------------------------------------
   await abrir('editor')
   await mudar('#cfg-disposicao', 'moderna')
   conferir('prévia moderna', await disp(), 'moderna')
-  conferir('trilho visível na prévia', await visivel('#trilho'), true)
+  conferir('faixa visível na prévia', await visivel('#faixa-abas'), true)
   await botaoDoDialogo('Cancelar')
   await fechado()
   conferir('Cancelar volta à clássica', await disp(), null)
-  conferir('trilho some', await visivel('#trilho'), false)
+  conferir('faixa some', await visivel('#faixa-abas'), false)
   conferir('avatar voltou à barra', await avaliar(`!!document.querySelector('#barra [data-id="conta"]')`), true)
   conferir('nada gravado ao cancelar', await avaliar(`window.misteralg.prefs.ler().then(p => p.disposicao)`), 'classica')
   await abrir('editor')
@@ -75,44 +85,54 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   await recarregar()
   conferir('moderna persiste', await disp(), 'moderna')
 
-  // ---- trilho de linguagens --------------------------------------------------------------------------
-  conferir('uma linguagem por botão', await avaliar(`[...document.querySelectorAll('.trilho-lang')].map(b => b.dataset.lang)`), LINGUAGENS)
-  conferir('botões com aria-label', await avaliar(`[...document.querySelectorAll('.trilho-lang')].every(b => b.getAttribute('aria-label'))`), true)
-  conferir('portugol marcado', await avaliar(`document.querySelector('.trilho-lang[aria-current="true"]')?.dataset.lang`), 'portugol')
-  conferir('avatar no trilho', await avaliar(`!!document.querySelector('.trilho [data-id="conta"]')`), true)
+  // ---- faixa de guias --------------------------------------------------------------------------------
+  conferir('sem trilho nem coluna de arquivos', await avaliar(`!document.querySelector('#trilho, #canais, .cab-alternar')`), true)
+  conferir('uma guia, do Portugol', await avaliar(`[...document.querySelectorAll('.aba-doc')].map(b => b.querySelector('.aba-sigla').textContent).join()`), 'Pt')
+  conferir('avatar na faixa', await avaliar(`!!document.querySelector('#faixa-abas [data-id="conta"]')`), true)
   conferir('barra no topo (sem lateral)', await avaliar(`!document.body.classList.contains('barra-lateral')`), true)
-  await avaliar(`document.querySelector('.trilho-lang[data-lang="python"]').click()`)
+  await avaliar(`document.querySelector('.aba-nova').click()`)
+  await esperar(300)
+  conferir('o + abre o menu de linguagens', await avaliar(`[...document.querySelectorAll('.menu-nova-item')].map(b => b.querySelector('.menu-nova-nome').textContent).join(' ')`), 'Portugol C# JavaScript TypeScript Python C C++ PHP SQL')
+  await avaliar(`[...document.querySelectorAll('.menu-nova-item')].find(b => b.textContent.includes('Python')).click()`)
   await esperar(500)
-  conferir('clicar em Python cria documento Python', await doc('linguagem'), 'python')
-  conferir('pílula acompanha', await avaliar(`document.querySelector('.trilho-lang[aria-current="true"]')?.dataset.lang`), 'python')
+  conferir('Python no lugar da guia vazia', await doc('linguagem'), 'python')
   conferir('título da página', await q('.cab-titulo', 'e.textContent'), 'semnome.py')
   conferir('propriedade Linguagem', await q('.cab-prop b', 'e.textContent'), 'Python')
-  await avaliar(`document.querySelector('.trilho-lang[data-lang="portugol"]').click()`)
+  await avaliar(`${M}.editor.definirTexto('x = 1'); ${M}.doc.modificado = false; 1`) // não é mais o esqueleto: a próxima guia é nova
+  await avaliar(`document.querySelector('.aba-nova').click()`)
+  await avaliar(`[...document.querySelectorAll('.menu-nova-item')].find(b => b.textContent.includes('Portugol')).click()`)
   await esperar(500)
-  conferir('volta ao Portugol', await doc('linguagem'), 'portugol')
+  conferir('volta ao Portugol (guia nova)', await doc('linguagem'), 'portugol')
   // se há texto modificado o fluxo normal pergunta antes de descartar (diálogo nativo): o teste não deixa modificado
   conferir('estado Salvo', await avaliar(`document.querySelectorAll('.cab-prop b')[1].textContent`), 'Salvo')
+  conferir('duas guias', await avaliar(`document.querySelectorAll('.aba-doc').length`), 2)
   await avaliar(`${M}.editor.definirTexto(${JSON.stringify(PROGRAMA)}); ${M}.doc.modificado = false; 1`)
 
   // ---- exemplos e recentes ------------------------------------------------------------------------
-  const exemplos = await avaliar(`[...document.querySelectorAll('.canais-lista')[1].querySelectorAll('.canal')].map(b => b.textContent)`)
+  await relogio()
+  conferir('relógio aberto (aria-expanded)', await q('.aba-historico', 'e.getAttribute("aria-expanded")'), 'true')
+  conferir('painel é um diálogo', await q('#historico', 'e.getAttribute("role")'), 'dialog')
+  const exemplos = await itensRelogio(1)
   console.log('exemplos do Portugol:', exemplos.join(', '))
   conferir('exemplos listados', exemplos.length >= 5, true)
-  conferir('recentes vazios no começo', await avaliar(`document.querySelectorAll('.canais-lista')[0].querySelectorAll('.canal').length`), 0)
-  await avaliar(`[...document.querySelectorAll('.canais-lista')[1].querySelectorAll('.canal')].find(b => b.textContent === 'media_notas.alg').click()`)
-  await esperar(800)
+  conferir('recentes vazios no começo', await itensRelogio(0), [])
+  await avaliar(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`)
+  conferir('Esc fecha o relógio', await avaliar(`!document.querySelector('#historico')`), true)
+  await abrirDoRelogio(1, 'media_notas.alg')
   conferir('exemplo abriu', await doc('nome'), 'media_notas')
   conferir('título mostra o exemplo', await q('.cab-titulo', 'e.textContent'), 'media_notas.alg')
-  conferir('exemplo atual destacado', await avaliar(`document.querySelectorAll('.canais-lista')[1].querySelector('.canal[aria-current="true"]')?.textContent`), 'media_notas.alg')
   conferir('editor tem o exemplo', await avaliar(`${M}.editor.texto().includes('media')`), true)
+  const guias = await avaliar(`document.querySelectorAll('.aba-doc').length`)
+  await abrirDoRelogio(1, 'media_notas.alg')
+  conferir('o mesmo exemplo só ativa a guia', await avaliar(`document.querySelectorAll('.aba-doc').length`), guias)
   // recente: abre um arquivo de verdade pelo fluxo normal (o mesmo do menu Arquivo)
   const arquivo = (await import('node:path')).resolve('exemplos/tabuada.alg')
   await avaliar(`${M}.comandos['abrir-recente'](${JSON.stringify(arquivo)})`)
   await esperar(1000)
-  conferir('recente listado', await avaliar(`[...document.querySelectorAll('.canais-lista')[0].querySelectorAll('.canal')].map(b => b.textContent)`), ['tabuada.alg'])
-  conferir('recente atual destacado', await avaliar(`document.querySelector('.canais-lista .canal[aria-current="true"]')?.textContent`), 'tabuada.alg')
-  await avaliar(`[...document.querySelectorAll('.canais-lista')[1].querySelectorAll('.canal')].find(b => b.textContent === 'media_notas.alg').click()`)
-  await esperar(800)
+  await relogio()
+  conferir('recente listado', await itensRelogio(0), ['tabuada.alg'])
+  await avaliar(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`)
+  await abrirDoRelogio(1, 'media_notas.alg')
 
   // ---- F9 escreve no terminal, dentro da aba ---------------------------------------------------------
   await avaliar(`${M}.editor.definirTexto(${JSON.stringify(PROGRAMA)}); ${M}.doc.modificado = false; 1`)
@@ -175,14 +195,13 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   await esperar(200)
   conferir('painel ⋯ fecha', await visivel('#barra-mais'), false)
 
-  // ---- trilho: siglas, logo M e tela inicial ----------------------------------------------------------------
-  conferir('siglas no trilho', await avaliar(`[...document.querySelectorAll('.trilho-lang')].map(b => b.textContent).join(' ')`), 'Pt C# JS TS Py C C++ PHP SQL')
-  conferir('logo M no topo do trilho', await q('.trilho-inicio', 'e.textContent'), 'M')
+  // ---- guias: siglas ------------------------------------------------------------------------------------
+  conferir('siglas das guias', await avaliar(`[...document.querySelectorAll('.aba-doc .aba-sigla')].map(b => b.textContent).slice(0, 2).join(' ')`), 'Py Pt')
+  conferir('abas com roles', await avaliar(`[document.querySelector('#abas-doc').getAttribute('role'), document.querySelector('.aba-doc').getAttribute('role'), document.querySelector('.aba-doc[aria-selected="true"]').getAttribute('aria-controls')].join()`), 'tablist,tab,editor-painel')
 
   // ---- F8 com vetor: "Passo N" e caixinhas na memória ------------------------------------------------------
   await avaliar(`${M}.execucao.restaurar(); ${M}.doc.modificado = false; 1`)
-  await avaliar(`[...document.querySelectorAll('.canais-lista')[1].querySelectorAll('.canal')].find(b => b.textContent === 'ordena_vetor.alg').click()`)
-  await esperar(800)
+  await abrirDoRelogio(1, 'ordena_vetor.alg')
   await avaliar(`${M}.doc.modificado = false; ${M}.editor.focar()`)
   conferir('Passo N escondido antes do F8', await visivel('.cab-passo'), false)
   for (let i = 0; i < 12; i += 1) { await avaliar(`void ${M}.comandos.passo()`); await esperar(450) }
@@ -205,46 +224,18 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   conferir('divisor aumenta o painel', alt1 > alt0, true)
   conferir('altura gravada nas prefs', await avaliar(`window.misteralg.prefs.ler().then(p => p.alturaPainel > 0)`), true)
 
-  // ---- coluna de arquivos: botão e recolhimento automático -------------------------------------------
-  conferir('canais abertos', await visivel('#canais'), true)
-  await avaliar(`document.querySelector('.cab-alternar').click()`)
-  conferir('botão recolhe', await visivel('#canais'), false)
-  conferir('aria-expanded', await q('.cab-alternar', 'e.getAttribute("aria-expanded")'), 'false')
-  await avaliar(`document.querySelector('.cab-alternar').click()`)
-  conferir('botão reabre', await visivel('#canais'), true)
-  await esperar(500)
-  conferir('escolha gravada (aberta)', await avaliar(`window.misteralg.prefs.ler().then(p => p.colunaRecolhida)`), false)
-  await gravar({ colunaRecolhida: null }) // sem escolha: a coluna volta a seguir a largura da janela
-  await recarregar()
-  await cdp('Emulation.setDeviceMetricsOverride', { width: 1200, height: 700, deviceScaleFactor: 1, mobile: false })
-  await esperar(500)
-  conferir('abaixo de 1280px recolhe sozinha', await visivel('#canais'), false)
-  await cdp('Emulation.setDeviceMetricsOverride', { width: 1366, height: 768, deviceScaleFactor: 1, mobile: false })
-  await esperar(500)
-  conferir('em 1366 a coluna volta', await visivel('#canais'), true)
-  // a escolha do usuário (coluna recolhida) sobrevive ao recarregar
-  await avaliar(`document.querySelector('.cab-alternar').click()`)
-  await esperar(600)
-  conferir('recolhida gravada', await avaliar(`window.misteralg.prefs.ler().then(p => p.colunaRecolhida)`), true)
-  await recarregar()
-  conferir('recolhida persiste ao recarregar', await visivel('#canais'), false)
-  await avaliar(`document.querySelector('.cab-alternar').click()`)
-  await esperar(600)
-  conferir('reaberta persiste', await avaliar(`window.misteralg.prefs.ler().then(p => p.colunaRecolhida)`), false)
-  await recarregar()
-  conferir('aberta depois de recarregar', await visivel('#canais'), true)
+  // ---- coluna de arquivos removida: o editor ocupa a largura toda -------------------------------------
+  conferir('editor com a largura toda (menos a memória)', await avaliar(`(() => { const m = document.querySelector('main').getBoundingClientRect(); const e = document.querySelector('.moldura-editor').getBoundingClientRect(); return e.left < 40 && m.right - e.right < 340 })()`), true)
 
   // ---- nada cortado nem com tamanho zero (1366x768) --------------------------------------------------
   const medir = () => avaliar(`(() => {
     const ruins = []
-    for (const s of ['.trilho', '.trilho-lang', '.barra', '#canais', '#cab-pagina', '.moldura-editor', '#divisor', '#abas-inferior', '.moldura-visualizacao', '.moldura-variaveis', '.status']) {
+    for (const s of ['#faixa-abas', '.aba-doc', '.barra', '#cab-pagina', '.moldura-editor', '#divisor', '#abas-inferior', '.moldura-visualizacao', '.moldura-variaveis', '.status']) {
       const e = document.querySelector(s); if (!e) { ruins.push(s + ' ausente'); continue }
       const r = e.getBoundingClientRect()
       if (r.width < 4 || r.height < 4) ruins.push(s + ' zero ' + Math.round(r.width) + 'x' + Math.round(r.height))
       if (r.right > innerWidth + 1 || r.bottom > innerHeight + 1 || r.left < -1 || r.top < -1) ruins.push(s + ' fora da janela')
     }
-    const lista = document.querySelector('.trilho-lista'); const ult = document.querySelector('.trilho-lang[data-lang="sql"]')
-    if (lista.scrollHeight > lista.clientHeight + 1) ruins.push('trilho rola (cabe?)')
     if (document.documentElement.scrollWidth > innerWidth || document.body.scrollHeight > innerHeight + 1) ruins.push('página rola')
     const ed = document.querySelector('.moldura-editor').getBoundingClientRect()
     if (ed.height < 150) ruins.push('editor baixo demais: ' + Math.round(ed.height))
@@ -254,8 +245,7 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
 
   if (pasta) {
     await avaliar(`${M}.execucao.restaurar(); 1`)
-    await avaliar(`[...document.querySelectorAll('.canais-lista')[1].querySelectorAll('.canal')].find(b => b.textContent === 'media_notas.alg').click()`)
-    await esperar(800)
+    await abrirDoRelogio(1, 'media_notas.alg')
     for (const [tema, nome] of [['hibrido-claro', 'hibrido-claro'], ['hibrido-escuro', 'hibrido-escuro'], ['noite', 'noite'], ['papel', 'papel']]) {
       await avaliar(`${M}.comandos.tema('${tema}')`)
       await avaliar(`${M}.execucao.restaurar(); 1`)
@@ -285,7 +275,7 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   await botaoDoDialogo('OK')
   await fechado()
   conferir('voltou à clássica', await disp(), null)
-  conferir('trilho escondido', await visivel('.trilho'), false)
+  conferir('faixa de guias escondida', await visivel('.faixa-abas'), false)
   conferir('cabeçalho escondido', await visivel('.cab-pagina'), false)
   conferir('avatar de volta à barra', await avaliar(`!!document.querySelector('#barra [data-id="conta"]')`), true)
   conferir('moldura do editor visível', await visivel('.moldura-editor'), true)

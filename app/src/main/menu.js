@@ -53,7 +53,8 @@ function menuExemplos(enviar) {
 export function montarMenu(janela, prefs, estado = {}) {
   const enviar = (id, dados) => () => janela?.webContents.send('menu', id, dados)
   const tr = tradutor(prefs.idioma)
-  const item = (label, id, accelerator, extra = {}) => ({ label: tr(label), accelerator, click: enviar(id), ...extra })
+  const moderna = prefs.disposicao !== 'classica'
+  const item =(label, id, accelerator, extra = {}) => ({ label: tr(label), accelerator, click: enviar(id), ...extra })
 
   const recentes = prefs.mru.map((caminho, i) => ({
     label: `&${i + 1}º - ${basename(caminho)}`,
@@ -93,6 +94,7 @@ export function montarMenu(janela, prefs, estado = {}) {
         { type: 'separator' },
         item('&Salvar', 'salvar', 'CmdOrCtrl+S'),
         item('Salvar &Como…', 'salvar-como', ATALHO.salvarComo),
+        ...(moderna ? [item('Fechar aba', 'fechar-aba', 'CmdOrCtrl+W')] : []),
         { type: 'separator' },
         item('&Imprimir…', 'imprimir', 'CmdOrCtrl+P'),
         ...(recentes.length ? [{ type: 'separator' }, ...recentes] : []),
@@ -118,7 +120,8 @@ export function montarMenu(janela, prefs, estado = {}) {
         { type: 'separator' },
         item('S&ubstituir…', 'substituir', ATALHO.substituir),
         { type: 'separator' },
-        item('&Gravar bloco…', 'gravar-bloco', 'Ctrl+W'),
+        // Na disposição moderna o Ctrl+W fecha a aba (como no VS Code); o Gravar bloco passa a Ctrl+Shift+W.
+        item('&Gravar bloco…', 'gravar-bloco', moderna ? 'Ctrl+Shift+W' : 'Ctrl+W'),
         item('I&nserir bloco…', 'inserir-bloco', 'Ctrl+R'),
       ],
     },

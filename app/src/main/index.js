@@ -313,6 +313,11 @@ function registrarIpc() {
   ipcMain.handle('dialogo:mensagem', async (_e, opcoes) => {
     const t = trMain
     const traduzidas = { ...opcoes, title: t(opcoes?.title ?? ''), message: t(opcoes?.message ?? ''), buttons: opcoes?.buttons?.map((b) => t(b)) }
+    // Fumaça automatizada (scripts/fumaca-abas.mjs): MISTERALG_DIALOGO_AUTO=<índice do botão> responde sem abrir a janela e registra o pedido na página.
+    if (process.env.MISTERALG_DADOS && process.env.MISTERALG_DIALOGO_AUTO !== undefined) {
+      void janela.webContents.executeJavaScript(`(window.__dialogosPedidos ??= []).push(${JSON.stringify(traduzidas.message)})`)
+      return /recuper/i.test(traduzidas.message) ? 0 : Number(process.env.MISTERALG_DIALOGO_AUTO) // recuperar após queda: sempre "Sim"
+    }
     const r = await dialog.showMessageBox(janela, { noLink: true, ...traduzidas })
     return r.response
   })

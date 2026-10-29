@@ -1,0 +1,105 @@
+/* Guias (abas) de documentos da disposição moderna, no estilo das abas do VS Code (renderer/abas.js).
+   Escopado por :root[data-disposicao="moderna"]; propriedades lógicas para o árabe (RTL). */
+
+:root[data-disposicao="moderna"] .faixa-abas {
+  grid-area: guias; display: flex; align-items: stretch; min-inline-size: 0; block-size: 38px;
+  background: color-mix(in srgb, var(--fundo-janela) 88%, #000); border-block-end: 1px solid var(--borda);
+}
+:root[data-disposicao="moderna"] .abas-doc {
+  display: flex; align-items: stretch; min-inline-size: 0; flex: 0 1 auto;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+}
+:root[data-disposicao="moderna"] .abas-doc::-webkit-scrollbar { display: none; }
+
+:root[data-disposicao="moderna"] .aba-doc {
+  position: relative; flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  min-inline-size: 110px; max-inline-size: 220px; padding: 0 8px 0 12px; margin-block-start: 5px;
+  border: 1px solid transparent; border-block-end: 0; border-start-start-radius: var(--raio); border-start-end-radius: var(--raio);
+  background: transparent; color: var(--detalhe); font: 500 13px var(--fonte-ui);
+  cursor: pointer; user-select: none; outline: none;
+}
+:root[data-disposicao="moderna"] .aba-doc:hover { background: var(--botao-hover); color: var(--texto); }
+:root[data-disposicao="moderna"] .aba-doc[aria-selected="true"] {
+  background: var(--fundo-campo); color: var(--texto); border-color: var(--borda);
+  margin-block-end: -1px; /* cobre o filete da faixa: a aba ativa "continua" no editor */
+}
+:root[data-disposicao="moderna"] .aba-doc[aria-selected="true"]::before { /* destaque de acento no topo */
+  content: ""; position: absolute; inset-inline: -1px; inset-block-start: -1px; block-size: 2px;
+  background: var(--destaque); border-start-start-radius: var(--raio); border-start-end-radius: var(--raio);
+}
+:root[data-disposicao="moderna"] .aba-doc:focus-visible { outline: 2px solid var(--destaque); outline-offset: -2px; }
+:root[data-disposicao="moderna"] .aba-doc[data-alvo="sim"] { box-shadow: inset 2px 0 0 var(--destaque); }
+:root[data-disposicao="moderna"] .aba-doc[draggable="true"]:active { opacity: .7; }
+:root[data-disposicao="moderna"] .aba-sigla {
+  flex: none; min-inline-size: 22px; padding: 1px 4px; border-radius: 4px; text-align: center;
+  background: var(--cor, var(--destaque)); color: #fff; font: 700 10px/1.4 var(--fonte-ui); font-style: normal; letter-spacing: -.01em;
+}
+:root[data-disposicao="moderna"] .aba-doc:not([aria-selected="true"]) .aba-sigla { opacity: .75; }
+:root[data-disposicao="moderna"] .aba-nome { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* o ● de modificado vira × ao passar o mouse (ou com o foco na aba) */
+:root[data-disposicao="moderna"] .aba-x {
+  flex: none; position: relative; display: grid; place-items: center; inline-size: 20px; block-size: 20px; padding: 0;
+  border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer;
+}
+:root[data-disposicao="moderna"] .aba-x:hover { background: var(--botao-hover); }
+:root[data-disposicao="moderna"] .aba-x > span { grid-area: 1 / 1; display: grid; place-items: center; }
+:root[data-disposicao="moderna"] .aba-ponto { font-size: 12px; line-height: 1; color: var(--texto); }
+:root[data-disposicao="moderna"] .aba-cruz { opacity: 0; }
+:root[data-disposicao="moderna"] .aba-cruz svg { inline-size: 14px; block-size: 14px; }
+:root[data-disposicao="moderna"] .aba-ponto { opacity: 0; }
+:root[data-disposicao="moderna"] .aba-doc[data-modificado="true"] .aba-ponto { opacity: 1; }
+:root[data-disposicao="moderna"] .aba-doc[data-modificado="false"] .aba-cruz { opacity: 0; }
+:root[data-disposicao="moderna"] .aba-doc[aria-selected="true"][data-modificado="false"] .aba-cruz,
+:root[data-disposicao="moderna"] .aba-doc:hover .aba-cruz,
+:root[data-disposicao="moderna"] .aba-doc:focus-within .aba-cruz,
+:root[data-disposicao="moderna"] .aba-x:focus-visible .aba-cruz { opacity: 1; }
+:root[data-disposicao="moderna"] .aba-doc:hover .aba-ponto,
+:root[data-disposicao="moderna"] .aba-doc:focus-within .aba-ponto { opacity: 0; }
+
+:root[data-disposicao="moderna"] .aba-botao {
+  flex: none; align-self: center; display: grid; place-items: center; inline-size: 28px; block-size: 28px; margin-inline: 2px; padding: 0;
+  border: 0; border-radius: var(--raio); background: transparent; color: var(--detalhe); cursor: pointer;
+}
+:root[data-disposicao="moderna"] .aba-botao:hover,
+:root[data-disposicao="moderna"] .aba-botao[aria-expanded="true"] { background: var(--botao-hover); color: var(--texto); }
+:root[data-disposicao="moderna"] .aba-botao:focus-visible { outline: 2px solid var(--destaque); outline-offset: 1px; }
+:root[data-disposicao="moderna"] .faixa-fim { margin-inline-start: auto; display: flex; align-items: center; padding-inline: 10px; }
+:root[data-disposicao="moderna"] .faixa-fim .botao.avatar { display: grid; margin: 0; inline-size: 30px; block-size: 30px; border-radius: 50%; }
+:root[data-disposicao="moderna"] .faixa-fim .avatar-disco { --av: 26px; }
+
+/* ---- popovers: "+" (linguagens) e relógio (projetos anteriores) ----------------------------- */
+.menu-nova, .historico {
+  position: fixed; z-index: 45; overflow: auto;
+  background: var(--fundo-campo); color: var(--texto); border: 1px solid var(--borda); border-radius: calc(var(--raio) + 2px);
+  box-shadow: 0 12px 32px rgb(0 0 0 / .28); font: 13px var(--fonte-ui);
+}
+.menu-nova { inline-size: 250px; padding: 6px; }
+.menu-nova-item, .historico-item {
+  display: flex; align-items: center; gap: 10px; inline-size: 100%; padding: 6px 8px; border: 0; border-radius: var(--raio);
+  background: transparent; color: inherit; font: inherit; text-align: start; cursor: pointer;
+}
+.menu-nova-item:hover, .menu-nova-item:focus-visible, .historico-item:hover, .historico-item:focus-visible { background: var(--botao-hover); outline: none; }
+.menu-nova-item:focus-visible, .historico-item:focus-visible { box-shadow: inset 0 0 0 2px var(--destaque); }
+.menu-nova-icone { flex: none; display: grid; place-items: center; inline-size: 28px; block-size: 28px; border-radius: 7px; background: var(--cor); overflow: hidden; }
+.menu-nova-icone svg { inline-size: 22px; block-size: 22px; }
+.menu-nova-nome { flex: 1; font-weight: 600; }
+.menu-nova-ext { color: var(--detalhe); font: 12px var(--fonte-codigo); }
+
+.historico { inline-size: min(420px, calc(100vw - 16px)); display: flex; flex-direction: column; }
+.historico-busca { flex: none; padding: 8px; border-block-end: 1px solid var(--borda); }
+.historico-campo {
+  inline-size: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid var(--borda); border-radius: var(--raio);
+  background: var(--fundo-janela); color: inherit; font: inherit;
+}
+.historico-campo:focus-visible { outline: 2px solid var(--destaque); outline-offset: -1px; }
+.historico-corpo { flex: 1; min-height: 0; overflow: auto; padding: 4px 6px 8px; }
+.historico-titulo { margin: 10px 8px 4px; font: 600 12px var(--fonte-ui); color: var(--detalhe); }
+.historico-item[hidden] { display: none; }
+.historico-nome { flex: none; max-inline-size: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.historico-pasta { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: end; color: var(--detalhe); }
+.historico .aba-sigla {
+  flex: none; min-inline-size: 26px; padding: 1px 4px; border-radius: 4px; text-align: center;
+  background: var(--cor); color: #fff; font: 700 10px/1.4 var(--fonte-ui); font-style: normal;
+}
+.historico-vazio { margin: 4px 10px 8px; color: var(--detalhe); font-size: 12px; }

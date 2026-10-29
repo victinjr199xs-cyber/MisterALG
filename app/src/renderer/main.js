@@ -20,6 +20,8 @@ import { BARRA, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOculta
 import { criarAvatar } from './avatar.js'
 import { criarDisposicao } from './disposicao.js'
 import { criarPaleta } from './paleta.js'
+import { criarAbas } from './abas.js'
+import { abaReutilizavel, acharPorCaminho, ciclar, lerRecuperacao, nomeDaAba, proximaAoFechar, reordenar, serializarRecuperacao } from './abas-logica.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
@@ -192,20 +194,135 @@ const editor = criarEditor($('#editor'), {
   aoAlternarBreakpoint: (linhas) => execucao?.atualizarBreakpoints(linhas),
 })
 
-function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome', linguagem = 'portugol' }) {
-  execucao.restaurar()
-  editor.definirLinguagem(linguagem)
-  editor.definirTexto(texto)
-  Object.assign(doc, { caminho, codificacao, nome, linguagem, modificado: false })
-  aplicarModo(linguagem)
-  // Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve.
+/** Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve. */
+function aquecer(linguagem, texto) {
   if (linguagem === 'c' || linguagem === 'cpp') api.clang.aquecer({ linguagem, fonte: texto })
   else if (linguagem === 'python') api.programa.aquecer('python')
   else if (linguagem === 'csharp') api.csharp.aquecer()
   else if (linguagem === 'php') api.php.aquecer()
   else if (linguagem === 'sql') api.sql.aquecer()
+}
+
+/** Troca o conteúdo da aba ativa (a "janela única" da disposição clássica; na moderna, o Novo/Abrir decide antes se vale uma aba nova). */
+function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome', linguagem = 'portugol', origem = null }) {
+  execucao.restaurar()
+  editor.definirLinguagem(linguagem)
+  editor.definirTexto(texto)
+  Object.assign(doc, { caminho, codificacao, nome, linguagem, modificado: false })
+  abaAtiva.origem = origem
+  aplicarModo(linguagem)
+  aquecer(linguagem, texto)
   atualizarTitulo()
   editor.focar()
+}
+
+// ---- abas de documentos ----------------------------------------------------------------------
+// `doc` continua sendo UM objeto: é sempre o documento da aba ativa. As outras abas guardam seus campos e o
+// EditorState do CodeMirror (texto, desfazer, seleção, breakpoints); trocar de aba copia de/para `doc` e `editor`.
+// Na disposição clássica não há faixa de guias: Novo/Abrir substituem o documento da aba ativa, como sempre.
+
+const abasDoc = [] // { id, estado, rolagem, origem, caminho, nome, codificacao, linguagem, modificado }
+let abaAtiva = { id: 1, estado: null, rolagem: 0, origem: null }
+abasDoc.push(abaAtiva)
+let proximoId = 2
+const CAMPOS_DOC = ['caminho', 'nome', 'codificacao', 'linguagem', 'modificado']
+const comAbas = () => document.documentElement.dataset.disposicao === 'moderna'
+
+function guardarAba() {
+  for (const c of CAMPOS_DOC) abaAtiva[c] = doc[c]
+  abaAtiva.estado = editor.estado()
+  abaAtiva.rolagem = editor.view.scrollDOM.scrollTop
+}
+
+function ativarAba(aba) {
+  if (aba === abaAtiva) return
+  guardarAba()
+  execucao.restaurar()
+  abaAtiva = aba
+  for (const c of CAMPOS_DOC) doc[c] = aba[c]
+  editor.usarEstado(aba.estado, aba.linguagem, aba.rolagem)
+  aplicarModo(aba.linguagem)
+  aquecer(aba.linguagem, editor.texto())
+  atualizarTitulo()
+  editor.focar()
+}
+
+function criarAba({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome', linguagem = 'portugol', origem = null }) {
+  const aba = { id: proximoId++, estado: editor.novoEstado(texto, linguagem), rolagem: 0, origem, caminho, nome, codificacao, linguagem, modificado: false }
+  abasDoc.push(aba)
+  ativarAba(aba)
+}
+
+const avisoDeExecucao = () => {
+  status.mensagem(` MENSAGEM: ${tradutor(prefs.idioma)('Pare o programa antes de trocar de aba')}`)
+  return false
+}
+
+/** Esqueleto ou nada: a aba "sem nome" pode ser reaproveitada em vez de abrir outra. */
+const abaVazia = () => {
+  const texto = editor.texto()
+  return texto.trim() === '' || texto === esqueletoDe(doc.linguagem)
+}
+
+/**
+ * Abre um documento: na moderna, numa aba (a do mesmo arquivo, se já aberta; a aba vazia, se for a única; senão uma nova);
+ * na clássica, no lugar do atual depois de perguntar se salva. Devolve false se não abriu.
+ */
+async function abrirDocumento(dados, titulo) {
+  if (!comAbas()) {
+    if (titulo && !(await podeDescartar(titulo))) return false
+    carregar(dados)
+    return true
+  }
+  if (execucao.emExecucao()) return avisoDeExecucao()
+  guardarAba()
+  const ja = dados.caminho ? acharPorCaminho(abasDoc, dados.caminho) : abasDoc.find((a) => dados.origem && a.origem === dados.origem)
+  if (ja) { ativarAba(ja); return true }
+  if (abaReutilizavel(abasDoc, abaVazia)) carregar(dados)
+  else criarAba(dados)
+  return true
+}
+
+async function fecharAba(aba = abaAtiva) {
+  if (execucao.emExecucao()) return avisoDeExecucao()
+  guardarAba()
+  const i = abasDoc.indexOf(aba)
+  if (i < 0) return false
+  if (aba !== abaAtiva && !aba.modificado) {
+    abasDoc.splice(i, 1)
+    disposicao?.atualizar()
+    return true
+  }
+  ativarAba(aba) // a pergunta de salvar e o salvar valem para o documento ativo
+  if (!(await podeDescartar(' Fechar o algoritmo '))) return false
+  if (abasDoc.length === 1) { // a última: no lugar dela nasce uma aba vazia (mesma linguagem)
+    const l = doc.linguagem
+    editor.usarEstado(editor.novoEstado('', l), l)
+    carregar({ texto: esqueletoDe(l), linguagem: l, codificacao: l === 'portugol' ? 'windows-1252' : 'utf-8' })
+    return true
+  }
+  const proxima = abasDoc[proximaAoFechar(abasDoc.length, i) + (i < abasDoc.length - 1 ? 1 : 0)]
+  ativarAba(proxima)
+  abasDoc.splice(abasDoc.indexOf(aba), 1)
+  disposicao?.atualizar()
+  return true
+}
+
+function irParaAba(delta) {
+  if (abasDoc.length < 2) return
+  if (execucao.emExecucao()) return void avisoDeExecucao()
+  ativarAba(abasDoc[ciclar(abasDoc.length, abasDoc.indexOf(abaAtiva), delta)])
+}
+
+/** Pergunta, uma aba por vez, sobre cada documento modificado. Devolve false se o usuário cancelou. */
+async function podeDescartarTodas(titulo) {
+  guardarAba()
+  for (const aba of [...abasDoc]) {
+    if (!aba.modificado) continue
+    ativarAba(aba)
+    if (!(await podeDescartar(titulo))) return false
+  }
+  return true
 }
 
 /** Pergunta se deve salvar. Devolve false se o usuário cancelou. */
@@ -242,17 +359,26 @@ async function salvar(comoNovo = false) {
   doc.modificado = false
   atualizarTitulo()
   status.mensagem(' MENSAGEM: Pronto! * Este algoritmo está salvo *')
-  api.recuperacao.limpar()
+  gravarRecuperacao() // as outras abas modificadas continuam protegidas
   return true
 }
 
-async function abrirResultado(lido) {
+async function abrirResultado(lido, titulo = null) {
   if (!lido) return
   if (lido.erro) {
     await api.mensagem({ type: 'warning', title: 'Pesquisa de algoritmo no MisterALG', message: lido.erro })
     return
   }
-  carregar({ ...lido, nome: lido.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(lido.caminho) })
+  await abrirDocumento({ ...lido, nome: lido.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(lido.caminho) }, titulo)
+}
+
+/** Na moderna, um arquivo que já está numa aba só ativa essa aba (sem ler de novo). */
+function ativarSeAberto(caminho) {
+  if (!comAbas() || execucao.emExecucao()) return false
+  guardarAba()
+  const ja = acharPorCaminho(abasDoc, caminho)
+  if (ja) ativarAba(ja)
+  return !!ja
 }
 
 /** O main devolve { erro } (já traduzido) quando o comando `arquivo` não pode usar o caminho; o interpretador mostra a mensagem ao aluno. */
@@ -344,18 +470,29 @@ async function exportarPrograma(linguagem, rotulo, extensao, gerar) {
 
 const comandos = {
   novo: async (linguagem = doc.linguagem) => {
-    if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
-    carregar({ texto: esqueletoDe(linguagem), linguagem, codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' })
+    await abrirDocumento({ texto: esqueletoDe(linguagem), linguagem, codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' }, ' Incluir um novo algoritmo no MisterALG ')
+  },
+  'nova-aba': () => abasUI.menuNova(),
+  'fechar-aba': () => (comAbas() ? fecharAba() : undefined),
+  'aba-seguinte': () => irParaAba(1),
+  'aba-anterior': () => irParaAba(-1),
+  'ir-aba': (id) => {
+    const aba = abasDoc.find((a) => a.id === id)
+    if (!aba) return
+    if (execucao.emExecucao() && aba !== abaAtiva) return void avisoDeExecucao()
+    ativarAba(aba)
   },
   abrir: async () => {
-    if (await podeDescartar(' Abrir um algoritmo no MisterALG ')) abrirResultado(await api.arquivo.abrir())
+    if (!comAbas() && !(await podeDescartar(' Abrir um algoritmo no MisterALG '))) return
+    await abrirResultado(await api.arquivo.abrir())
   },
   'abrir-recente': async (caminho) => {
-    if (await podeDescartar(' Abrir um algoritmo no MisterALG ')) abrirResultado(await api.arquivo.abrirCaminho(caminho))
+    if (ativarSeAberto(caminho)) return
+    if (!comAbas() && !(await podeDescartar(' Abrir um algoritmo no MisterALG '))) return
+    await abrirResultado(await api.arquivo.abrirCaminho(caminho))
   },
   exemplo: async ({ nome, texto }) => {
-    if (!(await podeDescartar(' Abrir um algoritmo no MisterALG '))) return
-    carregar({ texto, nome: nome.replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(nome), codificacao: /\.alg$/.test(nome) ? 'windows-1252' : 'utf-8' })
+    await abrirDocumento({ texto, nome: nome.replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(nome), codificacao: /\.alg$/.test(nome) ? 'windows-1252' : 'utf-8', origem: `exemplo:${nome}` }, ' Abrir um algoritmo no MisterALG ')
   },
   salvar: () => salvar(false),
   'salvar-como': () => salvar(true),
@@ -385,11 +522,11 @@ const comandos = {
       if (r !== 'fechar') return editor.focar()
     }
     if (execucao.emExecucao()) execucao.parar()
-    if (await podeDescartar(' Encerrando o algoritmo e fechando o MisterALG ')) api.janela.fechar()
+    if (await podeDescartarTodas(' Encerrando o algoritmo e fechando o MisterALG ')) api.janela.fechar()
   },
   // Trocar o idioma recarrega a IDE já traduzida, com o mesmo arquivo (ou um novo na mesma linguagem).
   idioma: async (id) => {
-    if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
+    if (!(await podeDescartarTodas(' Incluir um novo algoritmo no MisterALG '))) return
     prefs = await api.prefs.gravar({ idioma: id })
     api.janela.pagina({ pagina: 'ide', params: doc.caminho ? { abrir: doc.caminho } : { linguagem: doc.linguagem } })
   },
@@ -458,7 +595,7 @@ const comandos = {
   dica: () => mostrarDica(),
   'tela-inicial': async () => {
     if (execucao.emExecucao()) execucao.parar()
-    if (await podeDescartar(' Voltar para a tela inicial do MisterALG ')) api.janela.pagina({ pagina: 'inicio' })
+    if (await podeDescartarTodas(' Voltar para a tela inicial do MisterALG ')) api.janela.pagina({ pagina: 'inicio' })
   },
   assistente: () => assistente.alternar(),
   'configurar-ia': () => assistente.configurar(),
@@ -469,7 +606,7 @@ const comandos = {
   'ajuda-referencia': () => abrirAjuda('referencia', tradutor(prefs.idioma)),
   sobre: () => dialogos.sobre(VERSAO),
   atualizacoes: () => procurarNaIDE(tradutor(prefs.idioma), {
-    podeDescartar: () => podeDescartar(' Encerrando o algoritmo e fechando o MisterALG '),
+    podeDescartar: () => podeDescartarTodas(' Encerrando o algoritmo e fechando o MisterALG '),
     status: (texto) => status.mensagem(texto),
   }),
   termos: () => dialogos.termos(TERMOS),
@@ -489,6 +626,7 @@ api.menu.aoComando(rodar)
 // Paleta de comandos (Ctrl+K / Ctrl+Shift+P): paleta.js liga o próprio atalho.
 criarPaleta({
   api, rodar, prefs: () => prefs, t: (...a) => tradutor(prefs.idioma)(...a),
+  abas: () => (comAbas() ? (guardarAba(), abasDoc.map((a) => ({ id: a.id, nome: nomeDaAba(a, EXTENSAO), ativa: a === abaAtiva }))) : null),
   aplicarDisposicao: async (d) => { prefs = await api.prefs.gravar({ disposicao: d }); aplicarBarra() },
 })
 
@@ -498,21 +636,54 @@ const ehMac = api.plataforma === 'darwin'
 
 const dicaDaPlataforma = (dica) => dicaPorPlataforma(dica, ehMac)
 
+// Faixa de guias (só aparece na disposição moderna).
+const abasUI = criarAbas({
+  t: (...a) => tradutor(prefs.idioma)(...a),
+  lista: () => {
+    guardarAba()
+    return abasDoc.map((a) => ({ id: a.id, nome: nomeDaAba(a, EXTENSAO), linguagem: a.linguagem, modificado: a.modificado, ativa: a === abaAtiva }))
+  },
+  ativar: (id) => rodar('ir-aba', id),
+  fechar: (id) => { const aba = abasDoc.find((a) => a.id === id); if (aba) void fecharAba(aba) },
+  nova: (linguagem) => rodar('novo', linguagem),
+  mover: (de, para) => {
+    guardarAba()
+    const nova = reordenar(abasDoc, de, para)
+    abasDoc.splice(0, abasDoc.length, ...nova)
+    abasUI.atualizar()
+  },
+  recentes: async () => (await api.prefs.ler()).mru ?? [],
+  exemplos: async () => (await api.exemplos.listar()).filter((g) => g.id === doc.linguagem).flatMap((g) => g.arquivos.map((arquivo) => ({
+    nome: arquivo,
+    abrir: async () => { const r = await api.exemplos.ler({ grupo: g.id, arquivo }); if (r) rodar('exemplo', r) },
+  }))),
+  abrirRecente: (caminho) => rodar('abrir-recente', caminho),
+  linguagemDoCaminho,
+  linguagemAtiva: () => doc.linguagem,
+})
+
 disposicao = criarDisposicao({
   api,
   t: (...a) => tradutor(prefs.idioma)(...a),
   doc,
   extensoes: EXTENSAO,
+  faixa: abasUI.el,
+  fimFaixa: abasUI.fim,
+  atualizarFaixa: () => abasUI.atualizar(),
   alturaSalva: prefs.alturaPainel ?? 0,
   gravarAltura: async (px) => { prefs = await api.prefs.gravar({ alturaPainel: px }) },
-  colunaSalva: prefs.colunaRecolhida,
-  gravarColuna: async (recolhida) => { prefs = await api.prefs.gravar({ colunaRecolhida: recolhida }) },
-  novo: (linguagem) => rodar('novo', linguagem),
-  telaInicial: () => rodar('tela-inicial'),
   irParaLinha: (n) => editor.irParaLinha(Number(n)),
-  abrirRecente: (caminho) => rodar('abrir-recente', caminho),
-  abrirExemplo: (e) => rodar('exemplo', e),
 })
+
+// Ctrl+Tab / Ctrl+Shift+Tab (e Ctrl+PageDown/PageUp) trocam de aba; Ctrl+W vem do menu ("Fechar aba").
+document.addEventListener('keydown', (e) => {
+  if (!comAbas() || !e.ctrlKey || e.altKey || e.metaKey || document.querySelector('dialog[open]')) return
+  const dir = e.key === 'Tab' ? (e.shiftKey ? -1 : 1) : e.key === 'PageDown' ? 1 : e.key === 'PageUp' ? -1 : 0
+  if (!dir) return
+  e.preventDefault()
+  e.stopPropagation()
+  irParaAba(dir)
+}, true)
 
 /** Posição, tamanho dos ícones e botões ocultos. `p` pode ser só uma prévia (Configurações), sem gravar. */
 function aplicarBarra(p = prefs) {
@@ -734,9 +905,13 @@ document.addEventListener('keydown', (e) => {
 
 // ---- recuperação após falha (visualg3.tmp) ------------------------------------------------
 
-setInterval(() => {
-  if (doc.modificado) api.recuperacao.gravar({ texto: editor.texto(), caminho: doc.caminho, nome: doc.nome, codificacao: doc.codificacao, linguagem: doc.linguagem })
-}, 5000)
+/** Grava (de forma atômica, no main) todas as abas modificadas; sem nenhuma, apaga o arquivo. */
+function gravarRecuperacao() {
+  guardarAba()
+  const dados = serializarRecuperacao(abasDoc.map((a) => ({ ...a, texto: a.estado.doc.toString() })), abasDoc.indexOf(abaAtiva))
+  return dados ? api.recuperacao.gravar(dados) : api.recuperacao.limpar()
+}
+setInterval(() => { if (abasDoc.some((a) => a.modificado) || doc.modificado) gravarRecuperacao() }, 5000)
 
 // ---- início ----------------------------------------------------------------------------------
 
@@ -757,8 +932,8 @@ if (mostrouTermos) {
 }
 
 const pendente = await api.arquivoPendente()
-const recuperado = await api.recuperacao.ler()
-if (recuperado?.texto) {
+const recuperado = lerRecuperacao(await api.recuperacao.ler()) // { abas, ativa } (aceita o formato antigo, de um documento só)
+if (recuperado) {
   const r = await api.mensagem({
     type: 'question',
     title: 'Falha!',
@@ -768,14 +943,19 @@ if (recuperado?.texto) {
     cancelId: 1,
   })
   if (r === 0) {
-    carregar(recuperado)
-    marcarModificado()
+    // A primeira aba recuperada ocupa a aba inicial; as outras viram abas novas (na clássica só a ativa fica visível, as demais esperam por baixo).
+    recuperado.abas.forEach((a, i) => {
+      if (i === 0) carregar(a)
+      else criarAba(a)
+      marcarModificado()
+    })
+    ativarAba(abasDoc[recuperado.ativa] ?? abaAtiva)
   } else {
     carregar({ texto: esqueleto(prefs) })
   }
   api.recuperacao.limpar()
   // Arquivo pendente (duplo clique): o recuperado fica no editor e, se nao for salvo, o aluno decide antes de abrir o outro.
-  if (pendente && (r !== 0 || (await podeDescartar('Abrir')))) await abrirResultado(await api.arquivo.abrirCaminho(pendente))
+  if (pendente && (r !== 0 || comAbas() || (await podeDescartar('Abrir')))) await abrirResultado(await api.arquivo.abrirCaminho(pendente))
 } else if (pendente) {
   carregar({ texto: esqueleto(prefs) })
   await abrirResultado(await api.arquivo.abrirCaminho(pendente))
@@ -799,9 +979,7 @@ function iniciarTutorial() {
     // O primeiro programa entra pelo caminho do "Novo": pergunta antes se o atual não está salvo.
     escreverPrograma: async (linguagem) => {
       if (execucao.emExecucao()) execucao.parar()
-      if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return false
-      carregar({ texto: primeiroPrograma(linguagem, t), linguagem, nome: 'primeiro', codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' })
-      return true
+      return abrirDocumento({ texto: primeiroPrograma(linguagem, t), linguagem, nome: 'primeiro', codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' }, ' Incluir um novo algoritmo no MisterALG ')
     },
     aoEvento: (fn) => execucao.aoEvento(fn),
     aoFechar: () => {
@@ -841,8 +1019,8 @@ async function mostrarDica() {
 // Dica do dia ao abrir (como o VisuAlg). Não aparece logo depois dos termos (uma
 // janela de cada vez na primeira abertura) nem nos testes automatizados.
 // O tutorial, oferecido uma vez, toma o lugar dela nessa abertura (também logo depois dos termos: uma janela depois da outra).
-if (!prefs.tutorialVisto && !api.automatizado && !recuperado?.texto) void oferecerTutorial()
-else if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto && !veioDoInicio) void mostrarDica()
+if (!prefs.tutorialVisto && !api.automatizado && !recuperado) void oferecerTutorial()
+else if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado && !veioDoInicio) void mostrarDica()
 
 // Para testes automatizados e depuração no DevTools.
-window.__misteralg = { editor, execucao, doc, comandos, get tutorial() { return tutorial } }
+window.__misteralg = { editor, execucao, doc, comandos, abas: abasDoc, gravarRecuperacao, get abaAtiva() { return abaAtiva }, get tutorial() { return tutorial } }

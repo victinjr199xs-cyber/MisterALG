@@ -57,6 +57,12 @@ export function criarPaleta(op) {
       ...(moderna ? [{ grupo: t('Disposição'), rotulo: t('Disposição clássica'), acao: () => op.aplicarDisposicao('classica') }] : []),
       ...(moderna ? [] : [{ grupo: t('Disposição'), rotulo: t('Disposição moderna'), acao: () => op.aplicarDisposicao('moderna') }]),
     ]
+    const abas = op.abas?.() // só na disposição moderna (a clássica não tem guias)
+    const deAbas = abas ? [
+      { grupo: t('Comandos'), rotulo: t('Nova aba'), acao: () => op.rodar('nova-aba') },
+      { grupo: t('Comandos'), rotulo: t('Fechar aba'), atalho: atalhoDe('Ctrl+W'), acao: () => op.rodar('fechar-aba') },
+      ...abas.map((a) => ({ grupo: t('Documentos abertos'), rotulo: t('Aba: {0}', a.nome), atual: a.ativa, acao: () => op.rodar('ir-aba', a.id) })),
+    ] : []
     const nome = (c) => c.split(/[\\/]/).pop()
     const recentes = (prefs.mru ?? []).map((c) => ({ grupo: t('Recentes'), rotulo: nome(c), dica: c, acao: () => op.rodar('abrir-recente', c) }))
     let exemplos = []
@@ -67,7 +73,7 @@ export function criarPaleta(op) {
         acao: async () => { const r = await op.api.exemplos.ler({ grupo: g.id, arquivo }); if (r) op.rodar('exemplo', r) },
       })))
     } catch { /* sem exemplos: a paleta segue com o resto */ }
-    return [...lista, ...temas, ...disposicao, ...recentes, ...exemplos].map((i) => ({ ...i, busca: normalizar(`${i.rotulo} ${i.grupo} ${i.dica ?? ''}`) }))
+    return [...lista, ...deAbas, ...temas, ...disposicao, ...recentes, ...exemplos].map((i) => ({ ...i, busca: normalizar(`${i.rotulo} ${i.grupo} ${i.dica ?? ''}`) }))
   }
 
   function filtrar(texto) {

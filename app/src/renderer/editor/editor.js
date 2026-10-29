@@ -264,11 +264,7 @@ export function criarEditor(parent, op) {
   }
 
   const prefs0 = op.prefs()
-  const view = new EditorView({
-    parent,
-    state: EditorState.create({
-      doc: '',
-      extensions: [
+  const extensoes = () => [
         numeracao.of(prefs0.numerarLinhas ? lineNumbers() : []),
         gutter({
           class: 'cm-gutter-breakpoint',
@@ -309,13 +305,32 @@ export function criarEditor(parent, op) {
         ]),
         avisarBreakpoints,
         EditorView.contentAttributes.of({ spellcheck: 'false', autocapitalize: 'off', autocorrect: 'off' }),
-      ],
-    }),
-  })
+  ]
+  const view = new EditorView({ parent, state: EditorState.create({ doc: '', extensions: extensoes() }) })
 
   const api = {
     view,
     texto: () => view.state.doc.toString(),
+    // Abas: cada documento guarda o seu EditorState (texto, desfazer, seleção, breakpoints).
+    estado: () => view.state,
+    /** Estado novo (sem histórico) para um documento recém-aberto. */
+    novoEstado(texto, id) {
+      const l = EXTENSOES[id] ? id : 'portugol'
+      const p = op.prefs()
+      return EditorState.create({ doc: texto, extensions: extensoes() }).update({
+        effects: [linguagem.reconfigure(EXTENSOES[l]()), aparencia.reconfigure(temaFonte(p)), numeracao.reconfigure(p.numerarLinhas ? lineNumbers() : [])],
+      }).state
+    },
+    /** Mostra o estado guardado de uma aba (as preferências de agora valem, não as de quando ele foi guardado). */
+    usarEstado(estado, id, rolagem = 0) {
+      linguagemAtual = EXTENSOES[id] ? id : 'portugol'
+      view.setState(estado)
+      api.aplicarPrefs(op.prefs())
+      view.scrollDOM.scrollTop = rolagem
+      const pos = view.state.selection.main.head
+      const linha = view.state.doc.lineAt(pos)
+      op.aoMoverCursor?.(linha.number, pos - linha.from + 1)
+    },
     definirTexto(texto) {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: texto },

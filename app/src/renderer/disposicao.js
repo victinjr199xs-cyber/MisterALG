@@ -1,4 +1,4 @@
-// Disposição "moderna" da tela (preferência `disposicao`): trilho de linguagens, coluna de arquivos, cabeçalho da página,
+// Disposição "moderna" da tela (preferência `disposicao`): faixa de guias de documentos, cabeçalho da página,
 // painel inferior com abas e a memória à direita. Os blocos da IDE (editor, memória, console, barra, avatar) são os
 // MESMOS elementos, só reposicionados por CSS (estilos/disposicao.css); aqui nascem apenas os elementos novos.
 // Na disposição clássica nada disto existe na tela.
@@ -12,12 +12,9 @@ const h = (tag, props = {}, ...filhos) => {
   return e
 }
 const ARQUIVO = (doc, ext) => (doc.caminho ? doc.caminho.split(/[\\/]/).pop() : `${doc.nome}.${ext[doc.linguagem]}`)
-const ICONE_PAINEL = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>'
-const SIGLAS = { portugol: 'Pt', c: 'C', cpp: 'C++', csharp: 'C#', javascript: 'JS', typescript: 'TS', python: 'Py', php: 'PHP', sql: 'SQL' }
-const ESTREITA = '(max-width: 1279px)' // abaixo disso a coluna de arquivos começa recolhida
 
 /**
- * @param op { api, t, doc, extensoes, novo(linguagem), abrirRecente(caminho), abrirExemplo({nome,texto}), alturaSalva: number, gravarAltura(px) }
+ * @param op { api, t, doc, extensoes, faixa, fimFaixa, atualizarFaixa(), alturaSalva: number, gravarAltura(px) }
  */
 export function criarDisposicao(op) {
   const raiz = document.documentElement
@@ -28,80 +25,12 @@ export function criarDisposicao(op) {
   let passos = 0
   let nos = {}
 
-  const recolher = (fechado) => {
-    raiz.dataset.canais = fechado ? 'fechado' : 'aberto'
-    nos.alternar?.setAttribute('aria-expanded', String(!fechado))
-  }
-  // Sem escolha do usuário (colunaRecolhida null) a coluna segue a largura da janela; depois do primeiro clique, a escolha vale.
-  let escolha = typeof op.colunaSalva === 'boolean' ? op.colunaSalva : null
-  const inicial = () => escolha ?? window.matchMedia(ESTREITA).matches
-  window.matchMedia(ESTREITA).addEventListener('change', (e) => { if (ativa && escolha === null) recolher(e.matches) })
-
   function montar() {
     montado = true
     const main = document.querySelector('main')
     const barraConta = () => document.querySelector('[data-id="conta"]')
 
-    // Trilho: um botão por linguagem (o mesmo que "Novo" naquela linguagem); o avatar da conta mora embaixo.
-    const lista = h('div', { className: 'trilho-lista' })
-    // "M" do app no topo: volta para a tela inicial (como o logo do servidor no Discord), separado das linguagens.
-    const inicio = h('button', { type: 'button', className: 'trilho-inicio', textContent: 'M' })
-    inicio.dataset.nome = t('Tela inicial')
-    inicio.setAttribute('aria-label', t('Tela inicial'))
-    inicio.addEventListener('click', () => op.telaInicial?.())
-    lista.append(inicio, h('hr', { className: 'trilho-sep' }))
-    for (const l of LINGUAGENS) {
-      const nome = t('Novo programa em {0}', l.nome)
-      const b = h('button', { type: 'button', className: 'trilho-lang', textContent: SIGLAS[l.id] ?? l.nome.slice(0, 2) })
-      b.dataset.lang = l.id
-      b.dataset.nome = l.nome
-      b.setAttribute('aria-label', nome)
-      b.style.setProperty('--cor', l.cor)
-      b.addEventListener('click', () => op.novo(l.id))
-      lista.append(b)
-    }
-    // Tooltip único e fixo (a lista rola, então um filho absoluto seria cortado).
-    const dica = h('div', { className: 'trilho-dica', hidden: true })
-    dica.setAttribute('role', 'tooltip')
-    const mostrarDica = (e) => {
-      const b = e.target.closest?.('.trilho-lang, .trilho-inicio')
-      if (!b) return
-      const r = b.getBoundingClientRect()
-      dica.textContent = b.dataset.nome
-      dica.hidden = false
-      const rtl = raiz.dir === 'rtl'
-      dica.style.insetBlockStart = `${r.top + r.height / 2}px`
-      dica.style.insetInlineStart = rtl ? 'auto' : `${r.right + 10}px`
-      dica.style.insetInlineEnd = rtl ? `${innerWidth - r.left + 10}px` : 'auto'
-    }
-    for (const ev of ['pointerover', 'focusin']) lista.addEventListener(ev, mostrarDica)
-    for (const ev of ['pointerleave', 'focusout']) lista.addEventListener(ev, () => { dica.hidden = true })
-    lista.addEventListener('click', () => { dica.hidden = true })
-    document.body.append(dica)
-    const trilho = h('nav', { id: 'trilho', className: 'trilho' }, lista, h('div', { className: 'trilho-rodape' }))
-    trilho.setAttribute('aria-label', t('Linguagens'))
-
-    // Coluna de arquivos: recentes e exemplos.
-    nos.recentes = h('ul', { className: 'canais-lista' })
-    nos.exemplos = h('ul', { className: 'canais-lista' })
-    nos.nomeLinguagem = h('span', { className: 'canais-titulo' })
-    const canais = h('aside', { id: 'canais', className: 'canais' },
-      h('div', { className: 'canais-cab' }, nos.nomeLinguagem),
-      h('div', { className: 'canais-corpo' },
-        h('h2', { className: 'canais-secao', textContent: t('Recentes') }), nos.recentes,
-        h('h2', { className: 'canais-secao', textContent: t('Exemplos') }), nos.exemplos))
-    canais.setAttribute('aria-label', t('Arquivos'))
-
     // Cabeçalho da página (estilo Notion): ícone, título e propriedades.
-    nos.alternar = h('button', { type: 'button', className: 'cab-alternar', title: t('Mostrar ou ocultar a lista de arquivos') })
-    nos.alternar.setAttribute('aria-label', t('Mostrar ou ocultar a lista de arquivos'))
-    nos.alternar.setAttribute('aria-controls', 'canais')
-    nos.alternar.innerHTML = ICONE_PAINEL
-    nos.alternar.addEventListener('click', () => {
-      escolha = raiz.dataset.canais !== 'fechado'
-      recolher(escolha)
-      op.gravarColuna?.(escolha)
-    })
     nos.icone = h('span', { className: 'cab-icone' })
     nos.titulo = h('h1', { className: 'cab-titulo' })
     nos.propLinguagem = h('b')
@@ -113,7 +42,7 @@ export function criarDisposicao(op) {
     nos.passo = h('div', { className: 'cab-passo', hidden: true }, nos.passoTexto, h('i', { className: 'cab-passo-barra' }))
     nos.passo.setAttribute('role', 'status')
     const cab = h('header', { id: 'cab-pagina', className: 'cab-pagina' },
-      h('div', { className: 'cab-linha' }, nos.alternar, nos.icone, nos.titulo),
+      h('div', { className: 'cab-linha' }, nos.icone, nos.titulo),
       h('div', { className: 'cab-linha2' },
         h('ul', { className: 'cab-props' }, prop(t('Linguagem'), nos.propLinguagem), prop(t('Arquivo'), nos.pontoEstado, nos.propEstado)),
         nos.passo))
@@ -161,12 +90,13 @@ export function criarDisposicao(op) {
     new MutationObserver(() => { nos.contador.textContent = String(document.querySelectorAll('#variaveis tbody tr').length) })
       .observe(document.querySelector('#variaveis tbody'), { childList: true })
 
-    document.body.append(trilho)
-    main.prepend(canais, cab)
+    // Faixa de guias no topo da área central, acima do cabeçalho; o editor é o painel da guia ativa.
+    const painelEditor = document.querySelector('.moldura-editor')
+    painelEditor.id = 'editor-painel'
+    painelEditor.setAttribute('role', 'tabpanel')
+    main.prepend(op.faixa, cab)
     main.append(nos.divisor, abas, nos.problemas)
-    nos.trilho = trilho
     nos.barraConta = barraConta
-    nos.rodape = trilho.querySelector('.trilho-rodape')
     ligarDivisor(main)
     mostrarAba('terminal')
     atualizarProblemas()
@@ -241,43 +171,17 @@ export function criarDisposicao(op) {
     nos.problemas.replaceChildren(item)
   }
 
-  async function atualizarListas() {
-    const prefs = await op.api.prefs.ler()
-    const abrir = (fn) => (e) => { e.preventDefault(); fn() }
-    const item = (rotulo, atual, fn, dica) => {
-      const b = h('button', { type: 'button', className: 'canal', textContent: rotulo, title: dica ?? rotulo })
-      if (atual) b.setAttribute('aria-current', 'true')
-      b.addEventListener('click', abrir(fn))
-      return h('li', {}, b)
-    }
-    const nomeDe = (c) => c.split(/[\\/]/).pop()
-    nos.recentes.replaceChildren(...((prefs.mru ?? []).length
-      ? prefs.mru.map((c) => item(nomeDe(c), c === doc.caminho, () => op.abrirRecente(c), c))
-      : [h('li', { className: 'canais-vazio', textContent: t('Os algoritmos que você abrir aparecem aqui.') })]))
-    const grupos = (await op.api.exemplos.listar()).filter((g) => g.id === doc.linguagem)
-    nos.exemplos.replaceChildren(...grupos.flatMap((g) => g.arquivos.map((nome) =>
-      item(nome, !doc.caminho && ARQUIVO(doc, op.extensoes) === nome, async () => {
-        const r = await op.api.exemplos.ler({ grupo: g.id, arquivo: nome })
-        if (r) op.abrirExemplo(r)
-      }))))
-  }
-
-  /** Chamado quando o documento muda (abrir, novo, salvar, editar). */
+  /** Chamado quando o documento muda (abrir, novo, salvar, editar, trocar de aba). */
   function atualizar() {
     if (!ativa) return
     const l = LINGUAGENS.find((x) => x.id === doc.linguagem) ?? LINGUAGENS[0]
-    for (const b of nos.trilho.querySelectorAll('.trilho-lang')) {
-      if (b.dataset.lang === l.id) b.setAttribute('aria-current', 'true')
-      else b.removeAttribute('aria-current')
-    }
+    op.atualizarFaixa?.()
     nos.icone.innerHTML = ICONES_LINGUAGEM[l.id]
     nos.icone.style.setProperty('--cor', l.cor)
     nos.titulo.textContent = ARQUIVO(doc, op.extensoes)
     nos.propLinguagem.textContent = l.nome
-    nos.nomeLinguagem.textContent = l.nome
     nos.propEstado.textContent = doc.modificado ? t('Modificado') : t('Salvo')
     nos.pontoEstado.dataset.estado = doc.modificado ? 'modificado' : 'salvo'
-    atualizarListas()
   }
 
   return {
@@ -289,13 +193,11 @@ export function criarDisposicao(op) {
       if (moderna) {
         if (!montado) montar()
         raiz.dataset.disposicao = 'moderna'
-        nos.rodape.append(nos.barraConta()) // o MESMO botão da conta passa para o rodapé do trilho
-        recolher(inicial())
+        op.fimFaixa.append(nos.barraConta()) // o MESMO botão da conta passa para o canto da faixa de guias
         atualizar()
         nos.automatica?.()
       } else {
         delete raiz.dataset.disposicao
-        delete raiz.dataset.canais
         if (montado) document.querySelector('#barra').append(nos.barraConta())
       }
     },
