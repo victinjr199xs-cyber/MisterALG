@@ -214,10 +214,6 @@
 :root[data-disposicao="moderna"] .problema:hover { outline: 1px solid var(--linha-erro); }
 :root[data-disposicao="moderna"] .problema:focus-visible { outline: 2px solid var(--destaque); outline-offset: 1px; }
 :root[data-disposicao="moderna"] .problema b { color: var(--linha-erro); white-space: nowrap; }
-/* o console já tem a aba "Terminal": a barra de título dele fica só com o botão de fechar */
-:root[data-disposicao="moderna"] body .console-titulo { min-block-size: 0; padding: 2px 6px; background: transparent; border: 0; justify-content: flex-end; }
-:root[data-disposicao="moderna"] body .console-titulo > span { display: none; }
-:root[data-disposicao="moderna"] body .console-fechar { margin-inline-start: auto; margin-left: 0; }
 
 /* ---- memória (painel direito) --------------------------------------------------------------- */
 :root[data-disposicao="moderna"] body .moldura-variaveis {

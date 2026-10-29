@@ -22,7 +22,7 @@ fimalgoritmo
 `
 const PROGRAMA_C = '#include <stdio.h>\nint main(void) {\n    int x;\n    printf("Valor: ");\n    scanf("%d", &x);\n    printf("Dobro = %d\\n", 2 * x);\n    return 0;\n}\n'
 const PROGRAMA_CPP = '#include <iostream>\n#include <stdexcept>\nint dividir(int a, int b) { if (b == 0) throw std::runtime_error("zero"); return a / b; }\nint main() {\n    try { std::cout << dividir(1, 0); } catch (const std::exception &e) { std::cout << "pegou: " << e.what() << std::endl; }\n}\n'
-const ESPERADO = 'Seu nome: Linux\nOlá, Linux! Soma dobrada = 30\n\n>>> Fim da execução do programa !'
+const ESPERADO = 'Seu nome: Linux\nOlá, Linux! Soma dobrada = 30\n>>> Fim da execução do programa !'
 
 function conferir(nome, obtido, esperado) {
   const ok = typeof obtido === 'object' ? JSON.stringify(obtido) === JSON.stringify(esperado) : obtido === esperado // listas e null por conteúdo
@@ -99,7 +99,7 @@ export default async ({ avaliar, esperar, digitar, tecla, classico }) => {
   await digitar('21')
   await tecla('Enter')
   for (let i = 0; i < 240 && !(await temTexto('Process finished')); i += 1) await esperar(250) // PC lento/CI: o processo pode demorar a sair
-  conferir('saída do C', await avaliar('document.querySelector("#console-tela").textContent'), 'Valor: 21\nDobro = 42\n\nProcess finished with exit code 0')
+  conferir('saída do C', await avaliar('document.querySelector("#console-tela").textContent'), 'Valor: 21\nDobro = 42\nProcess finished with exit code 0')
 
   // C++ com try/catch: liga a libexcecoes.a embutida no worker (exceções do WebAssembly).
   await avaliar(`${M}.doc.modificado = false`)
@@ -107,7 +107,7 @@ export default async ({ avaliar, esperar, digitar, tecla, classico }) => {
   await avaliar(`${M}.editor.definirTexto(${JSON.stringify(PROGRAMA_CPP)})`)
   await avaliar(`void ${M}.comandos.executar()`)
   for (let i = 0; i < 360 && !(await temTexto('Process finished')); i += 1) await esperar(500)
-  conferir('saída do C++ com exceção', await avaliar('document.querySelector("#console-tela").textContent'), 'pegou: zero\n\nProcess finished with exit code 0')
+  conferir('saída do C++ com exceção', await avaliar('document.querySelector("#console-tela").textContent'), 'pegou: zero\nProcess finished with exit code 0')
 
   await verificarMenusEDialogos({ avaliar, esperar })
   await verificarArquivos({ avaliar, esperar })

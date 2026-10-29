@@ -7,7 +7,7 @@ import { mostrarAbertura } from './abertura.js'
 import { anexarDados, gravarArquivo, gravarAtomicoSync, lerArquivo, lerDados } from './arquivos.js'
 import { aquecer, arvore, compilar, enviarEntrada, executar, foiCancelado, parar, pararTudo } from './clang.js'
 import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
-import { carregarPagina, criarJanelaPrincipal } from './janelas.js'
+import { carregarPagina, criarJanelaPrincipal, fixarConsole } from './janelas.js'
 import * as programas from './programas.js'
 import { aquecerPHP, pararPHP } from './php.js'
 import { aquecerSQL, comandoSQL, pararSQL } from './sql.js'
@@ -445,6 +445,7 @@ function registrarIpc() {
     pararPHP()
     void irPara(pagina, params && typeof params === 'object' ? params : {}) // a página atual vai embora; não há resposta a esperar
   })
+  ipcMain.handle('console:fixar', (_e, sim) => fixarConsole(sim === true))
   ipcMain.handle('janela:fechar', () => {
     podeFechar = true
     limparRecuperacao()

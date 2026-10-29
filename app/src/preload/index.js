@@ -43,6 +43,7 @@ contextBridge.exposeInMainWorld('misteralg', {
   exportar: invocar('exportar:salvar'),
   abrirExterno: invocar('externo:abrir'),
   janela: { titulo: invocar('janela:titulo'), fechar: invocar('janela:fechar'), pagina: invocar('janela:pagina') },
+  console: { fixar: invocar('console:fixar') },
   clang: {
     aquecer: invocar('clang:aquecer'),
     executar: invocar('clang:executar'),

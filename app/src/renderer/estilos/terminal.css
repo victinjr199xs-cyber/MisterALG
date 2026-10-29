@@ -1,91 +1,215 @@
-/* Terminal moderno: so nos temas novos. O tema classico (console MS-DOS) fica intocado. */
-:root[data-tema="noite"] .console,
-:root[data-tema="papel"] .console,
-:root[data-tema="hibrido-claro"] .console,
-:root[data-tema="hibrido-escuro"] .console {
-  --term-fundo: #14131f; --term-barra: #1d1c2f; --term-texto: #e9e8f7; --term-suave: #8d8bae; --term-borda: #2b2a44;
+/* Console moderno (estilo Windows Terminal), igual em todas as linguagens, disposições e temas.
+   Cabeçalho com linguagem, programa e selo de estado; saída; campo do `leia`; rodapé com tempo e linhas.
+   Estrutura: renderer/index.html (#console) e renderer/console.js. */
+
+:root {
+  --term-fundo: #101114; --term-barra: #181a1f; --term-borda: #2a2d35;
+  --term-texto: #e6e8ec; --term-suave: #8b91a0; --term-realce: #7c6af7;
+  --term-ok: #4ade80; --term-aviso: #f2c94c; --term-erro: #ff6b7a;
+}
+:root[data-tema="noite"] { --term-fundo: #17181b; --term-barra: #1e1f22; --term-borda: #2e3035; }
+:root[data-tema="papel"] { --term-fundo: #1f1e1b; --term-barra: #2a2926; --term-borda: #3a3834; --term-suave: #9a958a; }
+:root[data-tema="hibrido-claro"], :root[data-tema="hibrido-escuro"] {
+  --term-fundo: #14131f; --term-barra: #1d1c2f; --term-borda: #2b2a44; --term-texto: #e9e8f7; --term-suave: #8d8bae;
+}
+
+.console {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--term-borda);
   border-radius: var(--raio);
   background: var(--term-fundo);
+  color: var(--term-texto);
   overflow: hidden;
+  z-index: 5;
   box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
 }
-:root[data-tema="noite"] .console { --term-fundo: #17181b; --term-barra: #1e1f22; --term-borda: #2e3035; }
-:root[data-tema="papel"] .console { --term-fundo: #1f1e1b; --term-barra: #2a2926; --term-borda: #3a3834; }
+.console[hidden] { display: none; }
+:root[data-disposicao="moderna"] .console { border: 0; border-radius: 0; box-shadow: none; }
 
-:root[data-tema="noite"] .console-titulo,
-:root[data-tema="papel"] .console-titulo,
-:root[data-tema="hibrido-claro"] .console-titulo,
-:root[data-tema="hibrido-escuro"] .console-titulo {
+/* ---- cabeçalho ------------------------------------------------------------------------------ */
+.console-cab {
+  flex: none;
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  min-block-size: 38px;
+  padding: 5px 8px 5px 10px;
   background: var(--term-barra);
   border-bottom: 1px solid var(--term-borda);
-  color: var(--term-suave);
-  font: 600 11px var(--fonte-ui);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font: 500 12px var(--fonte-ui);
+  user-select: none;
 }
-:root[data-tema="noite"] .console-icone,
-:root[data-tema="papel"] .console-icone,
-:root[data-tema="hibrido-claro"] .console-icone,
-:root[data-tema="hibrido-escuro"] .console-icone {
-  padding: 2px 8px;
-  border: 0;
+.console-lang {
+  display: grid;
+  place-items: center;
+  min-inline-size: 26px;
+  block-size: 20px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--cor, var(--term-realce));
+  color: #fff;
+  font: 700 10.5px var(--fonte-mono);
+}
+.console-nome {
+  min-inline-size: 0;
+  overflow: hidden;
+  color: var(--term-texto);
+  font: 600 12.5px var(--fonte-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.console-espaco { flex: 1; }
+
+.console-selo {
+  --tom: var(--term-suave);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  padding: 2px 11px 2px 9px;
+  border: 1px solid color-mix(in srgb, var(--tom) 40%, transparent);
   border-radius: 999px;
-  background: var(--destaque);
-  color: #ffffff;
-  font: 700 10px var(--fonte-codigo);
+  background: color-mix(in srgb, var(--tom) 13%, transparent);
+  color: var(--tom);
+  font: 600 11.5px var(--fonte-ui);
+  white-space: nowrap;
 }
-:root[data-tema="noite"] .console-fechar,
-:root[data-tema="papel"] .console-fechar,
-:root[data-tema="hibrido-claro"] .console-fechar,
-:root[data-tema="hibrido-escuro"] .console-fechar {
-  width: 22px;
-  height: 22px;
-  border: 1px solid var(--term-borda);
+.console-selo[data-tom="rodando"], .console-selo[data-tom="ok"] { --tom: var(--term-ok); }
+.console-selo[data-tom="espera"], .console-selo[data-tom="aviso"] { --tom: var(--term-aviso); }
+.console-selo[data-tom="erro"] { --tom: var(--term-erro); }
+.console-selo.clicavel { cursor: pointer; }
+.console-selo.clicavel:hover { background: color-mix(in srgb, var(--tom) 24%, transparent); text-decoration: underline; }
+.console-selo:focus-visible { outline: 2px solid var(--term-realce); outline-offset: 2px; }
+.console-ponto {
+  inline-size: 7px;
+  block-size: 7px;
+  border-radius: 50%;
+  background: var(--tom);
+}
+.console-selo[data-pulsa="true"] .console-ponto { animation: console-pulso 1.3s ease-in-out infinite; }
+@keyframes console-pulso {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--tom) 70%, transparent); opacity: 1; }
+  50% { box-shadow: 0 0 0 5px transparent; opacity: 0.55; }
+}
+
+.console-btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 28px;
+  block-size: 28px;
+  padding: 0;
+  border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--term-suave);
   cursor: pointer;
 }
-:root[data-tema="noite"] .console-fechar:hover,
-:root[data-tema="papel"] .console-fechar:hover,
-:root[data-tema="hibrido-claro"] .console-fechar:hover,
-:root[data-tema="hibrido-escuro"] .console-fechar:hover { background: #c4384a; border-color: #c4384a; color: #ffffff; }
+.console-btn svg { inline-size: 16px; block-size: 16px; }
+.console-btn:hover:not(:disabled) { background: rgb(255 255 255 / 0.09); color: var(--term-texto); }
+.console-btn:focus-visible { outline: 2px solid var(--term-realce); outline-offset: -2px; }
+.console-btn:disabled { opacity: 0.32; cursor: default; }
+.console-btn[hidden] { display: none; }
+.console-btn[aria-pressed="true"] { background: color-mix(in srgb, var(--term-realce) 28%, transparent); color: #fff; }
+.console-btn.feito { color: var(--term-ok); }
+.console-btn[data-acao="parar"]:not(:disabled) { color: var(--term-erro); }
+.console-btn[data-acao="reexecutar"]:not(:disabled) { color: var(--term-ok); }
+.console-btn[data-acao="fechar"]:hover { background: #c4384a; color: #fff; }
 
-:root[data-tema="noite"] .console-tela,
-:root[data-tema="papel"] .console-tela,
-:root[data-tema="hibrido-claro"] .console-tela,
-:root[data-tema="hibrido-escuro"] .console-tela {
-  padding: 12px 14px;
+/* ---- saída ----------------------------------------------------------------------------------- */
+.console-tela {
+  flex: 1;
+  min-block-size: 0;
+  padding: 12px 16px;
+  overflow-y: auto;
   color: var(--term-texto);
-  font: 400 13px/1.6 var(--fonte-codigo);
+  font: 400 13px/1.6 var(--fonte-mono);
+  white-space: pre-wrap;
   word-break: break-word;
+  user-select: text;
+  scrollbar-width: thin;
+  scrollbar-color: #3a3d46 transparent;
 }
-:root[data-tema="noite"] .console-entrada,
-:root[data-tema="papel"] .console-entrada,
-:root[data-tema="hibrido-claro"] .console-entrada,
-:root[data-tema="hibrido-escuro"] .console-entrada {
-  min-width: 6ch;
-  padding: 1px 6px;
-  border-bottom: 1px solid var(--destaque);
-  border-radius: 3px 3px 0 0;
-  background: rgb(255 255 255 / 0.07);
-  color: #ffd28a;
-  caret-color: #ffd28a;
-}
-:root[data-tema="noite"] .console-tela::selection,
-:root[data-tema="papel"] .console-tela::selection,
-:root[data-tema="hibrido-claro"] .console-tela::selection,
-:root[data-tema="hibrido-escuro"] .console-tela::selection { background: var(--selecao-texto, #3a3680); }
+.console-tela:focus { outline: none; }
+.console-tela::selection, .console-tela ::selection { background: var(--selecao-texto, #3a3680); }
 
-/* Cores semanticas da saida (o inline style do console e sobrescrito so nos temas novos) */
-:root[data-tema="noite"] .console .saida-erro,
-:root[data-tema="papel"] .console .saida-erro,
-:root[data-tema="hibrido-claro"] .console .saida-erro,
-:root[data-tema="hibrido-escuro"] .console .saida-erro { color: #ff6b7a !important; }
-:root[data-tema="noite"] .console .saida-aviso,
-:root[data-tema="papel"] .console .saida-aviso,
-:root[data-tema="hibrido-claro"] .console .saida-aviso,
-:root[data-tema="hibrido-escuro"] .console .saida-aviso { color: #f2c94c !important; }
+/* os `cor` do Portugol vêm em linha; o erro e o aviso do console vencem a cor em linha */
+.console .saida-erro { color: var(--term-erro) !important; }
+.console .saida-aviso { color: var(--term-aviso) !important; }
+.console-linha-link {
+  border-radius: 3px;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.console-linha-link:hover { background: rgb(255 255 255 / 0.12); text-decoration: underline solid; }
+.console-linha-link:focus-visible { outline: 2px solid var(--term-realce); outline-offset: 1px; }
+
+.saida-sistema {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-block-start: 0.8em;
+  color: var(--term-suave);
+  font: 400 12px/1.5 var(--fonte-mono);
+  white-space: normal;
+}
+.saida-sistema svg { flex: none; inline-size: 14px; block-size: 14px; }
+.saida-sistema[data-tom="ok"] svg { color: var(--term-ok); }
+.saida-sistema[data-tom="erro"] svg { color: var(--term-erro); }
+
+/* ---- campo do `leia` -------------------------------------------------------------------------- */
+.console-entrada {
+  display: inline-block;
+  min-inline-size: 3ch;
+  margin-inline: 2px;
+  padding: 0 6px;
+  border: 0;
+  border-block-end: 2px solid var(--term-realce);
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--term-realce) 16%, transparent);
+  color: #ffd28a;
+  font: inherit;
+  outline: none;
+  caret-color: #ffd28a;
+  caret-shape: block;
+  animation: console-entrada-brilho 2.2s ease-in-out infinite;
+}
+@keyframes console-entrada-brilho {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 2px 12px -2px color-mix(in srgb, var(--term-realce) 70%, transparent); }
+}
+
+/* ---- rodapé ---------------------------------------------------------------------------------- */
+.console-rodape {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px;
+  background: var(--term-barra);
+  border-top: 1px solid var(--term-borda);
+  color: var(--term-suave);
+  font: 500 11px var(--fonte-mono);
+  user-select: none;
+}
+.console-linhas::before { content: '·'; margin-inline-end: 8px; }
+
+/* ---- janela própria ---------------------------------------------------------------------------- */
+:root[data-console-janela], :root[data-console-janela] body {
+  margin: 0;
+  block-size: 100%;
+  overflow: hidden;
+  background: var(--term-fundo);
+}
+:root[data-console-janela] .console { position: fixed; inset: 0; border: 0; border-radius: 0; box-shadow: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .console-selo[data-pulsa="true"] .console-ponto, .console-entrada { animation: none; }
+}
+@media (max-width: 560px) {
+  .console-nome { display: none; }
+}

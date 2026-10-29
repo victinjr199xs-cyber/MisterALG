@@ -154,7 +154,6 @@ document.addEventListener('mouseover', (e) => {
 const ROTULOS_CODIGO = [
   ['.moldura-variaveis .legenda', 'Variables'],
   ['.moldura-visualizacao > .legenda', 'Terminal'],
-  ['.console-titulo > span:not(.console-icone)', 'Terminal'],
   ['#variaveis th:nth-child(1)', 'Scope'], ['#variaveis th:nth-child(2)', 'Name'],
   ['#variaveis th:nth-child(3)', 'Type'], ['#variaveis th:nth-child(4)', 'Value'],
 ]
@@ -184,6 +183,7 @@ function marcarModificado() {
 let execucao = null // criada logo abaixo; o editor precisa existir antes
 const editor = criarEditor($('#editor'), {
   prefs: () => prefs,
+  t: (...a) => tradutor(prefs.idioma)(...a),
   aoMudar: () => {
     marcarModificado()
     execucao?.aoEditar()
@@ -280,6 +280,13 @@ execucao = criarExecucao({
     },
   }),
   idioma: () => prefs.idioma,
+  consoleEmJanela: () => prefs.consoleEmJanela, // null = automático (janela própria na disposição clássica)
+  programa: () => ({
+    nome: doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.nome === 'semnome' ? tradutor(prefs.idioma)('sem nome') : `${doc.nome}.${EXTENSAO[doc.linguagem]}`,
+    linguagem: doc.linguagem,
+  }),
+  rodar: (id) => rodar(id),
+  emTutorial: () => !!tutorial, // durante o tutorial o console fica no painel, que é o que ele aponta
   aoErro: (erro) => { ultimoErro = erro; disposicao?.problema(erro) },
   iaAtiva: () => !!prefs.ia?.ativo,
   aoPedirIA: () => assistente.explicarErro(),
@@ -724,8 +731,6 @@ document.addEventListener('keydown', (e) => {
   e.preventDefault()
   if (comando !== 'nada') rodar(comando)
 })
-
-$('#console-fechar').addEventListener('click', () => (execucao.emExecucao() ? execucao.parar() : execucao.fecharConsole()))
 
 // ---- recuperação após falha (visualg3.tmp) ------------------------------------------------
 

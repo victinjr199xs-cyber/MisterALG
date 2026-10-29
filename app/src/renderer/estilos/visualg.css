@@ -506,56 +506,7 @@ main {
   user-select: text;
 }
 
-/* O console imita o modo texto do MS-DOS: é preto em todos os temas. */
-.console {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  border: 2px solid #404040;
-  border-radius: max(0px, calc(var(--raio) - 3px));
-  background: #000000;
-  z-index: 5;
-}
-.console[hidden] { display: none; }
-
-.console-titulo {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 4px 2px 6px;
-  background: linear-gradient(var(--titulo-inicio), var(--titulo-fim));
-  color: var(--titulo-texto);
-  font-weight: 700;
-}
-.console-icone {
-  padding: 0 3px;
-  border: 1px solid currentColor;
-  font: 700 10px var(--fonte-codigo);
-}
-.console-fechar {
-  margin-left: auto;
-  width: 20px;
-  height: 18px;
-  padding: 0;
-  border: 1px solid #ffffff;
-  background: #d4d0c8;
-  color: #000000;
-  line-height: 1;
-}
-
-.console-tela {
-  flex: 1;
-  min-height: 0;
-  padding: 4px 6px;
-  overflow-y: auto;
-  color: #ffffff;
-  font: 700 13px/1.35 var(--fonte-codigo);
-  white-space: pre-wrap;
-  word-break: break-all;
-  user-select: text;
-}
-.console-tela:focus { outline: none; }
+/* O console (cabeçalho, saída, campo do `leia`, rodapé) está em terminal.css. */
 
 /* A página gerada pelo PHP (previa.js): cobre a área de visualização, como o console. */
 .previa {
@@ -595,18 +546,6 @@ main {
 .previa-quadro[hidden] { display: none; }
 .previa-html { flex: 1; min-height: 0; margin: 0; padding: 4px 6px; overflow: auto; font: 12px/1.35 var(--fonte-codigo); white-space: pre-wrap; user-select: text; }
 .previa-html[hidden] { display: none; }
-
-.console-entrada {
-  display: inline;
-  min-width: 2ch;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  outline: none;
-  caret-color: #ffffff;
-}
 
 /* ---- barra de status ---------------------------------------------------- */
 
@@ -1111,18 +1050,7 @@ body.modo-codigo .grade th { border: 0; border-bottom: 1px solid var(--borda); c
 body.modo-codigo .grade td { border: 0; border-bottom: 1px solid var(--linha-grade); }
 body.modo-codigo .grade tr.modificada td { background: var(--selecao-grade); color: #fbbf24; font-weight: 600; }
 body.modo-codigo .visualizacao { padding: 10px 16px; font: 13px/1.5 var(--mono); }
-/* O terminal: mesma área, sem a janela do MS-DOS. */
-body.modo-codigo .console { border: 0; background: #0b0d11; }
-body.modo-codigo .console-titulo {
-  padding: 8px 10px 8px 16px; background: #0f1115; border-bottom: 1px solid var(--borda);
-  color: #8b93a1; font: 600 11px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
-}
-body.modo-codigo .console-icone { display: none; }
-body.modo-codigo .console-titulo::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #16a37f; box-shadow: 0 0 8px #16a37f; }
-body.modo-codigo .console-fechar { border: 1px solid var(--borda); border-radius: 4px; background: transparent; color: #8b93a1; }
-body.modo-codigo .console-fechar:hover { background: #c42b1c; color: #fff; }
-body.modo-codigo .console-tela { padding: 12px 16px; color: #e6e8eb; font: 13px/1.55 var(--mono); }
-body.modo-codigo .console-entrada { caret-color: #a78bfa; color: #fbbf24; }
+/* O console (estilos/terminal.css) é o mesmo em todas as linguagens e temas. */
 body.modo-codigo .previa-barra { background: #0f1115; color: #8b93a1; border-bottom: 1px solid var(--borda); }
 body.modo-codigo .status { padding: 0; border-top: 1px solid var(--borda); background: #0f1115; gap: 0; }
 body.modo-codigo .painel { border: 0; border-right: 1px solid var(--borda); padding: 6px 12px; color: #8b93a1; font: 11px/1 var(--mono); }

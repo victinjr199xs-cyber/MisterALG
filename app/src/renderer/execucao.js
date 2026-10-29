@@ -13,6 +13,8 @@ import { tradutor } from '../compartilhado/idiomas.js'
 import { criarMemoriaC } from './memoria-c.js'
 import { criarMemoriaBanco } from './memoria-banco.js'
 import { SessaoSQL } from './sql/sessao-sql.js'
+import { criarConsole } from './console.js'
+import { dividirLinhas } from './console-logica.js'
 
 /** Itens do "Intervalo do timer" (cboInterval do VisuAlg) → milissegundos. */
 export const INTERVALOS = [
@@ -74,6 +76,31 @@ export function criarExecucao(op) {
   const consoleEl = document.getElementById('console')
   const tela = document.getElementById('console-tela')
   const visualizacao = document.getElementById('visualizacao')
+  const t = (...a) => tradutor(op.idioma?.() ?? 'pt')(...a)
+  // Atalhos com o foco na janela própria do console (lá não há menu): F9, F8, Shift+F9, Ctrl+F2 e Esc.
+  function teclaDaJanela(e) {
+    const id = api.plataforma !== 'darwin' && ({ F9: e.shiftKey ? 'timer' : 'executar', F8: 'passo' }[e.key] ?? (e.key === 'F2' && e.ctrlKey ? 'parar' : null))
+    if (id) {
+      e.preventDefault()
+      op.rodar?.(id)
+    } else if (e.key === 'Escape' && teclaEscape()) e.preventDefault()
+  }
+  const cons = criarConsole({
+    el: consoleEl,
+    tela,
+    t,
+    idioma: () => op.idioma?.() ?? 'pt',
+    pref: () => op.consoleEmJanela?.(),
+    plataforma: api.plataforma,
+    api,
+    programa: () => op.programa?.() ?? { nome: t('sem nome'), linguagem: op.linguagem?.() ?? 'portugol' },
+    rodar: (id) => op.rodar?.(id),
+    aoParar: () => parar(),
+    aoFechar: () => fecharConsole(),
+    aoIrParaLinha: (n) => { editor.irParaLinha(n); window.focus() },
+    aoTecla: teclaDaJanela,
+    emTutorial: () => op.emTutorial?.(),
+  })
   const corpoGrade = document.querySelector('#variaveis tbody')
 
   let sessao = null
@@ -147,11 +174,17 @@ export function criarExecucao(op) {
       cortou = true
       const cor = corTexto
       corTexto = CORES.AMARELO
-      escreverBruto(`\n${tradutor(op.idioma?.() ?? 'pt')('… saída cortada (mais de 500 mil caracteres)')}\n`)
+      escreverBruto(`\n${t('… saída cortada (mais de 500 mil caracteres)')}\n`)
       corTexto = cor
       return
     }
+    cons.contar(texto)
     escreverBruto(texto)
+  }
+  /** Erros em vermelho: "linha N" (Portugol, clang, C#, traceback do Python) vira link para a linha do editor. */
+  function anexar(span, parte) {
+    if (!span.classList.contains('saida-erro')) return span.append(parte)
+    for (const p of dividirLinhas(parte)) span.append(p.linha ? cons.linkLinha(p) : p.texto)
   }
   function escreverBruto(texto) {
     const campo = tela.querySelector('.console-entrada')
@@ -163,15 +196,15 @@ export function criarExecucao(op) {
       }
       if (!parte) return
       const ultimo = campo ? campo.previousElementSibling : tela.lastElementChild
-      if (ultimo && ultimo.tagName === 'SPAN' && ultimo.dataset.cor === corTexto) ultimo.append(parte)
+      if (ultimo && ultimo.tagName === 'SPAN' && ultimo.dataset.cor === corTexto) anexar(ultimo, parte)
       else {
         const span = document.createElement('span')
         span.dataset.cor = corTexto
-        span.style.color = corTexto
-        // classe semântica (só os temas novos a estilizam); vermelho = erro, amarelo = aviso
+        if (corTexto !== CORES.BRANCO) span.style.color = corTexto // o branco padrão é a cor do tema do console
+        // classe semântica; vermelho = erro, amarelo = aviso
         if (corTexto === CORES.VERMELHO) span.className = 'saida-erro'
         else if (corTexto === CORES.AMARELO) span.className = 'saida-aviso'
-        span.textContent = parte
+        anexar(span, parte)
         tela.insertBefore(span, campo)
       }
     })
@@ -184,17 +217,37 @@ export function criarExecucao(op) {
     else tela.style.background = valor
   }
 
+  /** O campo cresce com o texto; ↑/↓ percorrem o que foi digitado antes nesta sessão do app. */
+  function ligarCampo(campo) {
+    campo.size = 1
+    campo.autocomplete = 'off'
+    campo.spellcheck = false
+    const ajustar = () => { campo.size = Math.max(1, campo.value.length + 1) }
+    campo.addEventListener('input', ajustar)
+    campo.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      e.preventDefault()
+      const valor = e.key === 'ArrowUp' ? cons.historico.anterior(campo.value) : cons.historico.proximo()
+      if (valor === null) return
+      campo.value = valor
+      ajustar()
+      campo.setSelectionRange(valor.length, valor.length)
+    })
+  }
+
   function pedirEntrada() {
     const campo = document.createElement('input')
     campo.className = 'console-entrada'
     campo.setAttribute('aria-label', 'Entrada de dados do leia')
-    campo.style.color = corTexto
-    campo.size = 1
-    campo.addEventListener('input', () => { campo.size = Math.max(1, campo.value.length + 1) })
+    if (corTexto !== CORES.BRANCO) campo.style.color = corTexto
+    ligarCampo(campo)
+    cons.estadoAtual('aguardando')
     campo.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault()
         const valor = campo.value
+        cons.historico.adicionar(valor)
+        cons.estadoAtual('rodando')
         campo.remove()
         status.mensagem(' MENSAGEM: Executando o algoritmo...')
         // Fora do Portugol, o eco é do terminal (o Portugol escreve ele mesmo).
@@ -220,12 +273,15 @@ export function criarExecucao(op) {
     tela.style.background = ''
     corTexto = CORES.BRANCO
     consoleEl.hidden = false
+    cons.comecar() // cabeçalho, relógio e, se for o caso, a janela própria
   }
 
   function fecharConsole() {
     if (consoleEl.hidden) return
     visualizacao.textContent = tela.textContent
     consoleEl.hidden = true
+    cons.aoEsconder()
+    window.focus()
     editor.focar()
   }
 
@@ -327,16 +383,29 @@ export function criarExecucao(op) {
 
   // ---- ciclo de execução ----------------------------------------------------------
 
-  function terminou(estadoFinal, erro) {
+  /** Resumo do erro no console, com "Erro na linha N" clicável (se a saída ainda não mostrou os erros em vermelho). */
+  function resumoDoErro(erro) {
+    const span = document.createElement('span')
+    span.className = 'saida-erro'
+    span.dataset.cor = CORES.VERMELHO
+    if (erro.linha > 0) span.append(cons.linkLinha({ texto: t('Erro na linha {0}', erro.linha), linha: erro.linha }), ': ')
+    span.append(`${erro.mensagem}\n`)
+    tela.append(span)
+  }
+
+  function terminou(estadoFinal, erro, codigo = 0) {
     editor.realcarExecucao(null)
     editor.somenteLeitura(false)
     tela.querySelector('.console-entrada')?.remove()
     const quebra = tela.textContent.endsWith('\n') || tela.textContent === '' ? '' : '\n'
     // Nas linguagens de programação (modo-codigo, main.js) o terminal fala inglês, como os de verdade.
     const ingles = document.body.classList.contains('modo-codigo')
-    if (estadoFinal === 'terminado') escreverBruto(`${quebra}\n${ingles ? 'Process finished with exit code 0' : TEXTOS.fimPrograma}`)
-    else if (estadoFinal === 'parado') escreverBruto(`${quebra}${ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario}`)
-    else if (estadoFinal === 'erro') escreverBruto(`${quebra}${ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro}`)
+    cons.estadoAtual({ terminado: 'finalizado', erro: 'erro' }[estadoFinal] ?? 'parado', { codigo: estadoFinal === 'erro' ? 1 : codigo, linha: erro?.linha })
+    if (quebra) escreverBruto(quebra)
+    if (estadoFinal === 'erro' && erro && !tela.querySelector('.saida-erro')) resumoDoErro(erro)
+    if (estadoFinal === 'terminado') cons.sistema(ingles ? `Process finished with exit code ${codigo}` : TEXTOS.fimPrograma, 'ok')
+    else if (estadoFinal === 'parado') cons.sistema(ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario)
+    else if (estadoFinal === 'erro') cons.sistema(ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro, 'erro')
     status.estado()
     status.mensagem(TEXTOS.rodapeConsole)
     op.aoMudarEstado(false)
@@ -372,13 +441,7 @@ export function criarExecucao(op) {
       arquivos: config.arquivos,
       perfil: true,
       onOutput: escrever,
-      onStep: ({ linha }) => {
-        editor.realcarExecucao(linha)
-        if (sessao?.estado === 'pausado') {
-          status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
-          avisar('pausa', { linha })
-        }
-      },
+      onStep: aoPassar,
       onVariables: mostrarVariaveis,
       onWaitInput: pedirEntrada,
       onColor: mudarCor,
@@ -401,11 +464,11 @@ export function criarExecucao(op) {
     const campo = document.createElement('input')
     campo.className = 'console-entrada'
     campo.setAttribute('aria-label', 'Entrada do programa')
-    campo.size = 1
-    campo.addEventListener('input', () => { campo.size = Math.max(1, campo.value.length + 1) })
+    ligarCampo(campo)
     campo.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault()
+        cons.historico.adicionar(campo.value)
         const linha = `${campo.value}\n`
         campo.value = ''
         campo.size = 1
@@ -431,7 +494,7 @@ export function criarExecucao(op) {
       } else if (ev.parado) terminou('parado')
       else {
         if (ev.codigo) escrever(`${tela.textContent.endsWith('\n') ? '' : '\n'}(o programa terminou com o código ${ev.codigo})\n`)
-        terminou('terminado')
+        terminou('terminado', null, ev.codigo ?? 0)
       }
     }
   })
@@ -446,6 +509,7 @@ export function criarExecucao(op) {
     editor.realcarErro(null)
     editor.somenteLeitura(true)
     comecou()
+    cons.estadoAtual('compilando')
     status.estado(' Compilando ')
     status.mensagem(` MENSAGEM: Compilando com o clang…${modo === 'continuo' ? '' : ' (o passo a passo do C/C++ ainda vai chegar; o programa roda direto)'}`)
     corTexto = CORES.AMARELO
@@ -469,6 +533,7 @@ export function criarExecucao(op) {
       corTexto = CORES.BRANCO
     }
     processo.rodando = true
+    cons.estadoAtual('rodando')
     status.estado(' Executando ')
     status.mensagem(' MENSAGEM: Digite no console e tecle <Enter> para enviar ao programa (Esc para)')
     entradaContinua(id)
@@ -487,9 +552,10 @@ export function criarExecucao(op) {
     mostrarPainel('objetos')
   }
 
-  const aoPassar = ({ linha }) => {
+  function aoPassar({ linha }) {
     editor.realcarExecucao(linha)
     if (sessao?.estado === 'pausado') {
+      cons.estadoAtual('pausado')
       status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
       avisar('pausa', { linha })
     }
@@ -595,6 +661,7 @@ export function criarExecucao(op) {
     const { nome, diretorio } = op.paginaPHP?.() ?? {}
     const pedido = ++pedidosPHP
     consoleEl.hidden = true
+    cons.aoEsconder()
     mostrarMemoriaC(false)
     status.estado(' PHP ')
     const { url } = await api.php.definir({ fonte: editor.texto(), nome, diretorio })
@@ -713,16 +780,10 @@ export function criarExecucao(op) {
       timerMs: config.timerMs,
       breakpoints: editor.breakpoints(),
       onOutput: escrever,
-      onStep: ({ linha }) => {
-        editor.realcarExecucao(linha)
-        if (sessao?.estado === 'pausado') {
-      status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
-      avisar('pausa', { linha })
-    }
-      },
+      onStep: aoPassar,
       onMemory: (maq) => memoriaC.mostrar(maq),
       onWaitInput: () => pedirEntrada(),
-      onEnd: (estado, erro) => terminou(estado === 'limite' ? 'parado' : estado, erro),
+      onEnd: (estado, erro, codigo) => terminou(estado === 'limite' ? 'parado' : estado, erro, codigo),
     })
     status.estado(' Executando ')
     if (modo === 'passo') sessao.passo()
@@ -767,6 +828,7 @@ export function criarExecucao(op) {
     if (!sessao || sessao.terminado) return // compilando, ou rodando um programa compilado (F9 do C/C++)
     if (sessao.estado === 'pausado') {
       sessao.modo = modo
+      cons.estadoAtual('rodando')
       editor.realcarExecucao(null)
       if (modo === 'passo') sessao.passo()
       else sessao.continuar()
@@ -782,6 +844,22 @@ export function criarExecucao(op) {
     else status.mensagem(` MENSAGEM: ${TEXTOS.jaTerminado}`)
   }
 
+  /** Esc: fecha a página do PHP ou o console (depois que o programa termina). Devolve true se tratou a tecla. */
+  function teclaEscape() {
+    if (previa.visivel) {
+      fecharPrevia()
+      status.estado()
+      status.mensagem('')
+      return true
+    }
+    if (!emExecucao() && !consoleEl.hidden) {
+      fecharConsole()
+      status.mensagem('')
+      return true
+    }
+    return false
+  }
+
   return {
     iniciar,
     parar,
@@ -794,26 +872,16 @@ export function criarExecucao(op) {
     fecharConsole,
     /** Esc: fecha o console depois que o programa termina. */
     aoEditar,
-    teclaEsc() {
-      if (previa.visivel) {
-        fecharPrevia()
-        status.estado()
-        status.mensagem('')
-        return true
-      }
-      if (!emExecucao() && !consoleEl.hidden) {
-        fecharConsole()
-        status.mensagem('')
-        return true
-      }
-      return false
-    },
+    teclaEsc: teclaEscape,
+    /** O console moderno (janela própria, estado) para quem precisa mexer nele de fora: testes e comandos. */
+    console: cons,
     atualizarBreakpoints(linhas) {
       if (sessao && !sessao.terminado) sessao.breakpoints = new Set(linhas)
     },
     restaurar() {
       if (emExecucao()) parar()
       consoleEl.hidden = true
+      cons.aoEsconder()
       fecharPrevia()
       mostrarMemoriaC(false)
       corpoGrade.replaceChildren()

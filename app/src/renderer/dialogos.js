@@ -275,9 +275,15 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     ['segundoPlano', 'Deixar em segundo plano'],
     ['fechar', 'Fechar o MisterALG'],
   ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.aoFechar ?? 'perguntar') })))
+  const consoleJanela = el('select', { id: 'cfg-console-janela' }, ...[
+    ['auto', 'Automático'],
+    ['sim', 'Sim'],
+    ['nao', 'Não'],
+  ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.consoleEmJanela === true ? 'sim' : prefs.consoleEmJanela === false ? 'nao' : 'auto') })))
   const abaSistema = el('div', { className: 'aba-conteudo', hidden: true },
     linhaToggle(aoLigar, 'Abrir quando o computador ligar', 'O MisterALG já abre sozinho quando você liga o computador.', 'Desligado'),
     linha('Ao fechar a janela:', aoFechar, 'Em segundo plano, a janela some mas o programa segue aberto perto do relógio; clique no ícone para voltar.', null, 'Perguntar'),
+    linha('Console em janela própria:', consoleJanela, 'Automático abre o console numa janela à parte na disposição clássica e no painel inferior na moderna. Sim abre sempre numa janela própria; Não mantém sempre no painel.', null, 'Automático'),
   )
   // ---- aba Barra: posição, tamanho dos ícones e quais botões aparecem (prévia ao vivo; Cancelar desfaz) ----
   const selecao = (opcoes, atual) => el('select', {}, ...opcoes.map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === atual })))
@@ -437,6 +443,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     entidade: entidade.value,
     abrirAoLigar: aoLigar.checked,
     aoFechar: aoFechar.value,
+    consoleEmJanela: { sim: true, nao: false }[consoleJanela.value] ?? null,
     ...valoresBarra(),
     conta: { nome: nomeConta.value.trim() },
   }
