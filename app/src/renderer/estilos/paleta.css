@@ -29,3 +29,30 @@
 .paleta-rodape { display: flex; gap: 16px; padding: 9px 14px; border-top: 1px solid var(--borda); background: var(--cabecalho); color: var(--detalhe); font-size: 12px; }
 .paleta-rodape kbd { padding: 1px 5px; border-radius: 4px; border: 1px solid var(--borda); background: var(--fundo-campo); font: 11px var(--fonte-codigo); }
 @media (prefers-reduced-motion: reduce) { .paleta { animation: none; } }
+
+/* Menu "/" do editor (editor/menu-barra.js): cartão flutuante ancorado no cursor, nas cores do tema. */
+.barra-menu {
+  position: fixed; z-index: 8500; box-sizing: border-box; max-height: min(380px, 60vh); display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--borda); border-radius: max(var(--raio), 8px); background: var(--fundo-campo); color: var(--texto);
+  font: 13px/1.3 var(--fonte-ui); box-shadow: 0 12px 36px rgb(0 0 0 / .28); padding: 6px;
+  animation: paleta-entrar .12s ease-out;
+}
+.barra-titulo { padding: 6px 8px 4px; font: 600 11.5px/1.2 var(--fonte-ui); color: var(--detalhe); }
+.barra-lista { overflow-y: auto; scrollbar-width: thin; }
+.barra-item { display: flex; align-items: center; gap: 12px; padding: 6px 8px; border-radius: max(calc(var(--raio) - 2px), 4px); cursor: pointer; }
+.barra-item[aria-selected="true"] { background: var(--destaque); color: var(--fundo-campo); }
+.barra-ico {
+  flex: none; display: grid; place-items: center; inline-size: 40px; block-size: 40px; box-sizing: border-box; overflow: hidden;
+  border: 1px solid var(--borda); border-radius: max(calc(var(--raio) - 2px), 4px); background: var(--cabecalho); color: var(--destaque);
+  font: 700 12px/1 var(--fonte-codigo);
+}
+.barra-item[aria-selected="true"] .barra-ico { border-color: transparent; background: rgb(255 255 255 / .2); color: inherit; }
+.barra-txt { min-inline-size: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; text-align: start; }
+.barra-nome { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barra-desc { color: var(--detalhe); font-size: 12px; line-height: 1.3; }
+.barra-previa {
+  margin-block-start: 3px; font: 11px/1.35 var(--fonte-codigo); color: var(--detalhe); white-space: pre; overflow: hidden; text-overflow: ellipsis; direction: ltr; text-align: left;
+}
+.barra-item[aria-selected="true"] .barra-desc, .barra-item[aria-selected="true"] .barra-previa { color: inherit; opacity: .85; }
+.barra-vazio { padding: 16px 10px; text-align: center; color: var(--detalhe); }
+@media (prefers-reduced-motion: reduce) { .barra-menu { animation: none; } }

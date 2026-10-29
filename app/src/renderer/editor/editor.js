@@ -27,6 +27,7 @@ import { tags as t } from '@lezer/highlight'
 import { FUNCOES, PALAVRAS_CHAVE, normalizar } from '@misteralg/interpreter'
 import { corrigirIndentacao } from './indentacao.js'
 import { MODELOS, SUGESTOES, cabecalho, expandir } from './modelos.js'
+import { menuBarra } from './menu-barra.js'
 
 // ---- realce de sintaxe (cores do VISUALG30.INI padrão) ----------------------
 
@@ -291,6 +292,7 @@ export function criarEditor(parent, op) {
         highlightSelectionMatches(),
         linguagem.of(EXTENSOES.portugol()),
         autocompletion({ override: [(c) => fonteCtrlJ(c, linguagemAtual)], activateOnTyping: false, icons: false }),
+        menuBarra({ ativo: () => op.prefs().menuBarra !== false, linguagem: () => linguagemAtual, t: op.t }),
         aparencia.of(temaFonte(prefs0)),
         somenteLeitura.of([]),
         keymap.of([

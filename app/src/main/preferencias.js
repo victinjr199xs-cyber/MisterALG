@@ -16,6 +16,7 @@ export const PADRAO = {
   numerarLinhas: true,
   tema: 'hibrido-claro', // ids em ../compartilhado/temas.js
   coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
+  menuBarra: true, // menu "/" no começo da linha do editor (renderer/editor/menu-barra.js)
   mostrarDicas: true, // dica do dia ao abrir
   tutorialVisto: false, // o tutorial já foi oferecido (renderer/tutorial.js); quem atualiza o app também recebe a oferta uma vez
   abertura: true, // animação de abertura (main/abertura.js)
@@ -24,6 +25,8 @@ export const PADRAO = {
   disposicao: 'moderna', // 'classica' (molduras do VisuAlg) ou 'moderna' (trilho de linguagens, painéis; renderer/disposicao.js)
   alturaPainel: 0, // altura do painel inferior (Terminal/Problemas) na disposição moderna; 0 = automática
   colunaRecolhida: null, // coluna de arquivos da disposição moderna: null = segue a largura da janela; true/false = escolha do usuário
+  consoleEmJanela: null, // console numa janela própria: null = automático (sim na disposição clássica, não na moderna), true ou false (renderer/console.js)
+  janelaConsole: null, // { x, y, width, height } da janela do console, lembrados ao fechar/mover (main/janelas.js)
   posicaoBarra: 'topo', // barra de ferramentas: 'topo' (clássico) ou 'lateral' (compartilhado/barra.js)
   tamanhoIcones: 'medio', // 'pequeno', 'medio' ou 'grande'
   botoesOcultos: [], // data-id dos botões tirados da barra (os essenciais nunca saem)
