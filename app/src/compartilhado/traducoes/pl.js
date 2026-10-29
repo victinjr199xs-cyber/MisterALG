@@ -888,6 +888,8 @@ export default {
   1562: "Próbuje wykonać i obsługuje błąd, jeśli wystąpi",
   1563: "Bloki kodu",
   1564: "Nie znaleziono bloku",
+  1600: "Menu \"/\" w edytorze",
+  1601: "Wpisanie \"/\" na początku wiersza otwiera listę bloków kodu (warunki, pętle, funkcje) do wstawienia.",
   1500: "Uruchomiony",
   1501: "Czeka na dane",
   1502: "Zakończono w {0} · kod {1}",

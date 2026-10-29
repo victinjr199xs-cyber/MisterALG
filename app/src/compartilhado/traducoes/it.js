@@ -888,6 +888,8 @@ export default {
   1562: "Prova a eseguire e gestisce l’errore, se c’è",
   1563: "Blocchi di codice",
   1564: "Nessun blocco trovato",
+  1600: "Menu \"/\" nell'editor",
+  1601: "Digitare \"/\" a inizio riga apre l'elenco dei blocchi di codice (se, cicli, funzioni) da inserire.",
   1500: "In esecuzione",
   1501: "In attesa di input",
   1502: "Terminato in {0} · codice {1}",

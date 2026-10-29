@@ -256,12 +256,14 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     confirmacao,
   )
 
+  const menuBarraCx = el('input', { type: 'checkbox', id: 'cfg-menu-barra', checked: prefs.menuBarra !== false })
   const abaEditor = el('div', { className: 'aba-conteudo' },
     linha('Tema (cores da tela):', tema, 'Escolhe as cores de toda a janela e do código; dá para trocar a qualquer hora.', null, 'Híbrido claro'),
     linha('Disposição da tela:', disposicao, 'Clássica imita o VisuAlg; a moderna traz linguagens à esquerda, memória à direita e painel embaixo.', null, 'Moderna'),
     linha('Fonte:', fonte, 'Letra usada no editor de código; as de largura fixa deixam o texto alinhado.', null, 'a do sistema'),
     linha('Tamanho:', tamanho, 'Tamanho da letra do editor, em pontos.', null, '13'),
     linha('Largura da Tabulação (colunas):', tab, 'Quantos espaços a tecla Tab usa para recuar o código.', tabValor, '3'),
+    linhaToggle(menuBarraCx, 'Menu "/" no editor', 'Digitar "/" no começo de uma linha abre a lista de blocos de código (se, laços, funções) para inserir.', 'Ligado'),
   )
   const abaPessoal = el('div', { className: 'aba-conteudo', hidden: true },
     linha('Disciplina:', disciplina, 'Nome da matéria; entra no cabeçalho dos algoritmos novos e na abreviatura "#".'),
@@ -442,6 +444,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     professor: professor.value,
     entidade: entidade.value,
     abrirAoLigar: aoLigar.checked,
+    menuBarra: menuBarraCx.checked,
     aoFechar: aoFechar.value,
     consoleEmJanela: { sim: true, nao: false }[consoleJanela.value] ?? null,
     ...valoresBarra(),

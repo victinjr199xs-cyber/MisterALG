@@ -889,6 +889,8 @@ export default {
   1562: "Essaie d’exécuter et gère l’échec, le cas échéant",
   1563: "Blocs de code",
   1564: "Aucun bloc trouvé",
+  1600: "Menu \"/\" dans l'éditeur",
+  1601: "Taper \"/\" au début d'une ligne ouvre la liste des blocs de code (si, boucles, fonctions) à insérer.",
   1500: "En cours d'exécution",
   1501: "En attente de saisie",
   1502: "Terminé en {0} · code {1}",

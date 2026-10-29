@@ -943,6 +943,8 @@ export default {
   1562: "Tenta executar e trata a falha, se houver",
   1563: "Blocos de código",
   1564: "Nenhum bloco encontrado",
+  1600: "Menu \"/\" no editor",
+  1601: "Digitar \"/\" no começo de uma linha abre a lista de blocos de código (se, laços, funções) para inserir.",
   1500: "Executando",
   1501: "Aguardando entrada",
   1502: "Finalizado em {0} · código {1}",

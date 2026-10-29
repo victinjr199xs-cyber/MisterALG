@@ -888,6 +888,8 @@ export default {
   1562: "Probeert uit te voeren en verwerkt de fout, indien aanwezig",
   1563: "Codeblokken",
   1564: "Geen blok gevonden",
+  1600: "\"/\"-menu in de editor",
+  1601: "Een \"/\" typen aan het begin van een regel opent een lijst met codeblokken (als, lussen, functies) om in te voegen.",
   1500: "Wordt uitgevoerd",
   1501: "Wacht op invoer",
   1502: "Klaar in {0} · code {1}",

@@ -869,6 +869,8 @@ export default {
   1562: "Mencoba menjalankan dan menangani kegagalan, jika ada",
   1563: "Blok kode",
   1564: "Blok tidak ditemukan",
+  1600: "Menu \"/\" di editor",
+  1601: "Mengetik \"/\" di awal baris membuka daftar blok kode (jika, perulangan, fungsi) untuk disisipkan.",
   1500: "Berjalan",
   1501: "Menunggu masukan",
   1502: "Selesai dalam {0} · kode {1}",

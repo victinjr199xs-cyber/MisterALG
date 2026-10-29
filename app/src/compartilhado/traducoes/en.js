@@ -888,6 +888,8 @@ export default {
   1562: "Tries to run and handles the failure, if any",
   1563: "Code blocks",
   1564: "No block found",
+  1600: "\"/\" menu in the editor",
+  1601: "Typing \"/\" at the start of a line opens a list of code blocks (if, loops, functions) to insert.",
   1500: "Running",
   1501: "Waiting for input",
   1502: "Finished in {0} · code {1}",

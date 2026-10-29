@@ -868,6 +868,8 @@ export default {
   1562: "Thử chạy và xử lý lỗi nếu có",
   1563: "Khối mã",
   1564: "Không tìm thấy khối nào",
+  1600: "Menu \"/\" trong trình soạn thảo",
+  1601: "Gõ \"/\" ở đầu dòng sẽ mở danh sách các khối mã (điều kiện, vòng lặp, hàm) để chèn.",
   1500: "Đang chạy",
   1501: "Đang chờ nhập",
   1502: "Hoàn tất sau {0} · mã {1}",

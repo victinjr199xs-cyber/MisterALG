@@ -3,17 +3,50 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
-## [Não lançado]
+## [1.12.0] — 2026-10-28
 
-### Novidades
+### Visual novo
+
+- **Disposição Moderna** (agora o padrão) e **tema Híbrido claro** (também o padrão). O "VisuAlg Clássico" continua
+  nas Configurações, com a mesma cara de sempre.
+- **Temas novos**: Noite, Papel e Híbrido, claro e escuro, com fontes Inter e JetBrains Mono embutidas (funcionam sem internet).
+- **Na disposição Moderna**: trilho de linguagens à esquerda (Pt, C#, JS...), lista de recentes e exemplos, cabeçalho
+  da página com o nome do arquivo, abas Terminal e Problemas (clicar num problema leva à linha), "Passo N" no F8 e
+  vetores da memória em caixinhas com valor e índice.
+- **Console moderno**: selo de estado (executando, aguardando, finalizado), histórico do `leia`, linha de erro clicável,
+  rodapé com o tempo e janela própria (Configurações > Sistema).
+- **Configurações em estilo menu de jogo**: cada opção tem uma explicação e o valor padrão no painel de ajuda.
+- **Tela inicial nova**, com saudação, cartões de atalho e aviso de atualização.
+- **Paleta de comandos** (Ctrl+K): digite o que quer fazer e ela acha o comando.
+- **Menu "/" no editor**: digite "/" no começo de uma linha e escolha um bloco pronto (se, laços, funções, leia...).
+  Dá para desligar em Configurações > Editor.
+
+### Barra, conta e ícones
 
 - **Ícones novos** na barra de ferramentas: traço simples, que acompanha as cores de cada tema (claro ou escuro).
+- **Barra no topo ou na lateral**, com os botões principais sempre à vista e o painel ⋯ para o resto.
 - **Barra na lateral**: em Configurações > Barra você escolhe se a barra fica no topo (como sempre foi) ou numa coluna
   ao lado, e vê o resultado na hora. Também dá para mudar o tamanho dos ícones e esconder os botões que você não usa
   (os essenciais, como Executar e Passo a passo, ficam sempre). Tem o botão "Restaurar barra padrão".
 - **Conta**: em Configurações > Conta você coloca seu nome e uma foto (PNG, JPG ou WEBP de até 5 MB). A foto fica só
   no seu computador. Sem foto, aparecem as iniciais do nome. O avatar aparece na barra e na tela inicial.
 - O tutorial pula o passo de um botão que você escondeu.
+
+### Correções (auditoria)
+
+- **Parar** funciona também no SQL e no timer.
+- **Recuperação após queda**: o programa em edição volta mesmo se você abriu outro arquivo antes.
+- O console tem **limite de saída**, para um laço infinito não travar o computador.
+- **Gravação segura** das preferências, das chaves do assistente e do arquivo de recuperação (sem arquivos pela metade).
+- O comando `arquivo` só mexe na **pasta do algoritmo** e em Documentos.
+- Arquivos **recentes** só somem da lista se o arquivo realmente não existe mais.
+- **Exportar** (Pascal, C, Java) avisa quando dá erro.
+- No C, recursão profunda demais agora mostra uma **mensagem de limite** em vez de travar.
+- Os instaladores só saem se a **tag bate com a versão** (conferido no CI).
+- Dependências que não eram usadas foram removidas.
+- **Abrir quando o computador ligar** também funciona no Linux.
+- O app automatizado (testes) nunca procura atualização na internet, e a interface não carrega nada da rede.
+- O ícone do menu "/" não fica mais cortado e o "localizar" seleciona o texto de forma confiável.
 
 ## [1.11.0] — 2026-10-28
 

@@ -885,6 +885,8 @@ export default {
   1562: "Çalıştırmayı dener ve varsa hatayı yönetir",
   1563: "Kod blokları",
   1564: "Blok bulunamadı",
+  1600: "Düzenleyicide \"/\" menüsü",
+  1601: "Satırın başına \"/\" yazmak, eklenecek kod bloklarının (koşul, döngü, fonksiyon) listesini açar.",
   1500: "Çalışıyor",
   1501: "Girdi bekleniyor",
   1502: "{0} içinde bitti · kod {1}",

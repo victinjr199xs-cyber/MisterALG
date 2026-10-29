@@ -170,7 +170,8 @@ async function verificarMenusEDialogos({ avaliar, esperar }) {
   await avaliar(`void ${M}.comandos.localizar()`)
   await esperar(200)
   await avaliar(`(() => { const d = document.querySelector('dialog[open]'); d.querySelector('input').value = 'inicio'; [...d.querySelectorAll('.janela-acoes button')].find((b) => b.textContent === 'OK').click() })()`)
-  await esperar(300)
+  // o diálogo fecha num evento assíncrono: espera a seleção aparecer (máquina ocupada demora mais que 300 ms)
+  for (let i = 0; i < 20 && !(await avaliar(`${M}.editor.textoSelecionado()`)); i += 1) await esperar(250)
   conferir('localizar seleciona o texto achado', await avaliar(`${M}.editor.textoSelecionado()`), 'inicio')
 
   // Linhas numeradas liga/desliga e volta
@@ -203,7 +204,7 @@ async function verificarArquivos({ avaliar, esperar }) {
     conferir('editar marca como modificado', await avaliar(`${M}.doc.modificado`), true)
     conferir('título da janela mostra a modificação', /modificado/i.test(await avaliar(`document.querySelector('#st-estado').textContent`)), true)
     await avaliar(`void ${M}.comandos.salvar()`)
-    await esperar(500)
+    for (let i = 0; i < 20 && (await avaliar(`${M}.doc.modificado`)); i += 1) await esperar(250) // gravar no disco pode demorar com a máquina ocupada
     conferir('salvar: não fica modificado', await avaliar(`${M}.doc.modificado`), false)
     conferir('salvar: o arquivo em disco foi atualizado', /\/\/ novo/.test(readFileSync(arquivo, 'latin1')), true)
     const inexistente = await avaliar(`window.misteralg.arquivo.abrirCaminho(${JSON.stringify(join(pasta, 'nao-existe.alg'))})`)

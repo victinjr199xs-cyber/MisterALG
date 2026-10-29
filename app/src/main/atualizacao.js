@@ -23,6 +23,8 @@ export const instalaSozinho = () =>
 export async function procurar() {
   // Só para testar a tela da atualização sem publicar uma versão nova.
   const atual = process.env.MISTERALG_VERSAO_TESTE || app.getVersion()
+  // Execução automatizada (pasta de dados própria, sem simulação de versão): nunca sai para a rede.
+  if (process.env.MISTERALG_DADOS && !process.env.MISTERALG_VERSAO_TESTE) return { atual }
   try {
     const r = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, { headers: { accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(10000) })
     if (!r.ok) return { erro: `GitHub respondeu ${r.status}` }

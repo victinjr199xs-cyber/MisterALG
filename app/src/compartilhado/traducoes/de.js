@@ -888,6 +888,8 @@ export default {
   1562: "Versucht auszuführen und behandelt den Fehler, falls vorhanden",
   1563: "Codeblöcke",
   1564: "Kein Block gefunden",
+  1600: "\"/\"-Menü im Editor",
+  1601: "Die Eingabe von \"/\" am Zeilenanfang öffnet eine Liste von Codeblöcken (Bedingung, Schleifen, Funktionen) zum Einfügen.",
   1500: "Läuft",
   1501: "Wartet auf Eingabe",
   1502: "Beendet nach {0} · Code {1}",

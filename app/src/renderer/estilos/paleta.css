@@ -38,8 +38,9 @@
   animation: paleta-entrar .12s ease-out;
 }
 .barra-titulo { padding: 6px 8px 4px; font: 600 11.5px/1.2 var(--fonte-ui); color: var(--detalhe); }
-.barra-lista { overflow-y: auto; scrollbar-width: thin; }
-.barra-item { display: flex; align-items: center; gap: 12px; padding: 6px 8px; border-radius: max(calc(var(--raio) - 2px), 4px); cursor: pointer; }
+.barra-lista { min-block-size: 0; overflow-y: auto; scrollbar-width: thin; scroll-padding-block: 4px; }
+/* ícone no topo do item: se o item aparece pela metade no fim da lista, o ícone não fica cortado ao meio */
+.barra-item { display: flex; align-items: flex-start; gap: 12px; padding: 6px 8px; border-radius: max(calc(var(--raio) - 2px), 4px); cursor: pointer; }
 .barra-item[aria-selected="true"] { background: var(--destaque); color: var(--fundo-campo); }
 .barra-ico {
   flex: none; display: grid; place-items: center; inline-size: 40px; block-size: 40px; box-sizing: border-box; overflow: hidden;
