@@ -64,6 +64,10 @@ const janelaVisivel = (pid) => Number(ps(`Add-Type '${CS}'; [JV]::N(${pid})`)) >
 const aguardarSaida = async (pid) => { for (let i = 0; i < 24 && vivo(pid); i += 1) await pausa(500) }
 const matar = (f) => { try { ps(`Stop-Process -Id ${f.pid} -Force -ErrorAction SilentlyContinue`) } catch { /* já saiu */ } }
 
+/** Volta à tela inicial (o X dentro da IDE faz isto) e espera a página 'inicio' carregar. */
+const naInicio = async () => { for (let i = 0; i < 30; i += 1) { try { if ((await alvo()).url.includes('inicio')) return true } catch { /* recarregando */ } await pausa(500) } return false }
+const irParaInicio = async () => { void avaliar("window.__misteralg.comandos['tela-inicial']()"); await naInicio(); await pausa(1500) }
+
 const base = `D:\\temp-misteralg-dados\\sistema-${Date.now()}`
 
 let n = 0
@@ -80,6 +84,21 @@ try {
   let dados = pasta({ aoFechar: 'segundoPlano' })
   let app = iniciar(dados)
   await alvo(); await pausa(2500)
+  // 0. Dentro da IDE o X NÃO oferece fechar/segundo plano: volta para a tela inicial (sem alterações, sem pergunta).
+  console.log('--- X na IDE')
+  // Com o documento modificado: o X pergunta se salva (fica na IDE, com a pergunta aberta); depois Não salvar leva à tela inicial.
+  await avaliar("window.__misteralg.editor.view?.dispatch?.({ changes: { from: 0, insert: 'x' } }); true")
+  await avaliar("window.__misteralg.doc.modificado = true")
+  clicarNoX(app.pid); await pausa(2000)
+  conferir('X na IDE modificada pergunta antes de sair', !(await alvo()).url.includes('inicio') && (await avaliar("!!document.querySelector('dialog[open]')")) === true)
+  await avaliar("window.__misteralg.doc.modificado = false; document.querySelector('dialog[open]')?.dispatchEvent(new Event('cancel', { cancelable: true })); document.querySelector('dialog[open]')?.close(); true")
+  await pausa(500)
+  clicarNoX(app.pid)
+  conferir('X na IDE volta para a tela inicial', await naInicio())
+  await pausa(1500)
+  conferir('X na IDE não escondeu a janela', janelaVisivel(app.pid) === true && vivo(app.pid))
+  conferir('X na IDE não criou a bandeja', !app.saida.includes('[bandeja] criada'))
+  // X na tela inicial: aplica aoFechar (segundo plano).
   clicarNoX(app.pid); await pausa(2500)
   conferir('processo continua vivo', vivo(app.pid))
   conferir('bandeja criada', app.saida.includes('[bandeja] criada'))
@@ -90,9 +109,16 @@ try {
   conferir('segunda instância saiu sozinha', !vivo(segunda.pid))
   await pausa(1000)
   conferir('janela voltou (second-instance)', janelaVisivel(app.pid) === true)
-  // 3. de novo em segundo plano e "Sair" da bandeja = o mesmo que o 'sair' vindo do main.
+  // 3. de novo em segundo plano e "Sair" da bandeja = o mesmo que o 'sair' vindo do main (testado na IDE).
+  void avaliar("window.misteralg.janela.pagina({ pagina: 'ide' })")
+  for (let i = 0; i < 30 && (await alvo()).url.includes('inicio'); i += 1) await pausa(500)
+  await pausa(2000)
+  conferir('IDE aberta de novo', !(await alvo()).url.includes('inicio'))
+  await irParaInicio()
   clicarNoX(app.pid); await pausa(2000)
   conferir('voltou ao segundo plano', janelaVisivel(app.pid) === false)
+  void avaliar("window.misteralg.janela.pagina({ pagina: 'ide' })")
+  await pausa(3500)
   // (o menu da bandeja é nativo; o item "Sair" faz mostrarJanela() + menu 'sair' direto, simulado aqui)
   void avaliar("window.__misteralg.comandos.sair({ direto: true })")
   await aguardarSaida(app.pid)
@@ -104,6 +130,7 @@ try {
   dados = pasta({ aoFechar: 'fechar' })
   app = iniciar(dados)
   await alvo(); await pausa(2500)
+  await irParaInicio() // o X só fecha de verdade na tela inicial
   clicarNoX(app.pid); await aguardarSaida(app.pid)
   conferir('processo encerrou', !vivo(app.pid))
   matar(app)

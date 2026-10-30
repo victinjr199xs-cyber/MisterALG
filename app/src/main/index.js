@@ -505,6 +505,10 @@ app.whenReady().then(() => {
     if (saindoDoApp || (process.env.MISTERALG_DADOS && !process.env.MISTERALG_TESTE_SISTEMA)) {
       saindoDoApp = false // se o aluno cancelar o "salvar?", o próximo X volta a perguntar
       janela.webContents.send('menu', 'sair')
+    } else if (!naInicio) {
+      // Dentro da IDE o X só volta para a tela inicial (pergunta se salva as abas modificadas); fechar/segundo plano é na tela inicial.
+      mostrarJanela()
+      janela.webContents.send('menu', 'tela-inicial')
     } else void aoClicarEmFechar()
   })
   janela.on('session-end', () => { saindoDoApp = true }) // Windows desligando

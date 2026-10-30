@@ -360,7 +360,7 @@ body.barra-lateral .botao.avatar { margin: 2px 0 0; flex-shrink: 0; }
 /* Painel "⋯" da lateral: os botões restantes em grade e os campos com rótulo, em tamanho normal. */
 .barra-mais {
   position: fixed; z-index: 30;
-  box-sizing: border-box; width: 280px; padding: 6px; overflow: hidden auto;
+  box-sizing: border-box; width: 292px; padding: 6px; overflow: hidden auto;
   border: 1px solid var(--borda); border-radius: 4px;
   background: var(--fundo-janela); color: var(--texto);
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
@@ -369,9 +369,9 @@ body.barra-lateral .botao.avatar { margin: 2px 0 0; flex-shrink: 0; }
 .barra-mais:focus { outline: none; }
 .barra-mais-lista { display: flex; flex-wrap: wrap; gap: 2px; }
 .barra-mais .separador { display: none; }
-body.barra-compacta .barra-mais .campo-barra { flex: 1 0 100%; display: flex; flex-direction: row; align-items: center; gap: 6px; margin: 4px 0; font-size: 13px; }
-body.barra-compacta .barra-mais .campo-barra label { flex: 0 0 104px; }
-body.barra-compacta .barra-mais .campo-barra input, body.barra-compacta .barra-mais .campo-barra select { flex: 1; width: auto; min-width: 0; height: 24px; padding: 0 4px; font-size: 13px; }
+body.barra-compacta .barra-mais .campo-barra { flex: 1 0 100%; min-width: 0; box-sizing: border-box; display: flex; flex-direction: row; align-items: center; gap: 6px; margin: 4px 0; font-size: 13px; }
+body.barra-compacta .barra-mais .campo-barra label { flex: 0 0 112px; white-space: nowrap; }
+body.barra-compacta .barra-mais .campo-barra input, body.barra-compacta .barra-mais .campo-barra select { box-sizing: border-box; flex: 1 1 0; width: 0; min-width: 0; height: 24px; padding: 0 4px; font-size: 13px; }
 .so-painel { display: none; }
 .barra-mais .so-painel { display: block; }
 

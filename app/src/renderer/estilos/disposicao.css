@@ -16,7 +16,20 @@
   border-bottom: 1px solid var(--borda); box-shadow: none;
   background: var(--moldura-editor);
 }
-:root[data-disposicao="moderna"] body .barra .botao.avatar { display: none; } /* a conta mora na faixa de guias */
+:root[data-disposicao="moderna"] body:not(.barra-lateral) .barra .botao.avatar { display: none; } /* a conta mora na faixa de guias */
+/* Barra lateral na moderna: coluna de ícones à esquerda (direita no árabe) ocupando a altura toda acima da barra de status;
+   a faixa de guias, o cabeçalho, o editor, o painel inferior e a memória ficam na coluna ao lado. A conta vai para o rodapé da coluna. */
+:root[data-disposicao="moderna"] body.barra-lateral {
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+:root[data-disposicao="moderna"] body.barra-lateral .barra {
+  grid-column: 1; grid-row: 1;
+  padding: 4px 2px; gap: 2px; align-items: center; min-inline-size: auto;
+  border-bottom: 0; border-inline-end: 1px solid var(--borda);
+}
+:root[data-disposicao="moderna"] body.barra-lateral main { grid-column: 2; grid-row: 1; }
+:root[data-disposicao="moderna"] body.barra-lateral .status { grid-column: 1 / -1; grid-row: 2; }
 :root[data-disposicao="moderna"] body main {
   grid-column: 1; grid-row: 2;
   display: grid; gap: 0; padding: 0; border: 0;

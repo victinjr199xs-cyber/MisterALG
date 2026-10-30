@@ -186,19 +186,20 @@ export function criarDisposicao(op) {
 
   return {
     /** 'moderna' monta (uma vez) e mostra; qualquer outro valor devolve tudo à disposição clássica. */
-    aplicar(d) {
+    aplicar(d, lateral = false) {
       const moderna = d === 'moderna'
-      if (moderna === ativa) return
-      ativa = moderna
+      if (moderna !== ativa) {
+        ativa = moderna
+        if (moderna) {
+          if (!montado) montar()
+          raiz.dataset.disposicao = 'moderna'
+        } else delete raiz.dataset.disposicao
+      }
+      // O MESMO botão da conta: canto da faixa de guias (moderna com a barra no topo) ou fim da barra (clássica / barra lateral).
+      if (montado) (moderna && !lateral ? op.fimFaixa : document.querySelector('#barra')).append(nos.barraConta())
       if (moderna) {
-        if (!montado) montar()
-        raiz.dataset.disposicao = 'moderna'
-        op.fimFaixa.append(nos.barraConta()) // o MESMO botão da conta passa para o canto da faixa de guias
         atualizar()
         nos.automatica?.()
-      } else {
-        delete raiz.dataset.disposicao
-        if (montado) document.querySelector('#barra').append(nos.barraConta())
       }
     },
     atualizar,

@@ -129,6 +129,7 @@ export default async ({ avaliar, esperar, foto, tecla, classico }) => {
   conferir('aba Conta aberta', await avaliar(`document.querySelector('dialog[open] .abas [aria-selected="true"]').textContent`), 'Conta')
   await botaoDoDialogo('Cancelar')
   await fechado()
+  console.log('diálogo da Conta fechado:', await avaliar(`!document.querySelector('#dialogos dialog')`))
 
   // capturas: tema claro (clássico) e escuro, topo e lateral, já com o nome
   for (const [tema, nome] of [['classico', 'classico'], ['escuro', 'escuro']]) {
@@ -140,6 +141,7 @@ export default async ({ avaliar, esperar, foto, tecla, classico }) => {
       await botaoDoDialogo('OK')
       await fechado()
       await esperar(300)
+      console.log('captura', nome, pos)
       await foto(`${pasta}/${nome}-${pos}-nome.png`)
       await foto(`${pasta}/v3-${nome}-${pos}${pos === 'lateral' ? '-fechada' : ''}.png`)
       if (pos === 'lateral') {

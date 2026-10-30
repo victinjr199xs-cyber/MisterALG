@@ -84,7 +84,10 @@ function abrirMenuTemas() {
   const lateral = document.body.classList.contains('barra-lateral')
   const topo = lateral ? r.top : r.bottom + 2
   menuTemas.style.top = `${Math.max(4, Math.min(topo, innerHeight - menuTemas.offsetHeight - 4))}px`
-  menuTemas.style.left = `${Math.max(4, Math.min(lateral ? r.right + 4 : r.left, innerWidth - menuTemas.offsetWidth - 4))}px`
+  const larg = menuTemas.offsetWidth
+  const rtl = document.documentElement.dir === 'rtl'
+  const esq = lateral ? (rtl ? r.left - larg - 4 : r.right + 4) : r.left // árabe: a barra fica à direita, o menu abre para a esquerda dela
+  menuTemas.style.left = `${Math.max(4, Math.min(esq, innerWidth - larg - 4))}px`
   botao.setAttribute('aria-expanded', 'true')
   menuTemas.querySelector('[aria-checked="true"]')?.focus()
 }
@@ -690,10 +693,9 @@ document.addEventListener('keydown', (e) => {
 
 /** Posição, tamanho dos ícones e botões ocultos. `p` pode ser só uma prévia (Configurações), sem gravar. */
 function aplicarBarra(p = prefs) {
-  disposicao.aplicar(p.disposicao)
-  // Na disposição moderna o trilho de linguagens ocupa a lateral: a barra fica sempre no topo (compacta).
   const moderna = p.disposicao === 'moderna'
-  const lateral = p.posicaoBarra === 'lateral' && !moderna
+  const lateral = p.posicaoBarra === 'lateral'
+  disposicao.aplicar(p.disposicao, lateral) // na moderna o avatar fica na faixa de guias (barra no topo) ou no rodapé da barra lateral
   // Compacta = só os botões principais na barra e o resto no painel "⋯" (lateral: ao lado; moderna: logo abaixo do botão, no topo).
   const compacta = lateral || moderna
   document.body.classList.toggle('barra-lateral', lateral)

@@ -7,6 +7,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Visual novo
 
+- **Barra de ferramentas na lateral também na disposição Moderna**: Configurações > Barra > Posição "Lateral" agora vale na moderna
+  (coluna de ícones à esquerda, à direita no árabe, com o painel "⋯" e o avatar da Conta no rodapé dela; no topo o avatar volta à faixa de abas).
+  O painel "⋯" e o menu de temas abrem ao lado da barra, sem sair da janela (inclusive no árabe), e os campos De/Até/Decimais do painel não ficam mais cortados.
+- **X da janela**: dentro da IDE só volta para a tela inicial (perguntando se salva as abas modificadas); o diálogo
+  "Fechar ou deixar em segundo plano" aparece apenas na tela inicial.
 - **Assistente de IA em pop-up**: o painel virou um cartão flutuante no canto inferior direito (não modal, sem fundo escurecido),
   que se arrasta pelo cabeçalho, redimensiona pelo canto, maximiza (duplo clique no cabeçalho também) e lembra posição e tamanho.
   Esc fecha; o foco vai para o campo de pergunta. Blocos de código das respostas ganharam Copiar e Inserir no editor.
