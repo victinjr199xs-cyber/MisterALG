@@ -924,4 +924,9 @@ export default {
   1686: "Panggilan memiliki nilai lebih banyak atau lebih sedikit daripada parameter pada deklarasi. Periksa jumlah dan urutannya.",
   1687: "Fungsi dan prosedur berada DI DALAM algoritma: pertama baris Algoritmo \"nama\", lalu bagian var, lalu subrutin (funcao ... fimfuncao, procedimento ... fimprocedimento), dan baru kemudian inicio program utama. Fungsi yang ditulis sebelum Algoritmo tidak diterima.",
   1688: "Setiap parameter ditulis sebagai nama: tipe, misalnya funcao dobro(n: real): real. Titik dua antara nama dan tipe hilang (dan, pada fungsi, tipe hasil setelah tanda kurung).",
+  1740: "Salin",
+  1741: "Sisipkan ke editor",
+  1742: "Maksimalkan",
+  1743: "Pulihkan",
+  1744: "Jalankan dengan F8 untuk melihat variabel di sini",
 }

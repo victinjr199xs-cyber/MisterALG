@@ -835,7 +835,6 @@ dialog.janela::backdrop { background: rgb(0 0 0 / 0.2); }
 #variaveis .grade-aviso { padding: 8px; color: var(--detalhe); font-style: italic; white-space: normal; }
 
 /* ---- Assistente de IA (assistente.js): terceira coluna da área ------------------ */
-main.com-assistente { grid-template-columns: minmax(300px, 50fr) minmax(220px, 30fr) minmax(280px, 380px); } /* soma dos mínimos cabe nos 900 px da janela */
 .assistente { background: var(--dialogo-fundo); }
 .assistente[hidden] { display: none; } /* o display:flex da .moldura venceria o atributo hidden */
 .assistente-topo { display: flex; align-items: center; gap: 2px; padding-right: 4px; }

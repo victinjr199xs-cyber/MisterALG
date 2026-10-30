@@ -104,12 +104,20 @@ export function criarExecucao(op) {
     emTutorial: () => op.emTutorial?.(),
   })
   const corpoGrade = document.querySelector('#variaveis tbody')
+  /** Grade sem variáveis: um convite no lugar das linhas (escondido no tema clássico, que mostra a grade vazia como o VisuAlg). */
+  const limparGrade = () => {
+    const tr = document.createElement('tr')
+    tr.className = 'memoria-vazia'
+    tr.append(Object.assign(document.createElement('td'), { colSpan: 4, textContent: 'Execute com F8 para ver as variáveis aqui' }))
+    corpoGrade.replaceChildren(tr)
+  }
 
   let sessao = null
   let corTexto = CORES.BRANCO
   let ultimoPerfil = null
   let linhasDoPerfil = []
   let valoresAnteriores = new Map()
+  limparGrade()
   let modoAtual = 'continuo'
 
   let processo = null // C/C++ compilado (F9), ou a preparação do passo a passo: { id, rodando, terminado }
@@ -333,6 +341,41 @@ export function criarExecucao(op) {
     return tr
   }
 
+  /** Matriz (M[1,2]...) como grade de células: linhas × colunas, com os índices na borda; a rolagem limita o tamanho. */
+  function linhaDeMatriz(g, mudouItem) {
+    const ordem = (lista, campo) => [...new Set(lista.map((it) => it[campo]))]
+    const linhas = ordem(g.itens, 'linha')
+    const colunas = ordem(g.itens, 'coluna')
+    const porPos = new Map(g.itens.map((it) => [`${it.linha},${it.coluna}`, it]))
+    const mk = (tag, texto, classe) => Object.assign(document.createElement(tag), { textContent: texto, className: classe ?? '' })
+    const tabela = document.createElement('table')
+    tabela.className = 'matriz'
+    const cabeca = document.createElement('tr')
+    cabeca.append(mk('th', ''), ...colunas.map((c) => mk('th', c)))
+    tabela.append(cabeca)
+    for (const l of linhas) {
+      const tr = document.createElement('tr')
+      tr.append(mk('th', l))
+      for (const c of colunas) {
+        const it = porPos.get(`${l},${c}`)
+        tr.append(mk('td', it?.valor ?? '', it && mudouItem(it) ? 'mudou' : ''))
+      }
+      tabela.append(tr)
+    }
+    const pilula = Object.assign(document.createElement('span'), { className: 'pilula-tipo', textContent: 'matriz' })
+    pilula.dataset.tipo = 'vetor'
+    const cab = document.createElement('div')
+    cab.className = 'vetor-cab'
+    cab.append(mk('span', g.escopo, 'vetor-escopo'), mk('b', `${g.base}[${linhas[0]}..${linhas.at(-1)}, ${colunas[0]}..${colunas.at(-1)}]`), pilula)
+    const rolagem = mk('div', '', 'matriz-rolagem')
+    rolagem.append(tabela)
+    const tr = document.createElement('tr')
+    tr.className = 'vetor-linha matriz-linha'
+    tr.append(Object.assign(document.createElement('td'), { colSpan: 4 }))
+    tr.firstChild.append(cab, rolagem)
+    return tr
+  }
+
   function mostrarVariaveis({ globais, locais }) {
     const linhas = [...globais, ...locais]
     const novos = new Map()
@@ -344,6 +387,14 @@ export function criarExecucao(op) {
     for (const v of linhas) {
       const chave = `${v.escopo}|${v.nome}`
       novos.set(chave, v.valor)
+      const m2 = agrupar ? /^(.+)\[([^\],]+),\s*([^\],]+)\]$/.exec(v.nome) : null
+      if (m2) {
+        const item = { linha: m2[2], coluna: m2[3], valor: v.valor, chave }
+        const ant = entradas.at(-1)
+        if (ant?.matriz && ant.escopo === v.escopo && ant.base === m2[1]) ant.itens.push(item)
+        else entradas.push({ matriz: true, escopo: v.escopo, base: m2[1], itens: [item] })
+        continue
+      }
       const m = agrupar ? /^(.+)\[([^\],]+)\]$/.exec(v.nome) : null
       if (!m) { entradas.push({ v, chave }); continue }
       const item = { indice: m[2], valor: v.valor, chave }
@@ -351,7 +402,14 @@ export function criarExecucao(op) {
       if (ant?.grupo && ant.escopo === v.escopo && ant.base === m[1]) ant.itens.push(item)
       else entradas.push({ grupo: true, escopo: v.escopo, base: m[1], tipo: v.tipo, itens: [item] })
     }
+    if (!entradas.length) { valoresAnteriores = novos; return limparGrade() }
     for (const e of entradas) {
+      if (e.matriz) {
+        const tr = linhaDeMatriz(e, (it) => mudouChave(it.chave, it.valor))
+        primeiraModificada ??= tr.querySelector('.mudou')
+        frag.append(tr)
+        continue
+      }
       if (e.grupo) {
         const tr = linhaDeVetor(e, (it) => mudouChave(it.chave, it.valor))
         primeiraModificada ??= tr.classList.contains('modificada') ? tr : tr.querySelector('.mudou')
@@ -449,7 +507,7 @@ export function criarExecucao(op) {
     const fonte = editor.texto()
     linhasDoPerfil = fonte.split('\n')
     valoresAnteriores = new Map()
-    corpoGrade.replaceChildren()
+    limparGrade()
     visualizacao.textContent = ''
     abrirConsole()
     editor.realcarErro(null)
@@ -914,7 +972,7 @@ export function criarExecucao(op) {
       cons.aoEsconder()
       fecharPrevia()
       mostrarMemoriaC(false)
-      corpoGrade.replaceChildren()
+      limparGrade()
       visualizacao.textContent = ''
       editor.realcarExecucao(null)
       editor.realcarErro(null)

@@ -943,4 +943,9 @@ export default {
   1686: "The call has more or fewer values than the declaration has parameters. Check the number and the order.",
   1687: "Functions and procedures go INSIDE the algorithm: first the line Algoritmo \"name\", then the var section, then the subroutines (funcao ... fimfuncao, procedimento ... fimprocedimento) and only then the inicio of the main program. A function written before Algoritmo is not accepted.",
   1688: "Each parameter is written as name: type, for example funcao dobro(n: real): real. The colon between the name and the type is missing (and, in a function, the result type after the parentheses).",
+  1740: "Copy",
+  1741: "Insert into editor",
+  1742: "Maximize",
+  1743: "Restore",
+  1744: "Run with F8 to see the variables here",
 }

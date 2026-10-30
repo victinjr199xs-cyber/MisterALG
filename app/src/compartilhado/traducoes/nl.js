@@ -943,4 +943,9 @@ export default {
   1686: "De aanroep heeft meer of minder waarden dan de declaratie parameters heeft. Controleer het aantal en de volgorde.",
   1687: "Functies en procedures staan BINNEN het algoritme: eerst de regel Algoritmo \"naam\", dan de sectie var, dan de subroutines (funcao ... fimfuncao, procedimento ... fimprocedimento) en pas daarna het inicio van het hoofdprogramma. Een functie vóór Algoritmo wordt niet geaccepteerd.",
   1688: "Elke parameter wordt geschreven als naam: type, bijvoorbeeld funcao dobro(n: real): real. De dubbele punt tussen naam en type ontbreekt (en bij een functie het resultaattype na de haakjes).",
+  1740: "Kopiëren",
+  1741: "In de editor invoegen",
+  1742: "Maximaliseren",
+  1743: "Herstellen",
+  1744: "Voer uit met F8 om hier de variabelen te zien",
 }

@@ -442,6 +442,8 @@ const assistente = criarAssistente({
     erro: ultimoErro,
     saida: $('#console-tela').textContent || $('#visualizacao').textContent,
   }),
+  t: (...a) => tradutor(prefs.idioma)(...a),
+  inserir: (texto) => editor.inserir(texto),
   aoMudar: (aberto) => $('[data-id="assistente"]')?.setAttribute('aria-pressed', String(aberto)),
 })
 

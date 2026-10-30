@@ -35,6 +35,7 @@ export const PADRAO = {
   aoFechar: 'perguntar', // o X da janela: 'perguntar', 'fechar' ou 'segundoPlano' (fica na bandeja)
   // Assistente de IA (main/ia.js): desligado até o usuário ativar. As chaves ficam à parte, criptografadas.
   ia: { ativo: false, provedor: 'claude', modelos: {}, urls: {}, modo: 'dica' },
+  iaJanela: null, // { x, y, w, h } do pop-up do assistente (renderer/assistente.js); validada contra o tamanho da janela ao abrir
   dicaAtual: 0,
   // Listas do comando `lista` (as 3 primeiras são as do listas.txt do VisuAlg).
   listas: [

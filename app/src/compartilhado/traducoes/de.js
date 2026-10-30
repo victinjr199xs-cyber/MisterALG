@@ -943,4 +943,9 @@ export default {
   1686: "Der Aufruf hat mehr oder weniger Werte, als die Deklaration Parameter hat. Prüfen Sie Anzahl und Reihenfolge.",
   1687: "Funktionen und Prozeduren stehen INNERHALB des Algorithmus: zuerst die Zeile Algoritmo \"Name\", dann der Abschnitt var, dann die Unterprogramme (funcao ... fimfuncao, procedimento ... fimprocedimento) und erst danach das inicio des Hauptprogramms. Eine Funktion vor Algoritmo wird nicht akzeptiert.",
   1688: "Jeder Parameter wird als Name: Typ geschrieben, zum Beispiel funcao dobro(n: real): real. Der Doppelpunkt zwischen Name und Typ fehlt (und bei einer Funktion der Ergebnistyp nach den Klammern).",
+  1740: "Kopieren",
+  1741: "In den Editor einfügen",
+  1742: "Maximieren",
+  1743: "Wiederherstellen",
+  1744: "Mit F8 ausführen, um die Variablen hier zu sehen",
 }

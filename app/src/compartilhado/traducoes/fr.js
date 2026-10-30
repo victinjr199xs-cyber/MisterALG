@@ -944,4 +944,9 @@ export default {
   1686: "L'appel contient plus ou moins de valeurs que la déclaration n'a de paramètres. Vérifiez le nombre et l'ordre.",
   1687: "Les fonctions et procédures se placent DANS l'algorithme : d'abord la ligne Algoritmo \"nom\", puis la section var, puis les sous-programmes (funcao ... fimfuncao, procedimento ... fimprocedimento) et seulement ensuite l'inicio du programme principal. Une fonction écrite avant Algoritmo n'est pas acceptée.",
   1688: "Chaque paramètre s'écrit nom: type, par exemple funcao dobro(n: real): real. Il manque les deux-points entre le nom et le type (et, dans une fonction, le type du résultat après les parenthèses).",
+  1740: "Copier",
+  1741: "Insérer dans l'éditeur",
+  1742: "Agrandir",
+  1743: "Restaurer",
+  1744: "Exécutez avec F8 pour voir les variables ici",
 }

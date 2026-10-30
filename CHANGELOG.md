@@ -7,6 +7,12 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Visual novo
 
+- **Assistente de IA em pop-up**: o painel virou um cartão flutuante no canto inferior direito (não modal, sem fundo escurecido),
+  que se arrasta pelo cabeçalho, redimensiona pelo canto, maximiza (duplo clique no cabeçalho também) e lembra posição e tamanho.
+  Esc fecha; o foco vai para o campo de pergunta. Blocos de código das respostas ganharam Copiar e Inserir no editor.
+- **Memória em grade, como no VisuAlg**: bordas em todas as células, cabeçalho diferenciado, linhas zebradas, a variável que mudou
+  destacada com um piscar curto, vetores em caixinhas com índice, matrizes como grade linhas × colunas e um convite
+  ("Execute com F8 para ver as variáveis aqui") quando ainda não há variáveis. O tema clássico não mudou.
 - **Terminal do Portugol igual ao do VisuAlg**: o console abre sempre numa janela própria, preta, "Console simulando o modo
   texto do MS-DOS", com texto cinza, cursor sublinhado piscando no `leia` e as mensagens finais do VisuAlg, em F9, F8 e timer.
   Fechar a janela ou Esc interrompe o programa. Em Configurações, "Console do Portugol" troca para o console Moderno.

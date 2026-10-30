@@ -940,4 +940,9 @@ export default {
   1686: "Çağrıdaki değer sayısı bildirimdeki parametre sayısından fazla veya az. Sayıyı ve sırayı kontrol edin.",
   1687: "Fonksiyonlar ve prosedürler algoritmanın İÇİNDE yer alır: önce Algoritmo \"ad\" satırı, sonra var bölümü, sonra alt programlar (funcao ... fimfuncao, procedimento ... fimprocedimento) ve ancak sonra ana programın inicio'su. Algoritmo'dan önce yazılmış fonksiyon kabul edilmez.",
   1688: "Her parametre ad: tür biçiminde yazılır, örneğin funcao dobro(n: real): real. Ad ile tür arasındaki iki nokta eksik (ve fonksiyonda parantezlerden sonra sonuç türü).",
+  1740: "Kopyala",
+  1741: "Düzenleyiciye ekle",
+  1742: "Büyüt",
+  1743: "Geri yükle",
+  1744: "Değişkenleri burada görmek için F8 ile çalıştırın",
 }

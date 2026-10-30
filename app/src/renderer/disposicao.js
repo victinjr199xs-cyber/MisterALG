@@ -87,7 +87,7 @@ export function criarDisposicao(op) {
     const memCab = h('div', { id: 'mem-cab', className: 'mem-cab' }, h('span', { textContent: t('Memória') }), nos.contador)
     const molduraMem = document.querySelector('.moldura-variaveis')
     molduraMem.prepend(memCab)
-    new MutationObserver(() => { nos.contador.textContent = String(document.querySelectorAll('#variaveis tbody tr').length) })
+    new MutationObserver(() => { nos.contador.textContent = String(document.querySelectorAll('#variaveis tbody tr:not(.memoria-vazia)').length) })
       .observe(document.querySelector('#variaveis tbody'), { childList: true })
 
     // Faixa de guias no topo da área central, acima do cabeçalho; o editor é o painel da guia ativa.

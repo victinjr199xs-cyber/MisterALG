@@ -923,4 +923,9 @@ export default {
   1686: "Lời gọi có nhiều hoặc ít giá trị hơn số tham số trong khai báo. Kiểm tra số lượng và thứ tự.",
   1687: "Hàm và thủ tục nằm BÊN TRONG thuật toán: trước hết là dòng Algoritmo \"tên\", rồi phần var, rồi các chương trình con (funcao ... fimfuncao, procedimento ... fimprocedimento) và chỉ sau đó mới đến inicio của chương trình chính. Hàm viết trước Algoritmo không được chấp nhận.",
   1688: "Mỗi tham số được viết dưới dạng tên: kiểu, ví dụ funcao dobro(n: real): real. Thiếu dấu hai chấm giữa tên và kiểu (và, với hàm, thiếu kiểu kết quả sau dấu ngoặc).",
+  1740: "Sao chép",
+  1741: "Chèn vào trình soạn thảo",
+  1742: "Phóng to",
+  1743: "Khôi phục",
+  1744: "Chạy bằng F8 để xem các biến ở đây",
 }

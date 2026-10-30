@@ -1,87 +1,59 @@
-/* Painel de memória (tabela #variaveis) nos temas novos. O tema classico não é tocado. */
-:root[data-tema="noite"] #variaveis,
-:root[data-tema="papel"] #variaveis,
-:root[data-tema="hibrido-claro"] #variaveis,
-:root[data-tema="hibrido-escuro"] #variaveis {
-  border-collapse: separate;
-  border-spacing: 0 4px;
-  padding: 0 6px;
+/* Painel de memória (tabela #variaveis): uma TABELA de verdade, como a do VisuAlg, em todos os temas menos o
+   clássico (que já é a grade original). Escopo | Nome | Tipo | Valor, uma linha por variável, bordas em todas as células. */
+:root:not([data-tema="classico"]) #variaveis {
+  --mem-borda: var(--borda);
+  --mem-zebra: color-mix(in srgb, var(--cabecalho) 38%, var(--fundo-campo));
+  --mem-mudou: color-mix(in srgb, var(--linha-execucao) 24%, var(--fundo-campo));
+  border-collapse: collapse;
+  border-spacing: 0;
+  padding: 0;
   font-family: var(--fonte-ui);
 }
-:root[data-tema="noite"] #variaveis th,
-:root[data-tema="papel"] #variaveis th,
-:root[data-tema="hibrido-claro"] #variaveis th,
-:root[data-tema="hibrido-escuro"] #variaveis th {
-  background: transparent;
-  border: 0;
+:root:not([data-tema="classico"]) #variaveis th {
+  position: sticky; inset-block-start: 0; z-index: 1;
+  padding: 0 8px;
+  background: var(--cabecalho);
+  border: 1px solid var(--mem-borda);
   color: var(--detalhe);
-  font: 600 10.5px/22px var(--fonte-ui);
+  font: 600 10.5px/24px var(--fonte-ui);
   letter-spacing: .08em;
   text-transform: uppercase;
+  text-align: start;
 }
-:root[data-tema="noite"] #variaveis td,
-:root[data-tema="papel"] #variaveis td,
-:root[data-tema="hibrido-claro"] #variaveis td,
-:root[data-tema="hibrido-escuro"] #variaveis td {
+:root:not([data-tema="classico"]) #variaveis td {
+  height: 26px;
+  padding: 2px 8px;
   background: var(--fundo-campo);
-  border: 0;
-  border-top: 1px solid var(--linha-grade);
-  border-bottom: 1px solid var(--linha-grade);
-  padding: 4px 8px;
-  font-family: var(--fonte-ui);
+  border: 1px solid var(--mem-borda);
+  font: 12.5px/18px var(--fonte-ui);
+  text-align: start;
+  white-space: nowrap;
 }
-:root[data-tema="noite"] #variaveis td:first-child,
-:root[data-tema="papel"] #variaveis td:first-child,
-:root[data-tema="hibrido-claro"] #variaveis td:first-child,
-:root[data-tema="hibrido-escuro"] #variaveis td:first-child {
-  border-left: 1px solid var(--linha-grade);
-  border-radius: var(--raio) 0 0 var(--raio);
-  color: var(--detalhe);
+:root:not([data-tema="classico"]) #variaveis tbody tr:nth-child(even) td { background: var(--mem-zebra); }
+:root:not([data-tema="classico"]) #variaveis td:nth-child(1) { width: 22%; color: var(--detalhe); }
+:root:not([data-tema="classico"]) #variaveis td:nth-child(2) { width: 22%; font-weight: 600; }
+:root:not([data-tema="classico"]) #variaveis td:nth-child(3) { width: 14%; text-align: center; }
+:root:not([data-tema="classico"]) #variaveis td:nth-child(4) { font-family: var(--fonte-mono); text-align: start; }
+/* variável que acabou de mudar: fundo, barra na borda e um piscar curto */
+:root:not([data-tema="classico"]) #variaveis tbody tr.modificada td {
+  background: var(--mem-mudou);
+  color: var(--texto);
+  font-weight: 700;
+  animation: mem-pisca .7s ease-out;
 }
-:root[data-tema="noite"] #variaveis td:last-child,
-:root[data-tema="papel"] #variaveis td:last-child,
-:root[data-tema="hibrido-claro"] #variaveis td:last-child,
-:root[data-tema="hibrido-escuro"] #variaveis td:last-child {
-  border-right: 1px solid var(--linha-grade);
-  border-radius: 0 var(--raio) var(--raio) 0;
-  font-family: var(--fonte-mono);
-}
-/* tipo como pílula discreta */
-:root[data-tema="noite"] #variaveis td:nth-child(3),
-:root[data-tema="papel"] #variaveis td:nth-child(3),
-:root[data-tema="hibrido-claro"] #variaveis td:nth-child(3),
-:root[data-tema="hibrido-escuro"] #variaveis td:nth-child(3) {
-  font: 600 11px var(--fonte-mono);
-  color: var(--sx-tipo);
-}
-/* variável que acabou de mudar */
-:root[data-tema="noite"] #variaveis tr.modificada td,
-:root[data-tema="papel"] #variaveis tr.modificada td,
-:root[data-tema="hibrido-claro"] #variaveis tr.modificada td,
-:root[data-tema="hibrido-escuro"] #variaveis tr.modificada td {
-  background: var(--selecao-grade);
-  border-top-color: var(--linha-execucao);
-  border-bottom-color: var(--linha-execucao);
-}
-:root[data-tema="noite"] #variaveis tr.modificada td:first-child,
-:root[data-tema="papel"] #variaveis tr.modificada td:first-child,
-:root[data-tema="hibrido-claro"] #variaveis tr.modificada td:first-child,
-:root[data-tema="hibrido-escuro"] #variaveis tr.modificada td:first-child { border-left-color: var(--linha-execucao); }
-:root[data-tema="noite"] #variaveis tr.modificada td:last-child,
-:root[data-tema="papel"] #variaveis tr.modificada td:last-child,
-:root[data-tema="hibrido-claro"] #variaveis tr.modificada td:last-child,
-:root[data-tema="hibrido-escuro"] #variaveis tr.modificada td:last-child { border-right-color: var(--linha-execucao); }
+:root:not([data-tema="classico"]) #variaveis tr.modificada td:first-child { box-shadow: inset 3px 0 0 var(--linha-execucao); }
+@keyframes mem-pisca { from { background: color-mix(in srgb, var(--linha-execucao) 60%, var(--fundo-campo)); } }
+/* estado vazio */
+#variaveis tr.memoria-vazia td { padding: 14px 10px; border: 0; background: transparent; color: var(--detalhe); font: italic 12px var(--fonte-ui); text-align: center; white-space: normal; }
+:root[data-tema="classico"] #variaveis tr.memoria-vazia { display: none; }
 
-/* Pilula de tipo na grade de memoria. */
-:root[data-tema="noite"] #variaveis .pilula-tipo,
-:root[data-tema="papel"] #variaveis .pilula-tipo,
-:root[data-tema="hibrido-claro"] #variaveis .pilula-tipo,
-:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo {
+/* Pílula de tipo (todos os temas menos o clássico). */
+:root:not([data-tema="classico"]) #variaveis .pilula-tipo {
   --cor-tipo: #6b7280;
   display: inline-block;
   padding: 1px 8px;
   border-radius: 999px;
-  font-size: 0.85em;
+  font: 600 11px var(--fonte-mono);
   color: var(--cor-tipo);
   background: color-mix(in srgb, var(--cor-tipo) 18%, transparent);
 }
@@ -91,34 +63,64 @@
 :root[data-tema] #variaveis .pilula-tipo[data-tipo="logico"] { --cor-tipo: #8b5cf6; }
 :root[data-tema] #variaveis .pilula-tipo[data-tipo="vetor"] { --cor-tipo: #ec4899; }
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="inteiro"],
-:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="inteiro"] { --cor-tipo: #60a5fa; }
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="inteiro"],
+:root[data-tema="escuro"] #variaveis .pilula-tipo[data-tipo="inteiro"],
+:root[data-tema="meia-noite"] #variaveis .pilula-tipo[data-tipo="inteiro"],
+:root[data-tema="dracula"] #variaveis .pilula-tipo[data-tipo="inteiro"],
+:root[data-tema="terminal"] #variaveis .pilula-tipo[data-tipo="inteiro"] { --cor-tipo: #60a5fa; }
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="real"],
-:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="real"] { --cor-tipo: #4ade80; }
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="real"],
+:root[data-tema="escuro"] #variaveis .pilula-tipo[data-tipo="real"],
+:root[data-tema="meia-noite"] #variaveis .pilula-tipo[data-tipo="real"],
+:root[data-tema="dracula"] #variaveis .pilula-tipo[data-tipo="real"],
+:root[data-tema="terminal"] #variaveis .pilula-tipo[data-tipo="real"] { --cor-tipo: #4ade80; }
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="caractere"],
-:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="caractere"] { --cor-tipo: #fb923c; }
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="caractere"],
+:root[data-tema="escuro"] #variaveis .pilula-tipo[data-tipo="caractere"],
+:root[data-tema="meia-noite"] #variaveis .pilula-tipo[data-tipo="caractere"],
+:root[data-tema="dracula"] #variaveis .pilula-tipo[data-tipo="caractere"],
+:root[data-tema="terminal"] #variaveis .pilula-tipo[data-tipo="caractere"] { --cor-tipo: #fb923c; }
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="logico"],
-:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="logico"] { --cor-tipo: #a78bfa; }
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="logico"],
+:root[data-tema="escuro"] #variaveis .pilula-tipo[data-tipo="logico"],
+:root[data-tema="meia-noite"] #variaveis .pilula-tipo[data-tipo="logico"],
+:root[data-tema="dracula"] #variaveis .pilula-tipo[data-tipo="logico"],
+:root[data-tema="terminal"] #variaveis .pilula-tipo[data-tipo="logico"] { --cor-tipo: #a78bfa; }
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="vetor"],
-:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="vetor"] { --cor-tipo: #f472b6; }
+:root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="vetor"],
+:root[data-tema="escuro"] #variaveis .pilula-tipo[data-tipo="vetor"],
+:root[data-tema="meia-noite"] #variaveis .pilula-tipo[data-tipo="vetor"],
+:root[data-tema="dracula"] #variaveis .pilula-tipo[data-tipo="vetor"],
+:root[data-tema="terminal"] #variaveis .pilula-tipo[data-tipo="vetor"] { --cor-tipo: #f472b6; }
 :root[data-tema="noite"] #variaveis .pilula-tipo[data-tipo="outro"],
 :root[data-tema="hibrido-escuro"] #variaveis .pilula-tipo[data-tipo="outro"] { --cor-tipo: #9ca3af; }
-/* Vetor de uma dimensão em caixinhas (valor em cima, índice embaixo); só nasce na disposição moderna e nos temas novos (execucao.js). */
-#variaveis tr.vetor-linha td { vertical-align: top; padding: 6px 8px 8px; }
-:root[data-tema] #variaveis tr.vetor-linha td:first-child,
-:root[data-tema] #variaveis tr.vetor-linha td:last-child { border: 1px solid var(--linha-grade); border-radius: var(--raio); }
-:root[data-tema] #variaveis tr.vetor-linha.modificada td:first-child { border-color: var(--linha-execucao); }
+
+/* Vetor de uma dimensão em caixinhas (valor em cima, índice embaixo) e matriz como grade de células; só nasce na
+   disposição moderna e nos temas novos (execucao.js). A linha do vetor ocupa a largura toda da tabela. */
+#variaveis tr.vetor-linha td { vertical-align: top; padding: 6px 8px 8px; height: auto; white-space: normal; }
+:root[data-tema] #variaveis tr.vetor-linha.modificada td { box-shadow: inset 3px 0 0 var(--linha-execucao); }
 #variaveis .vetor-cab { display: flex; align-items: center; gap: 8px; margin-block-end: 6px; }
 #variaveis .vetor-escopo { color: var(--detalhe); font-size: 11px; }
-#variaveis .vetor-cab b { font: 700 13px var(--fonte-mono); color: var(--texto); }
+#variaveis .vetor-cab b { font: 700 13px var(--fonte-mono); color: var(--texto); direction: ltr; }
 #variaveis .vetor-cab .pilula-tipo { margin-inline-start: auto; }
-#variaveis .caixinhas { display: flex; flex-wrap: wrap; gap: 4px; padding-block: 2px; }
+#variaveis .caixinhas { display: flex; flex-wrap: wrap; gap: 0; padding-block: 2px; }
 #variaveis .caixa {
-  display: flex; flex-direction: column; align-items: center; min-inline-size: 28px; max-inline-size: 64px; padding: 3px 5px 2px;
-  border: 1px solid var(--linha-grade); border-radius: 7px; background: color-mix(in srgb, var(--selecao-grade) 55%, var(--fundo-campo));
+  display: flex; flex-direction: column; align-items: center; min-inline-size: 34px; max-inline-size: 72px; padding: 3px 5px 2px;
+  border: 1px solid var(--mem-borda, var(--borda)); margin-inline-end: -1px; margin-block-end: -1px; background: var(--fundo-campo);
 }
 #variaveis .caixa b { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 12px/1.3 var(--fonte-mono); color: var(--texto); }
-#variaveis .caixa i { font: normal 9.5px/1.2 var(--fonte-ui); color: var(--detalhe); }
-#variaveis .caixa.mudou { border-color: var(--linha-execucao); background: var(--selecao-grade); animation: caixa-pisca .5s ease-out; }
-#variaveis .caixas-mais { align-self: center; font: 600 11px var(--fonte-ui); color: var(--detalhe); }
+#variaveis .caixa i { inline-size: 100%; margin-block-start: 2px; padding-block-start: 1px; border-block-start: 1px solid var(--mem-borda, var(--borda)); text-align: center; font: normal 9.5px/1.2 var(--fonte-ui); color: var(--detalhe); }
+#variaveis .caixa.mudou { z-index: 1; position: relative; border-color: var(--linha-execucao); background: var(--selecao-grade); animation: caixa-pisca .5s ease-out; }
+#variaveis .caixas-mais { align-self: center; padding-inline-start: 8px; font: 600 11px var(--fonte-ui); color: var(--detalhe); }
 @keyframes caixa-pisca { from { transform: scale(1.18); } to { transform: none; } }
-@media (prefers-reduced-motion: reduce) { #variaveis .caixa.mudou { animation: none; } }
+/* matriz: colunas × linhas com os índices na borda */
+#variaveis .matriz-rolagem { max-block-size: 180px; overflow: auto; direction: ltr; border: 1px solid var(--mem-borda, var(--borda)); }
+:root[data-tema] #variaveis .matriz-rolagem table.matriz { inline-size: auto; border-collapse: collapse; font-family: var(--fonte-mono); }
+:root[data-tema] #variaveis .matriz-rolagem table.matriz th,
+:root[data-tema] #variaveis .matriz-rolagem table.matriz td { inline-size: auto; min-inline-size: 34px; height: 22px; padding: 0 6px; border: 1px solid var(--mem-borda, var(--borda)); font: 12px/20px var(--fonte-mono); text-align: center; }
+:root[data-tema] #variaveis .matriz-rolagem table.matriz th { position: static; background: var(--cabecalho); color: var(--detalhe); font-size: 10.5px; letter-spacing: 0; text-transform: none; }
+:root[data-tema] #variaveis .matriz-rolagem table.matriz td { background: var(--fundo-campo); color: var(--texto); font-weight: 400; }
+:root[data-tema] #variaveis .matriz-rolagem table.matriz td.mudou { background: var(--selecao-grade); box-shadow: inset 0 0 0 2px var(--linha-execucao); font-weight: 700; animation: caixa-pisca .5s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  #variaveis .caixa.mudou, :root[data-tema] #variaveis .matriz-rolagem table.matriz td.mudou, #variaveis tr.modificada td { animation: none !important; }
+}

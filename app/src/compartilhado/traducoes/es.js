@@ -944,4 +944,9 @@ export default {
   1686: "La llamada tiene más o menos valores que parámetros en la declaración. Revisa la cantidad y el orden.",
   1687: "Las funciones y los procedimientos van DENTRO del algoritmo: primero la línea Algoritmo \"nombre\", luego la sección var, luego las subrutinas (funcao ... fimfuncao, procedimento ... fimprocedimento) y solo después el inicio del programa principal. Una función escrita antes de Algoritmo no se acepta.",
   1688: "Cada parámetro se escribe como nombre: tipo, por ejemplo funcao dobro(n: real): real. Falta el signo de dos puntos entre el nombre y el tipo (y, en una función, el tipo del resultado después de los paréntesis).",
+  1740: "Copiar",
+  1741: "Insertar en el editor",
+  1742: "Maximizar",
+  1743: "Restaurar",
+  1744: "Ejecuta con F8 para ver las variables aquí",
 }

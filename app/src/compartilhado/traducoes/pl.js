@@ -943,4 +943,9 @@ export default {
   1686: "Wywołanie ma więcej lub mniej wartości niż deklaracja parametrów. Sprawdź liczbę i kolejność.",
   1687: "Funkcje i procedury umieszcza się WEWNĄTRZ algorytmu: najpierw wiersz Algoritmo \"nazwa\", potem sekcja var, potem podprogramy (funcao ... fimfuncao, procedimento ... fimprocedimento) i dopiero potem inicio programu głównego. Funkcja napisana przed Algoritmo nie jest akceptowana.",
   1688: "Każdy parametr zapisuje się jako nazwa: typ, na przykład funcao dobro(n: real): real. Brakuje dwukropka między nazwą a typem (a w funkcji typu wyniku po nawiasach).",
+  1740: "Kopiuj",
+  1741: "Wstaw do edytora",
+  1742: "Maksymalizuj",
+  1743: "Przywróć",
+  1744: "Uruchom klawiszem F8, aby zobaczyć tu zmienne",
 }

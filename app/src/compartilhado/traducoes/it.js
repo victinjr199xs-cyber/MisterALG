@@ -943,4 +943,9 @@ export default {
   1686: "La chiamata ha più o meno valori dei parametri della dichiarazione. Controlla il numero e l'ordine.",
   1687: "Funzioni e procedure vanno DENTRO l'algoritmo: prima la riga Algoritmo \"nome\", poi la sezione var, poi i sottoprogrammi (funcao ... fimfuncao, procedimento ... fimprocedimento) e solo dopo l'inicio del programma principale. Una funzione scritta prima di Algoritmo non è accettata.",
   1688: "Ogni parametro si scrive nome: tipo, per esempio funcao dobro(n: real): real. Mancano i due punti tra il nome e il tipo (e, in una funzione, il tipo del risultato dopo le parentesi).",
+  1740: "Copia",
+  1741: "Inserisci nell'editor",
+  1742: "Massimizza",
+  1743: "Ripristina",
+  1744: "Esegui con F8 per vedere qui le variabili",
 }
