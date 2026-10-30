@@ -14,7 +14,8 @@ import { criarMemoriaC } from './memoria-c.js'
 import { criarMemoriaBanco } from './memoria-banco.js'
 import { SessaoSQL } from './sql/sessao-sql.js'
 import { criarConsole } from './console.js'
-import { dividirLinhas } from './console-logica.js'
+import { consoleVisualg, dividirLinhas } from './console-logica.js'
+import { linhaCorrigida } from './aviso-logica.js'
 
 /** Itens do "Intervalo do timer" (cboInterval do VisuAlg) → milissegundos. */
 export const INTERVALOS = [
@@ -91,6 +92,7 @@ export function criarExecucao(op) {
     t,
     idioma: () => op.idioma?.() ?? 'pt',
     pref: () => op.consoleEmJanela?.(),
+    visualg: () => consoleVisualg(op.consolePortugol?.(), op.linguagem?.() ?? 'portugol', op.emTutorial?.()),
     plataforma: api.plataforma,
     api,
     programa: () => op.programa?.() ?? { nome: t('sem nome'), linguagem: op.linguagem?.() ?? 'portugol' },
@@ -402,10 +404,17 @@ export function criarExecucao(op) {
     const ingles = document.body.classList.contains('modo-codigo')
     cons.estadoAtual({ terminado: 'finalizado', erro: 'erro' }[estadoFinal] ?? 'parado', { codigo: estadoFinal === 'erro' ? 1 : codigo, linha: erro?.linha })
     if (quebra) escreverBruto(quebra)
-    if (estadoFinal === 'erro' && erro && !tela.querySelector('.saida-erro')) resumoDoErro(erro)
-    if (estadoFinal === 'terminado') cons.sistema(ingles ? `Process finished with exit code ${codigo}` : TEXTOS.fimPrograma, 'ok')
-    else if (estadoFinal === 'parado') cons.sistema(ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario)
-    else if (estadoFinal === 'erro') cons.sistema(ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro, 'erro')
+    if (cons.visualg) {
+      // Como no VisuAlg: texto simples, uma linha em branco e as duas mensagens finais.
+      corTexto = CORES.BRANCO
+      const fim = { erro: t(TEXTOS.terminadoErro), parado: t(TEXTOS.terminadoUsuario) }[estadoFinal] ?? t('*** Fim da execução.')
+      escreverBruto(`\n${fim}\n${t('*** Feche esta janela para retornar ao MisterALG.')}\n`)
+    } else {
+      if (estadoFinal === 'erro' && erro && !tela.querySelector('.saida-erro')) resumoDoErro(erro)
+      if (estadoFinal === 'terminado') cons.sistema(ingles ? `Process finished with exit code ${codigo}` : TEXTOS.fimPrograma, 'ok')
+      else if (estadoFinal === 'parado') cons.sistema(ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario)
+      else if (estadoFinal === 'erro') cons.sistema(ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro, 'erro')
+    }
     status.estado()
     status.mensagem(TEXTOS.rodapeConsole)
     op.aoMudarEstado(false)
@@ -413,8 +422,25 @@ export function criarExecucao(op) {
     if (estadoFinal === 'erro' && erro) {
       editor.realcarErro(erro.linha)
       op.aoErro?.(erro)
-      dialogos.aviso(erro, editor.textoDaLinha(erro.linha), op.iaAtiva?.()).then((r) => (r === 'ia' ? op.aoPedirIA() : editor.focar()))
+      mostrarAviso(erro)
     }
+  }
+
+  /** O aviso do erro: a linha pode ser corrigida ali mesmo e o programa roda de novo do mesmo jeito (F9, F8 ou timer). */
+  function mostrarAviso(erro) {
+    const modo = modoAtual
+    const original = editor.textoDaLinha(erro.linha)
+    if (cons.emJanela) window.focus() // o console do VisuAlg é uma janela à parte: o aviso aparece aqui
+    dialogos.aviso(erro, original, op.iaAtiva?.(), erro.linha >= 1 && erro.linha <= editor.texto().split('\n').length).then(({ acao, texto }) => {
+      if (acao === 'ia') return op.aoPedirIA()
+      if (acao === 'corrigir' || acao === 'executar') {
+        editor.substituirLinha(erro.linha, linhaCorrigida(original, texto))
+        editor.realcarErro(null)
+        if (acao === 'executar') iniciar(modo)
+        return
+      }
+      editor.focar()
+    })
   }
 
   function novaSessao(modo) {
@@ -647,7 +673,7 @@ export function criarExecucao(op) {
       pedidoManualPHP = false
       const e = { linha: erro.linha, mensagem: `${erro.rotulo}: ${erro.mensagem}`, explicacao: erro.explicacao }
       op.aoErro?.(e)
-      dialogos.aviso(e, editor.textoDaLinha(erro.linha), op.iaAtiva?.()).then((x) => (x === 'ia' ? op.aoPedirIA() : editor.focar()))
+      mostrarAviso(e)
     }
     if (!erro) pedidoManualPHP = false
   })
@@ -850,6 +876,10 @@ export function criarExecucao(op) {
       fecharPrevia()
       status.estado()
       status.mensagem('')
+      return true
+    }
+    if (emExecucao() && cons.visualg) { // no console do VisuAlg, Esc interrompe o programa
+      parar()
       return true
     }
     if (!emExecucao() && !consoleEl.hidden) {

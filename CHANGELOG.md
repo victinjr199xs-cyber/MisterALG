@@ -7,6 +7,11 @@ O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e 
 
 ### Visual novo
 
+- **Terminal do Portugol igual ao do VisuAlg**: o console abre sempre numa janela própria, preta, "Console simulando o modo
+  texto do MS-DOS", com texto cinza, cursor sublinhado piscando no `leia` e as mensagens finais do VisuAlg, em F9, F8 e timer.
+  Fechar a janela ou Esc interrompe o programa. Em Configurações, "Console do Portugol" troca para o console Moderno.
+- **Aviso de erro editável**: o "Conteúdo da linha" agora pode ser corrigido ali mesmo, com "Corrigir e executar" (roda de
+  novo do mesmo jeito), "Corrigir", Enter e Esc; a troca entra no Ctrl+Z e mantém a indentação.
 - **Disposição Moderna** (agora o padrão) e **tema Híbrido claro** (também o padrão). O "VisuAlg Clássico" continua
   nas Configurações, com a mesma cara de sempre.
 - **Temas novos**: Noite, Papel e Híbrido, claro e escuro, com fontes Inter e JetBrains Mono embutidas (funcionam sem internet).

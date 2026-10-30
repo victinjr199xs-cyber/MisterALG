@@ -3,6 +3,7 @@
 import { BARRA, ESSENCIAIS, POSICOES, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis } from '../compartilhado/barra.js'
 import { VERSAO } from '../compartilhado/versao.js'
 import { criarAvatar } from './avatar.js'
+import { alterou, textoVisivel } from './aviso-logica.js'
 
 const raiz = () => document.getElementById('dialogos')
 
@@ -59,19 +60,41 @@ const EXPLICACOES = {
   100: 'O índice está fora da faixa declarada para o vetor. Confira os limites em "vetor[inicio..fim]".',
 }
 
-/** @param comIA mostra o botão "Perguntar à IA" (resolve com 'ia') */
-export function aviso(erro, textoLinha, comIA = false) {
+/**
+ * @param comIA mostra o botão "Perguntar à IA"
+ * @param editavel o campo da linha pode ser corrigido ("Corrigir" e "Corrigir e executar")
+ * @returns {Promise<{acao: 'ia'|'ok'|'corrigir'|'executar'|'cancelar', texto: string}>} texto = o que está no campo
+ */
+export async function aviso(erro, textoLinha, comIA = false, editavel = false) {
+  const campo = el('input', {
+    className: 'aviso-linha', value: editavel ? textoVisivel(textoLinha) : textoLinha, readOnly: !editavel, spellcheck: false, autocomplete: 'off',
+  })
   const corpo = el('div', {},
     el('div', { textContent: `O MisterALG encontrou o seguinte problema em seu algoritmo${erro.linha ? `, na linha ${erro.linha}` : ''} :` }),
     el('div', { className: 'aviso-mensagem', textContent: erro.mensagem }),
     el('label', { textContent: 'Conteúdo da linha:' }),
-    el('input', { className: 'aviso-linha', value: textoLinha, readOnly: true }),
+    campo,
     el('label', { textContent: 'Explicação:' }),
     el('div', { className: 'aviso-explicacao', textContent: erro.explicacao ?? EXPLICACOES[erro.codigo] ?? 'Não há explicação disponível para este problema.' }),
   )
-  const botoes = [{ valor: 'ok', texto: 'Terminar', principal: true }]
+  const botoes = [{ valor: 'ok', texto: 'Terminar', principal: !editavel }]
+  if (editavel) botoes.push({ valor: 'corrigir', texto: 'Corrigir' }, { valor: 'executar', texto: 'Corrigir e executar', principal: true })
   if (comIA) botoes.unshift({ valor: 'ia', texto: '✨ Perguntar à IA' })
-  return janela({ titulo: 'Aviso', corpo, botoes, largura: '560px' })
+  const acao = await janela({
+    titulo: 'Aviso', corpo, botoes, largura: '560px',
+    aoMontar: (d, { acoes }) => {
+      if (!editavel) return
+      const porValor = (v) => [...acoes.children][botoes.findIndex((b) => b.valor === v)]
+      const sincronizar = () => { for (const v of ['corrigir', 'executar']) porValor(v).disabled = !alterou(textoLinha, campo.value) }
+      sincronizar()
+      campo.addEventListener('input', sincronizar)
+      campo.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); d.close(alterou(textoLinha, campo.value) ? 'executar' : 'ok') }
+      })
+      setTimeout(() => { campo.focus(); campo.select() })
+    },
+  })
+  return { acao, texto: campo.value }
 }
 
 // ---- Pilha de ativação (Ctrl+F3) e Perfil (F7) ----------------------------------
@@ -282,10 +305,15 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     ['sim', 'Sim'],
     ['nao', 'Não'],
   ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.consoleEmJanela === true ? 'sim' : prefs.consoleEmJanela === false ? 'nao' : 'auto') })))
+  const consolePortugol = el('select', { id: 'cfg-console-portugol' }, ...[
+    ['visualg', 'Igual ao VisuAlg'],
+    ['moderno', 'Moderno'],
+  ].map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === (prefs.consolePortugol === 'moderno' ? 'moderno' : 'visualg') })))
   const abaSistema = el('div', { className: 'aba-conteudo', hidden: true },
     linhaToggle(aoLigar, 'Abrir quando o computador ligar', 'O MisterALG já abre sozinho quando você liga o computador.', 'Desligado'),
     linha('Ao fechar a janela:', aoFechar, 'Em segundo plano, a janela some mas o programa segue aberto perto do relógio; clique no ícone para voltar.', null, 'Perguntar'),
     linha('Console em janela própria:', consoleJanela, 'Automático abre o console numa janela à parte na disposição clássica e no painel inferior na moderna. Sim abre sempre numa janela própria; Não mantém sempre no painel.', null, 'Automático'),
+    linha('Console do Portugol:', consolePortugol, 'Igual ao VisuAlg abre o console numa janela própria, preta, em modo texto, como no VisuAlg, para entender como o programa roda. Moderno usa o console com cabeçalho, botões e rodapé.', null, 'Igual ao VisuAlg'),
   )
   // ---- aba Barra: posição, tamanho dos ícones e quais botões aparecem (prévia ao vivo; Cancelar desfaz) ----
   const selecao = (opcoes, atual) => el('select', {}, ...opcoes.map(([valor, rotulo]) => el('option', { value: valor, textContent: rotulo, selected: valor === atual })))
@@ -447,6 +475,7 @@ export async function configuracoes(prefs, { temas = [], aoPrever, aoPreverBarra
     menuBarra: menuBarraCx.checked,
     aoFechar: aoFechar.value,
     consoleEmJanela: { sim: true, nao: false }[consoleJanela.value] ?? null,
+    consolePortugol: consolePortugol.value,
     ...valoresBarra(),
     conta: { nome: nomeConta.value.trim() },
   }

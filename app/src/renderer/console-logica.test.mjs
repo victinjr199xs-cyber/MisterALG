@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { consoleEmJanela, contarQuebras, criarHistorico, descreverSelo, dividirLinhas, formatarTempo } from './console-logica.js'
+import { consoleEmJanela, consoleVisualg, contarQuebras, criarHistorico, descreverSelo, dividirLinhas, formatarTempo } from './console-logica.js'
 
 test('formatarTempo: centésimos, décimos e minutos', () => {
   assert.equal(formatarTempo(40), '0,04 s')
@@ -53,6 +53,14 @@ test('dividirLinhas acha "linha N" nos formatos de erro', () => {
   assert.equal(py.find((p) => p.linha)?.linha, 3)
   assert.deepEqual(dividirLinhas('sem número'), [{ texto: 'sem número' }])
   assert.deepEqual(dividirLinhas('linha 0'), [{ texto: 'linha 0' }])
+})
+
+test('consoleVisualg: só no Portugol, padrão visualg, nunca no tutorial', () => {
+  assert.equal(consoleVisualg(undefined, 'portugol'), true)
+  assert.equal(consoleVisualg('visualg', 'portugol'), true)
+  assert.equal(consoleVisualg('moderno', 'portugol'), false)
+  assert.equal(consoleVisualg('visualg', 'c'), false)
+  assert.equal(consoleVisualg('visualg', 'portugol', true), false)
 })
 
 test('contarQuebras e consoleEmJanela', () => {

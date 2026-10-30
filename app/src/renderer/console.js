@@ -192,7 +192,7 @@ export function criarConsole(op) {
     janela = j
     lugar = { pai: el.parentNode, depois: el.nextSibling }
     const d = j.document
-    d.title = t('MisterALG — Console')
+    d.title = titulo()
     d.head.append(h('meta', { charset: 'UTF-8' }))
     for (const n of document.head.querySelectorAll('link[rel="stylesheet"], style')) {
       if (n.localName === 'link') d.head.append(Object.assign(d.createElement('link'), { rel: 'stylesheet', href: n.href }))
@@ -203,10 +203,10 @@ export function criarConsole(op) {
     observador = new MutationObserver(sincronizar)
     observador.observe(document.documentElement, { attributes: true })
     observador.observe(document.body, { attributes: true, attributeFilter: ['class'] })
-    j.addEventListener('pagehide', recolocar)
-    j.addEventListener('beforeunload', recolocar)
+    j.addEventListener('pagehide', aoFecharJanela)
+    j.addEventListener('beforeunload', aoFecharJanela)
     d.addEventListener('keydown', (e) => op.aoTecla(e))
-    sondagem = setInterval(() => { if (j.closed) recolocar() }, 500)
+    sondagem = setInterval(() => { if (j.closed) aoFecharJanela() }, 500)
     rotular()
     j.focus()
     if (fixado) op.api.console.fixar(true)
@@ -231,6 +231,19 @@ export function criarConsole(op) {
     ;(tela.querySelector('.console-entrada') ?? tela).focus()
   }
 
+  const visualg = () => el.dataset.estilo === 'visualg'
+  const titulo = () => (visualg() ? t('Console simulando o modo texto do MS-DOS') : t('MisterALG — Console'))
+
+  /** O X da janela. No estilo VisuAlg fechar o console interrompe o programa (se rodando) e o esconde; no moderno ele volta ao painel. */
+  function aoFecharJanela() {
+    if (!janela) return
+    const vg = visualg()
+    recolocar()
+    if (!vg) return
+    if (ATIVOS.has(estado)) op.aoParar()
+    op.aoFechar()
+  }
+
   // ---- ciclo ---------------------------------------------------------------------------------------
 
   rotular()
@@ -241,6 +254,7 @@ export function criarConsole(op) {
     historico: historicoLeia,
     get estado() { return estado },
     get emJanela() { return !!janela },
+    get visualg() { return visualg() },
     el,
     /** Console aberto para uma nova execução: nome, sigla, relógio e contagem de linhas recomeçam. */
     comecar() {
@@ -255,7 +269,17 @@ export function criarConsole(op) {
       fim = null
       historicoLeia.recomecar()
       mudarEstado('rodando')
-      if (!janela && !op.emTutorial?.() && consoleEmJanela(op.pref?.(), document.documentElement.dataset.disposicao)) destacar()
+      // Portugol no estilo VisuAlg: sempre numa janela própria; se o sistema negar a janela, cai no console moderno do painel.
+      if (op.visualg?.()) {
+        el.dataset.estilo = 'visualg'
+        if (!janela) destacar()
+        if (!janela) delete el.dataset.estilo
+        else janela.document.title = titulo()
+        return
+      }
+      delete el.dataset.estilo
+      if (janela) janela.document.title = titulo()
+      else if (!op.emTutorial?.() && consoleEmJanela(op.pref?.(), document.documentElement.dataset.disposicao)) destacar()
     },
     estadoAtual: mudarEstado,
     contar(texto) {

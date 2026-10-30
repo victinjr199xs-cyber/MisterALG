@@ -71,7 +71,7 @@ export default async ({ avaliar, esperar, foto, tecla, cdp }) => {
   await pronta()
   for (const [disposicao, janela] of [['moderna', false], ['classica', false], ['classica', true]]) {
     console.log(`--- ${disposicao}, janela=${janela}`)
-    await gravar({ disposicao, tema: disposicao === 'moderna' ? 'hibrido-escuro' : 'classico', consoleEmJanela: janela })
+    await gravar({ disposicao, tema: disposicao === 'moderna' ? 'hibrido-escuro' : 'classico', consoleEmJanela: janela, consolePortugol: 'moderno' })
     await recarregar()
     await carregar(LEIA)
     await avaliar(`${M}.comandos.executar(); 1`)

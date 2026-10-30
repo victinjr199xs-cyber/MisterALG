@@ -25,6 +25,7 @@ export const PADRAO = {
   disposicao: 'moderna', // 'classica' (molduras do VisuAlg) ou 'moderna' (trilho de linguagens, painéis; renderer/disposicao.js)
   alturaPainel: 0, // altura do painel inferior (Terminal/Problemas) na disposição moderna; 0 = automática
   consoleEmJanela: null, // console numa janela própria: null = automático (sim na disposição clássica, não na moderna), true ou false (renderer/console.js)
+  consolePortugol: 'visualg', // console do Portugol: 'visualg' (janela própria, modo texto do MS-DOS) ou 'moderno' (renderer/console.js)
   janelaConsole: null, // { x, y, width, height } da janela do console, lembrados ao fechar/mover (main/janelas.js)
   posicaoBarra: 'topo', // barra de ferramentas: 'topo' (clássico) ou 'lateral' (compartilhado/barra.js)
   tamanhoIcones: 'medio', // 'pequeno', 'medio' ou 'grande'

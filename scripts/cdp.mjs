@@ -109,7 +109,7 @@ const ferramentas = {
       }
     }
     await pronta()
-    await ferramentas.avaliar(`window.misteralg.prefs.gravar({ tema: 'classico', disposicao: 'classica', consoleEmJanela: false }).then(() => 1)`)
+    await ferramentas.avaliar(`window.misteralg.prefs.gravar({ tema: 'classico', disposicao: 'classica', consoleEmJanela: false, consolePortugol: 'moderno' }).then(() => 1)`)
     await ferramentas.esperar(1000)
     await enviar('Page.reload', {})
     await ferramentas.esperar(2500)

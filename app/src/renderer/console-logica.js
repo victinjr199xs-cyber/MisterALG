@@ -92,5 +92,8 @@ export const contarQuebras = (texto) => {
   return n
 }
 
+/** Console no estilo VisuAlg? Só no Portugol, com a preferência 'visualg' (o padrão), e nunca durante o tutorial. */
+export const consoleVisualg = (pref, linguagem, emTutorial = false) => !emTutorial && linguagem === 'portugol' && pref !== 'moderno'
+
 /** Janela própria? `pref` é null (automático: sim na clássica, não na moderna), true ou false. */
 export const consoleEmJanela = (pref, disposicao) => (typeof pref === 'boolean' ? pref : disposicao !== 'moderna')

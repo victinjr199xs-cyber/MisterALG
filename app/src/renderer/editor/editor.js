@@ -360,6 +360,19 @@ export function criarEditor(parent, op) {
       view.focus()
     },
     linhaDoCursor: () => view.state.doc.lineAt(view.state.selection.main.head).number,
+    /** Troca o texto da linha n numa única transação (um Ctrl+Z desfaz) e põe o cursor no fim dela. */
+    substituirLinha(n, texto) {
+      if (!(n >= 1 && n <= view.state.doc.lines)) return false
+      const linha = view.state.doc.line(n)
+      view.dispatch({
+        changes: { from: linha.from, to: linha.to, insert: texto },
+        selection: EditorSelection.cursor(linha.from + texto.length),
+        effects: EditorView.scrollIntoView(linha.from, { y: 'center' }),
+        userEvent: 'input.correcao',
+      })
+      view.focus()
+      return true
+    },
     textoDaLinha: (n) => (n >= 1 && n <= view.state.doc.lines ? view.state.doc.line(n).text : ''),
     breakpoints: () => linhasComBp(view.state),
     alternarBreakpoint() {

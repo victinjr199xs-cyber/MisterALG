@@ -407,6 +407,7 @@ execucao = criarExecucao({
   }),
   idioma: () => prefs.idioma,
   consoleEmJanela: () => prefs.consoleEmJanela, // null = automático (janela própria na disposição clássica)
+  consolePortugol: () => prefs.consolePortugol,
   programa: () => ({
     nome: doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.nome === 'semnome' ? tradutor(prefs.idioma)('sem nome') : `${doc.nome}.${EXTENSAO[doc.linguagem]}`,
     linguagem: doc.linguagem,
@@ -889,7 +890,7 @@ function alternarAleatorio() {
 
 document.addEventListener('keydown', (e) => {
   const comando = (() => {
-    if (e.key === 'Escape') return execucao.teclaEsc() ? 'nada' : null
+    if (e.key === 'Escape') return !document.querySelector('dialog[open]') && execucao.teclaEsc() ? 'nada' : null // com um diálogo aberto, o Esc é dele
     if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       const k = e.key.toLowerCase()
       if (k === 'l') return 'localizar'

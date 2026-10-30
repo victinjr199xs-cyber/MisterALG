@@ -52,6 +52,11 @@ export default async ({ avaliar, esperar, foto, cdp }) => {
   const dialogos = () => avaliar(`(window.__dialogosPedidos ?? []).length`)
 
   await pronta()
+  // O console do Portugol no painel (o padrão é a janela do VisuAlg): grava e recarrega.
+  await avaliar(`window.misteralg.prefs.gravar({ consolePortugol: 'moderno' }).then(() => 1)`)
+  await cdp('Page.reload', {})
+  await esperar(2500)
+  await pronta()
   conferir('moderna por padrão', await avaliar(`document.documentElement.dataset.disposicao`), 'moderna')
   conferir('começa com uma guia', await nAbas(), 1)
   conferir('sem trilho nem coluna de arquivos', await avaliar(`!document.querySelector('#trilho, #canais')`), true)
@@ -229,7 +234,7 @@ export default async ({ avaliar, esperar, foto, cdp }) => {
   conferir('formato antigo ainda é recuperado', [await avaliar(`${M}.editor.texto()`), await doc('linguagem'), await nAbas()], ['print("antigo")', 'python', 1])
 
   // ---- clássica: sem faixa; Novo/Abrir substituem o documento -----------------------------------------------
-  await avaliar(`window.misteralg.prefs.gravar({ disposicao: 'classica' }).then(() => 1)`)
+  await avaliar(`window.misteralg.prefs.gravar({ disposicao: 'classica', consolePortugol: 'moderno' }).then(() => 1)`)
   await esperar(1000)
   await cdp('Page.reload', {})
   await esperar(2500)

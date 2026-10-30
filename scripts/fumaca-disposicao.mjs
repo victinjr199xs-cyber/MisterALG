@@ -279,7 +279,7 @@ export default async ({ avaliar, esperar, foto, tecla, cdp, classico }) => {
   conferir('cabeçalho escondido', await visivel('.cab-pagina'), false)
   conferir('avatar de volta à barra', await avaliar(`!!document.querySelector('#barra [data-id="conta"]')`), true)
   conferir('moldura do editor visível', await visivel('.moldura-editor'), true)
-  await gravar({ tema: 'classico', disposicao: 'classica' })
+  await gravar({ tema: 'classico', disposicao: 'classica', consolePortugol: 'moderno' })
   await recarregar()
   conferir('clássica persiste', await disp(), null)
   console.log('Fumaça da disposição: tudo certo.')
