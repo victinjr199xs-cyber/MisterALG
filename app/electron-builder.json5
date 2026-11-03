@@ -28,6 +28,8 @@
     // Sem conta Apple Developer: assinatura ad-hoc ("-"), necessária para o app
     // rodar em Macs com chip Apple. Não é notarizado (ver README / Gatekeeper).
     identity: '-',
+    // O Electron 44 exige o macOS 13. Para o 10.15 a 12 há um segundo DMG (npm run dist:mac-antigo, Electron 32).
+    minimumSystemVersion: '13.0',
     category: 'public.app-category.education',
     icon: 'build/icon.png',
     darkModeSupport: false,

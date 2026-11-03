@@ -29,6 +29,7 @@
     "test:compat": "node --test testes-compat/p0.test.mjs testes-compat/exemplos.test.mjs",
     "test:compat:full": "node --test \"testes-compat/*.test.mjs\"",
     "dist:mac": "npm run build && node scripts/preparar-linguagens.mjs && node scripts/gerar-pch.mjs && npm run dist:mac -w misteralg-app",
+    "dist:mac-antigo": "MISTERALG_MAC_ANTIGO=1 npm run build && node scripts/preparar-linguagens.mjs && node scripts/gerar-pch.mjs && npm run dist:mac-antigo -w misteralg-app",
     "dist:win": "npm run build && node scripts/preparar-linguagens.mjs && node scripts/gerar-pch.mjs && npm run dist:win -w misteralg-app",
     "dist:linux": "npm run build && node scripts/preparar-linguagens.mjs && node scripts/gerar-pch.mjs && npm run dist:linux -w misteralg-app"
   },

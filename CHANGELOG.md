@@ -3,6 +3,15 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [Não lançado]
+
+### Novidades
+
+- **Macs com macOS 10.15 Catalina, 11 Big Sur e 12 Monterey**: novo instalador
+  `MisterALG-x.y.z-macOS-10.15-a-12.dmg`, com as mesmas funções do DMG principal. O DMG principal usa o
+  Electron 44, que exige o macOS 13 ("Você não pode usar esta versão do aplicativo… requer o macOS 13.0");
+  o novo roda no Electron 32, o último que abre no Catalina.
+
 ## [1.11.0] — 2026-10-28
 
 ### Novidades

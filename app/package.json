@@ -17,6 +17,7 @@
     "build": "electron-vite build",
     "start": "electron out/main/index.js",
     "dist:mac": "electron-builder --mac --config electron-builder.json5 --publish never",
+    "dist:mac-antigo": "electron-builder --mac --config electron-builder.json5 --publish never -c.electronVersion=32.3.3 -c.mac.minimumSystemVersion=10.15 '-c.dmg.artifactName=MisterALG-${version}-macOS-10.15-a-12.dmg'",
     "dist:win": "electron-builder --win --config electron-builder.json5 --publish never",
     "dist:linux": "electron-builder --linux --config electron-builder.json5 --publish never"
   },

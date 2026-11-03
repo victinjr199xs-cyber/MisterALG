@@ -39,6 +39,11 @@ jobs:
             comando: dist:mac
             artefato: MisterALG-dmg
             arquivos: app/dist/*.dmg
+          # Macs antigos (macOS 10.15 Catalina, 11 Big Sur e 12 Monterey): Electron 32.
+          - sistema: macos-15
+            comando: dist:mac-antigo
+            artefato: MisterALG-dmg-mac-antigo
+            arquivos: app/dist/*.dmg
           - sistema: windows-latest
             comando: dist:win
             artefato: MisterALG-windows

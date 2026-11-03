@@ -96,10 +96,17 @@ Todos os arquivos estão na página **[Releases](https://github.com/victinjr199x
 |:-:|---|---|---|
 | <img src="https://cdn.simpleicons.org/windows/0078D4" width="18" alt=""> | **Windows** | `MisterALG-x.y.z-instalador.exe` | Assistente em português (termos, pasta, atalhos) |
 | <img src="https://cdn.simpleicons.org/windows/0078D4" width="18" alt=""> | **Windows** (sem instalar) | `MisterALG-x.y.z-portatil.exe` | É só abrir — ótimo para pendrive ou PC da escola |
-| <img src="https://cdn.simpleicons.org/apple/000000" width="18" alt=""> | **macOS** (Intel e Apple Silicon) | `MisterALG-x.y.z.dmg` | Arraste para **Aplicativos** |
+| <img src="https://cdn.simpleicons.org/apple/000000" width="18" alt=""> | **macOS 13 Ventura ou mais novo** (Intel e Apple Silicon) | `MisterALG-x.y.z.dmg` | Arraste para **Aplicativos** |
+| <img src="https://cdn.simpleicons.org/apple/000000" width="18" alt=""> | **macOS 10.15 Catalina, 11 Big Sur e 12 Monterey** | `MisterALG-x.y.z-macOS-10.15-a-12.dmg` | Arraste para **Aplicativos** |
 | <img src="https://cdn.simpleicons.org/ubuntu/E95420" width="18" alt=""> | **Ubuntu, Mint, Debian, Pop!_OS** | `misteralg_x.y.z_amd64.deb` | Duplo clique, ou `sudo apt install ./misteralg_*.deb` |
 | <img src="https://cdn.simpleicons.org/fedora/51A2DA" width="18" alt=""> | **Fedora, openSUSE** | `misteralg-x.y.z.x86_64.rpm` | `sudo dnf install ./misteralg-*.rpm` |
 | <img src="https://cdn.simpleicons.org/linux/333333" width="18" alt=""> | **Outras distribuições** | `.AppImage` ou `.tar.gz` | Sem instalar |
+
+> [!NOTE]
+> **Qual DMG baixar no Mac?** Veja a versão em **menu Apple › Sobre Este Mac**. Do macOS 13 em diante, use o
+> `MisterALG-x.y.z.dmg`. No 10.15, 11 ou 12, use o `MisterALG-x.y.z-macOS-10.15-a-12.dmg` (o outro avisa
+> "requer o macOS 13.0 ou uma versão posterior"). Os dois têm as mesmas funções. Macs com macOS 10.14 ou
+> mais antigo não conseguem rodar o MisterALG.
 
 > [!TIP]
 > **Primeira abertura:** o MisterALG não tem certificado digital pago, então o sistema pode avisar.
@@ -359,6 +366,7 @@ npm test          # todos os testes: Portugol, busca, app, idiomas, C, JS, Pytho
 npm run dev       # abre a IDE com recarga automática
 npm run build     # compila para app/out/
 npm run dist:win  # instaladores (também dist:mac e dist:linux), já com Python, PHP, C# e PostgreSQL embutidos
+npm run dist:mac-antigo  # DMG para o macOS 10.15 a 12 (Electron 32)
 ```
 
 | Onde | O quê |
