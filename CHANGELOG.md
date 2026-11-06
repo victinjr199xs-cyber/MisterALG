@@ -3,6 +3,68 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.12.0] — 2026-10-28
+
+### Visual novo
+
+- **Barra de ferramentas na lateral também na disposição Moderna**: Configurações > Barra > Posição "Lateral" agora vale na moderna
+  (coluna de ícones à esquerda, à direita no árabe, com o painel "⋯" e o avatar da Conta no rodapé dela; no topo o avatar volta à faixa de abas).
+  O painel "⋯" e o menu de temas abrem ao lado da barra, sem sair da janela (inclusive no árabe), e os campos De/Até/Decimais do painel não ficam mais cortados.
+- **X da janela**: dentro da IDE só volta para a tela inicial (perguntando se salva as abas modificadas); o diálogo
+  "Fechar ou deixar em segundo plano" aparece apenas na tela inicial.
+- **Assistente de IA em pop-up**: o painel virou um cartão flutuante no canto inferior direito (não modal, sem fundo escurecido),
+  que se arrasta pelo cabeçalho, redimensiona pelo canto, maximiza (duplo clique no cabeçalho também) e lembra posição e tamanho.
+  Esc fecha; o foco vai para o campo de pergunta. Blocos de código das respostas ganharam Copiar e Inserir no editor.
+- **Memória em grade, como no VisuAlg**: bordas em todas as células, cabeçalho diferenciado, linhas zebradas, a variável que mudou
+  destacada com um piscar curto, vetores em caixinhas com índice, matrizes como grade linhas × colunas e um convite
+  ("Execute com F8 para ver as variáveis aqui") quando ainda não há variáveis. O tema clássico não mudou.
+- **Terminal do Portugol igual ao do VisuAlg**: o console abre sempre numa janela própria, preta, "Console simulando o modo
+  texto do MS-DOS", com texto cinza, cursor sublinhado piscando no `leia` e as mensagens finais do VisuAlg, em F9, F8 e timer.
+  Fechar a janela ou Esc interrompe o programa. Em Configurações, "Console do Portugol" troca para o console Moderno.
+- **Aviso de erro editável**: o "Conteúdo da linha" agora pode ser corrigido ali mesmo, com "Corrigir e executar" (roda de
+  novo do mesmo jeito), "Corrigir", Enter e Esc; a troca entra no Ctrl+Z e mantém a indentação.
+- **Disposição Moderna** (agora o padrão) e **tema Híbrido claro** (também o padrão). O "VisuAlg Clássico" continua
+  nas Configurações, com a mesma cara de sempre.
+- **Temas novos**: Noite, Papel e Híbrido, claro e escuro, com fontes Inter e JetBrains Mono embutidas (funcionam sem internet).
+- **Na disposição Moderna**: guias (abas) de documentos no topo, como as do VS Code (o "+" abre a escolha de linguagem,
+  Ctrl+W fecha, Ctrl+Tab alterna, arraste para reordenar), relógio com projetos anteriores (recentes e exemplos), cabeçalho
+  da página com o nome do arquivo, abas Terminal e Problemas (clicar num problema leva à linha), "Passo N" no F8 e
+  vetores da memória em caixinhas com valor e índice.
+- **Console moderno**: selo de estado (executando, aguardando, finalizado), histórico do `leia`, linha de erro clicável,
+  rodapé com o tempo e janela própria (Configurações > Sistema).
+- **Configurações em estilo menu de jogo**: cada opção tem uma explicação e o valor padrão no painel de ajuda.
+- **Tela inicial nova**, com saudação, cartões de atalho e aviso de atualização.
+- **Paleta de comandos** (Ctrl+K): digite o que quer fazer e ela acha o comando.
+- **Menu "/" no editor**: digite "/" no começo de uma linha e escolha um bloco pronto (se, laços, funções, leia...).
+  Dá para desligar em Configurações > Editor.
+
+### Barra, conta e ícones
+
+- **Ícones novos** na barra de ferramentas: traço simples, que acompanha as cores de cada tema (claro ou escuro).
+- **Barra no topo ou na lateral**, com os botões principais sempre à vista e o painel ⋯ para o resto.
+- **Barra na lateral**: em Configurações > Barra você escolhe se a barra fica no topo (como sempre foi) ou numa coluna
+  ao lado, e vê o resultado na hora. Também dá para mudar o tamanho dos ícones e esconder os botões que você não usa
+  (os essenciais, como Executar e Passo a passo, ficam sempre). Tem o botão "Restaurar barra padrão".
+- **Conta**: em Configurações > Conta você coloca seu nome e uma foto (PNG, JPG ou WEBP de até 5 MB). A foto fica só
+  no seu computador. Sem foto, aparecem as iniciais do nome. O avatar aparece na barra e na tela inicial.
+- O tutorial pula o passo de um botão que você escondeu.
+
+### Correções (auditoria)
+
+- **Parar** funciona também no SQL e no timer.
+- **Recuperação após queda**: o programa em edição volta mesmo se você abriu outro arquivo antes.
+- O console tem **limite de saída**, para um laço infinito não travar o computador.
+- **Gravação segura** das preferências, das chaves do assistente e do arquivo de recuperação (sem arquivos pela metade).
+- O comando `arquivo` só mexe na **pasta do algoritmo** e em Documentos.
+- Arquivos **recentes** só somem da lista se o arquivo realmente não existe mais.
+- **Exportar** (Pascal, C, Java) avisa quando dá erro.
+- No C, recursão profunda demais agora mostra uma **mensagem de limite** em vez de travar.
+- Os instaladores só saem se a **tag bate com a versão** (conferido no CI).
+- Dependências que não eram usadas foram removidas.
+- **Abrir quando o computador ligar** também funciona no Linux.
+- O app automatizado (testes) nunca procura atualização na internet, e a interface não carrega nada da rede.
+- O ícone do menu "/" não fica mais cortado e o "localizar" seleciona o texto de forma confiável.
+
 ## [1.11.0] — 2026-10-28
 
 ### Novidades

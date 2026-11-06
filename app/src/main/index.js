@@ -1,18 +1,20 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, shell } from 'electron'
-import { existsSync, statSync } from 'node:fs'
+import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, nativeTheme, shell } from 'electron'
+import { existsSync, readFileSync, rmSync, statSync } from 'node:fs'
+import { basename, extname, join } from 'node:path'
 import { temaPorId } from '../compartilhado/temas.js'
+import { FOTO_EXTENSOES, FOTO_LADO, FOTO_LADO_MAX, recorteQuadrado, validarFoto } from '../compartilhado/conta.js'
 import { mostrarAbertura } from './abertura.js'
-import { anexarDados, gravarArquivo, lerArquivo, lerDados } from './arquivos.js'
+import { anexarDados, gravarArquivo, gravarAtomicoSync, lerArquivo, lerDados } from './arquivos.js'
 import { aquecer, arvore, compilar, enviarEntrada, executar, foiCancelado, parar, pararTudo } from './clang.js'
 import { cancelar, gravarChave, perguntar, provedoresComChave } from './ia.js'
-import { carregarPagina, criarJanelaPrincipal } from './janelas.js'
+import { carregarPagina, criarJanelaPrincipal, fixarConsole } from './janelas.js'
 import * as programas from './programas.js'
 import { aquecerPHP, pararPHP } from './php.js'
 import { aquecerSQL, comandoSQL, pararSQL } from './sql.js'
 import { baixar as baixarAtualizacao, instalar as instalarAtualizacao, procurar as procurarAtualizacao } from './atualizacao.js'
 import { analisarCSharp, aquecerCSharp, preludioCSharp } from './csharp.js'
 import { definirPagina, iniciarPrevia, registrarEsquema, ultimaResposta } from './previa.js'
-import { montarMenu } from './menu.js'
+import { listarExemplos, montarMenu } from './menu.js'
 import { abreAoLigar, definirAbrirAoLigar, esconderBandeja, mostrarBandeja } from './sistema.js'
 import { tradutor } from '../compartilhado/idiomas.js'
 import {
@@ -172,6 +174,48 @@ function registrarIpc() {
     atualizarMenu()
     return r
   })
+  // Foto da conta: o renderer nunca passa caminho; o main escolhe o arquivo, recorta ao centro, reduz para
+  // 128x128 e grava sempre em userData/conta.png. Volta como data URL (cabe na CSP img-src data:).
+  const arquivoFoto = () => join(app.getPath('userData'), 'conta.png')
+  const lerFoto = () => {
+    try {
+      return `data:image/png;base64,${readFileSync(arquivoFoto()).toString('base64')}`
+    } catch {
+      return null
+    }
+  }
+  ipcMain.handle('conta:foto', () => lerFoto())
+  ipcMain.handle('conta:removerFoto', () => {
+    rmSync(arquivoFoto(), { force: true })
+    return null
+  })
+  ipcMain.handle('conta:escolherFoto', async () => {
+    const r = await dialog.showOpenDialog(janela, {
+      title: trMain('Escolher foto da conta'),
+      filters: [{ name: trMain('Imagens'), extensions: FOTO_EXTENSOES }],
+      properties: ['openFile'],
+    })
+    if (r.canceled || !r.filePaths[0]) return null
+    const caminho = r.filePaths[0]
+    try {
+      if (!validarFoto({ extensao: extname(caminho), tamanho: statSync(caminho).size }).ok) return { erro: true }
+      const original = nativeImage.createFromPath(caminho)
+      const { width, height } = original.getSize()
+      if (original.isEmpty() || width > FOTO_LADO_MAX || height > FOTO_LADO_MAX) return { erro: true }
+      const png = original.crop(recorteQuadrado(width, height)).resize({ width: FOTO_LADO, height: FOTO_LADO, quality: 'best' }).toPNG()
+      gravarAtomicoSync(arquivoFoto(), png)
+      return { foto: lerFoto() }
+    } catch {
+      return { erro: true } // a conta anterior continua como estava
+    }
+  })
+  // Exemplos para a lista da disposição moderna: o renderer só recebe nomes e pede o texto por (grupo, arquivo), nunca por caminho.
+  ipcMain.handle('exemplos:listar', () => listarExemplos().map(({ id, nome, arquivos }) => ({ id, nome, arquivos: arquivos.map((c) => basename(c)) })))
+  ipcMain.handle('exemplos:ler', async (_e, { grupo, arquivo }) => {
+    const g = listarExemplos().find((x) => x.id === grupo)
+    const caminho = g?.arquivos.find((c) => basename(c) === arquivo)
+    return caminho ? { nome: arquivo, texto: (await lerArquivo(caminho)).texto } : null
+  })
   ipcMain.handle('menu:estado', (_e, estado) => {
     estadoMenu = { ...estadoMenu, ...estado }
     atualizarMenu()
@@ -269,6 +313,11 @@ function registrarIpc() {
   ipcMain.handle('dialogo:mensagem', async (_e, opcoes) => {
     const t = trMain
     const traduzidas = { ...opcoes, title: t(opcoes?.title ?? ''), message: t(opcoes?.message ?? ''), buttons: opcoes?.buttons?.map((b) => t(b)) }
+    // Fumaça automatizada (scripts/fumaca-abas.mjs): MISTERALG_DIALOGO_AUTO=<índice do botão> responde sem abrir a janela e registra o pedido na página.
+    if (process.env.MISTERALG_DADOS && process.env.MISTERALG_DIALOGO_AUTO !== undefined) {
+      void janela.webContents.executeJavaScript(`(window.__dialogosPedidos ??= []).push(${JSON.stringify(traduzidas.message)})`)
+      return /recuper/i.test(traduzidas.message) ? 0 : Number(process.env.MISTERALG_DIALOGO_AUTO) // recuperar após queda: sempre "Sim"
+    }
     const r = await dialog.showMessageBox(janela, { noLink: true, ...traduzidas })
     return r.response
   })
@@ -401,6 +450,7 @@ function registrarIpc() {
     pararPHP()
     void irPara(pagina, params && typeof params === 'object' ? params : {}) // a página atual vai embora; não há resposta a esperar
   })
+  ipcMain.handle('console:fixar', (_e, sim) => fixarConsole(sim === true))
   ipcMain.handle('janela:fechar', () => {
     podeFechar = true
     limparRecuperacao()
@@ -455,6 +505,10 @@ app.whenReady().then(() => {
     if (saindoDoApp || (process.env.MISTERALG_DADOS && !process.env.MISTERALG_TESTE_SISTEMA)) {
       saindoDoApp = false // se o aluno cancelar o "salvar?", o próximo X volta a perguntar
       janela.webContents.send('menu', 'sair')
+    } else if (!naInicio) {
+      // Dentro da IDE o X só volta para a tela inicial (pergunta se salva as abas modificadas); fechar/segundo plano é na tela inicial.
+      mostrarJanela()
+      janela.webContents.send('menu', 'tela-inicial')
     } else void aoClicarEmFechar()
   })
   janela.on('session-end', () => { saindoDoApp = true }) // Windows desligando

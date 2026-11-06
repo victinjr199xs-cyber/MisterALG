@@ -1,0 +1,60 @@
+/* Assistente de IA como pop-up flutuante (renderer/assistente.js). Não é modal: sem fundo escurecido, o editor
+   continua utilizável. Posição, tamanho e maximizar são feitos pelo JS (left/top/width/height em px). */
+.assistente-popup {
+  position: fixed; z-index: 35; box-sizing: border-box;
+  display: flex; flex-direction: column; overflow: hidden;
+  inline-size: 420px; block-size: min(640px, 70vh); min-inline-size: 300px; min-block-size: 260px;
+  max-inline-size: calc(100vw - 16px); max-block-size: calc(100vh - 16px);
+  margin: 0; padding: 0;
+  border: 1px solid var(--borda); border-radius: var(--raio);
+  background: var(--dialogo-fundo); color: var(--texto);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .35), 0 2px 6px rgba(0, 0, 0, .2);
+  resize: both; /* o canto de redimensionar */
+  animation: assistente-entrar .16s ease-out;
+}
+.assistente-popup[hidden] { display: none; }
+.assistente-popup:focus { outline: none; }
+.assistente-popup:focus-within { border-color: var(--destaque); }
+.assistente-popup.maximizado { resize: none; }
+@keyframes assistente-entrar { from { opacity: 0; transform: translateY(8px); } }
+
+.assistente-popup .assistente-topo {
+  flex: none; gap: 4px; padding: 6px 8px; cursor: grab; touch-action: none; user-select: none;
+  border-block-end: 1px solid var(--borda); background: var(--cabecalho);
+}
+.assistente-popup.maximizado .assistente-topo { cursor: default; }
+.assistente-popup .assistente-topo:active { cursor: grabbing; }
+.assistente-popup .assistente-topo .legenda { margin: 0; font-size: 13px; }
+.assistente-popup .assistente-topo-botao { cursor: pointer; inline-size: 26px; block-size: 26px; border-radius: var(--raio); color: var(--texto); }
+.assistente-popup .assistente-topo-botao:focus-visible { outline: 2px solid var(--destaque); outline-offset: 1px; }
+
+.assistente-popup .assistente-conversa {
+  flex: 1 1 0; min-block-size: 0; margin: 0; padding: 12px; gap: 10px;
+  border: 0; border-block-end: 1px solid var(--borda); background: var(--fundo-campo);
+  font: 13.5px/1.55 var(--fonte-ui);
+}
+.assistente-popup .assistente-msg { max-inline-size: 94%; padding: 8px 12px; border-radius: calc(var(--raio) + 4px); }
+.assistente-popup .assistente-msg.usuario { border-end-end-radius: 3px; }
+.assistente-popup .assistente-msg.ia { border-end-start-radius: 3px; max-inline-size: 100%; }
+.assistente-popup .assistente-msg p { margin: 0 0 8px; }
+.assistente-popup .assistente-msg code { font-family: var(--fonte-mono); font-size: .92em; direction: ltr; unicode-bidi: plaintext; }
+
+.assistente-popup .assistente-codigo { margin: 8px 0; border: 1px solid var(--borda); border-radius: var(--raio); overflow: hidden; background: var(--fundo-campo); direction: ltr; }
+.assistente-popup .assistente-codigo-barra { display: flex; justify-content: flex-end; gap: 4px; padding: 3px 6px; border-block-end: 1px solid var(--borda); background: var(--cabecalho); }
+.assistente-popup .assistente-codigo-botao {
+  padding: 1px 8px; border: 1px solid var(--borda); border-radius: 999px; background: none; color: var(--texto);
+  font: 600 11px var(--fonte-ui); cursor: pointer;
+}
+.assistente-popup .assistente-codigo-botao:hover { background: var(--botao-hover); }
+.assistente-popup .assistente-codigo pre { margin: 0; padding: 8px 10px; border: 0; border-radius: 0; background: transparent; font: 12.5px/1.5 var(--fonte-mono); tab-size: 3; }
+.assistente-popup .assistente-codigo pre code { font-size: inherit; }
+
+.assistente-popup .assistente-acoes { flex: none; padding: 8px 10px 0; }
+.assistente-popup .assistente-acao { padding: 3px 10px; font-size: 12px; color: var(--texto); }
+.assistente-popup .assistente-rodape { flex: none; padding: 8px 10px 14px; }
+.assistente-popup .assistente-entrada { border-radius: var(--raio); font: 13px/1.4 var(--fonte-ui); }
+.assistente-popup .assistente-entrada:focus-visible { outline: 2px solid var(--destaque); outline-offset: 0; }
+.assistente-popup .assistente-enviar { color: var(--texto); }
+.assistente-popup:not(.maximizado) { resize: both; }
+
+@media (prefers-reduced-motion: reduce) { .assistente-popup { animation: none; } }

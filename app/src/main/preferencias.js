@@ -14,17 +14,28 @@ export const PADRAO = {
   tamanho: 13,
   tabulacao: 3,
   numerarLinhas: true,
-  tema: 'classico', // ids em ../compartilhado/temas.js
+  tema: 'hibrido-claro', // ids em ../compartilhado/temas.js
   coresSintaxe: {}, // por tema: { [idTema]: { comentario: '#rrggbb', ... } }
+  menuBarra: true, // menu "/" no começo da linha do editor (renderer/editor/menu-barra.js)
   mostrarDicas: true, // dica do dia ao abrir
   tutorialVisto: false, // o tutorial já foi oferecido (renderer/tutorial.js); quem atualiza o app também recebe a oferta uma vez
   abertura: true, // animação de abertura (main/abertura.js)
   procurarAtualizacoes: true, // ao abrir, pergunta ao GitHub se há versão nova (main/atualizacao.js)
   idioma: 'pt', // idioma da interface (compartilhado/idiomas.js)
+  disposicao: 'moderna', // 'classica' (molduras do VisuAlg) ou 'moderna' (trilho de linguagens, painéis; renderer/disposicao.js)
+  alturaPainel: 0, // altura do painel inferior (Terminal/Problemas) na disposição moderna; 0 = automática
+  consoleEmJanela: null, // console numa janela própria: null = automático (sim na disposição clássica, não na moderna), true ou false (renderer/console.js)
+  consolePortugol: 'visualg', // console do Portugol: 'visualg' (janela própria, modo texto do MS-DOS) ou 'moderno' (renderer/console.js)
+  janelaConsole: null, // { x, y, width, height } da janela do console, lembrados ao fechar/mover (main/janelas.js)
+  posicaoBarra: 'topo', // barra de ferramentas: 'topo' (clássico) ou 'lateral' (compartilhado/barra.js)
+  tamanhoIcones: 'medio', // 'pequeno', 'medio' ou 'grande'
+  botoesOcultos: [], // data-id dos botões tirados da barra (os essenciais nunca saem)
+  conta: { nome: '' }, // a foto fica à parte, em userData/conta.png (main/index.js)
   abrirAoLigar: false, // abrir quando o computador liga (main/sistema.js)
   aoFechar: 'perguntar', // o X da janela: 'perguntar', 'fechar' ou 'segundoPlano' (fica na bandeja)
   // Assistente de IA (main/ia.js): desligado até o usuário ativar. As chaves ficam à parte, criptografadas.
   ia: { ativo: false, provedor: 'claude', modelos: {}, urls: {}, modo: 'dica' },
+  iaJanela: null, // { x, y, w, h } do pop-up do assistente (renderer/assistente.js); validada contra o tamanho da janela ao abrir
   dicaAtual: 0,
   // Listas do comando `lista` (as 3 primeiras são as do listas.txt do VisuAlg).
   listas: [

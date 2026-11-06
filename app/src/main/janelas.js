@@ -1,5 +1,10 @@
 import { BrowserWindow, screen } from 'electron'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { temaPorId } from '../compartilhado/temas.js'
+import { limitesPadrao, limitesValidos, TAMANHO_MINIMO } from './console-limites.js'
+import { gravarPreferencias, lerPreferencias } from './preferencias.js'
 
 const caminhoPreload = fileURLToPath(new URL('../preload/index.mjs', import.meta.url))
 const arquivoPagina = (html) => fileURLToPath(new URL(`../renderer/${html}`, import.meta.url))
@@ -50,8 +55,67 @@ export function criarJanelaPrincipal(fundo = '#c0dcc0', aguardar = null) {
   })
 
   // Links externos (ajuda, sobre) abrem fora do app; navegação interna é bloqueada.
-  janela.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  // Única exceção: a janela do console (renderer/console.js), aberta em branco com este nome.
+  janela.webContents.setWindowOpenHandler(({ url, frameName }) => {
+    if (frameName !== NOME_CONSOLE || url !== 'about:blank' || (consoleFilha && !consoleFilha.isDestroyed())) return { action: 'deny' }
+    return { action: 'allow', overrideBrowserWindowOptions: opcoesDoConsole(janela) }
+  })
+  janela.webContents.on('did-create-window', (filha, { frameName }) => {
+    if (frameName === NOME_CONSOLE) ligarConsole(filha, janela)
+  })
   janela.webContents.on('will-navigate', (evento) => evento.preventDefault())
 
   return janela
+}
+
+// ---- janela própria do console ------------------------------------------------------------
+// O renderer abre a janela com window.open e muda o elemento do console para dentro dela; aqui só se
+// define como ela nasce (tamanho lembrado, tema, ícone), que nada navegue e que ela feche com o app.
+
+const NOME_CONSOLE = 'misteralg-console'
+let consoleFilha = null
+
+function iconeDoApp() {
+  const candidatos = [join(process.resourcesPath ?? '', 'icone.png'), fileURLToPath(new URL('../../build/icon.png', import.meta.url))]
+  return candidatos.find((c) => existsSync(c))
+}
+
+function opcoesDoConsole(principal) {
+  const salvo = lerPreferencias().janelaConsole
+  const area = (limites) => screen.getDisplayMatching(limites).workArea
+  const limites = limitesValidos(salvo, area(salvo ?? principal.getBounds())) ?? limitesPadrao(principal.getBounds(), area(principal.getBounds()))
+  return {
+    ...limites,
+    minWidth: TAMANHO_MINIMO.width,
+    minHeight: TAMANHO_MINIMO.height,
+    title: 'MisterALG — Console',
+    icon: iconeDoApp(),
+    backgroundColor: temaPorId(lerPreferencias().tema).fundo,
+    autoHideMenuBar: true,
+    webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true, spellcheck: false },
+  }
+}
+
+function ligarConsole(filha, principal) {
+  consoleFilha = filha
+  filha.removeMenu?.() // Windows/Linux: sem barra de menus (F9, F8 e Esc são repassados pelo renderer)
+  filha.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  filha.webContents.on('will-navigate', (evento) => evento.preventDefault())
+  let relogio = null
+  const lembrar = () => {
+    if (filha.isDestroyed() || filha.isMinimized() || filha.isMaximized() || filha.isFullScreen()) return
+    gravarPreferencias({ janelaConsole: filha.getBounds() })
+  }
+  const agendar = () => { clearTimeout(relogio); relogio = setTimeout(lembrar, 400) }
+  filha.on('resize', agendar)
+  filha.on('move', agendar)
+  filha.on('close', () => { clearTimeout(relogio); lembrar() })
+  filha.on('closed', () => { consoleFilha = null })
+  principal.on('closed', () => { if (!filha.isDestroyed()) filha.destroy() }) // fechar o app fecha o console
+}
+
+/** "Fixar no topo" do console. Sem janela própria aberta, não faz nada. */
+export function fixarConsole(sim) {
+  if (consoleFilha && !consoleFilha.isDestroyed()) consoleFilha.setAlwaysOnTop(!!sim, 'floating')
+  return !!consoleFilha && !consoleFilha.isDestroyed() && consoleFilha.isAlwaysOnTop()
 }

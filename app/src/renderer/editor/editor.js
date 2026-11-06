@@ -27,6 +27,7 @@ import { tags as t } from '@lezer/highlight'
 import { FUNCOES, PALAVRAS_CHAVE, normalizar } from '@misteralg/interpreter'
 import { corrigirIndentacao } from './indentacao.js'
 import { MODELOS, SUGESTOES, cabecalho, expandir } from './modelos.js'
+import { menuBarra } from './menu-barra.js'
 
 // ---- realce de sintaxe (cores do VISUALG30.INI padrão) ----------------------
 
@@ -263,11 +264,7 @@ export function criarEditor(parent, op) {
   }
 
   const prefs0 = op.prefs()
-  const view = new EditorView({
-    parent,
-    state: EditorState.create({
-      doc: '',
-      extensions: [
+  const extensoes = () => [
         numeracao.of(prefs0.numerarLinhas ? lineNumbers() : []),
         gutter({
           class: 'cm-gutter-breakpoint',
@@ -291,6 +288,7 @@ export function criarEditor(parent, op) {
         highlightSelectionMatches(),
         linguagem.of(EXTENSOES.portugol()),
         autocompletion({ override: [(c) => fonteCtrlJ(c, linguagemAtual)], activateOnTyping: false, icons: false }),
+        menuBarra({ ativo: () => op.prefs().menuBarra !== false, linguagem: () => linguagemAtual, t: op.t }),
         aparencia.of(temaFonte(prefs0)),
         somenteLeitura.of([]),
         keymap.of([
@@ -307,13 +305,32 @@ export function criarEditor(parent, op) {
         ]),
         avisarBreakpoints,
         EditorView.contentAttributes.of({ spellcheck: 'false', autocapitalize: 'off', autocorrect: 'off' }),
-      ],
-    }),
-  })
+  ]
+  const view = new EditorView({ parent, state: EditorState.create({ doc: '', extensions: extensoes() }) })
 
   const api = {
     view,
     texto: () => view.state.doc.toString(),
+    // Abas: cada documento guarda o seu EditorState (texto, desfazer, seleção, breakpoints).
+    estado: () => view.state,
+    /** Estado novo (sem histórico) para um documento recém-aberto. */
+    novoEstado(texto, id) {
+      const l = EXTENSOES[id] ? id : 'portugol'
+      const p = op.prefs()
+      return EditorState.create({ doc: texto, extensions: extensoes() }).update({
+        effects: [linguagem.reconfigure(EXTENSOES[l]()), aparencia.reconfigure(temaFonte(p)), numeracao.reconfigure(p.numerarLinhas ? lineNumbers() : [])],
+      }).state
+    },
+    /** Mostra o estado guardado de uma aba (as preferências de agora valem, não as de quando ele foi guardado). */
+    usarEstado(estado, id, rolagem = 0) {
+      linguagemAtual = EXTENSOES[id] ? id : 'portugol'
+      view.setState(estado)
+      api.aplicarPrefs(op.prefs())
+      view.scrollDOM.scrollTop = rolagem
+      const pos = view.state.selection.main.head
+      const linha = view.state.doc.lineAt(pos)
+      op.aoMoverCursor?.(linha.number, pos - linha.from + 1)
+    },
     definirTexto(texto) {
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: texto },
@@ -326,6 +343,14 @@ export function criarEditor(parent, op) {
     selecionar(inicio, fim) {
       view.dispatch({ selection: EditorSelection.single(inicio, fim), scrollIntoView: true })
     },
+    /** Leva o cursor ao começo da linha `n` (1-based), rola até ela e devolve o foco ao editor. Devolve false se a linha não existe. */
+    irParaLinha(n) {
+      if (!(n >= 1 && n <= view.state.doc.lines)) return false
+      const linha = view.state.doc.line(n)
+      view.dispatch({ selection: EditorSelection.cursor(linha.from), effects: EditorView.scrollIntoView(linha.from, { y: 'center' }) })
+      view.focus()
+      return true
+    },
     textoSelecionado: () => {
       const { from, to } = view.state.selection.main
       return view.state.sliceDoc(from, to)
@@ -335,6 +360,19 @@ export function criarEditor(parent, op) {
       view.focus()
     },
     linhaDoCursor: () => view.state.doc.lineAt(view.state.selection.main.head).number,
+    /** Troca o texto da linha n numa única transação (um Ctrl+Z desfaz) e põe o cursor no fim dela. */
+    substituirLinha(n, texto) {
+      if (!(n >= 1 && n <= view.state.doc.lines)) return false
+      const linha = view.state.doc.line(n)
+      view.dispatch({
+        changes: { from: linha.from, to: linha.to, insert: texto },
+        selection: EditorSelection.cursor(linha.from + texto.length),
+        effects: EditorView.scrollIntoView(linha.from, { y: 'center' }),
+        userEvent: 'input.correcao',
+      })
+      view.focus()
+      return true
+    },
     textoDaLinha: (n) => (n >= 1 && n <= view.state.doc.lines ? view.state.doc.line(n).text : ''),
     breakpoints: () => linhasComBp(view.state),
     alternarBreakpoint() {

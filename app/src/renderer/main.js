@@ -16,6 +16,12 @@ import { abrirTutorial } from './tutorial.js'
 import { primeiroPrograma } from './tutorial-passos.js'
 import { gerarPascal, gerarC, gerarJava } from '@misteralg/interpreter'
 import { TEMAS, temaPorId } from '../compartilhado/temas.js'
+import { BARRA, TAMANHOS_ICONE, dicaDaPlataforma as dicaPorPlataforma, idsOcultaveis, itensVisiveis, principaisLateral } from '../compartilhado/barra.js'
+import { criarAvatar } from './avatar.js'
+import { criarDisposicao } from './disposicao.js'
+import { criarPaleta } from './paleta.js'
+import { criarAbas } from './abas.js'
+import { abaReutilizavel, acharPorCaminho, ciclar, lerRecuperacao, nomeDaAba, proximaAoFechar, reordenar, serializarRecuperacao } from './abas-logica.js'
 
 const api = window.misteralg
 const $ = (sel) => document.querySelector(sel)
@@ -26,10 +32,12 @@ const TERMOS = TEXTO_TERMOS.replace(/^﻿/, '').replace(/\r\n/g, '\n')
 const VERSAO_TERMOS = '1.5'
 
 let prefs = await api.prefs.ler()
+let fotoConta = await api.conta.foto() // data URL da foto da conta, ou null
 /** Tema + cores de código que o usuário trocou para esse tema (Configurações → Cores). */
 function aplicarTema(id, cores = prefs.coresSintaxe?.[temaPorId(id).id] ?? {}) {
   const raiz = document.documentElement
   raiz.dataset.tema = temaPorId(id).id
+  for (const [nome, cor] of Object.entries(temaPorId(id).icones)) raiz.style.setProperty(`--icone-${nome}`, cor)
   for (const [cat] of dialogos.CATEGORIAS_SINTAXE) {
     if (cores[cat]) raiz.style.setProperty(`--sx-${cat}`, cores[cat])
     else raiz.style.removeProperty(`--sx-${cat}`)
@@ -69,10 +77,17 @@ function abrirMenuTemas() {
     document.createElement('hr'),
     item(['Personalizar as cores do código…'], () => comandos['configurar-cores']()),
   )
-  const r = botao.getBoundingClientRect()
+  let r = botao.getBoundingClientRect()
+  if (!r.width) r = $('[data-id="mais"]')?.getBoundingClientRect() ?? r // o painel "⋯" já fechou: ancora no botão dele
   menuTemas.hidden = false
-  menuTemas.style.top = `${r.bottom + 2}px`
-  menuTemas.style.left = `${Math.max(4, Math.min(r.left, innerWidth - menuTemas.offsetWidth - 4))}px`
+  // Na barra lateral (ou no painel "⋯") o botão fica embaixo: abre ao lado e sem sair da janela.
+  const lateral = document.body.classList.contains('barra-lateral')
+  const topo = lateral ? r.top : r.bottom + 2
+  menuTemas.style.top = `${Math.max(4, Math.min(topo, innerHeight - menuTemas.offsetHeight - 4))}px`
+  const larg = menuTemas.offsetWidth
+  const rtl = document.documentElement.dir === 'rtl'
+  const esq = lateral ? (rtl ? r.left - larg - 4 : r.right + 4) : r.left // árabe: a barra fica à direita, o menu abre para a esquerda dela
+  menuTemas.style.left = `${Math.max(4, Math.min(esq, innerWidth - larg - 4))}px`
   botao.setAttribute('aria-expanded', 'true')
   menuTemas.querySelector('[aria-checked="true"]')?.focus()
 }
@@ -92,6 +107,7 @@ menuTemas.addEventListener('keydown', (e) => {
 })
 const editandoCampo = () => !!document.querySelector('dialog[open]') || !!document.activeElement?.matches('input, textarea')
 const doc = { caminho: null, nome: 'semnome', codificacao: 'windows-1252', modificado: false, linguagem: 'portugol' }
+let disposicao = null // criada junto da barra (disposição moderna); atualizarTitulo avisa quando o documento muda
 
 // ---- linguagens --------------------------------------------------------------------
 
@@ -143,7 +159,6 @@ document.addEventListener('mouseover', (e) => {
 const ROTULOS_CODIGO = [
   ['.moldura-variaveis .legenda', 'Variables'],
   ['.moldura-visualizacao > .legenda', 'Terminal'],
-  ['.console-titulo > span:not(.console-icone)', 'Terminal'],
   ['#variaveis th:nth-child(1)', 'Scope'], ['#variaveis th:nth-child(2)', 'Name'],
   ['#variaveis th:nth-child(3)', 'Type'], ['#variaveis th:nth-child(4)', 'Value'],
 ]
@@ -160,6 +175,7 @@ function atualizarTitulo() {
   const t = tradutor(prefs.idioma)
   api.janela.titulo(doc.modificado ? t('MisterALG — {0} (modificado)', arquivo) : t('MisterALG — {0}', arquivo))
   status.estado()
+  disposicao?.atualizar()
 }
 
 function marcarModificado() {
@@ -172,6 +188,7 @@ function marcarModificado() {
 let execucao = null // criada logo abaixo; o editor precisa existir antes
 const editor = criarEditor($('#editor'), {
   prefs: () => prefs,
+  t: (...a) => tradutor(prefs.idioma)(...a),
   aoMudar: () => {
     marcarModificado()
     execucao?.aoEditar()
@@ -180,20 +197,135 @@ const editor = criarEditor($('#editor'), {
   aoAlternarBreakpoint: (linhas) => execucao?.atualizarBreakpoints(linhas),
 })
 
-function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome', linguagem = 'portugol' }) {
-  execucao.restaurar()
-  editor.definirLinguagem(linguagem)
-  editor.definirTexto(texto)
-  Object.assign(doc, { caminho, codificacao, nome, linguagem, modificado: false })
-  aplicarModo(linguagem)
-  // Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve.
+/** Carrega o compilador (e o PCH do C++) ou o Python enquanto a pessoa escreve. */
+function aquecer(linguagem, texto) {
   if (linguagem === 'c' || linguagem === 'cpp') api.clang.aquecer({ linguagem, fonte: texto })
   else if (linguagem === 'python') api.programa.aquecer('python')
   else if (linguagem === 'csharp') api.csharp.aquecer()
   else if (linguagem === 'php') api.php.aquecer()
   else if (linguagem === 'sql') api.sql.aquecer()
+}
+
+/** Troca o conteúdo da aba ativa (a "janela única" da disposição clássica; na moderna, o Novo/Abrir decide antes se vale uma aba nova). */
+function carregar({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome', linguagem = 'portugol', origem = null }) {
+  execucao.restaurar()
+  editor.definirLinguagem(linguagem)
+  editor.definirTexto(texto)
+  Object.assign(doc, { caminho, codificacao, nome, linguagem, modificado: false })
+  abaAtiva.origem = origem
+  aplicarModo(linguagem)
+  aquecer(linguagem, texto)
   atualizarTitulo()
   editor.focar()
+}
+
+// ---- abas de documentos ----------------------------------------------------------------------
+// `doc` continua sendo UM objeto: é sempre o documento da aba ativa. As outras abas guardam seus campos e o
+// EditorState do CodeMirror (texto, desfazer, seleção, breakpoints); trocar de aba copia de/para `doc` e `editor`.
+// Na disposição clássica não há faixa de guias: Novo/Abrir substituem o documento da aba ativa, como sempre.
+
+const abasDoc = [] // { id, estado, rolagem, origem, caminho, nome, codificacao, linguagem, modificado }
+let abaAtiva = { id: 1, estado: null, rolagem: 0, origem: null }
+abasDoc.push(abaAtiva)
+let proximoId = 2
+const CAMPOS_DOC = ['caminho', 'nome', 'codificacao', 'linguagem', 'modificado']
+const comAbas = () => document.documentElement.dataset.disposicao === 'moderna'
+
+function guardarAba() {
+  for (const c of CAMPOS_DOC) abaAtiva[c] = doc[c]
+  abaAtiva.estado = editor.estado()
+  abaAtiva.rolagem = editor.view.scrollDOM.scrollTop
+}
+
+function ativarAba(aba) {
+  if (aba === abaAtiva) return
+  guardarAba()
+  execucao.restaurar()
+  abaAtiva = aba
+  for (const c of CAMPOS_DOC) doc[c] = aba[c]
+  editor.usarEstado(aba.estado, aba.linguagem, aba.rolagem)
+  aplicarModo(aba.linguagem)
+  aquecer(aba.linguagem, editor.texto())
+  atualizarTitulo()
+  editor.focar()
+}
+
+function criarAba({ texto, caminho = null, codificacao = 'windows-1252', nome = 'semnome', linguagem = 'portugol', origem = null }) {
+  const aba = { id: proximoId++, estado: editor.novoEstado(texto, linguagem), rolagem: 0, origem, caminho, nome, codificacao, linguagem, modificado: false }
+  abasDoc.push(aba)
+  ativarAba(aba)
+}
+
+const avisoDeExecucao = () => {
+  status.mensagem(` MENSAGEM: ${tradutor(prefs.idioma)('Pare o programa antes de trocar de aba')}`)
+  return false
+}
+
+/** Esqueleto ou nada: a aba "sem nome" pode ser reaproveitada em vez de abrir outra. */
+const abaVazia = () => {
+  const texto = editor.texto()
+  return texto.trim() === '' || texto === esqueletoDe(doc.linguagem)
+}
+
+/**
+ * Abre um documento: na moderna, numa aba (a do mesmo arquivo, se já aberta; a aba vazia, se for a única; senão uma nova);
+ * na clássica, no lugar do atual depois de perguntar se salva. Devolve false se não abriu.
+ */
+async function abrirDocumento(dados, titulo) {
+  if (!comAbas()) {
+    if (titulo && !(await podeDescartar(titulo))) return false
+    carregar(dados)
+    return true
+  }
+  if (execucao.emExecucao()) return avisoDeExecucao()
+  guardarAba()
+  const ja = dados.caminho ? acharPorCaminho(abasDoc, dados.caminho) : abasDoc.find((a) => dados.origem && a.origem === dados.origem)
+  if (ja) { ativarAba(ja); return true }
+  if (abaReutilizavel(abasDoc, abaVazia)) carregar(dados)
+  else criarAba(dados)
+  return true
+}
+
+async function fecharAba(aba = abaAtiva) {
+  if (execucao.emExecucao()) return avisoDeExecucao()
+  guardarAba()
+  const i = abasDoc.indexOf(aba)
+  if (i < 0) return false
+  if (aba !== abaAtiva && !aba.modificado) {
+    abasDoc.splice(i, 1)
+    disposicao?.atualizar()
+    return true
+  }
+  ativarAba(aba) // a pergunta de salvar e o salvar valem para o documento ativo
+  if (!(await podeDescartar(' Fechar o algoritmo '))) return false
+  if (abasDoc.length === 1) { // a última: no lugar dela nasce uma aba vazia (mesma linguagem)
+    const l = doc.linguagem
+    editor.usarEstado(editor.novoEstado('', l), l)
+    carregar({ texto: esqueletoDe(l), linguagem: l, codificacao: l === 'portugol' ? 'windows-1252' : 'utf-8' })
+    return true
+  }
+  const proxima = abasDoc[proximaAoFechar(abasDoc.length, i) + (i < abasDoc.length - 1 ? 1 : 0)]
+  ativarAba(proxima)
+  abasDoc.splice(abasDoc.indexOf(aba), 1)
+  disposicao?.atualizar()
+  return true
+}
+
+function irParaAba(delta) {
+  if (abasDoc.length < 2) return
+  if (execucao.emExecucao()) return void avisoDeExecucao()
+  ativarAba(abasDoc[ciclar(abasDoc.length, abasDoc.indexOf(abaAtiva), delta)])
+}
+
+/** Pergunta, uma aba por vez, sobre cada documento modificado. Devolve false se o usuário cancelou. */
+async function podeDescartarTodas(titulo) {
+  guardarAba()
+  for (const aba of [...abasDoc]) {
+    if (!aba.modificado) continue
+    ativarAba(aba)
+    if (!(await podeDescartar(titulo))) return false
+  }
+  return true
 }
 
 /** Pergunta se deve salvar. Devolve false se o usuário cancelou. */
@@ -230,17 +362,26 @@ async function salvar(comoNovo = false) {
   doc.modificado = false
   atualizarTitulo()
   status.mensagem(' MENSAGEM: Pronto! * Este algoritmo está salvo *')
-  api.recuperacao.limpar()
+  gravarRecuperacao() // as outras abas modificadas continuam protegidas
   return true
 }
 
-async function abrirResultado(lido) {
+async function abrirResultado(lido, titulo = null) {
   if (!lido) return
   if (lido.erro) {
     await api.mensagem({ type: 'warning', title: 'Pesquisa de algoritmo no MisterALG', message: lido.erro })
     return
   }
-  carregar({ ...lido, nome: lido.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(lido.caminho) })
+  await abrirDocumento({ ...lido, nome: lido.caminho.split(/[\\/]/).pop().replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(lido.caminho) }, titulo)
+}
+
+/** Na moderna, um arquivo que já está numa aba só ativa essa aba (sem ler de novo). */
+function ativarSeAberto(caminho) {
+  if (!comAbas() || execucao.emExecucao()) return false
+  guardarAba()
+  const ja = acharPorCaminho(abasDoc, caminho)
+  if (ja) ativarAba(ja)
+  return !!ja
 }
 
 /** O main devolve { erro } (já traduzido) quando o comando `arquivo` não pode usar o caminho; o interpretador mostra a mensagem ao aluno. */
@@ -268,7 +409,15 @@ execucao = criarExecucao({
     },
   }),
   idioma: () => prefs.idioma,
-  aoErro: (erro) => { ultimoErro = erro },
+  consoleEmJanela: () => prefs.consoleEmJanela, // null = automático (janela própria na disposição clássica)
+  consolePortugol: () => prefs.consolePortugol,
+  programa: () => ({
+    nome: doc.caminho ? doc.caminho.split(/[\\/]/).pop() : doc.nome === 'semnome' ? tradutor(prefs.idioma)('sem nome') : `${doc.nome}.${EXTENSAO[doc.linguagem]}`,
+    linguagem: doc.linguagem,
+  }),
+  rodar: (id) => rodar(id),
+  emTutorial: () => !!tutorial, // durante o tutorial o console fica no painel, que é o que ele aponta
+  aoErro: (erro) => { ultimoErro = erro; disposicao?.problema(erro) },
   iaAtiva: () => !!prefs.ia?.ativo,
   aoPedirIA: () => assistente.explicarErro(),
   linguagem: () => doc.linguagem,
@@ -278,11 +427,13 @@ execucao = criarExecucao({
     diretorio: doc.caminho ? doc.caminho.replace(/[\\/][^\\/]*$/, '') : null,
   }),
   aoMudarEstado: (rodando) => {
-    if (rodando) ultimoErro = null
+    if (rodando) { ultimoErro = null; disposicao?.problema(null); disposicao?.aoExecutar() }
     api.menu.estado({ executando: rodando })
     for (const id of ['parar']) $(`[data-id="${id}"]`).disabled = !rodando
   },
 })
+
+execucao.aoEvento((tipo) => disposicao?.passo(tipo)) // "Passo N" no cabeçalho da disposição moderna
 
 let ultimoErro = null // para o Assistente de IA saber o que deu errado
 const assistente = criarAssistente({
@@ -294,6 +445,8 @@ const assistente = criarAssistente({
     erro: ultimoErro,
     saida: $('#console-tela').textContent || $('#visualizacao').textContent,
   }),
+  t: (...a) => tradutor(prefs.idioma)(...a),
+  inserir: (texto) => editor.inserir(texto),
   aoMudar: (aberto) => $('[data-id="assistente"]')?.setAttribute('aria-pressed', String(aberto)),
 })
 
@@ -323,18 +476,29 @@ async function exportarPrograma(linguagem, rotulo, extensao, gerar) {
 
 const comandos = {
   novo: async (linguagem = doc.linguagem) => {
-    if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
-    carregar({ texto: esqueletoDe(linguagem), linguagem, codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' })
+    await abrirDocumento({ texto: esqueletoDe(linguagem), linguagem, codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' }, ' Incluir um novo algoritmo no MisterALG ')
+  },
+  'nova-aba': () => abasUI.menuNova(),
+  'fechar-aba': () => (comAbas() ? fecharAba() : undefined),
+  'aba-seguinte': () => irParaAba(1),
+  'aba-anterior': () => irParaAba(-1),
+  'ir-aba': (id) => {
+    const aba = abasDoc.find((a) => a.id === id)
+    if (!aba) return
+    if (execucao.emExecucao() && aba !== abaAtiva) return void avisoDeExecucao()
+    ativarAba(aba)
   },
   abrir: async () => {
-    if (await podeDescartar(' Abrir um algoritmo no MisterALG ')) abrirResultado(await api.arquivo.abrir())
+    if (!comAbas() && !(await podeDescartar(' Abrir um algoritmo no MisterALG '))) return
+    await abrirResultado(await api.arquivo.abrir())
   },
   'abrir-recente': async (caminho) => {
-    if (await podeDescartar(' Abrir um algoritmo no MisterALG ')) abrirResultado(await api.arquivo.abrirCaminho(caminho))
+    if (ativarSeAberto(caminho)) return
+    if (!comAbas() && !(await podeDescartar(' Abrir um algoritmo no MisterALG '))) return
+    await abrirResultado(await api.arquivo.abrirCaminho(caminho))
   },
   exemplo: async ({ nome, texto }) => {
-    if (!(await podeDescartar(' Abrir um algoritmo no MisterALG '))) return
-    carregar({ texto, nome: nome.replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(nome), codificacao: /\.alg$/.test(nome) ? 'windows-1252' : 'utf-8' })
+    await abrirDocumento({ texto, nome: nome.replace(/\.[^.]+$/, ''), linguagem: linguagemDoCaminho(nome), codificacao: /\.alg$/.test(nome) ? 'windows-1252' : 'utf-8', origem: `exemplo:${nome}` }, ' Abrir um algoritmo no MisterALG ')
   },
   salvar: () => salvar(false),
   'salvar-como': () => salvar(true),
@@ -364,11 +528,11 @@ const comandos = {
       if (r !== 'fechar') return editor.focar()
     }
     if (execucao.emExecucao()) execucao.parar()
-    if (await podeDescartar(' Encerrando o algoritmo e fechando o MisterALG ')) api.janela.fechar()
+    if (await podeDescartarTodas(' Encerrando o algoritmo e fechando o MisterALG ')) api.janela.fechar()
   },
   // Trocar o idioma recarrega a IDE já traduzida, com o mesmo arquivo (ou um novo na mesma linguagem).
   idioma: async (id) => {
-    if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return
+    if (!(await podeDescartarTodas(' Incluir um novo algoritmo no MisterALG '))) return
     prefs = await api.prefs.gravar({ idioma: id })
     api.janela.pagina({ pagina: 'ide', params: doc.caminho ? { abrir: doc.caminho } : { linguagem: doc.linguagem } })
   },
@@ -409,13 +573,25 @@ const comandos = {
   'exportar-c': () => exportarPrograma('c', 'C / C++', 'c', gerarC),
   'exportar-java': () => exportarPrograma('java', 'Java', 'java', gerarJava),
   configuracoes: async (aba) => {
-    const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema, aba })
+    const conta = {
+      foto: fotoConta,
+      aoEscolher: async () => {
+        const r = await api.conta.escolherFoto()
+        if (r?.foto) { fotoConta = r.foto; atualizarAvatar() }
+        return r
+      },
+      aoRemover: async () => { fotoConta = await api.conta.removerFoto(); atualizarAvatar() },
+    }
+    const novas = await dialogos.configuracoes(prefs, { temas: TEMAS, aoPrever: aplicarTema, aoPreverBarra: (p) => aplicarBarra({ ...prefs, ...p }), conta, aba })
     if (novas) {
       prefs = await api.prefs.gravar(novas)
       editor.aplicarPrefs(prefs)
     }
     aplicarTema(prefs.tema)
+    aplicarBarra()
+    atualizarAvatar()
   },
+  conta: () => comandos.configuracoes('conta'),
   'configurar-cores': () => comandos.configuracoes('cores'),
   temas: () => abrirMenuTemas(),
   tema: async (id) => {
@@ -425,7 +601,7 @@ const comandos = {
   dica: () => mostrarDica(),
   'tela-inicial': async () => {
     if (execucao.emExecucao()) execucao.parar()
-    if (await podeDescartar(' Voltar para a tela inicial do MisterALG ')) api.janela.pagina({ pagina: 'inicio' })
+    if (await podeDescartarTodas(' Voltar para a tela inicial do MisterALG ')) api.janela.pagina({ pagina: 'inicio' })
   },
   assistente: () => assistente.alternar(),
   'configurar-ia': () => assistente.configurar(),
@@ -436,7 +612,7 @@ const comandos = {
   'ajuda-referencia': () => abrirAjuda('referencia', tradutor(prefs.idioma)),
   sobre: () => dialogos.sobre(VERSAO),
   atualizacoes: () => procurarNaIDE(tradutor(prefs.idioma), {
-    podeDescartar: () => podeDescartar(' Encerrando o algoritmo e fechando o MisterALG '),
+    podeDescartar: () => podeDescartarTodas(' Encerrando o algoritmo e fechando o MisterALG '),
     status: (texto) => status.mensagem(texto),
   }),
   termos: () => dialogos.termos(TERMOS),
@@ -453,125 +629,263 @@ function rodar(id, dados) {
 
 api.menu.aoComando(rodar)
 
-// ---- barra de ferramentas -----------------------------------------------------------
+// Paleta de comandos (Ctrl+K / Ctrl+Shift+P): paleta.js liga o próprio atalho.
+criarPaleta({
+  api, rodar, prefs: () => prefs, t: (...a) => tradutor(prefs.idioma)(...a),
+  abas: () => (comAbas() ? (guardarAba(), abasDoc.map((a) => ({ id: a.id, nome: nomeDaAba(a, EXTENSAO), ativa: a === abaAtiva }))) : null),
+  aplicarDisposicao: async (d) => { prefs = await api.prefs.gravar({ disposicao: d }); aplicarBarra() },
+})
 
-const BARRA = [
-  ['novo', 'novo', 'Botão Novo (⌘N)'],
-  ['abrir', 'abrir', 'Botão Abrir (⌘O)'],
-  ['salvar', 'salvar', 'Botão Salvar (⌘S)'],
-  '|',
-  ['executar', 'executar', 'Botão Executar (F9)'],
-  ['passo', 'passo', 'Botão Passo a Passo (F8)'],
-  ['timer', 'timer', 'Executar com Timer (Tempo) (Shift+F9)'],
-  'intervalo',
-  '|',
-  ['parar', 'parar', 'Botão Parar (Ctrl+F2)'],
-  ['breakpoint', 'breakpoint', 'Botão Liga/desliga breakpoint (F5)'],
-  ['limpar-breakpoints', 'limparBreakpoints', 'Botão Desmarca todos os breakpoints (Ctrl+F5)'],
-  ['restaurar', 'restaurar', 'Botão Restaura a tela inicial do MisterALG'],
-  ['cortar', 'cortar', 'Botão Cortar (⌘X)'],
-  ['copiar', 'copiar', 'Botão Copiar (⌘C)'],
-  ['colar', 'colar', 'Botão Colar (⌘V)'],
-  '|',
-  ['gravar-bloco', 'gravarBloco', 'Botão Grava o bloco de texto selecionado (Ctrl+W)'],
-  ['inserir-bloco', 'inserirBloco', 'Botão Insere um bloco de algoritmo na posição do cursor (Ctrl+R)'],
-  ['desfazer', 'desfazer', 'Botão Desfazer (⌘Z)'],
-  ['refazer', 'refazer', 'Botão Refazer (Shift+⌘Z)'],
-  '|',
-  ['localizar', 'localizar', 'Botão Localizar (⌘F ou Ctrl+L)'],
-  ['localizar-proximo', 'proximo', 'Botão Localizar o próximo (F3)'],
-  ['localizar-anterior', 'anterior', 'Botão Localizar o anterior (F4)'],
-  ['substituir', 'substituir', 'Botão Substituir (⌥⌘F ou Ctrl+U)'],
-  ['indentar', 'indentar', 'Botão Corrigir indentação (Ctrl+G)'],
-  ['imprimir', 'imprimir', 'Botão Imprimir (⌘P)'],
-  ['perfil', 'perfil', 'Botão Perfil (F7)'],
-  ['aleatorio', 'aleatorio', 'Botão Ativa/Desativa Aleatório'],
-  'faixa',
-  '|',
-  ['pilha', 'pilha', 'Botão Mostra a pilha de ativação dos procedimentos e funções (Ctrl+F3)'],
-  ['calculadora', 'calculadora', 'Mostra uma calculadora prática'],
-  ['calendario', 'calendario', 'Mostra um calendário do ano atual'],
-  ['temas', 'temas', 'Botão Temas: escolhe as cores da tela (claras ou escuras)'],
-  ['assistente', 'assistente', 'Botão Assistente de IA: explica o código e dá dicas (⌘I)'],
-  ['ajuda-tela', 'ajuda', 'Botão Ajuda on-line (F1)'],
-  ['sair', 'sair', 'Sair do MisterALG'],
-]
+// ---- barra de ferramentas -----------------------------------------------------------
 
 const ehMac = api.plataforma === 'darwin'
 
-/** No Windows as dicas mostram os atalhos originais do VisuAlg em vez dos do Mac. */
-function dicaDaPlataforma(dica) {
-  if (ehMac) return dica
-  return dica
-    .replace(' (⌘F ou Ctrl+L)', ' (Ctrl+L)')
-    .replace(' (⌥⌘F ou Ctrl+U)', ' (Ctrl+U)')
-    .replace('⌘O', 'Ctrl+A')
-    .replace('⌘', 'Ctrl+')
+const dicaDaPlataforma = (dica) => dicaPorPlataforma(dica, ehMac)
+
+// Faixa de guias (só aparece na disposição moderna).
+const abasUI = criarAbas({
+  t: (...a) => tradutor(prefs.idioma)(...a),
+  lista: () => {
+    guardarAba()
+    return abasDoc.map((a) => ({ id: a.id, nome: nomeDaAba(a, EXTENSAO), linguagem: a.linguagem, modificado: a.modificado, ativa: a === abaAtiva }))
+  },
+  ativar: (id) => rodar('ir-aba', id),
+  fechar: (id) => { const aba = abasDoc.find((a) => a.id === id); if (aba) void fecharAba(aba) },
+  nova: (linguagem) => rodar('novo', linguagem),
+  mover: (de, para) => {
+    guardarAba()
+    const nova = reordenar(abasDoc, de, para)
+    abasDoc.splice(0, abasDoc.length, ...nova)
+    abasUI.atualizar()
+  },
+  recentes: async () => (await api.prefs.ler()).mru ?? [],
+  exemplos: async () => (await api.exemplos.listar()).filter((g) => g.id === doc.linguagem).flatMap((g) => g.arquivos.map((arquivo) => ({
+    nome: arquivo,
+    abrir: async () => { const r = await api.exemplos.ler({ grupo: g.id, arquivo }); if (r) rodar('exemplo', r) },
+  }))),
+  abrirRecente: (caminho) => rodar('abrir-recente', caminho),
+  linguagemDoCaminho,
+  linguagemAtiva: () => doc.linguagem,
+})
+
+disposicao = criarDisposicao({
+  api,
+  t: (...a) => tradutor(prefs.idioma)(...a),
+  doc,
+  extensoes: EXTENSAO,
+  faixa: abasUI.el,
+  fimFaixa: abasUI.fim,
+  atualizarFaixa: () => abasUI.atualizar(),
+  alturaSalva: prefs.alturaPainel ?? 0,
+  gravarAltura: async (px) => { prefs = await api.prefs.gravar({ alturaPainel: px }) },
+  irParaLinha: (n) => editor.irParaLinha(Number(n)),
+})
+
+// Ctrl+Tab / Ctrl+Shift+Tab (e Ctrl+PageDown/PageUp) trocam de aba; Ctrl+W vem do menu ("Fechar aba").
+document.addEventListener('keydown', (e) => {
+  if (!comAbas() || !e.ctrlKey || e.altKey || e.metaKey || document.querySelector('dialog[open]')) return
+  const dir = e.key === 'Tab' ? (e.shiftKey ? -1 : 1) : e.key === 'PageDown' ? 1 : e.key === 'PageUp' ? -1 : 0
+  if (!dir) return
+  e.preventDefault()
+  e.stopPropagation()
+  irParaAba(dir)
+}, true)
+
+/** Posição, tamanho dos ícones e botões ocultos. `p` pode ser só uma prévia (Configurações), sem gravar. */
+function aplicarBarra(p = prefs) {
+  const moderna = p.disposicao === 'moderna'
+  const lateral = p.posicaoBarra === 'lateral'
+  disposicao.aplicar(p.disposicao, lateral) // na moderna o avatar fica na faixa de guias (barra no topo) ou no rodapé da barra lateral
+  // Compacta = só os botões principais na barra e o resto no painel "⋯" (lateral: ao lado; moderna: logo abaixo do botão, no topo).
+  const compacta = lateral || moderna
+  document.body.classList.toggle('barra-lateral', lateral)
+  document.body.classList.toggle('barra-compacta', compacta)
+  document.documentElement.dataset.tamIcone = TAMANHOS_ICONE.includes(p.tamanhoIcones) ? p.tamanhoIcones : 'medio'
+  const barra = $('#barra')
+  barra.setAttribute('aria-orientation', lateral ? 'vertical' : 'horizontal')
+  const ocultos = idsOcultaveis(p.botoesOcultos)
+  let ver = itensVisiveis(ocultos)
+  // Lateral: só os principais ficam na coluna (separadores calculados entre eles); o resto vai para o painel "⋯".
+  const fixo = principaisLateral()
+  if (compacta) {
+    const sub = itensVisiveis(ocultos, BARRA.filter((_, i) => fixo[i]))
+    let k = 0
+    ver = ver.map((v, i) => (fixo[i] ? sub[k++] : v))
+  } else fecharMais(false)
+  // Os MESMOS elementos mudam de pai (nada de clones), na ordem da tabela.
+  const lista = barra.querySelector('.barra-lista')
+  const painel = $('#barra-mais .barra-mais-lista')
+  ;[...document.querySelectorAll('[data-item]')]
+    .sort((a, b) => Number(a.dataset.item) - Number(b.dataset.item))
+    .forEach((e) => {
+      const i = Number(e.dataset.item)
+      ;(compacta && !fixo[i] ? painel : lista).append(e)
+      e.hidden = !ver[i]
+    })
+  $('[data-id="mais"]').hidden = !compacta
+}
+
+/** Painel flutuante "⋯" da barra lateral: abre ao lado da coluna, foco dentro, Esc/clique fora/ação fecham. */
+function abrirMais(foco = true) {
+  const painel = $('#barra-mais')
+  const botao = $('[data-id="mais"]')
+  if (!document.body.classList.contains('barra-compacta') || !painel.hidden) return
+  painel.hidden = false
+  const r = botao.getBoundingClientRect()
+  if (document.body.classList.contains('barra-lateral')) {
+    painel.style.top = ''
+    painel.style.left = ''
+    painel.style.insetInlineStart = `${$('#barra').getBoundingClientRect().width}px`
+    painel.style.bottom = `${Math.max(4, innerHeight - r.bottom)}px`
+    painel.style.maxHeight = `${Math.max(120, r.bottom - 8)}px`
+  } else {
+    // Barra no topo (disposição moderna): o painel abre para baixo, alinhado ao botão e sem sair da janela.
+    const rtl = document.documentElement.dir === 'rtl'
+    painel.style.bottom = ''
+    painel.style.top = `${r.bottom + 4}px`
+    const larg = painel.offsetWidth
+    const x = rtl ? Math.max(4, Math.min(r.right - larg, innerWidth - larg - 4)) : Math.max(4, Math.min(r.left, innerWidth - larg - 4))
+    painel.style.insetInlineStart = 'auto'
+    painel.style.left = `${x}px`
+    painel.style.maxHeight = `${Math.max(120, innerHeight - r.bottom - 12)}px`
+  }
+  botao.setAttribute('aria-expanded', 'true')
+  if (foco) painel.focus({ preventScroll: true })
+}
+function fecharMais(devolverFoco = true) {
+  const painel = $('#barra-mais')
+  if (painel.hidden) return
+  const ativo = document.activeElement
+  painel.hidden = true
+  const botao = $('[data-id="mais"]')
+  botao.setAttribute('aria-expanded', 'false')
+  // Só puxa o foco de volta se ele estava no painel (uma ação que levou o foco ao editor ou a um diálogo manda).
+  if (devolverFoco && (painel.contains(ativo) || ativo === document.body || !ativo)) botao.focus({ preventScroll: true })
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || $('#barra-mais').hidden || document.querySelector('.tutorial, dialog[open]')) return
+  e.preventDefault()
+  e.stopPropagation()
+  fecharMais()
+}, true)
+document.addEventListener('pointerdown', (e) => {
+  if ($('#barra-mais').hidden || e.target.closest('#barra-mais, [data-id="mais"], .tutorial')) return
+  fecharMais(false)
+})
+// O tutorial abre o painel quando o alvo do passo está dentro dele (tutorial.js).
+document.addEventListener('barra-mais', (e) => (e.detail ? abrirMais(false) : fecharMais(false)))
+
+/** Botão da conta no fim da barra: foto ou iniciais; abre Configurações > Conta. */
+function atualizarAvatar() {
+  const b = $('[data-id="conta"]')
+  if (!b) return
+  const nome = prefs.conta?.nome ?? ''
+  const dica = nome ? tradutor(prefs.idioma)('Conta de {0}', nome) : tradutor(prefs.idioma)('Conta: nome e foto')
+  b.replaceChildren(criarAvatar({ nome, foto: fotoConta }))
+  b.title = dica
+  b.dataset.dica = dica
+  b.setAttribute('aria-label', dica)
 }
 
 function montarBarra() {
   const barra = $('#barra')
-  for (const item of BARRA) {
-    if (item === '|') {
-      barra.append(Object.assign(document.createElement('span'), { className: 'separador' }))
-    } else if (item === 'intervalo') {
-      const sel = document.createElement('select')
-      sel.id = 'intervalo'
-      sel.dataset.dica = 'Intervalo do timer'
-      sel.title = 'Intervalo do timer'
-      INTERVALOS.forEach(([rotulo], i) => sel.append(new Option(rotulo, String(i), false, i === prefs.timer)))
-      sel.addEventListener('change', async () => { prefs = await api.prefs.gravar({ timer: Number(sel.value) }) })
+  // Lista rolável própria: na lateral o avatar fica fora dela (rodapé fixo); no topo ela é `display: contents`.
+  const lista = Object.assign(document.createElement('div'), { className: 'barra-lista' })
+  barra.append(lista)
+  const mais = Object.assign(document.createElement('button'), { type: 'button', className: 'botao' })
+  const dicaMais = 'Mais ferramentas' // traduzirPagina troca depois, como nas outras dicas da barra
+  Object.assign(mais.dataset, { id: 'mais', dica: dicaMais })
+  mais.title = dicaMais
+  mais.setAttribute('aria-label', dicaMais)
+  mais.setAttribute('aria-haspopup', 'dialog')
+  mais.setAttribute('aria-expanded', 'false')
+  mais.innerHTML = ICONES.mais
+  mais.addEventListener('click', () => ($('#barra-mais').hidden ? abrirMais() : fecharMais()))
+  barra.append(mais)
+  const painelMais = Object.assign(document.createElement('div'), { id: 'barra-mais', className: 'barra-mais', hidden: true, tabIndex: -1 })
+  painelMais.setAttribute('role', 'dialog')
+  painelMais.setAttribute('aria-label', dicaMais)
+  painelMais.append(Object.assign(document.createElement('div'), { className: 'barra-mais-lista' }))
+  // Clicar numa ação fecha o painel (menos o liga/desliga do aleatório, que ainda pede De/Até/Decimais).
+  painelMais.addEventListener('click', (e) => {
+    const b = e.target.closest('button.botao')
+    if (b && b.dataset.id !== 'aleatorio') fecharMais()
+  })
+  document.body.append(painelMais)
+  BARRA.forEach((item, indice) => {
+    const antes = lista.childElementCount
+    montarItem(lista, item)
+    for (const e of [...lista.children].slice(antes)) e.dataset.item = String(indice)
+  })
+  const avatar = Object.assign(document.createElement('button'), { type: 'button', className: 'botao avatar' })
+  avatar.dataset.id = 'conta'
+  avatar.addEventListener('click', () => rodar('conta'))
+  barra.append(avatar)
+  atualizarAvatar()
+  aplicarBarra()
+}
+
+function montarItem(barra, item) {
+  if (item === '|') {
+    barra.append(Object.assign(document.createElement('span'), { className: 'separador' }))
+  } else if (item === 'intervalo') {
+    const sel = document.createElement('select')
+    sel.id = 'intervalo'
+    sel.dataset.dica = 'Intervalo do timer'
+    sel.title = 'Intervalo do timer'
+    INTERVALOS.forEach(([rotulo], i) => sel.append(new Option(rotulo, String(i), false, i === prefs.timer)))
+    sel.addEventListener('change', async () => { prefs = await api.prefs.gravar({ timer: Number(sel.value) }) })
+    const span = Object.assign(document.createElement('span'), { className: 'campo-barra' })
+    // Rótulo só aparece no painel "⋯" da lateral (visualg.css).
+    span.append(Object.assign(document.createElement('label'), { className: 'so-painel', htmlFor: 'intervalo', textContent: 'Intervalo do timer' }), sel)
+    barra.append(span)
+  } else if (item === 'faixa') {
+    const campo = (rotulo, chave, dica, opcoes) => {
       const span = Object.assign(document.createElement('span'), { className: 'campo-barra' })
-      span.append(sel)
-      barra.append(span)
-    } else if (item === 'faixa') {
-      const campo = (rotulo, chave, dica, opcoes) => {
-        const span = Object.assign(document.createElement('span'), { className: 'campo-barra' })
-        span.dataset.dica = dica
-        const lab = document.createElement('label')
-        lab.textContent = rotulo
-        let input
-        if (opcoes) {
-          input = document.createElement('select')
-          opcoes.forEach((o) => input.append(new Option(String(o), String(o), false, String(o) === String(prefs.aleatorio[chave]))))
-        } else {
-          input = Object.assign(document.createElement('input'), { value: prefs.aleatorio[chave], inputMode: 'decimal' })
-        }
-        input.id = `aleatorio-${chave}`
-        input.title = dica
-        input.disabled = true
-        input.addEventListener('change', async () => {
-          prefs = await api.prefs.gravar({ aleatorio: { ...prefs.aleatorio, [chave]: input.value } })
-        })
-        lab.htmlFor = input.id
-        span.append(lab, input)
-        barra.append(span)
+      span.dataset.dica = dica
+      const lab = document.createElement('label')
+      lab.textContent = rotulo
+      let input
+      if (opcoes) {
+        input = document.createElement('select')
+        opcoes.forEach((o) => input.append(new Option(String(o), String(o), false, String(o) === String(prefs.aleatorio[chave]))))
+      } else {
+        input = Object.assign(document.createElement('input'), { value: prefs.aleatorio[chave], inputMode: 'decimal' })
       }
-      campo('De:', 'de', 'Digita o valor aleatório inicial')
-      campo('Até:', 'ate', 'Digita o valor aleatório final')
-      campo('Decimais:', 'decimais', 'Digita as casas decimais do valor aleatório', [0, 1, 2, 3, 4, 5])
-    } else {
-      const [id, icone] = item
-      const dica = dicaDaPlataforma(item[2])
-      const b = document.createElement('button')
-      b.type = 'button'
-      b.className = 'botao'
-      b.dataset.id = id
-      b.dataset.dica = dica
-      b.title = dica
-      b.setAttribute('aria-label', dica)
-      b.innerHTML = ICONES[icone]
-      b.addEventListener('click', () => rodar(id))
-      if (id === 'aleatorio' || id === 'assistente') b.setAttribute('aria-pressed', 'false')
-      if (id === 'parar') b.disabled = true
-      barra.append(b)
+      input.id = `aleatorio-${chave}`
+      input.title = dica
+      input.disabled = true
+      input.addEventListener('change', async () => {
+        prefs = await api.prefs.gravar({ aleatorio: { ...prefs.aleatorio, [chave]: input.value } })
+      })
+      lab.htmlFor = input.id
+      span.append(lab, input)
+      barra.append(span)
     }
+    campo('De:', 'de', 'Digita o valor aleatório inicial')
+    campo('Até:', 'ate', 'Digita o valor aleatório final')
+    campo('Decimais:', 'decimais', 'Digita as casas decimais do valor aleatório', [0, 1, 2, 3, 4, 5])
+  } else {
+    const [id, icone] = item
+    const dica = dicaDaPlataforma(item[2])
+    const b = document.createElement('button')
+    b.type = 'button'
+    b.className = 'botao'
+    b.dataset.id = id
+    b.dataset.dica = dica
+    b.title = dica
+    b.setAttribute('aria-label', dica)
+    b.innerHTML = ICONES[icone]
+    b.addEventListener('click', () => rodar(id))
+    if (id === 'aleatorio' || id === 'assistente') b.setAttribute('aria-pressed', 'false')
+    if (id === 'parar') b.disabled = true
+    barra.append(b)
   }
 }
 
 function alternarAleatorio() {
   aleatorioLigado = !aleatorioLigado
-  $('[data-id="aleatorio"]').setAttribute('aria-pressed', String(aleatorioLigado))
+  $('[data-id="aleatorio"]').setAttribute('aria-pressed', String(aleatorioLigado)) // oculto só some (hidden), continua no DOM
   for (const c of ['de', 'ate', 'decimais']) $(`#aleatorio-${c}`).disabled = !aleatorioLigado
   api.menu.estado({ aleatorio: aleatorioLigado })
 }
@@ -580,7 +894,7 @@ function alternarAleatorio() {
 
 document.addEventListener('keydown', (e) => {
   const comando = (() => {
-    if (e.key === 'Escape') return execucao.teclaEsc() ? 'nada' : null
+    if (e.key === 'Escape') return !document.querySelector('dialog[open]') && execucao.teclaEsc() ? 'nada' : null // com um diálogo aberto, o Esc é dele
     if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       const k = e.key.toLowerCase()
       if (k === 'l') return 'localizar'
@@ -594,13 +908,15 @@ document.addEventListener('keydown', (e) => {
   if (comando !== 'nada') rodar(comando)
 })
 
-$('#console-fechar').addEventListener('click', () => (execucao.emExecucao() ? execucao.parar() : execucao.fecharConsole()))
-
 // ---- recuperação após falha (visualg3.tmp) ------------------------------------------------
 
-setInterval(() => {
-  if (doc.modificado) api.recuperacao.gravar({ texto: editor.texto(), caminho: doc.caminho, nome: doc.nome, codificacao: doc.codificacao, linguagem: doc.linguagem })
-}, 5000)
+/** Grava (de forma atômica, no main) todas as abas modificadas; sem nenhuma, apaga o arquivo. */
+function gravarRecuperacao() {
+  guardarAba()
+  const dados = serializarRecuperacao(abasDoc.map((a) => ({ ...a, texto: a.estado.doc.toString() })), abasDoc.indexOf(abaAtiva))
+  return dados ? api.recuperacao.gravar(dados) : api.recuperacao.limpar()
+}
+setInterval(() => { if (abasDoc.some((a) => a.modificado) || doc.modificado) gravarRecuperacao() }, 5000)
 
 // ---- início ----------------------------------------------------------------------------------
 
@@ -621,8 +937,8 @@ if (mostrouTermos) {
 }
 
 const pendente = await api.arquivoPendente()
-const recuperado = await api.recuperacao.ler()
-if (recuperado?.texto) {
+const recuperado = lerRecuperacao(await api.recuperacao.ler()) // { abas, ativa } (aceita o formato antigo, de um documento só)
+if (recuperado) {
   const r = await api.mensagem({
     type: 'question',
     title: 'Falha!',
@@ -632,14 +948,19 @@ if (recuperado?.texto) {
     cancelId: 1,
   })
   if (r === 0) {
-    carregar(recuperado)
-    marcarModificado()
+    // A primeira aba recuperada ocupa a aba inicial; as outras viram abas novas (na clássica só a ativa fica visível, as demais esperam por baixo).
+    recuperado.abas.forEach((a, i) => {
+      if (i === 0) carregar(a)
+      else criarAba(a)
+      marcarModificado()
+    })
+    ativarAba(abasDoc[recuperado.ativa] ?? abaAtiva)
   } else {
     carregar({ texto: esqueleto(prefs) })
   }
   api.recuperacao.limpar()
   // Arquivo pendente (duplo clique): o recuperado fica no editor e, se nao for salvo, o aluno decide antes de abrir o outro.
-  if (pendente && (r !== 0 || (await podeDescartar('Abrir')))) await abrirResultado(await api.arquivo.abrirCaminho(pendente))
+  if (pendente && (r !== 0 || comAbas() || (await podeDescartar('Abrir')))) await abrirResultado(await api.arquivo.abrirCaminho(pendente))
 } else if (pendente) {
   carregar({ texto: esqueleto(prefs) })
   await abrirResultado(await api.arquivo.abrirCaminho(pendente))
@@ -663,9 +984,7 @@ function iniciarTutorial() {
     // O primeiro programa entra pelo caminho do "Novo": pergunta antes se o atual não está salvo.
     escreverPrograma: async (linguagem) => {
       if (execucao.emExecucao()) execucao.parar()
-      if (!(await podeDescartar(' Incluir um novo algoritmo no MisterALG '))) return false
-      carregar({ texto: primeiroPrograma(linguagem, t), linguagem, nome: 'primeiro', codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' })
-      return true
+      return abrirDocumento({ texto: primeiroPrograma(linguagem, t), linguagem, nome: 'primeiro', codificacao: linguagem === 'portugol' ? 'windows-1252' : 'utf-8' }, ' Incluir um novo algoritmo no MisterALG ')
     },
     aoEvento: (fn) => execucao.aoEvento(fn),
     aoFechar: () => {
@@ -705,8 +1024,8 @@ async function mostrarDica() {
 // Dica do dia ao abrir (como o VisuAlg). Não aparece logo depois dos termos (uma
 // janela de cada vez na primeira abertura) nem nos testes automatizados.
 // O tutorial, oferecido uma vez, toma o lugar dela nessa abertura (também logo depois dos termos: uma janela depois da outra).
-if (!prefs.tutorialVisto && !api.automatizado && !recuperado?.texto) void oferecerTutorial()
-else if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado?.texto && !veioDoInicio) void mostrarDica()
+if (!prefs.tutorialVisto && !api.automatizado && !recuperado) void oferecerTutorial()
+else if (prefs.mostrarDicas !== false && !api.automatizado && !mostrouTermos && !recuperado && !veioDoInicio) void mostrarDica()
 
 // Para testes automatizados e depuração no DevTools.
-window.__misteralg = { editor, execucao, doc, comandos, get tutorial() { return tutorial } }
+window.__misteralg = { editor, execucao, doc, comandos, abas: abasDoc, gravarRecuperacao, get abaAtiva() { return abaAtiva }, get tutorial() { return tutorial } }

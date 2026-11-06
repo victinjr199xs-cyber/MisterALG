@@ -1,7 +1,7 @@
 {
   "name": "misteralg-app",
   "productName": "MisterALG",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "private": true,
   "description": "MisterALG — interpretador e IDE de Portugol inspirado no VisuAlg 3.0.7",
   "author": {
@@ -16,7 +16,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "start": "electron out/main/index.js",
-    "dist:mac": "electron-builder --mac --config electron-builder.json5 --publish never",
+    "dist:mac": "electron-builder --mac --config electron-builder.json5 -c.electronVersion=43.4.1 --publish never",
     "dist:win": "electron-builder --win --config electron-builder.json5 --publish never",
     "dist:linux": "electron-builder --linux --config electron-builder.json5 --publish never"
   },

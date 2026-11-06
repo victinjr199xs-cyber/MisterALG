@@ -13,6 +13,9 @@ import { tradutor } from '../compartilhado/idiomas.js'
 import { criarMemoriaC } from './memoria-c.js'
 import { criarMemoriaBanco } from './memoria-banco.js'
 import { SessaoSQL } from './sql/sessao-sql.js'
+import { criarConsole } from './console.js'
+import { consoleVisualg, dividirLinhas } from './console-logica.js'
+import { linhaCorrigida } from './aviso-logica.js'
 
 /** Itens do "Intervalo do timer" (cboInterval do VisuAlg) → milissegundos. */
 export const INTERVALOS = [
@@ -74,13 +77,47 @@ export function criarExecucao(op) {
   const consoleEl = document.getElementById('console')
   const tela = document.getElementById('console-tela')
   const visualizacao = document.getElementById('visualizacao')
+  const t = (...a) => tradutor(op.idioma?.() ?? 'pt')(...a)
+  // Atalhos com o foco na janela própria do console (lá não há menu): F9, F8, Shift+F9, Ctrl+F2 e Esc.
+  function teclaDaJanela(e) {
+    const id = api.plataforma !== 'darwin' && ({ F9: e.shiftKey ? 'timer' : 'executar', F8: 'passo' }[e.key] ?? (e.key === 'F2' && e.ctrlKey ? 'parar' : null))
+    if (id) {
+      e.preventDefault()
+      op.rodar?.(id)
+    } else if (e.key === 'Escape' && teclaEscape()) e.preventDefault()
+  }
+  const cons = criarConsole({
+    el: consoleEl,
+    tela,
+    t,
+    idioma: () => op.idioma?.() ?? 'pt',
+    pref: () => op.consoleEmJanela?.(),
+    visualg: () => consoleVisualg(op.consolePortugol?.(), op.linguagem?.() ?? 'portugol', op.emTutorial?.()),
+    plataforma: api.plataforma,
+    api,
+    programa: () => op.programa?.() ?? { nome: t('sem nome'), linguagem: op.linguagem?.() ?? 'portugol' },
+    rodar: (id) => op.rodar?.(id),
+    aoParar: () => parar(),
+    aoFechar: () => fecharConsole(),
+    aoIrParaLinha: (n) => { editor.irParaLinha(n); window.focus() },
+    aoTecla: teclaDaJanela,
+    emTutorial: () => op.emTutorial?.(),
+  })
   const corpoGrade = document.querySelector('#variaveis tbody')
+  /** Grade sem variáveis: um convite no lugar das linhas (escondido no tema clássico, que mostra a grade vazia como o VisuAlg). */
+  const limparGrade = () => {
+    const tr = document.createElement('tr')
+    tr.className = 'memoria-vazia'
+    tr.append(Object.assign(document.createElement('td'), { colSpan: 4, textContent: 'Execute com F8 para ver as variáveis aqui' }))
+    corpoGrade.replaceChildren(tr)
+  }
 
   let sessao = null
   let corTexto = CORES.BRANCO
   let ultimoPerfil = null
   let linhasDoPerfil = []
   let valoresAnteriores = new Map()
+  limparGrade()
   let modoAtual = 'continuo'
 
   let processo = null // C/C++ compilado (F9), ou a preparação do passo a passo: { id, rodando, terminado }
@@ -147,11 +184,17 @@ export function criarExecucao(op) {
       cortou = true
       const cor = corTexto
       corTexto = CORES.AMARELO
-      escreverBruto(`\n${tradutor(op.idioma?.() ?? 'pt')('… saída cortada (mais de 500 mil caracteres)')}\n`)
+      escreverBruto(`\n${t('… saída cortada (mais de 500 mil caracteres)')}\n`)
       corTexto = cor
       return
     }
+    cons.contar(texto)
     escreverBruto(texto)
+  }
+  /** Erros em vermelho: "linha N" (Portugol, clang, C#, traceback do Python) vira link para a linha do editor. */
+  function anexar(span, parte) {
+    if (!span.classList.contains('saida-erro')) return span.append(parte)
+    for (const p of dividirLinhas(parte)) span.append(p.linha ? cons.linkLinha(p) : p.texto)
   }
   function escreverBruto(texto) {
     const campo = tela.querySelector('.console-entrada')
@@ -163,12 +206,15 @@ export function criarExecucao(op) {
       }
       if (!parte) return
       const ultimo = campo ? campo.previousElementSibling : tela.lastElementChild
-      if (ultimo && ultimo.tagName === 'SPAN' && ultimo.dataset.cor === corTexto) ultimo.append(parte)
+      if (ultimo && ultimo.tagName === 'SPAN' && ultimo.dataset.cor === corTexto) anexar(ultimo, parte)
       else {
         const span = document.createElement('span')
         span.dataset.cor = corTexto
-        span.style.color = corTexto
-        span.textContent = parte
+        if (corTexto !== CORES.BRANCO) span.style.color = corTexto // o branco padrão é a cor do tema do console
+        // classe semântica; vermelho = erro, amarelo = aviso
+        if (corTexto === CORES.VERMELHO) span.className = 'saida-erro'
+        else if (corTexto === CORES.AMARELO) span.className = 'saida-aviso'
+        anexar(span, parte)
         tela.insertBefore(span, campo)
       }
     })
@@ -181,17 +227,37 @@ export function criarExecucao(op) {
     else tela.style.background = valor
   }
 
+  /** O campo cresce com o texto; ↑/↓ percorrem o que foi digitado antes nesta sessão do app. */
+  function ligarCampo(campo) {
+    campo.size = 1
+    campo.autocomplete = 'off'
+    campo.spellcheck = false
+    const ajustar = () => { campo.size = Math.max(1, campo.value.length + 1) }
+    campo.addEventListener('input', ajustar)
+    campo.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+      e.preventDefault()
+      const valor = e.key === 'ArrowUp' ? cons.historico.anterior(campo.value) : cons.historico.proximo()
+      if (valor === null) return
+      campo.value = valor
+      ajustar()
+      campo.setSelectionRange(valor.length, valor.length)
+    })
+  }
+
   function pedirEntrada() {
     const campo = document.createElement('input')
     campo.className = 'console-entrada'
     campo.setAttribute('aria-label', 'Entrada de dados do leia')
-    campo.style.color = corTexto
-    campo.size = 1
-    campo.addEventListener('input', () => { campo.size = Math.max(1, campo.value.length + 1) })
+    if (corTexto !== CORES.BRANCO) campo.style.color = corTexto
+    ligarCampo(campo)
+    cons.estadoAtual('aguardando')
     campo.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault()
         const valor = campo.value
+        cons.historico.adicionar(valor)
+        cons.estadoAtual('rodando')
         campo.remove()
         status.mensagem(' MENSAGEM: Executando o algoritmo...')
         // Fora do Portugol, o eco é do terminal (o Portugol escreve ele mesmo).
@@ -217,34 +283,155 @@ export function criarExecucao(op) {
     tela.style.background = ''
     corTexto = CORES.BRANCO
     consoleEl.hidden = false
+    cons.comecar() // cabeçalho, relógio e, se for o caso, a janela própria
   }
 
   function fecharConsole() {
     if (consoleEl.hidden) return
     visualizacao.textContent = tela.textContent
     consoleEl.hidden = true
+    cons.aoEsconder()
+    window.focus()
     editor.focar()
   }
 
   // ---- grade de variáveis -----------------------------------------------------
+
+  function categoriaTipo(tipo) {
+    const t = String(tipo ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    if (t.startsWith('vetor') || t.includes('[')) return 'vetor'
+    if (/^(inteiro|int|long)\b/.test(t)) return 'inteiro'
+    if (/^(real|double|float)\b/.test(t)) return 'real'
+    if (/^(caractere|char|string|str)\b/.test(t)) return 'caractere'
+    if (/^(logico|bool|boolean)\b/.test(t)) return 'logico'
+    return 'outro'
+  }
+
+  // Vetores em caixinhas (valor + índice) na disposição moderna e nos temas novos; no clássico ficam as linhas do VisuAlg.
+  const TEMAS_NOVOS = new Set(['noite', 'papel', 'hibrido-claro', 'hibrido-escuro'])
+  const MAX_CAIXAS = 20
+  const agruparVetores = () => document.documentElement.dataset.disposicao === 'moderna' || TEMAS_NOVOS.has(document.documentElement.dataset.tema)
+
+  /** Linha única de um vetor de uma dimensão: o interpretador manda um elemento por linha (V[1], V[2]...); a matriz (V[1,2]) continua em texto. */
+  function linhaDeVetor(g, mudouItem) {
+    const tr = document.createElement('tr')
+    tr.className = 'vetor-linha'
+    const mudados = g.itens.filter((it) => mudouItem(it))
+    if (mudados.length > 1) tr.classList.add('modificada')
+    const caixas = document.createElement('div')
+    caixas.className = 'caixinhas'
+    for (const it of g.itens.slice(0, MAX_CAIXAS)) {
+      const c = document.createElement('span')
+      c.className = 'caixa'
+      if (mudados.length === 1 && mudados[0] === it) c.classList.add('mudou')
+      c.append(Object.assign(document.createElement('b'), { textContent: it.valor }), Object.assign(document.createElement('i'), { textContent: it.indice }))
+      caixas.append(c)
+    }
+    if (g.itens.length > MAX_CAIXAS) caixas.append(Object.assign(document.createElement('span'), { className: 'caixas-mais', textContent: `…+${g.itens.length - MAX_CAIXAS}` }))
+    // O painel da memória é estreito: o vetor vira um cartão de largura total (escopo, nome e tipo em cima; caixinhas embaixo).
+    const nome = `${g.base}[${g.itens[0].indice}..${g.itens.at(-1).indice}]`
+    const pilula = Object.assign(document.createElement('span'), { className: 'pilula-tipo', textContent: 'vetor' })
+    pilula.dataset.tipo = 'vetor'
+    const cab = document.createElement('div')
+    cab.className = 'vetor-cab'
+    cab.append(Object.assign(document.createElement('span'), { className: 'vetor-escopo', textContent: g.escopo }), Object.assign(document.createElement('b'), { textContent: nome }), pilula)
+    const td = Object.assign(document.createElement('td'), { colSpan: 4 })
+    td.append(cab, caixas)
+    tr.append(td)
+    return tr
+  }
+
+  /** Matriz (M[1,2]...) como grade de células: linhas × colunas, com os índices na borda; a rolagem limita o tamanho. */
+  function linhaDeMatriz(g, mudouItem) {
+    const ordem = (lista, campo) => [...new Set(lista.map((it) => it[campo]))]
+    const linhas = ordem(g.itens, 'linha')
+    const colunas = ordem(g.itens, 'coluna')
+    const porPos = new Map(g.itens.map((it) => [`${it.linha},${it.coluna}`, it]))
+    const mk = (tag, texto, classe) => Object.assign(document.createElement(tag), { textContent: texto, className: classe ?? '' })
+    const tabela = document.createElement('table')
+    tabela.className = 'matriz'
+    const cabeca = document.createElement('tr')
+    cabeca.append(mk('th', ''), ...colunas.map((c) => mk('th', c)))
+    tabela.append(cabeca)
+    for (const l of linhas) {
+      const tr = document.createElement('tr')
+      tr.append(mk('th', l))
+      for (const c of colunas) {
+        const it = porPos.get(`${l},${c}`)
+        tr.append(mk('td', it?.valor ?? '', it && mudouItem(it) ? 'mudou' : ''))
+      }
+      tabela.append(tr)
+    }
+    const pilula = Object.assign(document.createElement('span'), { className: 'pilula-tipo', textContent: 'matriz' })
+    pilula.dataset.tipo = 'vetor'
+    const cab = document.createElement('div')
+    cab.className = 'vetor-cab'
+    cab.append(mk('span', g.escopo, 'vetor-escopo'), mk('b', `${g.base}[${linhas[0]}..${linhas.at(-1)}, ${colunas[0]}..${colunas.at(-1)}]`), pilula)
+    const rolagem = mk('div', '', 'matriz-rolagem')
+    rolagem.append(tabela)
+    const tr = document.createElement('tr')
+    tr.className = 'vetor-linha matriz-linha'
+    tr.append(Object.assign(document.createElement('td'), { colSpan: 4 }))
+    tr.firstChild.append(cab, rolagem)
+    return tr
+  }
 
   function mostrarVariaveis({ globais, locais }) {
     const linhas = [...globais, ...locais]
     const novos = new Map()
     let primeiraModificada = null
     const frag = document.createDocumentFragment()
+    const agrupar = agruparVetores()
+    const mudouChave = (chave, valor) => valoresAnteriores.size > 0 && valoresAnteriores.get(chave) !== valor
+    const entradas = []
     for (const v of linhas) {
       const chave = `${v.escopo}|${v.nome}`
       novos.set(chave, v.valor)
+      const m2 = agrupar ? /^(.+)\[([^\],]+),\s*([^\],]+)\]$/.exec(v.nome) : null
+      if (m2) {
+        const item = { linha: m2[2], coluna: m2[3], valor: v.valor, chave }
+        const ant = entradas.at(-1)
+        if (ant?.matriz && ant.escopo === v.escopo && ant.base === m2[1]) ant.itens.push(item)
+        else entradas.push({ matriz: true, escopo: v.escopo, base: m2[1], itens: [item] })
+        continue
+      }
+      const m = agrupar ? /^(.+)\[([^\],]+)\]$/.exec(v.nome) : null
+      if (!m) { entradas.push({ v, chave }); continue }
+      const item = { indice: m[2], valor: v.valor, chave }
+      const ant = entradas.at(-1)
+      if (ant?.grupo && ant.escopo === v.escopo && ant.base === m[1]) ant.itens.push(item)
+      else entradas.push({ grupo: true, escopo: v.escopo, base: m[1], tipo: v.tipo, itens: [item] })
+    }
+    if (!entradas.length) { valoresAnteriores = novos; return limparGrade() }
+    for (const e of entradas) {
+      if (e.matriz) {
+        const tr = linhaDeMatriz(e, (it) => mudouChave(it.chave, it.valor))
+        primeiraModificada ??= tr.querySelector('.mudou')
+        frag.append(tr)
+        continue
+      }
+      if (e.grupo) {
+        const tr = linhaDeVetor(e, (it) => mudouChave(it.chave, it.valor))
+        primeiraModificada ??= tr.classList.contains('modificada') ? tr : tr.querySelector('.mudou')
+        frag.append(tr)
+        continue
+      }
+      const { v, chave } = e
       const tr = document.createElement('tr')
-      const mudou = valoresAnteriores.size > 0 && valoresAnteriores.get(chave) !== v.valor
+      const mudou = mudouChave(chave, v.valor)
       if (mudou) {
         tr.className = 'modificada'
         primeiraModificada ??= tr
       }
-      for (const texto of [v.escopo, v.nome, v.tipo, v.valor]) {
+      for (const [i, texto] of [v.escopo, v.nome, v.tipo, v.valor].entries()) {
         const td = document.createElement('td')
-        td.textContent = texto
+        if (i === 2) {
+          const pilula = document.createElement('span')
+          pilula.className = 'pilula-tipo'
+          pilula.dataset.tipo = categoriaTipo(texto)
+          pilula.textContent = texto
+          td.append(pilula)
+        } else td.textContent = texto
         tr.append(td)
       }
       frag.append(tr)
@@ -256,16 +443,36 @@ export function criarExecucao(op) {
 
   // ---- ciclo de execução ----------------------------------------------------------
 
-  function terminou(estadoFinal, erro) {
+  /** Resumo do erro no console, com "Erro na linha N" clicável (se a saída ainda não mostrou os erros em vermelho). */
+  function resumoDoErro(erro) {
+    const span = document.createElement('span')
+    span.className = 'saida-erro'
+    span.dataset.cor = CORES.VERMELHO
+    if (erro.linha > 0) span.append(cons.linkLinha({ texto: t('Erro na linha {0}', erro.linha), linha: erro.linha }), ': ')
+    span.append(`${erro.mensagem}\n`)
+    tela.append(span)
+  }
+
+  function terminou(estadoFinal, erro, codigo = 0) {
     editor.realcarExecucao(null)
     editor.somenteLeitura(false)
     tela.querySelector('.console-entrada')?.remove()
     const quebra = tela.textContent.endsWith('\n') || tela.textContent === '' ? '' : '\n'
     // Nas linguagens de programação (modo-codigo, main.js) o terminal fala inglês, como os de verdade.
     const ingles = document.body.classList.contains('modo-codigo')
-    if (estadoFinal === 'terminado') escreverBruto(`${quebra}\n${ingles ? 'Process finished with exit code 0' : TEXTOS.fimPrograma}`)
-    else if (estadoFinal === 'parado') escreverBruto(`${quebra}${ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario}`)
-    else if (estadoFinal === 'erro') escreverBruto(`${quebra}${ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro}`)
+    cons.estadoAtual({ terminado: 'finalizado', erro: 'erro' }[estadoFinal] ?? 'parado', { codigo: estadoFinal === 'erro' ? 1 : codigo, linha: erro?.linha })
+    if (quebra) escreverBruto(quebra)
+    if (cons.visualg) {
+      // Como no VisuAlg: texto simples, uma linha em branco e as duas mensagens finais.
+      corTexto = CORES.BRANCO
+      const fim = { erro: t(TEXTOS.terminadoErro), parado: t(TEXTOS.terminadoUsuario) }[estadoFinal] ?? t('*** Fim da execução.')
+      escreverBruto(`\n${fim}\n${t('*** Feche esta janela para retornar ao MisterALG.')}\n`)
+    } else {
+      if (estadoFinal === 'erro' && erro && !tela.querySelector('.saida-erro')) resumoDoErro(erro)
+      if (estadoFinal === 'terminado') cons.sistema(ingles ? `Process finished with exit code ${codigo}` : TEXTOS.fimPrograma, 'ok')
+      else if (estadoFinal === 'parado') cons.sistema(ingles ? 'Process stopped by the user' : TEXTOS.terminadoUsuario)
+      else if (estadoFinal === 'erro') cons.sistema(ingles ? 'Process finished with exit code 1' : TEXTOS.terminadoErro, 'erro')
+    }
     status.estado()
     status.mensagem(TEXTOS.rodapeConsole)
     op.aoMudarEstado(false)
@@ -273,8 +480,25 @@ export function criarExecucao(op) {
     if (estadoFinal === 'erro' && erro) {
       editor.realcarErro(erro.linha)
       op.aoErro?.(erro)
-      dialogos.aviso(erro, editor.textoDaLinha(erro.linha), op.iaAtiva?.()).then((r) => (r === 'ia' ? op.aoPedirIA() : editor.focar()))
+      mostrarAviso(erro)
     }
+  }
+
+  /** O aviso do erro: a linha pode ser corrigida ali mesmo e o programa roda de novo do mesmo jeito (F9, F8 ou timer). */
+  function mostrarAviso(erro) {
+    const modo = modoAtual
+    const original = editor.textoDaLinha(erro.linha)
+    if (cons.emJanela) window.focus() // o console do VisuAlg é uma janela à parte: o aviso aparece aqui
+    dialogos.aviso(erro, original, op.iaAtiva?.(), erro.linha >= 1 && erro.linha <= editor.texto().split('\n').length).then(({ acao, texto }) => {
+      if (acao === 'ia') return op.aoPedirIA()
+      if (acao === 'corrigir' || acao === 'executar') {
+        editor.substituirLinha(erro.linha, linhaCorrigida(original, texto))
+        editor.realcarErro(null)
+        if (acao === 'executar') iniciar(modo)
+        return
+      }
+      editor.focar()
+    })
   }
 
   function novaSessao(modo) {
@@ -283,7 +507,7 @@ export function criarExecucao(op) {
     const fonte = editor.texto()
     linhasDoPerfil = fonte.split('\n')
     valoresAnteriores = new Map()
-    corpoGrade.replaceChildren()
+    limparGrade()
     visualizacao.textContent = ''
     abrirConsole()
     editor.realcarErro(null)
@@ -301,13 +525,7 @@ export function criarExecucao(op) {
       arquivos: config.arquivos,
       perfil: true,
       onOutput: escrever,
-      onStep: ({ linha }) => {
-        editor.realcarExecucao(linha)
-        if (sessao?.estado === 'pausado') {
-          status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
-          avisar('pausa', { linha })
-        }
-      },
+      onStep: aoPassar,
       onVariables: mostrarVariaveis,
       onWaitInput: pedirEntrada,
       onColor: mudarCor,
@@ -330,11 +548,11 @@ export function criarExecucao(op) {
     const campo = document.createElement('input')
     campo.className = 'console-entrada'
     campo.setAttribute('aria-label', 'Entrada do programa')
-    campo.size = 1
-    campo.addEventListener('input', () => { campo.size = Math.max(1, campo.value.length + 1) })
+    ligarCampo(campo)
     campo.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault()
+        cons.historico.adicionar(campo.value)
         const linha = `${campo.value}\n`
         campo.value = ''
         campo.size = 1
@@ -360,7 +578,7 @@ export function criarExecucao(op) {
       } else if (ev.parado) terminou('parado')
       else {
         if (ev.codigo) escrever(`${tela.textContent.endsWith('\n') ? '' : '\n'}(o programa terminou com o código ${ev.codigo})\n`)
-        terminou('terminado')
+        terminou('terminado', null, ev.codigo ?? 0)
       }
     }
   })
@@ -375,6 +593,7 @@ export function criarExecucao(op) {
     editor.realcarErro(null)
     editor.somenteLeitura(true)
     comecou()
+    cons.estadoAtual('compilando')
     status.estado(' Compilando ')
     status.mensagem(` MENSAGEM: Compilando com o clang…${modo === 'continuo' ? '' : ' (o passo a passo do C/C++ ainda vai chegar; o programa roda direto)'}`)
     corTexto = CORES.AMARELO
@@ -398,6 +617,7 @@ export function criarExecucao(op) {
       corTexto = CORES.BRANCO
     }
     processo.rodando = true
+    cons.estadoAtual('rodando')
     status.estado(' Executando ')
     status.mensagem(' MENSAGEM: Digite no console e tecle <Enter> para enviar ao programa (Esc para)')
     entradaContinua(id)
@@ -416,9 +636,10 @@ export function criarExecucao(op) {
     mostrarPainel('objetos')
   }
 
-  const aoPassar = ({ linha }) => {
+  function aoPassar({ linha }) {
     editor.realcarExecucao(linha)
     if (sessao?.estado === 'pausado') {
+      cons.estadoAtual('pausado')
       status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
       avisar('pausa', { linha })
     }
@@ -510,7 +731,7 @@ export function criarExecucao(op) {
       pedidoManualPHP = false
       const e = { linha: erro.linha, mensagem: `${erro.rotulo}: ${erro.mensagem}`, explicacao: erro.explicacao }
       op.aoErro?.(e)
-      dialogos.aviso(e, editor.textoDaLinha(erro.linha), op.iaAtiva?.()).then((x) => (x === 'ia' ? op.aoPedirIA() : editor.focar()))
+      mostrarAviso(e)
     }
     if (!erro) pedidoManualPHP = false
   })
@@ -524,6 +745,7 @@ export function criarExecucao(op) {
     const { nome, diretorio } = op.paginaPHP?.() ?? {}
     const pedido = ++pedidosPHP
     consoleEl.hidden = true
+    cons.aoEsconder()
     mostrarMemoriaC(false)
     status.estado(' PHP ')
     const { url } = await api.php.definir({ fonte: editor.texto(), nome, diretorio })
@@ -642,16 +864,10 @@ export function criarExecucao(op) {
       timerMs: config.timerMs,
       breakpoints: editor.breakpoints(),
       onOutput: escrever,
-      onStep: ({ linha }) => {
-        editor.realcarExecucao(linha)
-        if (sessao?.estado === 'pausado') {
-      status.mensagem(` MENSAGEM: Pausado na linha ${linha} — F8 executa a linha, F9 continua, Ctrl+F2 para`)
-      avisar('pausa', { linha })
-    }
-      },
+      onStep: aoPassar,
       onMemory: (maq) => memoriaC.mostrar(maq),
       onWaitInput: () => pedirEntrada(),
-      onEnd: (estado, erro) => terminou(estado === 'limite' ? 'parado' : estado, erro),
+      onEnd: (estado, erro, codigo) => terminou(estado === 'limite' ? 'parado' : estado, erro, codigo),
     })
     status.estado(' Executando ')
     if (modo === 'passo') sessao.passo()
@@ -696,6 +912,7 @@ export function criarExecucao(op) {
     if (!sessao || sessao.terminado) return // compilando, ou rodando um programa compilado (F9 do C/C++)
     if (sessao.estado === 'pausado') {
       sessao.modo = modo
+      cons.estadoAtual('rodando')
       editor.realcarExecucao(null)
       if (modo === 'passo') sessao.passo()
       else sessao.continuar()
@@ -711,6 +928,26 @@ export function criarExecucao(op) {
     else status.mensagem(` MENSAGEM: ${TEXTOS.jaTerminado}`)
   }
 
+  /** Esc: fecha a página do PHP ou o console (depois que o programa termina). Devolve true se tratou a tecla. */
+  function teclaEscape() {
+    if (previa.visivel) {
+      fecharPrevia()
+      status.estado()
+      status.mensagem('')
+      return true
+    }
+    if (emExecucao() && cons.visualg) { // no console do VisuAlg, Esc interrompe o programa
+      parar()
+      return true
+    }
+    if (!emExecucao() && !consoleEl.hidden) {
+      fecharConsole()
+      status.mensagem('')
+      return true
+    }
+    return false
+  }
+
   return {
     iniciar,
     parar,
@@ -723,29 +960,19 @@ export function criarExecucao(op) {
     fecharConsole,
     /** Esc: fecha o console depois que o programa termina. */
     aoEditar,
-    teclaEsc() {
-      if (previa.visivel) {
-        fecharPrevia()
-        status.estado()
-        status.mensagem('')
-        return true
-      }
-      if (!emExecucao() && !consoleEl.hidden) {
-        fecharConsole()
-        status.mensagem('')
-        return true
-      }
-      return false
-    },
+    teclaEsc: teclaEscape,
+    /** O console moderno (janela própria, estado) para quem precisa mexer nele de fora: testes e comandos. */
+    console: cons,
     atualizarBreakpoints(linhas) {
       if (sessao && !sessao.terminado) sessao.breakpoints = new Set(linhas)
     },
     restaurar() {
       if (emExecucao()) parar()
       consoleEl.hidden = true
+      cons.aoEsconder()
       fecharPrevia()
       mostrarMemoriaC(false)
-      corpoGrade.replaceChildren()
+      limparGrade()
       visualizacao.textContent = ''
       editor.realcarExecucao(null)
       editor.realcarErro(null)

@@ -9,6 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MisterALG</title>
     <link rel="stylesheet" href="./estilos/visualg.css" />
+    <link rel="stylesheet" href="./estilos/terminal.css" />
+    <link rel="stylesheet" href="./estilos/memoria.css" />
+    <link rel="stylesheet" href="./estilos/assistente-popup.css" />
+    <link rel="stylesheet" href="./estilos/configuracoes.css" />
+    <link rel="stylesheet" href="./estilos/disposicao.css" />
+    <link rel="stylesheet" href="./estilos/abas.css" />
+    <link rel="stylesheet" href="./estilos/paleta.css" />
   </head>
   <body>
     <div id="barra" class="barra" role="toolbar" aria-label="Barra de ferramentas"></div>
@@ -50,12 +57,9 @@
           </div>
 
           <div id="console" class="console" hidden>
-            <div class="console-titulo">
-              <span class="console-icone">C:\</span>
-              <span>Console simulando o modo texto do MS-DOS</span>
-              <button type="button" id="console-fechar" class="console-fechar" title="Fechar (Esc)">×</button>
-            </div>
+            <div id="console-cab" class="console-cab"></div>
             <div id="console-tela" class="console-tela" tabindex="0"></div>
+            <div id="console-rodape" class="console-rodape"></div>
           </div>
         </section>
       </div>

@@ -5,6 +5,7 @@
 import { comNegrito, el } from './dialogos.js'
 import { ICONES_LINGUAGEM } from './icones-linguagens.js'
 import { IDIOMAS, tradutor } from '../compartilhado/idiomas.js'
+import { criarAvatar } from './avatar.js'
 
 export const LINGUAGENS = [
   { id: 'portugol', nome: 'Portugol', ext: '.alg', cor: '#8b5cf6', resumo: 'Lógica de programação em português', visao: 'Variáveis, pilha de ativação e perfil, como no VisuAlg', selo: 'Como no VisuAlg' },
@@ -22,7 +23,7 @@ export const LINGUAGENS = [
  * @param {{versao:string, recentes:string[], dica:string, prefs:{abertura:boolean, idioma?:string}, atalhos:{novo:string, abrir:string}}} opcoes
  * @returns {Promise<{acao:'novo'|'abrir'|'recente'|'idioma', idioma?:string, linguagem?:string, caminho?:string, prefs:{abertura:boolean}}>}
  */
-export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
+export function telaInicial({ versao, recentes, dica, prefs, atalhos, conta = null }) {
   const t = tradutor(prefs.idioma)
   return new Promise((resolve) => {
     const caixa = (rotulo, marcado) => {
@@ -54,14 +55,13 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
     const cartoes = LINGUAGENS.map((l, i) => {
       const icone = el('span', { className: 'inicio-icone' })
       icone.innerHTML = ICONES_LINGUAGEM[l.id] // texto fixo do próprio app
-      const numero = el('span', { className: 'inicio-numero', textContent: String(i + 1).padStart(2, '0') })
       const b = botao('inicio-linguagem', [
-        el('span', { className: 'inicio-celula-topo' }, numero, el('span', { className: 'inicio-ext', textContent: l.ext })),
         el('span', { className: 'inicio-celula-meio' },
           icone,
           el('span', { className: 'inicio-textos' },
             el('span', { className: 'inicio-nome', textContent: l.nome }),
             el('span', { className: 'inicio-resumo', textContent: t(l.resumo) }))),
+        el('span', { className: 'inicio-ext', textContent: l.ext }),
         el('span', { className: 'inicio-selo', textContent: t(l.selo) }),
         el('span', { className: 'inicio-visao', textContent: t(l.visao) }),
         el('span', { className: 'inicio-criar', textContent: t('Criar programa') }),
@@ -72,34 +72,53 @@ export function telaInicial({ versao, recentes, dica, prefs, atalhos }) {
     })
 
     const nomeArquivo = (c) => c.split(/[\\/]/).pop()
+    const linguagemDe = (c) => LINGUAGENS.find((l) => c.toLowerCase().endsWith(l.ext))
+    const cartaoRecente = (c) => {
+      const l = linguagemDe(c)
+      const marca = el('span', { className: 'inicio-recente-marca', textContent: l ? l.ext.slice(1).toUpperCase() : '?' })
+      if (l) marca.style.setProperty('--cor', l.cor)
+      return el('li', {}, botao('inicio-link', [marca,
+        el('span', { className: 'inicio-recente-textos' }, el('b', { textContent: nomeArquivo(c) }), el('small', { textContent: `${l?.nome ?? ''} · ${c.slice(0, -nomeArquivo(c).length - 1)}`.replace(/^ · /, '') })),
+      ], () => terminar({ acao: 'recente', caminho: c }), { title: c }))
+    }
     const listaRecentes = recentes.length
-      ? el('ul', { className: 'inicio-recentes' }, ...recentes.map((c) => el('li', {},
-          botao('inicio-link', [el('b', { textContent: nomeArquivo(c) }), el('small', { textContent: c })], () => terminar({ acao: 'recente', caminho: c }), { title: c }))))
+      ? el('ul', { className: 'inicio-recentes' }, ...recentes.map(cartaoRecente))
       : el('p', { className: 'inicio-vazio', textContent: t('Os algoritmos que você abrir aparecem aqui.') })
+
+    // Saudação pela hora local, com o avatar e o nome da Conta.
+    const hora = new Date().getHours()
+    const saudacao = hora < 12 ? 'Bom dia, {0}' : hora < 18 ? 'Boa tarde, {0}' : 'Boa noite, {0}'
+    const titulo = conta?.nome ? `${t(saudacao, conta.nome)} 👋` : t('Bem-vindo ao MisterALG')
 
     tela.append(
       el('header', { className: 'inicio-barra' },
-        el('span', { className: 'inicio-logo' }, 'MISTER', el('b', { textContent: 'ALG' })),
+        el('span', { className: 'inicio-logo' }, el('i', { className: 'inicio-logo-m', textContent: 'M' }), el('span', {}, 'Mister', el('b', { textContent: 'ALG' }))),
         el('span', { className: 'inicio-aba ativa', textContent: t('Início') }),
-        el('span', { className: 'inicio-aba', textContent: t('Ambiente de programação') }),
         el('span', { className: 'inicio-espaco' }),
         el('label', { className: 'inicio-rotulo' }, t('Idioma'), idioma),
-        botao('inicio-botao-claro', [t('Abrir…'), el('kbd', { textContent: atalhos.abrir })], () => terminar({ acao: 'abrir' })),
       ),
       el('div', { className: 'inicio-conteudo' },
+        el('section', { className: 'inicio-heroi' },
+          ...(conta ? [el('span', { className: 'inicio-avatar', role: 'img', ariaLabel: conta.nome ? t('Conta de {0}', conta.nome) : t('Conta: nome e foto') }, criarAvatar(conta, 64))] : []),
+          el('div', { className: 'inicio-heroi-textos' },
+            el('h1', { className: 'inicio-ola', textContent: titulo }),
+            el('p', { className: 'inicio-subtitulo', textContent: t('O que vamos programar hoje?') })),
+          el('div', { className: 'inicio-atalhos', role: 'group', ariaLabel: t('Atalhos') },
+            botao('inicio-botao-claro', [t('Novo algoritmo'), el('kbd', { textContent: atalhos.novo })], () => terminar({ acao: 'novo', linguagem: 'portugol' })),
+            botao('inicio-botao-linha', [t('Abrir…'), el('kbd', { textContent: atalhos.abrir })], () => terminar({ acao: 'abrir' }))),
+        ),
         el('div', { className: 'inicio-faixa' },
           el('span', { className: 'inicio-chip', textContent: t('Dica do dia') }),
           el('p', { className: 'inicio-dica' }, ...comNegrito(dica)),
-          botao('inicio-botao-claro', [t('Novo algoritmo'), el('kbd', { textContent: atalhos.novo })], () => terminar({ acao: 'novo', linguagem: 'portugol' })),
         ),
         el('div', { className: 'inicio-filtros' },
-          el('span', { className: 'inicio-filtro ativo' }, t('Linguagens'), el('em', { textContent: ` ${LINGUAGENS.length}` })),
+          el('h2', { className: 'inicio-secao' }, t('Linguagens'), el('em', { textContent: ` ${LINGUAGENS.length}` })),
           el('span', { className: 'inicio-espaco' }),
           el('span', { className: 'inicio-rotulo', textContent: t('Em qual linguagem você quer programar?') }),
         ),
         el('section', { className: 'inicio-grade', ariaLabel: t('Linguagens') }, ...cartoes),
         el('section', { className: 'inicio-bloco-recentes' },
-          el('h2', { className: 'inicio-rotulo', textContent: t('Recentes') }),
+          el('h2', { className: 'inicio-secao', textContent: t('Recentes') }),
           listaRecentes,
         ),
       ),

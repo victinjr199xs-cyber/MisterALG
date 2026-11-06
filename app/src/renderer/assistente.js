@@ -31,10 +31,29 @@ function trechos(texto) {
     return t
   })
 }
+// Preenchidos por criarAssistente: tradução dos rótulos (a conversa não passa pelo traduzirPagina) e inserção no editor.
+let rotulo = (s) => s
+let inserirNoEditor = null
+
+/** Bloco de código da resposta, com os botões Copiar e (se o editor deixar) Inserir no editor. */
+function blocoCodigo(texto) {
+  const botao = (nome, aoClicar) => {
+    const b = el('button', { type: 'button', className: 'assistente-codigo-botao', textContent: rotulo(nome) })
+    b.addEventListener('click', () => aoClicar(b))
+    return b
+  }
+  const barra = el('div', { className: 'assistente-codigo-barra' }, botao('Copiar', (b) => {
+    navigator.clipboard?.writeText(texto).catch(() => {})
+    b.textContent = rotulo('Copiado!')
+    setTimeout(() => { b.textContent = rotulo('Copiar') }, 1200)
+  }))
+  if (inserirNoEditor) barra.append(botao('Inserir no editor', () => inserirNoEditor(texto)))
+  return el('div', { className: 'assistente-codigo' }, barra, el('pre', {}, el('code', { textContent: texto })))
+}
 function renderizar(destino, texto) {
   const partes = texto.split(/```[^\n]*\n?/)
   destino.replaceChildren(...partes.flatMap((p, i) => (i % 2
-    ? [el('pre', {}, el('code', { textContent: p.replace(/\n$/, '') }))]
+    ? [blocoCodigo(p.replace(/\n$/, ''))]
     : p.split(/\n{2,}/).filter((par) => par.trim()).map((par) => el('p', {}, ...trechos(par.trim()))))))
 }
 
@@ -42,6 +61,8 @@ function renderizar(destino, texto) {
  * @param op {{ prefs: () => object, gravarPrefs: (parcial) => Promise<object>, contexto: () => {codigo, erro, saida}, aoMudar?: (aberto) => void }}
  */
 export function criarAssistente(op) {
+  rotulo = op.t ?? rotulo
+  inserirNoEditor = op.inserir ?? null
   const historico = [] // { role, content } — a pergunta sem o contexto, para a conversa não crescer à toa
   let enviando = null // id da pergunta em andamento
   let bolhaAtual = null
@@ -64,19 +85,100 @@ export function criarAssistente(op) {
   }
   const acoes = el('div', { className: 'assistente-acoes' }, ...ACOES.map(([r, p]) => botaoAcao(r, p)))
 
-  const painel = el('section', { className: 'moldura assistente', hidden: true, ariaLabel: 'Assistente de IA' },
-    el('header', { className: 'assistente-topo' },
-      el('h2', { className: 'legenda' }, '✨ ', el('span', { textContent: 'Assistente de IA' })),
-      subtitulo,
-      botaoTopo('⟲', 'Nova conversa', () => novaConversa()),
-      botaoTopo('⚙', 'Configurar o assistente', () => configurar()),
-      botaoTopo('×', 'Fechar o assistente', () => fechar()),
-    ),
+  const botaoMax = botaoTopo('⤢', 'Maximizar', () => maximizar())
+  const topo = el('header', { className: 'assistente-topo' },
+    el('h2', { className: 'legenda' }, '✨ ', el('span', { textContent: 'Assistente de IA' })),
+    subtitulo,
+    botaoTopo('⟲', 'Nova conversa', () => novaConversa()),
+    botaoTopo('⚙', 'Configurar o assistente', () => configurar()),
+    botaoMax,
+    botaoTopo('×', 'Fechar o assistente', () => fechar()),
+  )
+  // Pop-up flutuante (estilos/assistente-popup.css): não é modal e não escurece o editor.
+  const painel = el('section', { className: 'moldura assistente assistente-popup', hidden: true, tabIndex: -1, ariaLabel: 'Assistente de IA' },
+    topo,
     conversa,
     acoes,
     el('div', { className: 'assistente-rodape' }, entrada, enviar),
   )
   document.getElementById('area').append(painel)
+
+  // ---- posição e tamanho: arrastar pelo cabeçalho, redimensionar pelo canto (CSS resize), maximizar ----
+  const MARGEM = 12
+  /** Geometria que cabe na janela; sem nada guardado, o canto inferior direito (~420 px × 70% da altura, no máximo 640). */
+  function geometria(g) {
+    const W = window.innerWidth
+    const H = window.innerHeight
+    const larg = Math.min(Math.max(g?.w ?? 420, 300), W - 2 * MARGEM)
+    const alt = Math.min(Math.max(g?.h ?? Math.min(640, Math.round(H * 0.7)), 260), H - 2 * MARGEM)
+    const x = Math.min(Math.max(g?.x ?? W - larg - MARGEM, MARGEM / 2), Math.max(W - larg - MARGEM / 2, MARGEM / 2))
+    const y = Math.min(Math.max(g?.y ?? H - alt - 36, MARGEM / 2), Math.max(H - alt - MARGEM / 2, MARGEM / 2))
+    return { x, y, w: larg, h: alt }
+  }
+  function aplicar(g) {
+    painel.style.left = `${g.x}px`
+    painel.style.top = `${g.y}px`
+    painel.style.width = `${g.w}px`
+    painel.style.height = `${g.h}px`
+  }
+  const lerGeometria = () => {
+    const r = painel.getBoundingClientRect()
+    return { x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) }
+  }
+  let normal = null // geometria fora do modo maximizado
+  let gravarEm = 0
+  const guardar = () => {
+    if (painel.classList.contains('maximizado') || painel.hidden) return
+    normal = lerGeometria()
+    clearTimeout(gravarEm)
+    gravarEm = setTimeout(() => op.gravarPrefs({ iaJanela: normal }), 400)
+  }
+  function maximizar() {
+    const max = !painel.classList.contains('maximizado')
+    if (max) normal = lerGeometria()
+    painel.classList.toggle('maximizado', max)
+    if (max) {
+      const W = window.innerWidth
+      const H = window.innerHeight
+      const w = Math.round(W * 0.8)
+      const h = Math.round(H * 0.8)
+      aplicar({ x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w, h })
+    } else aplicar(geometria(normal))
+    const nome = rotulo(max ? 'Restaurar' : 'Maximizar')
+    botaoMax.title = nome
+    botaoMax.setAttribute('aria-label', nome)
+    botaoMax.textContent = max ? '⤡' : '⤢'
+  }
+  topo.addEventListener('dblclick', (e) => { if (!e.target.closest('button')) maximizar() })
+  topo.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || e.target.closest('button') || painel.classList.contains('maximizado')) return
+    const r = painel.getBoundingClientRect()
+    const dx = e.clientX - r.left
+    const dy = e.clientY - r.top
+    topo.setPointerCapture(e.pointerId)
+    const mover = (ev) => aplicar(geometria({ x: ev.clientX - dx, y: ev.clientY - dy, w: r.width, h: r.height }))
+    const soltar = () => {
+      topo.removeEventListener('pointermove', mover)
+      topo.removeEventListener('pointerup', soltar)
+      topo.removeEventListener('pointercancel', soltar)
+      guardar()
+    }
+    topo.addEventListener('pointermove', mover)
+    topo.addEventListener('pointerup', soltar)
+    topo.addEventListener('pointercancel', soltar)
+  })
+  new ResizeObserver(guardar).observe(painel) // o canto de redimensionar é o `resize` do CSS
+  window.addEventListener('resize', () => {
+    if (painel.hidden || painel.classList.contains('maximizado')) return
+    aplicar(geometria(lerGeometria()))
+  })
+  // Esc fecha o pop-up quando o foco está nele (no editor o Esc continua sendo de quem executa o programa).
+  painel.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !e.defaultPrevented && !document.querySelector('dialog[open]')) {
+      e.preventDefault()
+      fechar()
+    }
+  })
 
   entrada.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
@@ -266,15 +368,16 @@ export function criarAssistente(op) {
   function abrir() {
     if (aberto()) return
     painel.hidden = false
-    painel.parentElement.classList.add('com-assistente')
+    if (!painel.classList.contains('maximizado')) aplicar(geometria(normal ??= op.prefs().iaJanela))
     op.aoMudar?.(true)
-    atualizar()
+    atualizar().then(() => (entrada.disabled ? painel : entrada).focus())
   }
 
   function fechar() {
+    const tinhaFoco = painel.contains(document.activeElement)
     painel.hidden = true
-    painel.parentElement.classList.remove('com-assistente')
     op.aoMudar?.(false)
+    if (tinhaFoco) document.activeElement?.blur?.()
   }
 
   return {

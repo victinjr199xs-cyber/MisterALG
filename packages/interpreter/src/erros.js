@@ -2,8 +2,8 @@
 // visualg30.exe — docs/spec/_sintese-A-linguagem.md §5).
 
 export const MENSAGENS = {
-  1: 'Um algoritmo começa com a palavra-chave ALGORITMO seguida do nome do programa, entre aspas; O VISUALG3 encontrou um comando (como VAR, INICIO, etc.) antes desta palavra e não pode continuar a execução do programa.',
-  2: 'O VISUALG3 encontrou a palavra FIMALGORITMO, que determina o fim do código do programa, sem encontrar a palavra INICIO, que indica o começo do código (isto é, os comandos) do algoritmo, e não pode continuar a execução do programa.',
+  1: 'Um algoritmo começa com a palavra-chave ALGORITMO seguida do nome do programa, entre aspas; O MisterALG encontrou um comando (como VAR, INICIO, etc.) antes desta palavra e não pode continuar a execução do programa.',
+  2: 'O MisterALG encontrou a palavra FIMALGORITMO, que determina o fim do código do programa, sem encontrar a palavra INICIO, que indica o começo do código (isto é, os comandos) do algoritmo, e não pode continuar a execução do programa.',
   3: 'Nenhum erro encontrado.',
   4: 'Esperava encontrar ALGORITMO.',
   5: 'Esperava encontrar INICIO.',
@@ -62,7 +62,7 @@ export const MENSAGENS = {
   104: 'Lista %s inexistente.', // "Lista " + " inexistente" estão no exe; o ponto final é nosso
 }
 
-export const CABECALHO_ERRO = 'VisuAlg3 encontrou o seguinte problema em seu algoritmo, na linha %d :'
+export const CABECALHO_ERRO = 'O MisterALG encontrou o seguinte problema em seu algoritmo, na linha %d :'
 
 export const TEXTOS = {
   inicio: 'Início da execução',
@@ -76,6 +76,22 @@ export const TEXTOS = {
   cronoIniciado: 'Cronômetro iniciado.',
   cronoNaoIniciado: 'O cronômetro não foi iniciado.',
   cronoTerminado: 'Cronômetro terminado. Tempo decorrido: ',
+}
+
+// Explicações didáticas (a tela de aviso usa estas e, na falta, as dela).
+export const EXPLICACOES_SUB = {
+  antes: 'Funções e procedimentos ficam DENTRO do algoritmo: primeiro a linha Algoritmo "nome", depois a seção var, depois as sub-rotinas (funcao ... fimfuncao, procedimento ... fimprocedimento) e só então o inicio do programa principal. Uma função escrita antes de Algoritmo não é aceita.',
+  parametro: 'Cada parâmetro é escrito como nome: tipo, por exemplo funcao dobro(n: real): real. Faltou o sinal de dois-pontos entre o nome e o tipo (e, numa função, o tipo do resultado depois dos parênteses).',
+}
+
+export const EXPLICACOES = {
+  1: 'Todo programa começa com a linha Algoritmo "nome". Escreva-a primeiro; var, funções, procedimentos e inicio vêm depois dela.',
+  13: 'Dê à função ou ao procedimento um nome que não seja palavra reservada, sem espaços nem acentos.',
+  36: 'Duas sub-rotinas não podem ter o mesmo nome (maiúsculas e minúsculas contam como iguais). Renomeie uma delas.',
+  42: 'Cada declaração é escrita como nome: tipo (por exemplo x: real ou a, b: inteiro). Confira o sinal de dois-pontos e o nome do tipo.',
+  50: 'Um parâmetro marcado com var recebe a própria variável, não um valor: chame com o nome de uma variável (ou de uma posição de vetor), nunca com número ou expressão.',
+  101: 'A função ou procedimento chamado não existe. Confira a grafia e lembre que ele precisa ser declarado depois do var e antes do inicio.',
+  102: 'A chamada tem mais ou menos valores do que os parâmetros da declaração. Confira a quantidade e a ordem.',
 }
 
 function formatar(modelo, args) {
@@ -92,6 +108,7 @@ export class ErroVisualg extends Error {
     this.codigo = codigo
     this.linha = linha
     this.mensagem = mensagem
+    if (EXPLICACOES[codigo]) this.explicacao = EXPLICACOES[codigo]
   }
 
   get cabecalho() {

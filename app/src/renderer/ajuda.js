@@ -26,6 +26,7 @@ const TELA = [
     ['Ctrl+G', 'Corrigir indentação'],
     ['Ctrl+Espaço (ou ⌥Espaço)', 'Auto-digitação: digite uma abreviatura (ex.: `see`, `par`, `dci`, `!`) e tecle'],
     ['Ctrl+J', 'Lista de comandos e funções'],
+    ['Ctrl+K (ou Ctrl+Shift+P)', 'Paleta de comandos'],
     ['Esc', 'Durante um `leia`, termina o programa; depois do fim, fecha o console'],
   ]],
   ['p', 'No Mac as teclas F podem precisar da tecla **fn** (ou ative "Usar F1, F2 etc. como teclas de função padrão" nos Ajustes do Sistema › Teclado).'],

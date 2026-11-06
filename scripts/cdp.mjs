@@ -28,11 +28,16 @@ await new Promise((r) => ws.addEventListener('open', r, { once: true }))
 let id = 0
 const pendentes = new Map()
 const erros = []
+const rede = []
 ws.addEventListener('message', (ev) => {
   const msg = JSON.parse(ev.data)
   if (msg.id && pendentes.has(msg.id)) {
     pendentes.get(msg.id)(msg)
     pendentes.delete(msg.id)
+  } else if (msg.method === 'Network.requestWillBeSent') {
+    // a interface não pode carregar nada da rede (só file:, data:, blob: e o servidor de desenvolvimento local)
+    const u = msg.params.request.url
+    if (/^(https?|wss?):/i.test(u) && !/^(https?|wss?):\/\/(localhost|127\.0\.0\.1)[:/]/i.test(u)) rede.push(u)
   } else if (msg.method === 'Runtime.exceptionThrown') {
     erros.push(msg.params.exceptionDetails.exception?.description ?? msg.params.exceptionDetails.text)
   } else if (msg.method === 'Runtime.consoleAPICalled' && msg.params.type === 'error') {
@@ -63,6 +68,7 @@ for (let tentativa = 1; ; tentativa += 1) {
   }
 }
 await enviar('Page.enable')
+await enviar('Network.enable')
 
 const ferramentas = {
   /** Comando CDP cru (ex.: cdp('Browser.setWindowBounds', {...})). */
@@ -92,6 +98,24 @@ const ferramentas = {
     await enviar('Input.insertText', { text: texto })
   },
   erros,
+  /** O padrão de quem instala agora é a disposição moderna + tema Híbrido claro; as fumaças antigas assumem o visual clássico: grava e recarrega. */
+  async classico() {
+    const pronta = async () => {
+      for (let i = 0; i < 40; i += 1) {
+        try {
+          if (await ferramentas.avaliar('!!window.__misteralg')) return
+        } catch { /* a página ainda recarrega */ }
+        await ferramentas.esperar(500)
+      }
+    }
+    await pronta()
+    await ferramentas.avaliar(`window.misteralg.prefs.gravar({ tema: 'classico', disposicao: 'classica', consoleEmJanela: false, consolePortugol: 'moderno' }).then(() => 1)`)
+    await ferramentas.esperar(1000)
+    await enviar('Page.reload', {})
+    await ferramentas.esperar(2500)
+    await pronta()
+    await ferramentas.esperar(400)
+  },
 }
 
 const passos = (await import(pathToFileURL(resolve(roteiro)).href)).default
@@ -100,4 +124,8 @@ try {
 } finally {
   if (erros.length) console.log('ERROS NO CONSOLE DA PÁGINA:\n' + erros.join('\n'))
   ws.close()
+}
+if (rede.length) {
+  console.error('FALHA: a interface fez requisição de rede:\n' + [...new Set(rede)].join('\n'))
+  process.exitCode = 1
 }

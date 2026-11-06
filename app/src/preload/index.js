@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('misteralg', {
   // Testes e capturas usam uma pasta de dados própria; neles não abre a dica do dia.
   automatizado: Boolean(process.env.MISTERALG_DADOS) && !process.env.MISTERALG_TESTE_SISTEMA,
   prefs: { ler: invocar('prefs:ler'), gravar: invocar('prefs:gravar') },
+  conta: { foto: invocar('conta:foto'), escolherFoto: invocar('conta:escolherFoto'), removerFoto: invocar('conta:removerFoto') },
   menu: {
     aoComando(fn) {
       const ouvinte = (_e, id, dados) => fn(id, dados)
@@ -26,6 +27,7 @@ contextBridge.exposeInMainWorld('misteralg', {
     gravarBloco: invocar('bloco:gravar'),
     inserirBloco: invocar('bloco:inserir'),
   },
+  exemplos: { listar: invocar('exemplos:listar'), ler: invocar('exemplos:ler') },
   dados: {
     ler: (nome, pasta) => ipcRenderer.sendSync('dados:ler', { nome, pasta }),
     anexar: (nome, pasta, linha) => ipcRenderer.sendSync('dados:anexar', { nome, pasta, linha }),
@@ -41,6 +43,7 @@ contextBridge.exposeInMainWorld('misteralg', {
   exportar: invocar('exportar:salvar'),
   abrirExterno: invocar('externo:abrir'),
   janela: { titulo: invocar('janela:titulo'), fechar: invocar('janela:fechar'), pagina: invocar('janela:pagina') },
+  console: { fixar: invocar('console:fixar') },
   clang: {
     aquecer: invocar('clang:aquecer'),
     executar: invocar('clang:executar'),

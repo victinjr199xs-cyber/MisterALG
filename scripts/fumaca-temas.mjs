@@ -66,7 +66,8 @@ const LER_CORES = `(() => {
   return { tema: document.documentElement.dataset.tema, cores, fundo }
 })()`
 
-export default async ({ avaliar, esperar, erros }) => {
+export default async ({ avaliar, esperar, erros, classico }) => {
+  await classico() // o padrão novo é a disposição moderna + Híbrido claro; esta fumaça parte do clássico
   // A IDE pode estar parada na tela de termos (primeira abertura).
   for (let i = 0; i < 40; i += 1) {
     if (await avaliar(`!!window.__misteralg || !!document.querySelector('dialog[open] .termos')`)) break

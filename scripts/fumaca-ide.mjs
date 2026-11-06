@@ -22,7 +22,7 @@ fimalgoritmo
 `
 const PROGRAMA_C = '#include <stdio.h>\nint main(void) {\n    int x;\n    printf("Valor: ");\n    scanf("%d", &x);\n    printf("Dobro = %d\\n", 2 * x);\n    return 0;\n}\n'
 const PROGRAMA_CPP = '#include <iostream>\n#include <stdexcept>\nint dividir(int a, int b) { if (b == 0) throw std::runtime_error("zero"); return a / b; }\nint main() {\n    try { std::cout << dividir(1, 0); } catch (const std::exception &e) { std::cout << "pegou: " << e.what() << std::endl; }\n}\n'
-const ESPERADO = 'Seu nome: Linux\nOlá, Linux! Soma dobrada = 30\n\n>>> Fim da execução do programa !'
+const ESPERADO = 'Seu nome: Linux\nOlá, Linux! Soma dobrada = 30\n>>> Fim da execução do programa !'
 
 function conferir(nome, obtido, esperado) {
   const ok = typeof obtido === 'object' ? JSON.stringify(obtido) === JSON.stringify(esperado) : obtido === esperado // listas e null por conteúdo
@@ -30,7 +30,8 @@ function conferir(nome, obtido, esperado) {
   if (!ok) throw new Error(`${nome}: esperado ${JSON.stringify(esperado)}`)
 }
 
-export default async ({ avaliar, esperar, digitar, tecla }) => {
+export default async ({ avaliar, esperar, digitar, tecla, classico }) => {
+  await classico() // o padrão novo é a disposição moderna; esta fumaça confere o visual clássico
   // A IDE pode estar parada na tela de termos (primeira abertura).
   for (let i = 0; i < 40; i += 1) {
     const pronto = await avaliar(`!!window.__misteralg || !!document.querySelector('dialog[open] .termos')`)
@@ -98,7 +99,7 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
   await digitar('21')
   await tecla('Enter')
   for (let i = 0; i < 240 && !(await temTexto('Process finished')); i += 1) await esperar(250) // PC lento/CI: o processo pode demorar a sair
-  conferir('saída do C', await avaliar('document.querySelector("#console-tela").textContent'), 'Valor: 21\nDobro = 42\n\nProcess finished with exit code 0')
+  conferir('saída do C', await avaliar('document.querySelector("#console-tela").textContent'), 'Valor: 21\nDobro = 42\nProcess finished with exit code 0')
 
   // C++ com try/catch: liga a libexcecoes.a embutida no worker (exceções do WebAssembly).
   await avaliar(`${M}.doc.modificado = false`)
@@ -106,7 +107,7 @@ export default async ({ avaliar, esperar, digitar, tecla }) => {
   await avaliar(`${M}.editor.definirTexto(${JSON.stringify(PROGRAMA_CPP)})`)
   await avaliar(`void ${M}.comandos.executar()`)
   for (let i = 0; i < 360 && !(await temTexto('Process finished')); i += 1) await esperar(500)
-  conferir('saída do C++ com exceção', await avaliar('document.querySelector("#console-tela").textContent'), 'pegou: zero\n\nProcess finished with exit code 0')
+  conferir('saída do C++ com exceção', await avaliar('document.querySelector("#console-tela").textContent'), 'pegou: zero\nProcess finished with exit code 0')
 
   await verificarMenusEDialogos({ avaliar, esperar })
   await verificarArquivos({ avaliar, esperar })
@@ -140,7 +141,7 @@ async function verificarMenusEDialogos({ avaliar, esperar }) {
 
   const DIALOGOS = {
     calculadora: /calculadora/i, calendario: /Calendário de \d{4}/, dica: /Dica do dia/, termos: /Termos de Uso/, sobre: /Sobre o MisterALG/,
-    pilha: /Pilha de Ativação/, perfil: /Perfil de execução/, configuracoes: /configuração/, 'configurar-cores': /configuração/, 'configurar-ia': /Assistente de IA/,
+    pilha: /Pilha de Ativação/, perfil: /Perfil de execução/, configuracoes: /^Editor$/, 'configurar-cores': /^Cores$/, 'configurar-ia': /Assistente de IA/,
     'ajuda-tela': /Tela do MisterALG/, 'ajuda-linguagem': /Linguagem \(Portugol\)/, 'ajuda-referencia': /Referência da Linguagem/,
     localizar: /Pesquisar o Texto/, substituir: /Substituir os textos/,
     'exportar-pascal': /Pascal/, 'exportar-c': /C \/ C\+\+/, 'exportar-java': /Java/,
@@ -169,7 +170,8 @@ async function verificarMenusEDialogos({ avaliar, esperar }) {
   await avaliar(`void ${M}.comandos.localizar()`)
   await esperar(200)
   await avaliar(`(() => { const d = document.querySelector('dialog[open]'); d.querySelector('input').value = 'inicio'; [...d.querySelectorAll('.janela-acoes button')].find((b) => b.textContent === 'OK').click() })()`)
-  await esperar(300)
+  // o diálogo fecha num evento assíncrono: espera a seleção aparecer (máquina ocupada demora mais que 300 ms)
+  for (let i = 0; i < 20 && !(await avaliar(`${M}.editor.textoSelecionado()`)); i += 1) await esperar(250)
   conferir('localizar seleciona o texto achado', await avaliar(`${M}.editor.textoSelecionado()`), 'inicio')
 
   // Linhas numeradas liga/desliga e volta
@@ -202,7 +204,7 @@ async function verificarArquivos({ avaliar, esperar }) {
     conferir('editar marca como modificado', await avaliar(`${M}.doc.modificado`), true)
     conferir('título da janela mostra a modificação', /modificado/i.test(await avaliar(`document.querySelector('#st-estado').textContent`)), true)
     await avaliar(`void ${M}.comandos.salvar()`)
-    await esperar(500)
+    for (let i = 0; i < 20 && (await avaliar(`${M}.doc.modificado`)); i += 1) await esperar(250) // gravar no disco pode demorar com a máquina ocupada
     conferir('salvar: não fica modificado', await avaliar(`${M}.doc.modificado`), false)
     conferir('salvar: o arquivo em disco foi atualizado', /\/\/ novo/.test(readFileSync(arquivo, 'latin1')), true)
     const inexistente = await avaliar(`window.misteralg.arquivo.abrirCaminho(${JSON.stringify(join(pasta, 'nao-existe.alg'))})`)
