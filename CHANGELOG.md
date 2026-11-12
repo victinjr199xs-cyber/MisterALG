@@ -3,6 +3,13 @@
 O formato segue o [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e as versões seguem o
 [versionamento semântico](https://semver.org/lang/pt-BR/). Cada item aponta o commit onde a mudança entrou.
 
+## [1.13.0] — 2026-11-12
+
+### Portugol
+
+- **Sub-rotinas onde você quiser**: `funcao` e `procedimento` agora podem ser escritas antes de `Algoritmo "nome"`,
+  entre `var` e `inicio` (como antes) ou depois de `fimalgoritmo`. Elas continuam enxergando as variáveis globais.
+
 ## [1.12.0] — 2026-10-28
 
 ### Visual novo

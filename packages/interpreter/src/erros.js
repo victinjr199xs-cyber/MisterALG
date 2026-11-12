@@ -80,7 +80,6 @@ export const TEXTOS = {
 
 // Explicações didáticas (a tela de aviso usa estas e, na falta, as dela).
 export const EXPLICACOES_SUB = {
-  antes: 'Funções e procedimentos ficam DENTRO do algoritmo: primeiro a linha Algoritmo "nome", depois a seção var, depois as sub-rotinas (funcao ... fimfuncao, procedimento ... fimprocedimento) e só então o inicio do programa principal. Uma função escrita antes de Algoritmo não é aceita.',
   parametro: 'Cada parâmetro é escrito como nome: tipo, por exemplo funcao dobro(n: real): real. Faltou o sinal de dois-pontos entre o nome e o tipo (e, numa função, o tipo do resultado depois dos parênteses).',
 }
 

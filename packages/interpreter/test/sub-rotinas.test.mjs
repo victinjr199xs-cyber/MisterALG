@@ -5,19 +5,29 @@ import { rodar } from '../src/index.js'
 
 const exec = (src) => rodar(src, { entradas: [], rng: () => 0.5, limitePassos: 100000 })
 
-test('sub-rotina antes de Algoritmo: erro 1 chama o programa de MisterALG e explica onde ela fica', async () => {
-  const r = await exec('FUNCAO F (N: REAL): REAL\ninicio\nretorne N\nfimfuncao\nAlgoritmo "x"\ninicio\nfimalgoritmo')
-  assert.equal(r.status, 'erro')
-  assert.equal(r.erro.codigo, 1)
-  assert.equal(r.erro.linha, 1)
-  assert.doesNotMatch(r.erro.mensagem, /VISUALG/i)
-  assert.match(r.erro.mensagem, /MisterALG/)
-  assert.match(r.erro.explicacao, /DENTRO do algoritmo/)
+test('sub-rotinas podem ficar antes de Algoritmo e depois de fimalgoritmo, e usam as globais', async () => {
+  const r = await exec(`FUNCAO F (N: REAL): REAL
+inicio
+retorne N * k
+fimfuncao
+
+Algoritmo "x"
+var k: real
+inicio
+k <- 2
+escreval(F(3))
+p
+fimalgoritmo
+
+procedimento p
+inicio
+escreval("fim")
+fimprocedimento`)
+  assert.equal(r.status, 'terminado', r.erro?.mensagem)
+  assert.equal(r.saida, ' 6\nfim\n')
 })
 
-test('procedimento antes de Algoritmo recebe a mesma explicação; outro comando antes, a geral', async () => {
-  const a = await exec('procedimento p\ninicio\nfimprocedimento\nalgoritmo "x"\ninicio\nfimalgoritmo')
-  assert.match(a.erro.explicacao, /DENTRO do algoritmo/)
+test('outro comando antes de Algoritmo continua dando erro 1', async () => {
   const b = await exec('var x: inteiro\nalgoritmo "x"\ninicio\nfimalgoritmo')
   assert.equal(b.erro.codigo, 1)
   assert.match(b.erro.explicacao, /começa com a linha Algoritmo/)

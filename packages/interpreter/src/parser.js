@@ -76,12 +76,19 @@ class Parser {
 
   // ---- programa e declarações -------------------------------------------
 
+  /** Sub-rotinas soltas fora do bloco algoritmo…fimalgoritmo (antes ou depois dele). */
+  subsSoltas(subs) {
+    for (;;) {
+      this.pularLinhas()
+      if (!this.ehPalavra('FUNCAO') && !this.ehPalavra('PROCEDIMENTO')) return
+      subs.push(this.subprograma())
+    }
+  }
+
   programa() {
-    this.pularLinhas()
+    const subsAntes = []
+    this.subsSoltas(subsAntes)
     if (!this.ehPalavra('ALGORITMO')) {
-      if (this.ehPalavra('FUNCAO') || this.ehPalavra('PROCEDIMENTO')) {
-        throw Object.assign(erro(1, this.tok.linha), { explicacao: EXPLICACOES_SUB.antes })
-      }
       throw erro(this.tok.k === 'ID' && PALAVRAS_CHAVE.has(this.tok.n) ? 1 : 4, this.tok.linha)
     }
     const linha = this.avancar().linha
@@ -89,7 +96,7 @@ class Parser {
     if (this.tok.k === 'STR' || this.tok.k === 'ID') nome = this.avancar().v
     this.fimComando()
 
-    const prog = { nome, linha, dos: false, arquivo: null, consts: [], tipos: [], vars: [], subs: [], corpo: [], linhaInicio: 0, linhaFim: 0 }
+    const prog = { nome, linha, dos: false, arquivo: null, consts: [], tipos: [], vars: [], subs: subsAntes, corpo: [], linhaInicio: 0, linhaFim: 0 }
 
     for (;;) {
       this.pularLinhas()
@@ -130,6 +137,7 @@ class Parser {
           this.fimComando()
           prog.corpo = this.bloco(['FIMALGORITMO'], (l) => erro(6, l))
           prog.linhaFim = this.avancar().linha
+          this.subsSoltas(prog.subs)
           return prog
         case 'FIMALGORITMO':
           throw erro(2, tok.linha)
